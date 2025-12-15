@@ -5,7 +5,6 @@ import viteReact from '@vitejs/plugin-react'
 import viteTsConfigPaths from 'vite-tsconfig-paths'
 import tailwindcss from '@tailwindcss/vite'
 import { nitro } from 'nitro/vite'
-import glsl from 'vite-plugin-glsl'
 import glslify from 'vite-plugin-glslify'
 
 
@@ -13,7 +12,7 @@ const config = defineConfig({
   plugins: [
     devtools(),
     nitro({
-      preset:"bun"
+      preset: "vercel"
     }),
     // this is the plugin that enables path aliases
     viteTsConfigPaths({
