@@ -1,3 +1,5 @@
+"use client";
+
 import { useGSAP } from "@gsap/react";
 import { createFileRoute, Outlet, useLocation } from "@tanstack/react-router";
 import { gsap } from "gsap";
@@ -13,54 +15,46 @@ const AuthLayout = () => {
 	const location = useLocation();
 	const pathname = location.pathname;
 	const containerRef = useRef<HTMLDivElement>(null);
-	useGSAP(() => {
-		if (!containerRef.current) return;
-		const title = new SplitText("#title", {
-			type: "chars",
-		});
-		const subtitle = new SplitText("#subtitle", {
-			type: "lines",
-		});
-		gsap.set(title.chars, {
-			y: 200,
-		});
-		gsap.to(title.chars, {
-			y: 0,
-			delay: 0.27,
-			duration: 1.2,
-			stagger: 0.03,
-			ease: "power2.inOut",
-		});
-		gsap.set(subtitle.lines, {
-			y: 100,
-		});
-		gsap.to(subtitle.lines, {
-			y: 0,
-			delay: 0.3,
-			duration: 1.2,
-			stagger: 0.075,
-			ease: "power2.inOut",
-		});
-		gsap.from(".auth", {
-			opacity: 0,
-			duration: 0.9,
-			ease: "power2.inOut",
-		});
+	useGSAP(
+		() => {
+			if (!containerRef.current) return;
 
-		gsap.from("#footer", {
-			opacity: 0,
-			duration: 0.7,
-			ease: "power2.in",
-		});
-	}, []);
+			const subtitle = new SplitText(".subtitle", {
+				type: "lines",
+			});
+
+			gsap.set(subtitle.lines, {
+				y: 100,
+			});
+			gsap.to(subtitle.lines, {
+				y: 0,
+				delay: 0.3,
+				duration: 1.2,
+				stagger: 0.075,
+				ease: "power2.inOut",
+			});
+			gsap.from(".auth", {
+				opacity: 0,
+				duration: 0.9,
+				ease: "power2.inOut",
+			});
+
+			gsap.from("#footer", {
+				opacity: 0,
+				duration: 0.7,
+				ease: "power2.in",
+			});
+		},
+		{ dependencies: [], scope: containerRef },
+	);
 	return (
-		<main className="flex relative flex-col-reverse items-center xl:flex-row min-h-screen xl:h-screen  overflow-hidden p-6 md:p-3 bg-slate-900">
+		<main
+			ref={containerRef}
+			className="flex relative flex-col-reverse items-center xl:flex-row min-h-screen xl:h-screen  overflow-hidden p-6 md:p-3 bg-slate-900"
+		>
 			<Scene />
 
-			<div
-				ref={containerRef}
-				className="space-y-7 xl:w-full pt-10 md:pt-18 pb-12 text-gray-300 h-full flex flex-col md:rounded-2xl relative overflow-hidden"
-			>
+			<div className="space-y-7 xl:w-full pt-10 md:pt-18 pb-12 text-gray-300 h-full flex flex-col md:rounded-2xl relative overflow-hidden">
 				<Body />
 
 				<Models />
@@ -97,13 +91,33 @@ const FormContainer = ({
 };
 
 const Body = () => {
+	const titleRef = useRef<HTMLDivElement>(null);
+	useGSAP(
+		() => {
+			if (!titleRef.current) return;
+			const title = new SplitText(titleRef.current, {
+				type: "lines",
+				mask: "lines",
+			});
+			gsap.set(title.lines, {
+				y: 200,
+			});
+			gsap.to(title.lines, {
+				y: 0,
+				delay: 0.27,
+				duration: 1.2,
+				stagger: 0.03,
+				ease: "power2.inOut",
+			});
+		},
+		{ dependencies: [], scope: titleRef },
+	);
+
 	return (
 		<>
 			<h1
-				className="text-4xl md:text-8xl lg:text-9xl font-bold  py-4 px-10 title"
-				style={{
-					clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
-				}}
+				ref={titleRef}
+				className="text-4xl md:text-8xl lg:text-9xl font-bold  py-4 px-10 z-999 will-change-transform"
 			>
 				High ELO LLMs
 			</h1>
@@ -149,6 +163,6 @@ const Footer = () => {
 	);
 };
 
-export const Route = createFileRoute("/(auth)/_layout")({
+export const Route = createFileRoute("/(auth)")({
 	component: AuthLayout,
 });

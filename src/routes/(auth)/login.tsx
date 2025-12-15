@@ -59,7 +59,6 @@ function RouteComponent() {
 			ref={formRef}
 			className="w-full max-w-md space-y-4 flex flex-col items-center justify-center px-2 "
 			errors={errors}
-			onClearErrors={setErrors}
 			onSubmit={async (event) => {
 				const response = await submitForm(event);
 				setErrors(response.errors);
