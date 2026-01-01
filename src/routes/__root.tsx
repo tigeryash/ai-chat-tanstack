@@ -17,7 +17,6 @@ import { createServerFn } from "@tanstack/react-start";
 import { getCookie, getRequest } from "@tanstack/react-start/server";
 import type { ConvexReactClient } from "convex/react";
 import { authClient } from "@/lib/auth-client";
-import Header from "../components/Header";
 
 import TanStackQueryDevtools from "../integrations/tanstack-query/devtools";
 
@@ -90,7 +89,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 					<HeadContent />
 				</head>
 				<body>
-					<Header />
 					{children}
 					<TanStackDevtools
 						config={{

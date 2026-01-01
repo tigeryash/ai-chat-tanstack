@@ -1,12 +1,18 @@
 import { Field } from "@base-ui-components/react/field";
 import { Form } from "@base-ui-components/react/form";
 import { useGSAP } from "@gsap/react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import gsap from "gsap";
 import { useRef, useState } from "react";
 import { z } from "zod";
+import { authClient } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/(auth)/login")({
+	beforeLoad: ({ context }) => {
+		if (context.userId) {
+			throw redirect({ to: "/new" });
+		}
+	},
 	component: RouteComponent,
 });
 
@@ -18,6 +24,8 @@ const schema = z.object({
 function RouteComponent() {
 	const [errors, setErrors] = useState({});
 	const formRef = useRef<HTMLFormElement>(null);
+	const router = useRouter();
+
 	const submitForm = async (event: React.FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 
@@ -27,13 +35,26 @@ function RouteComponent() {
 		if (!result.success) {
 			return {
 				errors: result.error.flatten().fieldErrors,
-			};
+			}
 		}
+
+		const { error } = await authClient.signIn.email({
+			email: result.data.email,
+			password: result.data.password,
+		})
+
+		if (error) {
+			return {
+				errors: { form: [error.message || "Login failed"] },
+			}
+		}
+
+		await router.navigate({ to: "/new" });
 
 		return {
 			errors: {},
-		};
-	};
+		}
+	}
 	useGSAP(
 		() => {
 			gsap.fromTo(
@@ -50,10 +71,10 @@ function RouteComponent() {
 					ease: "power2.inOut",
 					delay: 0.1,
 				},
-			);
+			)
 		},
 		{ scope: formRef },
-	);
+	)
 	return (
 		<Form
 			ref={formRef}
@@ -101,5 +122,5 @@ function RouteComponent() {
 				Login
 			</button>
 		</Form>
-	);
+	)
 }

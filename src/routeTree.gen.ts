@@ -9,10 +9,13 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as dashboardRouteRouteImport } from './routes/(dashboard)/route'
 import { Route as authRouteRouteImport } from './routes/(auth)/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DemoTanstackQueryRouteImport } from './routes/demo/tanstack-query'
 import { Route as DemoConvexRouteImport } from './routes/demo/convex'
+import { Route as dashboardNewRouteImport } from './routes/(dashboard)/new'
+import { Route as dashboardChatIdRouteImport } from './routes/(dashboard)/$chatId'
 import { Route as authSignupRouteImport } from './routes/(auth)/signup'
 import { Route as authResetPasswordRouteImport } from './routes/(auth)/reset-password'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
@@ -27,6 +30,10 @@ import { Route as DemoStartSsrSpaModeRouteImport } from './routes/demo/start.ssr
 import { Route as DemoStartSsrFullSsrRouteImport } from './routes/demo/start.ssr.full-ssr'
 import { Route as DemoStartSsrDataOnlyRouteImport } from './routes/demo/start.ssr.data-only'
 
+const dashboardRouteRoute = dashboardRouteRouteImport.update({
+  id: '/(dashboard)',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const authRouteRoute = authRouteRouteImport.update({
   id: '/(auth)',
   getParentRoute: () => rootRouteImport,
@@ -45,6 +52,16 @@ const DemoConvexRoute = DemoConvexRouteImport.update({
   id: '/demo/convex',
   path: '/demo/convex',
   getParentRoute: () => rootRouteImport,
+} as any)
+const dashboardNewRoute = dashboardNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => dashboardRouteRoute,
+} as any)
+const dashboardChatIdRoute = dashboardChatIdRouteImport.update({
+  id: '/$chatId',
+  path: '/$chatId',
+  getParentRoute: () => dashboardRouteRoute,
 } as any)
 const authSignupRoute = authSignupRouteImport.update({
   id: '/signup',
@@ -118,6 +135,8 @@ export interface FileRoutesByFullPath {
   '/login': typeof authLoginRoute
   '/reset-password': typeof authResetPasswordRoute
   '/signup': typeof authSignupRoute
+  '/$chatId': typeof dashboardChatIdRoute
+  '/new': typeof dashboardNewRoute
   '/demo/convex': typeof DemoConvexRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -136,6 +155,8 @@ export interface FileRoutesByTo {
   '/login': typeof authLoginRoute
   '/reset-password': typeof authResetPasswordRoute
   '/signup': typeof authSignupRoute
+  '/$chatId': typeof dashboardChatIdRoute
+  '/new': typeof dashboardNewRoute
   '/demo/convex': typeof DemoConvexRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -152,10 +173,13 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/(auth)': typeof authRouteRouteWithChildren
+  '/(dashboard)': typeof dashboardRouteRouteWithChildren
   '/(auth)/forgot-password': typeof authForgotPasswordRoute
   '/(auth)/login': typeof authLoginRoute
   '/(auth)/reset-password': typeof authResetPasswordRoute
   '/(auth)/signup': typeof authSignupRoute
+  '/(dashboard)/$chatId': typeof dashboardChatIdRoute
+  '/(dashboard)/new': typeof dashboardNewRoute
   '/demo/convex': typeof DemoConvexRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -176,6 +200,8 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/signup'
+    | '/$chatId'
+    | '/new'
     | '/demo/convex'
     | '/demo/tanstack-query'
     | '/api/auth/$'
@@ -194,6 +220,8 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/signup'
+    | '/$chatId'
+    | '/new'
     | '/demo/convex'
     | '/demo/tanstack-query'
     | '/api/auth/$'
@@ -209,10 +237,13 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/(auth)'
+    | '/(dashboard)'
     | '/(auth)/forgot-password'
     | '/(auth)/login'
     | '/(auth)/reset-password'
     | '/(auth)/signup'
+    | '/(dashboard)/$chatId'
+    | '/(dashboard)/new'
     | '/demo/convex'
     | '/demo/tanstack-query'
     | '/api/auth/$'
@@ -229,6 +260,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   authRouteRoute: typeof authRouteRouteWithChildren
+  dashboardRouteRoute: typeof dashboardRouteRouteWithChildren
   DemoConvexRoute: typeof DemoConvexRoute
   DemoTanstackQueryRoute: typeof DemoTanstackQueryRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
@@ -244,6 +276,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/(dashboard)': {
+      id: '/(dashboard)'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof dashboardRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(auth)': {
       id: '/(auth)'
       path: ''
@@ -271,6 +310,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/demo/convex'
       preLoaderRoute: typeof DemoConvexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/(dashboard)/new': {
+      id: '/(dashboard)/new'
+      path: '/new'
+      fullPath: '/new'
+      preLoaderRoute: typeof dashboardNewRouteImport
+      parentRoute: typeof dashboardRouteRoute
+    }
+    '/(dashboard)/$chatId': {
+      id: '/(dashboard)/$chatId'
+      path: '/$chatId'
+      fullPath: '/$chatId'
+      preLoaderRoute: typeof dashboardChatIdRouteImport
+      parentRoute: typeof dashboardRouteRoute
     }
     '/(auth)/signup': {
       id: '/(auth)/signup'
@@ -384,9 +437,24 @@ const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
   authRouteRouteChildren,
 )
 
+interface dashboardRouteRouteChildren {
+  dashboardChatIdRoute: typeof dashboardChatIdRoute
+  dashboardNewRoute: typeof dashboardNewRoute
+}
+
+const dashboardRouteRouteChildren: dashboardRouteRouteChildren = {
+  dashboardChatIdRoute: dashboardChatIdRoute,
+  dashboardNewRoute: dashboardNewRoute,
+}
+
+const dashboardRouteRouteWithChildren = dashboardRouteRoute._addFileChildren(
+  dashboardRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   authRouteRoute: authRouteRouteWithChildren,
+  dashboardRouteRoute: dashboardRouteRouteWithChildren,
   DemoConvexRoute: DemoConvexRoute,
   DemoTanstackQueryRoute: DemoTanstackQueryRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,

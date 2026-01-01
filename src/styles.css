@@ -136,3 +136,7 @@ code {
     @apply bg-background text-foreground;
   }
 }
+
+.input-button {
+  @apply p-2 hover:bg-black/10 hover:ring-1 hover:ring-black/20 text-black rounded-full transition-all duration-300 ease-in-out;
+}
