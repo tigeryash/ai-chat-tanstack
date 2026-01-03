@@ -1,3 +1,4 @@
+import { useChat } from "@ai-sdk/react";
 import { Globe } from "lucide-react";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import { useLayoutEffect, useRef, useState } from "react";
@@ -28,7 +29,8 @@ export const Input = () => {
 	const [input, setInput] = useState("");
 	const [WebSearchEnabled, setWebSearchEnabled] = useState(false);
 	const [files, setFiles] = useState<FileObject[] | null>(null);
-
+	const { messages, sendMessage } = useChat();
+	console.log("Messages in Input component:", messages);
 	const isExpanded =
 		(files && files.length > 0) || input.includes("\n") || input.length > 120;
 
@@ -36,7 +38,9 @@ export const Input = () => {
 		e.preventDefault();
 		const trimmedInput = input.trim();
 		if (!trimmedInput) return;
-		console.log("Submitted input:", trimmedInput);
+
+		sendMessage({ text: trimmedInput });
+		setInput("");
 	};
 
 	const handleKeyDown = (e: React.KeyboardEvent) => {

@@ -14,6 +14,7 @@ import { Route as authRouteRouteImport } from './routes/(auth)/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DemoTanstackQueryRouteImport } from './routes/demo/tanstack-query'
 import { Route as DemoConvexRouteImport } from './routes/demo/convex'
+import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as dashboardNewRouteImport } from './routes/(dashboard)/new'
 import { Route as dashboardChatIdRouteImport } from './routes/(dashboard)/$chatId'
 import { Route as authSignupRouteImport } from './routes/(auth)/signup'
@@ -51,6 +52,11 @@ const DemoTanstackQueryRoute = DemoTanstackQueryRouteImport.update({
 const DemoConvexRoute = DemoConvexRouteImport.update({
   id: '/demo/convex',
   path: '/demo/convex',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const dashboardNewRoute = dashboardNewRouteImport.update({
@@ -137,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof authSignupRoute
   '/$chatId': typeof dashboardChatIdRoute
   '/new': typeof dashboardNewRoute
+  '/api/chat': typeof ApiChatRoute
   '/demo/convex': typeof DemoConvexRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -157,6 +164,7 @@ export interface FileRoutesByTo {
   '/signup': typeof authSignupRoute
   '/$chatId': typeof dashboardChatIdRoute
   '/new': typeof dashboardNewRoute
+  '/api/chat': typeof ApiChatRoute
   '/demo/convex': typeof DemoConvexRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -180,6 +188,7 @@ export interface FileRoutesById {
   '/(auth)/signup': typeof authSignupRoute
   '/(dashboard)/$chatId': typeof dashboardChatIdRoute
   '/(dashboard)/new': typeof dashboardNewRoute
+  '/api/chat': typeof ApiChatRoute
   '/demo/convex': typeof DemoConvexRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -202,6 +211,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/$chatId'
     | '/new'
+    | '/api/chat'
     | '/demo/convex'
     | '/demo/tanstack-query'
     | '/api/auth/$'
@@ -222,6 +232,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/$chatId'
     | '/new'
+    | '/api/chat'
     | '/demo/convex'
     | '/demo/tanstack-query'
     | '/api/auth/$'
@@ -244,6 +255,7 @@ export interface FileRouteTypes {
     | '/(auth)/signup'
     | '/(dashboard)/$chatId'
     | '/(dashboard)/new'
+    | '/api/chat'
     | '/demo/convex'
     | '/demo/tanstack-query'
     | '/api/auth/$'
@@ -261,6 +273,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   authRouteRoute: typeof authRouteRouteWithChildren
   dashboardRouteRoute: typeof dashboardRouteRouteWithChildren
+  ApiChatRoute: typeof ApiChatRoute
   DemoConvexRoute: typeof DemoConvexRoute
   DemoTanstackQueryRoute: typeof DemoTanstackQueryRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
@@ -309,6 +322,13 @@ declare module '@tanstack/react-router' {
       path: '/demo/convex'
       fullPath: '/demo/convex'
       preLoaderRoute: typeof DemoConvexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(dashboard)/new': {
@@ -455,6 +475,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   authRouteRoute: authRouteRouteWithChildren,
   dashboardRouteRoute: dashboardRouteRouteWithChildren,
+  ApiChatRoute: ApiChatRoute,
   DemoConvexRoute: DemoConvexRoute,
   DemoTanstackQueryRoute: DemoTanstackQueryRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,

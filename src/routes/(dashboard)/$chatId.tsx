@@ -1,9 +1,12 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { useChat } from "@ai-sdk/react";
+import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute('/(dashboard)/$chatId')({
-  component: RouteComponent,
-})
+export const Route = createFileRoute("/(dashboard)/$chatId")({
+	component: RouteComponent,
+});
 
 function RouteComponent() {
-  return <div>Hello "/(dashboard)/chatId"!</div>
+	const { messages } = useChat();
+
+	return <div>{!messages.length && "No messages yet."}</div>;
 }
