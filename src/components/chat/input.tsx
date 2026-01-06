@@ -1,4 +1,5 @@
 import { useChat } from "@ai-sdk/react";
+import { useLocation, useRouter } from "@tanstack/react-router";
 import { Globe } from "lucide-react";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import { useLayoutEffect, useRef, useState } from "react";
@@ -30,16 +31,34 @@ export const Input = () => {
 	const [WebSearchEnabled, setWebSearchEnabled] = useState(false);
 	const [files, setFiles] = useState<FileObject[] | null>(null);
 	const { messages, sendMessage } = useChat();
+
+	const router = useRouter();
+	const location = useLocation();
+
 	console.log("Messages in Input component:", messages);
 	const isExpanded =
 		(files && files.length > 0) || input.includes("\n") || input.length > 120;
 
-	const handleSubmit = (e: React.FormEvent, input: string) => {
+	const handleSubmit = async (e: React.FormEvent, input: string) => {
 		e.preventDefault();
 		const trimmedInput = input.trim();
 		if (!trimmedInput) return;
 
-		sendMessage({ text: trimmedInput });
+		if (location.pathname === "/new") {
+			try {
+				const chatId = await createChat({ title: trimmedInput.slice(0, 40) });
+
+				await router.navigate({
+					to: "/$chatId",
+					params: { chatId },
+				});
+			} catch (error) {
+				console.error("Error creating new chat:", error);
+			}
+		} else {
+			sendMessage({ text: trimmedInput });
+		}
+
 		setInput("");
 	};
 
