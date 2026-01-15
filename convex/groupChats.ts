@@ -199,7 +199,7 @@ export const inviteUser = mutation({
       )
       .first();
 
-    const isAdmin = participation?.role === "admin";
+    const isAdmin = participation?.role === "owner";
 
     if (!isOwner && !isAdmin) {
       throw new Error("Only owners and admins can invite users");
@@ -332,7 +332,7 @@ export const updateRole = mutation({
   args:  {
     conversationId: v.id("conversations"),
     userId: v.id("users"),
-    role: v.union(v.literal("admin"), v.literal("member")),
+    role: v.union(v.literal("owner"), v.literal("member") ),
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);

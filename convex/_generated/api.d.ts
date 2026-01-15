@@ -8,10 +8,19 @@
  * @module
  */
 
+import type * as activeSessions from "../activeSessions.js";
+import type * as attachments from "../attachments.js";
 import type * as auth from "../auth.js";
+import type * as branching from "../branching.js";
+import type * as conversations from "../conversations.js";
 import type * as email from "../email.js";
+import type * as groupChats from "../groupChats.js";
 import type * as http from "../http.js";
-import type * as todos from "../todos.js";
+import type * as lib_utils from "../lib/utils.js";
+import type * as messages from "../messages.js";
+import type * as sharing from "../sharing.js";
+import type * as usage from "../usage.js";
+import type * as users from "../users.js";
 
 import type {
   ApiFromModules,
@@ -20,10 +29,19 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  activeSessions: typeof activeSessions;
+  attachments: typeof attachments;
   auth: typeof auth;
+  branching: typeof branching;
+  conversations: typeof conversations;
   email: typeof email;
+  groupChats: typeof groupChats;
   http: typeof http;
-  todos: typeof todos;
+  "lib/utils": typeof lib_utils;
+  messages: typeof messages;
+  sharing: typeof sharing;
+  usage: typeof usage;
+  users: typeof users;
 }>;
 
 /**

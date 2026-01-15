@@ -117,10 +117,10 @@ export const search = query({
   args: { query: v.string() },
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
-    const searchTerm = args.query. toLowerCase();
+    const searchTerm = args.query.toLowerCase();
 
     // Get user's conversations
-    const conversations = await ctx. db
+    const conversations = await ctx.db
       .query("conversations")
       .withIndex("by_user_status", (q) =>
         q.eq("userId", user._id).eq("status", "active")
@@ -129,7 +129,7 @@ export const search = query({
 
     // Filter by title match
     const titleMatches = conversations.filter((c) =>
-      c.title?. toLowerCase().includes(searchTerm)
+      c.title?.toLowerCase().includes(searchTerm)
     );
 
     // For content search, we'd need to search messages
@@ -146,7 +146,7 @@ export const search = query({
         .take(100);
 
       const hasMatch = messages.some((m) =>
-        m.content?. toLowerCase().includes(searchTerm)
+        m.content?.toLowerCase().includes(searchTerm)
       );
 
       if (hasMatch) {
@@ -154,9 +154,9 @@ export const search = query({
       }
     }
 
-    return titleMatches. sort((a, b) => {
-      const aTime = a. lastMessageAt ?? a.updatedAt;
-      const bTime = b.lastMessageAt ?? b. updatedAt;
+    return titleMatches.sort((a, b) => {
+      const aTime = a.lastMessageAt ?? a.updatedAt;
+      const bTime = b.lastMessageAt ?? b.updatedAt;
       return bTime - aTime;
     });
   },
@@ -200,18 +200,18 @@ export const listPinned = query({
 export const create = mutation({
   args: {
     model: v.optional(v.string()),
-    modelProvider: v.optional(v. string()),
-    systemPrompt: v.optional(v. string()),
+    modelProvider: v.optional(v.string()),
+    systemPrompt: v.optional(v.string()),
     title: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
     const now = Date.now();
 
-    const conversationId = await ctx.db. insert("conversations", {
+    const conversationId = await ctx.db.insert("conversations", {
       userId: user._id,
       title: args.title,
-      model: args.model ??  user.preferences?. defaultModel,
+      model: args.model ??  user.preferences?.defaultModel,
       modelProvider: args.modelProvider,
       systemPrompt: args.systemPrompt,
       status: "active",

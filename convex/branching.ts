@@ -196,7 +196,7 @@ async function deactivateSubtree(ctx: any, messageId: Id<"messages">) {
 
   const children = await ctx.db
     . query("messages")
-    .withIndex("by_parent", (q) => q.eq("parentId", messageId))
+    .withIndex("by_parent", (q: any) => q.eq("parentId", messageId))
     .collect();
 
   for (const child of children) {
@@ -210,12 +210,12 @@ async function activateSubtree(ctx: any, messageId:  Id<"messages">) {
   // Find and activate the most recent active child
   const children = await ctx. db
     .query("messages")
-    .withIndex("by_parent", (q) => q.eq("parentId", messageId))
+    .withIndex("by_parent", (q: any) => q.eq("parentId", messageId))
     .collect();
 
   const activeChild = children
-    .filter((c) => !c.deletedAt)
-    .sort((a, b) => b.createdAt - a.createdAt)[0];
+    .filter((c: { deletedAt?: unknown }) => !c.deletedAt)
+    .sort((a: { createdAt: number }, b: { createdAt: number }) => b.createdAt - a.createdAt)[0];
 
   if (activeChild) {
     await activateSubtree(ctx, activeChild._id);

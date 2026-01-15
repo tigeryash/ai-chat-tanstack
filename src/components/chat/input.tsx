@@ -1,8 +1,10 @@
-import { useChat } from "@ai-sdk/react";
-import { useLocation, useRouter } from "@tanstack/react-router";
+import { useLocation, useParams, useRouter } from "@tanstack/react-router";
+import { useMutation } from "convex/react";
 import { Globe } from "lucide-react";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import { useLayoutEffect, useRef, useState } from "react";
+import { api } from "../../../convex/_generated/api";
+import type { Id } from "../../../convex/_generated/dataModel";
 import { AudioLines } from "../animate-ui/icons/audio-lines";
 import { AnimateIcon } from "../animate-ui/icons/icon";
 import { Send } from "../animate-ui/icons/send";
@@ -25,38 +27,84 @@ export type FileObject = {
 	type: string;
 	isProcessing?: boolean;
 };
+type InputProps = {
+	sendMessage?: (message: { text: string }) => void;
+};
 
-export const Input = () => {
+export const Input = ({ sendMessage }: InputProps) => {
 	const [input, setInput] = useState("");
-	const [WebSearchEnabled, setWebSearchEnabled] = useState(false);
+	const [webSearchEnabled, setWebSearchEnabled] = useState(false);
 	const [files, setFiles] = useState<FileObject[] | null>(null);
-	const { messages, sendMessage } = useChat();
+	const [isCreating, setIsCreating] = useState(false);
+
+	const params = useParams({ strict: false }) as { chatId?: string };
+	const chatId = params.chatId;
 
 	const router = useRouter();
 	const location = useLocation();
 
-	console.log("Messages in Input component:", messages);
+	const createConversation = useMutation(api.conversations.create);
+	const sendUserMessage = useMutation(api.messages.sendUserMessage);
+	const createAssistantMessage = useMutation(
+		api.messages.createAssistantMessage,
+	);
+
 	const isExpanded =
 		(files && files.length > 0) || input.includes("\n") || input.length > 120;
 
 	const handleSubmit = async (e: React.FormEvent, input: string) => {
 		e.preventDefault();
 		const trimmedInput = input.trim();
-		if (!trimmedInput) return;
-
+		if (!trimmedInput || isCreating) return;
 		if (location.pathname === "/new") {
 			try {
-				const chatId = await createChat({ title: trimmedInput.slice(0, 40) });
+				setIsCreating(true);
+
+				const conversationId = await createConversation({
+					title: trimmedInput.slice(0, 50),
+				});
+
+				// 2. Send the first user message
+				const userMessageId = await sendUserMessage({
+					conversationId,
+					content: trimmedInput,
+				});
+
+				// 3. Create placeholder for AI response
+				await createAssistantMessage({
+					conversationId,
+					parentId: userMessageId,
+					model: "glm-4.6v-flash",
+					modelProvider: "lmstudio",
+				});
+
+				// 4. Clear input and navigate
+				setInput("");
 
 				await router.navigate({
 					to: "/$chatId",
-					params: { chatId },
+					params: { chatId: conversationId },
 				});
 			} catch (error) {
 				console.error("Error creating new chat:", error);
+			} finally {
+				setIsCreating(false);
 			}
-		} else {
-			sendMessage({ text: trimmedInput });
+		} else if (chatId) {
+			// Existing chat - save to Convex and trigger AI
+			try {
+				await sendUserMessage({
+					conversationId: chatId as Id<"conversations">,
+					content: trimmedInput,
+				});
+
+				setInput("");
+
+				// Use sendMessage directly
+				sendMessage?.({ text: trimmedInput });
+			} catch (error) {
+				console.error("Error sending message:", error);
+			}
 		}
 
 		setInput("");
@@ -105,7 +153,7 @@ export const Input = () => {
 					<div className="flex space-x-2">
 						<FileInput setFiles={setFiles} />
 						<WebSearch
-							WebSearchEnabled={WebSearchEnabled}
+							webSearchEnabled={webSearchEnabled}
 							setWebSearchEnabled={setWebSearchEnabled}
 						/>
 						<DeepResearch />
@@ -177,10 +225,10 @@ const TextInput = ({ input, setInput, onKeyDown }: TextInputProps) => {
 };
 
 const WebSearch = ({
-	WebSearchEnabled,
+	webSearchEnabled: WebSearchEnabled,
 	setWebSearchEnabled,
 }: {
-	WebSearchEnabled: boolean;
+	webSearchEnabled: boolean;
 	setWebSearchEnabled: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
 	return (
