@@ -27,18 +27,29 @@ export type FileObject = {
 	type: string;
 	isProcessing?: boolean;
 };
+
 type InputProps = {
-	sendMessage?: (message: { text: string }) => void;
+	sendMessage?: (message: {
+		role: "user";
+		content: string;
+		parts: Array<{ type: "text"; text: string }>;
+	}) => void;
+	pendingAssistantIdRef?: React.MutableRefObject<Id<"messages"> | null>;
+	chatId?: string;
 };
 
-export const Input = ({ sendMessage }: InputProps) => {
+export const Input = ({
+	sendMessage,
+	pendingAssistantIdRef,
+	chatId: propChatId,
+}: InputProps) => {
 	const [input, setInput] = useState("");
 	const [webSearchEnabled, setWebSearchEnabled] = useState(false);
 	const [files, setFiles] = useState<FileObject[] | null>(null);
 	const [isCreating, setIsCreating] = useState(false);
 
 	const params = useParams({ strict: false }) as { chatId?: string };
-	const chatId = params.chatId;
+	const chatId = propChatId || params.chatId;
 
 	const router = useRouter();
 	const location = useLocation();
@@ -56,6 +67,7 @@ export const Input = ({ sendMessage }: InputProps) => {
 		e.preventDefault();
 		const trimmedInput = input.trim();
 		if (!trimmedInput || isCreating) return;
+
 		if (location.pathname === "/new") {
 			try {
 				setIsCreating(true);
@@ -64,52 +76,70 @@ export const Input = ({ sendMessage }: InputProps) => {
 					title: trimmedInput.slice(0, 50),
 				});
 
-				// 2. Send the first user message
+				// Send the first user message
 				const userMessageId = await sendUserMessage({
 					conversationId,
 					content: trimmedInput,
 				});
 
-				// 3. Create placeholder for AI response
-				await createAssistantMessage({
+				// Create placeholder for AI response
+				const assistantMessageId = await createAssistantMessage({
 					conversationId,
 					parentId: userMessageId,
-					model: "glm-4.6v-flash",
+					model: "openai/gpt-oss-20b",
 					modelProvider: "lmstudio",
 				});
 
-				// 4. Clear input and navigate
 				setInput("");
 
+				// Navigate with search params to trigger AI call
 				await router.navigate({
 					to: "/$chatId",
 					params: { chatId: conversationId },
+					search: {
+						initialMessage: trimmedInput,
+						assistantMessageId: assistantMessageId,
+					},
 				});
 			} catch (error) {
 				console.error("Error creating new chat:", error);
 			} finally {
 				setIsCreating(false);
 			}
-		} else if (chatId) {
-			// Existing chat - save to Convex and trigger AI
+		} else if (chatId && sendMessage) {
+			// Existing chat - save to Convex first, then trigger AI
 			try {
-				await sendUserMessage({
+				const userMessageId = await sendUserMessage({
 					conversationId: chatId as Id<"conversations">,
 					content: trimmedInput,
 				});
 
+				// Create assistant placeholder
+				const assistantMessageId = await createAssistantMessage({
+					conversationId: chatId as Id<"conversations">,
+					parentId: userMessageId,
+					model: "openai/gpt-oss-20b",
+					modelProvider: "lmstudio",
+				});
+
+				// Set the pending ID so onFinish can update it
+				if (pendingAssistantIdRef) {
+					pendingAssistantIdRef.current = assistantMessageId;
+				}
+
 				setInput("");
 
-				// Use sendMessage directly
-				sendMessage?.({ text: trimmedInput });
+				// Trigger AI call
+				sendMessage({
+					role: "user",
+					content: trimmedInput,
+					parts: [{ type: "text", text: trimmedInput }],
+				});
 			} catch (error) {
 				console.error("Error sending message:", error);
 			}
 		}
-
-		setInput("");
 	};
-
 	const handleKeyDown = (e: React.KeyboardEvent) => {
 		if (e.key === "Enter" && !e.shiftKey) {
 			handleSubmit(e, input);

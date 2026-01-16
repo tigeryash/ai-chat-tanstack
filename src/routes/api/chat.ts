@@ -7,7 +7,7 @@ const lmstudio = createOpenAICompatible({
 	baseURL: process.env.LMSTUDIO_BASE_URL || "http://localhost:1234/v1",
 });
 
-const model = lmstudio("zai-org/glm-4.6v-flash");
+const model = lmstudio("openai/gpt-oss-20b");
 
 export const Route = createFileRoute("/api/chat")({
 	server: {
