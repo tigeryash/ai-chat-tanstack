@@ -66,6 +66,7 @@
     "nodemailer": "^7.0.11",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-dropzone": "^14.3.8",
     "react-fast-marquee": "^1.6.5",
     "shiki": "^3.21.0",
     "streamdown": "^2.0.1",

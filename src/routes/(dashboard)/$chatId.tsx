@@ -134,11 +134,6 @@ function RouteComponent() {
 			hasSentInitialMessage.current = true;
 			pendingAssistantId.current = assistantMessageId as Id<"messages">;
 
-			console.log("Triggering initial AI call:", {
-				initialMessage,
-				assistantMessageId,
-			});
-
 			// Send to AI
 			sendMessage({
 				role: "user",
@@ -161,9 +156,9 @@ function RouteComponent() {
 	const isLoading = status === "submitted" || status === "streaming";
 
 	return (
-		<div className="flex flex-col h-full items-center pb-4">
+		<div className="flex flex-col h-full items-center pb-4 ">
 			<ChatHeader />
-			<div className="flex-1 overflow-auto w-full max-w-3xl">
+			<div className="flex-1 overflow-auto w-full">
 				{messages.length === 0 ? (
 					<div className="flex items-center justify-center h-full text-muted-foreground">
 						No messages yet.
