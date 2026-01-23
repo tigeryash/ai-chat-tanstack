@@ -20,7 +20,7 @@ const messagePartValidator = v.union(
       v.literal("input-streaming"),
       v.literal("input-available"),
       v.literal("output-available"),
-      v.literal("output-error")
+      v.literal("output-error"),
     ),
     input: v.any(),
     output: v.optional(v.any()),
@@ -55,20 +55,22 @@ const messagePartValidator = v.union(
     storageId: v.optional(v.id("_storage")),
     prompt: v.optional(v.string()),
     revisedPrompt: v.optional(v.string()),
-  })
+  }),
 );
 
 // ============================================================================
 // HELPERS
 // ============================================================================
 
-async function getCurrentUser(ctx:  any) {
+async function getCurrentUser(ctx: any) {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) throw new Error("Unauthenticated");
 
   const user = await ctx.db
     .query("users")
-    .withIndex("by_token", (q:  any) => q.eq("tokenIdentifier", identity.tokenIdentifier))
+    .withIndex("by_token", (q: any) =>
+      q.eq("tokenIdentifier", identity.tokenIdentifier),
+    )
     .first();
 
   if (!user) throw new Error("User not found");
@@ -78,7 +80,7 @@ async function getCurrentUser(ctx:  any) {
 async function verifyConversationAccess(
   ctx: any,
   conversationId: Id<"conversations">,
-  userId: Id<"users">
+  userId: Id<"users">,
 ) {
   const conversation = await ctx.db.get(conversationId);
   if (!conversation) throw new Error("Conversation not found");
@@ -88,14 +90,14 @@ async function verifyConversationAccess(
 
   // Check group chat participant
   if (conversation.isGroupChat) {
-    const participant = await ctx. db
+    const participant = await ctx.db
       .query("conversationParticipants")
-      .withIndex("by_user_conversation", (q:  any) =>
-        q.eq("userId", userId).eq("conversationId", conversationId)
+      .withIndex("by_user_conversation", (q: any) =>
+        q.eq("userId", userId).eq("conversationId", conversationId),
       )
       .first();
 
-    if (participant && !participant. leftAt) return conversation;
+    if (participant && !participant.leftAt) return conversation;
   }
 
   throw new Error("Access denied");
@@ -111,7 +113,7 @@ async function verifyConversationAccess(
  */
 export const list = query({
   args: {
-    conversationId: v. id("conversations"),
+    conversationId: v.id("conversations"),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
@@ -120,7 +122,9 @@ export const list = query({
 
     const user = await ctx.db
       .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
+      .withIndex("by_token", (q) =>
+        q.eq("tokenIdentifier", identity.tokenIdentifier),
+      )
       .first();
 
     if (!user) return [];
@@ -136,7 +140,7 @@ export const list = query({
         (await ctx.db
           .query("conversationParticipants")
           .withIndex("by_user_conversation", (q) =>
-            q.eq("userId", user._id).eq("conversationId", args.conversationId)
+            q.eq("userId", user._id).eq("conversationId", args.conversationId),
           )
           .first()));
 
@@ -145,14 +149,15 @@ export const list = query({
     const messages = await ctx.db
       .query("messages")
       .withIndex("by_conversation_created", (q) =>
-        q.eq("conversationId", args.conversationId)
+        q.eq("conversationId", args.conversationId),
       )
       .order("asc")
-      .take(args.limit ??  200);
+      .take(args.limit ?? 200);
 
     // Filter out deleted messages and only show active branch
     return messages.filter(
-      (m) => !m.deletedAt && (m.isActiveBranch === undefined || m.isActiveBranch)
+      (m) =>
+        !m.deletedAt && (m.isActiveBranch === undefined || m.isActiveBranch),
     );
   },
 });
@@ -167,9 +172,9 @@ export const listWithBranches = query({
     await verifyConversationAccess(ctx, args.conversationId, user._id);
 
     const messages = await ctx.db
-      . query("messages")
+      .query("messages")
       .withIndex("by_conversation_created", (q) =>
-        q.eq("conversationId", args. conversationId)
+        q.eq("conversationId", args.conversationId),
       )
       .order("asc")
       .collect();
@@ -187,21 +192,23 @@ export const getSiblings = query({
     const message = await ctx.db.get(args.messageId);
     if (!message) return [];
 
-    if (! message.parentId) {
+    if (!message.parentId) {
       // Root messages - get all root messages in conversation
       const rootMessages = await ctx.db
         .query("messages")
         .withIndex("by_conversation", (q) =>
-          q.eq("conversationId", message.conversationId)
+          q.eq("conversationId", message.conversationId),
         )
         .filter((q) => q.eq(q.field("parentId"), undefined))
         .collect();
 
-      return rootMessages.filter((m) => !m.deletedAt && m.role === message.role);
+      return rootMessages.filter(
+        (m) => !m.deletedAt && m.role === message.role,
+      );
     }
 
     // Get siblings with same parent
-    const siblings = await ctx. db
+    const siblings = await ctx.db
       .query("messages")
       .withIndex("by_parent", (q) => q.eq("parentId", message.parentId))
       .collect();
@@ -218,11 +225,11 @@ export const getSiblings = query({
  * Send a user message
  */
 export const sendUserMessage = mutation({
-  args:  {
+  args: {
     conversationId: v.id("conversations"),
     content: v.string(),
     parts: v.optional(v.array(messagePartValidator)),
-    parentId: v.optional(v. id("messages")),
+    parentId: v.optional(v.id("messages")),
     attachmentIds: v.optional(v.array(v.id("attachments"))),
   },
   handler: async (ctx, args) => {
@@ -232,14 +239,14 @@ export const sendUserMessage = mutation({
     const now = Date.now();
 
     // Build parts array
-    const parts = args. parts ?? [{ type: "text" as const, text: args.content }];
+    const parts = args.parts ?? [{ type: "text" as const, text: args.content }];
 
     // Handle branching - if parentId specified, calculate branch index
     let branchIndex = 0;
-    if (args. parentId) {
+    if (args.parentId) {
       const siblings = await ctx.db
         .query("messages")
-        .withIndex("by_parent", (q) => q.eq("parentId", args. parentId))
+        .withIndex("by_parent", (q) => q.eq("parentId", args.parentId))
         .collect();
 
       branchIndex = siblings.filter((s) => !s.deletedAt).length;
@@ -278,8 +285,8 @@ export const sendUserMessage = mutation({
 
     // Update conversation
     const conversation = await ctx.db.get(args.conversationId);
-    await ctx.db.patch(args. conversationId, {
-      messageCount: (conversation?.messageCount ??  0) + 1,
+    await ctx.db.patch(args.conversationId, {
+      messageCount: (conversation?.messageCount ?? 0) + 1,
       lastMessageAt: now,
       updatedAt: now,
     });
@@ -297,6 +304,8 @@ export const createAssistantMessage = mutation({
     parentId: v.id("messages"),
     model: v.string(),
     modelProvider: v.string(),
+    content: v.string(),
+    parts: v.array(messagePartValidator),
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
@@ -306,17 +315,17 @@ export const createAssistantMessage = mutation({
 
     // Calculate branch index
     const siblings = await ctx.db
-      . query("messages")
+      .query("messages")
       .withIndex("by_parent", (q) => q.eq("parentId", args.parentId))
       .collect();
 
     const branchIndex = siblings.filter(
-      (s) => !s.deletedAt && s.role === "assistant"
+      (s) => !s.deletedAt && s.role === "assistant",
     ).length;
 
     // Deactivate other assistant responses from same parent
     for (const sibling of siblings) {
-      if (sibling.role === "assistant" && sibling. isActiveBranch) {
+      if (sibling.role === "assistant" && sibling.isActiveBranch) {
         await ctx.db.patch(sibling._id, { isActiveBranch: false });
       }
     }
@@ -325,7 +334,7 @@ export const createAssistantMessage = mutation({
       conversationId: args.conversationId,
       userId: user._id,
       role: "assistant",
-      parts: [],
+      parts: args.parts,
       status: "pending",
       model: args.model,
       modelProvider: args.modelProvider,
@@ -353,8 +362,8 @@ export const updateAssistantMessage = mutation({
         v.literal("streaming"),
         v.literal("completed"),
         v.literal("failed"),
-        v.literal("cancelled")
-      )
+        v.literal("cancelled"),
+      ),
     ),
     finishReason: v.optional(
       v.union(
@@ -363,19 +372,19 @@ export const updateAssistantMessage = mutation({
         v.literal("tool-calls"),
         v.literal("content-filter"),
         v.literal("error"),
-        v.literal("cancelled")
-      )
+        v.literal("cancelled"),
+      ),
     ),
     usage: v.optional(
       v.object({
         promptTokens: v.number(),
-        completionTokens:  v.number(),
+        completionTokens: v.number(),
         totalTokens: v.number(),
         reasoningTokens: v.optional(v.number()),
-        cachedTokens: v.optional(v. number()),
-      })
+        cachedTokens: v.optional(v.number()),
+      }),
     ),
-    latencyMs: v.optional(v. number()),
+    latencyMs: v.optional(v.number()),
     hasToolCalls: v.optional(v.boolean()),
     toolCallIds: v.optional(v.array(v.string())),
   },
@@ -385,15 +394,17 @@ export const updateAssistantMessage = mutation({
 
     const now = Date.now();
 
-    await ctx.db.patch(args. messageId, {
+    await ctx.db.patch(args.messageId, {
       ...(args.parts && { parts: args.parts }),
       ...(args.content && { content: args.content }),
       ...(args.status && { status: args.status }),
       ...(args.finishReason && { finishReason: args.finishReason }),
-      ...(args.usage && { usage: args. usage }),
+      ...(args.usage && { usage: args.usage }),
       ...(args.latencyMs && { latencyMs: args.latencyMs }),
-      ...(args.hasToolCalls !== undefined && { hasToolCalls:  args.hasToolCalls }),
-      ...(args.toolCallIds && { toolCallIds: args. toolCallIds }),
+      ...(args.hasToolCalls !== undefined && {
+        hasToolCalls: args.hasToolCalls,
+      }),
+      ...(args.toolCallIds && { toolCallIds: args.toolCallIds }),
       updatedAt: now,
     });
 
@@ -402,7 +413,7 @@ export const updateAssistantMessage = mutation({
       const conversation = await ctx.db.get(message.conversationId);
       if (conversation) {
         await ctx.db.patch(message.conversationId, {
-          messageCount: (conversation.messageCount ??  0) + 1,
+          messageCount: (conversation.messageCount ?? 0) + 1,
           totalTokens: (conversation.totalTokens ?? 0) + args.usage.totalTokens,
           lastMessageAt: now,
           updatedAt: now,
@@ -436,7 +447,7 @@ export const editUserMessage = mutation({
 
     await ctx.db.patch(args.messageId, {
       content: args.content,
-      parts: args.parts ??  [{ type: "text", text: args.content }],
+      parts: args.parts ?? [{ type: "text", text: args.content }],
       originalContent,
       isEdited: true,
       editedAt: now,
@@ -452,7 +463,7 @@ export const editUserMessage = mutation({
  */
 export const addFeedback = mutation({
   args: {
-    messageId:  v.id("messages"),
+    messageId: v.id("messages"),
     rating: v.union(v.literal("positive"), v.literal("negative")),
     comment: v.optional(v.string()),
   },
@@ -465,13 +476,13 @@ export const addFeedback = mutation({
       throw new Error("Can only add feedback to assistant messages");
     }
 
-    await ctx.db.patch(args. messageId, {
-      feedback:  {
+    await ctx.db.patch(args.messageId, {
+      feedback: {
         rating: args.rating,
         comment: args.comment,
         feedbackAt: Date.now(),
       },
-      updatedAt:  Date.now(),
+      updatedAt: Date.now(),
     });
   },
 });
@@ -499,13 +510,13 @@ export const remove = mutation({
  * Cancel a streaming response
  */
 export const cancelStreaming = mutation({
-  args:  { messageId: v.id("messages") },
+  args: { messageId: v.id("messages") },
   handler: async (ctx, args) => {
     const message = await ctx.db.get(args.messageId);
     if (!message) throw new Error("Message not found");
 
     if (message.status === "streaming" || message.status === "pending") {
-      await ctx.db. patch(args.messageId, {
+      await ctx.db.patch(args.messageId, {
         status: "cancelled",
         finishReason: "cancelled",
         updatedAt: Date.now(),

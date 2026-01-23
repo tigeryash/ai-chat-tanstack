@@ -1,211 +1,175 @@
 import { useChat } from "@ai-sdk/react";
-import {
-	createFileRoute,
-	useNavigate,
-	useSearch,
-} from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
-import { useEffect, useRef } from "react";
-import { z } from "zod";
+import { useCallback, useEffect, useRef } from "react";
 import ChatHeader from "@/components/chat/chatstuff/chat-header";
 import MessagesList from "@/components/chat/chatstuff/messages-list";
 import { Input } from "@/components/chat/input";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 
-const searchSchema = z.object({
-	initialMessage: z.string().optional(),
-	assistantMessageId: z.string().optional(),
+export const Route = createFileRoute("/(dashboard)/$chatId")({
+  component: RouteComponent,
 });
 
-export const Route = createFileRoute("/(dashboard)/$chatId")({
-	component: RouteComponent,
-	validateSearch: (search) => searchSchema.parse(search),
-});
+function convertConvexPartsToAISDK(parts: any[]) {
+  return parts?.length
+    ? parts.map((p) => {
+        if (p.type === "text")
+          return { type: "text" as const, text: p.text, state: p.state };
+        if (p.type === "reasoning")
+          return { type: "reasoning" as const, text: p.text, state: p.state };
+        if (p.type === "step-start") return { type: "step-start" as const };
+        return p as any;
+      })
+    : [];
+}
+
+function convertAISDKPartsToConvex(parts: any[]) {
+  return (
+    parts
+      ?.map((part) => {
+        if (part.type === "text")
+          return {
+            type: "text" as const,
+            text: part.text,
+            state: "done" as const,
+          };
+        if (part.type === "reasoning")
+          return {
+            type: "reasoning" as const,
+            text: (part as any).text,
+            state: "done" as const,
+          };
+        if (part.type === "step-start") return { type: "step-start" as const };
+        return null;
+      })
+      .filter((part): part is any => part !== null) || []
+  );
+}
 
 function RouteComponent() {
-	const navigate = useNavigate();
-	const { chatId } = Route.useParams();
-	const { initialMessage, assistantMessageId } = useSearch({
-		from: "/(dashboard)/$chatId",
-	});
+  const { chatId } = Route.useParams();
 
-	const hasInitialized = useRef(false);
-	const hasSentInitialMessage = useRef(false);
-	const pendingAssistantId = useRef<Id<"messages"> | null>(null);
+  const hasInitialized = useRef(false);
+  const hasTriggeredInitialResponse = useRef(false);
 
-	const convexMessages = useQuery(api.messages.list, {
-		conversationId: chatId as Id<"conversations">,
-	});
+  const convexMessages = useQuery(api.messages.list, {
+    conversationId: chatId as Id<"conversations">,
+  });
+  const sendUserMessage = useMutation(api.messages.sendUserMessage);
+  const saveAssistantMessage = useMutation(api.messages.createAssistantMessage);
 
-	const updateAssistantMessage = useMutation(
-		api.messages.updateAssistantMessage,
-	);
+  const { messages, sendMessage, status, setMessages } = useChat({
+    id: chatId,
+    onFinish: async ({ message, messages }) => {
+      if (message.role === "assistant") {
+        const textContent =
+          message.parts
+            ?.filter(
+              (p): p is { type: "text"; text: string } => p.type === "text",
+            )
+            .map((p) => p.text)
+            .join("") || "";
 
-	const { messages, sendMessage, status, setMessages } = useChat({
-		id: chatId,
-		onFinish: async ({ message }) => {
-			if (message.role === "assistant" && pendingAssistantId.current) {
-				// Extract text content for the content field
-				const textContent =
-					message.parts
-						?.filter(
-							(p): p is { type: "text"; text: string } => p.type === "text",
-						)
-						.map((p) => p.text)
-						.join("") || "";
+        const convexParts = convertAISDKPartsToConvex(message.parts || []);
 
-				// Convert parts to match Convex schema, filtering out unsupported types
-				const convexParts =
-					message.parts
-						?.map((part) => {
-							if (part.type === "text") {
-								return {
-									type: "text" as const,
-									text: part.text,
-									state: "done" as const,
-								};
-							}
-							if (part.type === "reasoning") {
-								return {
-									type: "reasoning" as const,
-									text: (part as { type: "reasoning"; text: string }).text,
-									state: "done" as const,
-								};
-							}
-							if (part.type === "step-start") {
-								return { type: "step-start" as const };
-							}
-							// Filter out unsupported part types
-							return null;
-						})
-						.filter(
-							(
-								part,
-							): part is
-								| { type: "text"; text: string; state: "done" }
-								| { type: "reasoning"; text: string; state: "done" }
-								| { type: "step-start" } => part !== null,
-						) || [];
+        // Get last user message as parent
+        const lastUserMessage = messages
+          ?.slice()
+          .reverse()
+          .find((m) => m.role === "user");
+        console.log(lastUserMessage);
 
-				await updateAssistantMessage({
-					messageId: pendingAssistantId.current,
-					content: textContent,
-					parts: convexParts,
-					status: "completed",
-				});
-				pendingAssistantId.current = null;
-			}
-		},
-	});
+        // Save completed assistant message to Convex
 
-	// Sync Convex messages to useChat on initial load
-	useEffect(() => {
-		if (
-			convexMessages &&
-			convexMessages.length > 0 &&
-			!hasInitialized.current
-		) {
-			hasInitialized.current = true;
-			setMessages(
-				convexMessages.map((msg) => ({
-					id: msg._id,
-					role: msg.role as "user" | "assistant",
-					content: msg.content || "",
-					parts: msg.parts?.length
-						? msg.parts.map((p) => {
-								if (p.type === "text")
-									return {
-										type: "text" as const,
-										text: p.text,
-										state: p.state,
-									};
-								if (p.type === "reasoning")
-									return {
-										type: "reasoning" as const,
-										text: p.text,
-										state: p.state,
-									};
-								if (p.type === "step-start")
-									return { type: "step-start" as const };
-								return p as any;
-							})
-						: [{ type: "text" as const, text: msg.content || "" }],
-				})),
-			);
-		}
-	}, [convexMessages, setMessages]);
+        if (lastUserMessage?.id) {
+          await saveAssistantMessage({
+            conversationId: chatId as Id<"conversations">,
+            parentId: lastUserMessage.id as Id<"messages">,
+            content: textContent,
+            parts: convexParts,
+            model: "glm-4.6v-flash",
+            modelProvider: "lmstudio",
+          });
+        } else {
+          console.error(
+            "Cannot save assistant message: no parent user message found",
+          );
+        }
+      }
+    },
+  });
+  //this causes the messages for useChat to save the first user message.
+  useEffect(() => {
+    if (convexMessages && !hasInitialized.current) {
+      hasInitialized.current = true;
+      if (convexMessages.length === 1 && convexMessages[0]?.role === "user") {
+        sendMessage({
+          role: "user",
+          parts: [{ type: "text", text: convexMessages[0].content || "" }],
+        });
+      } else if (convexMessages.length > 1) {
+        setMessages(
+          convexMessages.map((msg) => ({
+            id: msg._id,
+            role: msg.role as "user" | "assistant",
+            content: msg.content || "",
+            parts: convertConvexPartsToAISDK(msg.parts || []),
+          })),
+        );
+      }
+    }
+  }, [convexMessages, setMessages, sendMessage]);
 
-	// Trigger AI call for initial message from /new route
-	useEffect(() => {
-		// Only trigger if we have the search params AND messages are initialized AND status is ready
-		const isAwaitingFirstResponse = convexMessages?.every(
-			(msg) => msg.role !== "assistant" || !msg.content,
-		);
+  const handleSubmit = useCallback(
+    async (userMessage: string) => {
+      try {
+        const lastMessage = convexMessages?.[convexMessages.length - 1];
 
-		if (
-			convexMessages &&
-			initialMessage &&
-			assistantMessageId &&
-			hasInitialized.current &&
-			!hasSentInitialMessage.current &&
-			status === "ready" &&
-			isAwaitingFirstResponse
-		) {
-			hasSentInitialMessage.current = true;
-			pendingAssistantId.current = assistantMessageId as Id<"messages">;
+        // Save user message to Convex
+        await sendUserMessage({
+          conversationId: chatId as Id<"conversations">,
+          content: userMessage,
+          parts: [{ type: "text", text: userMessage }],
+          parentId: lastMessage?._id,
+        });
 
-			// Send to AI
-			sendMessage({
-				role: "user",
-				parts: [{ type: "text", text: initialMessage }],
-			});
+        // Trigger AI response (assistant will be saved in onFinish)
+        sendMessage({
+          role: "user",
+          parts: [{ type: "text", text: userMessage }],
+        });
+      } catch (error) {
+        console.error("Failed to send message:", error);
+      }
+    },
+    [chatId, convexMessages, sendUserMessage, sendMessage],
+  );
 
-			navigate({
-				from: Route.fullPath,
-				search: {},
-				replace: true,
-			});
-		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [
-		initialMessage,
-		assistantMessageId,
-		status,
-		sendMessage,
-		convexMessages,
-		navigate,
-	]);
+  useEffect(() => {
+    console.log("ChatId changed, resetting state", chatId);
+    return () => {
+      hasInitialized.current = false;
+      hasTriggeredInitialResponse.current = false;
+    };
+  }, [chatId]);
 
-	// Reset refs when chatId changes
-	useEffect(() => {
-		return () => {
-			console.log(`Resetting session state for chat: ${chatId}`);
-			hasInitialized.current = false;
-			hasSentInitialMessage.current = false;
-			pendingAssistantId.current = null;
-		};
-	}, [chatId]);
+  const isLoading = status === "submitted" || status === "streaming";
 
-	const isLoading = status === "submitted" || status === "streaming";
-
-	return (
-		<div className="flex flex-col h-full items-center pb-4 ">
-			<ChatHeader />
-			<div className="flex-1 overflow-auto w-full">
-				{messages.length === 0 ? (
-					<div className="flex items-center justify-center h-full text-muted-foreground">
-						No messages yet.
-					</div>
-				) : (
-					<MessagesList messages={messages} />
-				)}
-			</div>
-			<Input
-				sendMessage={sendMessage}
-				pendingAssistantIdRef={pendingAssistantId}
-				chatId={chatId}
-			/>
-		</div>
-	);
+  return (
+    <div className="flex flex-col h-full items-center pb-4 ">
+      <ChatHeader />
+      <div className="flex-1 overflow-auto w-full">
+        {messages.length === 0 ? (
+          <div className="flex items-center justify-center h-full text-muted-foreground">
+            No messages yet.
+          </div>
+        ) : (
+          <MessagesList messages={messages} />
+        )}
+      </div>
+      <Input onSubmit={handleSubmit} isLoading={isLoading} />
+    </div>
+  );
 }
