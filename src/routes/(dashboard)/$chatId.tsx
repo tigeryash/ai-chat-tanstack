@@ -1,22 +1,30 @@
 import { useChat } from "@ai-sdk/react";
-import { createFileRoute, useSearch } from "@tanstack/react-router";
+import {
+	createFileRoute,
+	useNavigate,
+	useSearch,
+} from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
 import { useEffect, useRef } from "react";
+import { z } from "zod";
 import ChatHeader from "@/components/chat/chatstuff/chat-header";
 import MessagesList from "@/components/chat/chatstuff/messages-list";
 import { Input } from "@/components/chat/input";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 
+const searchSchema = z.object({
+	initialMessage: z.string().optional(),
+	assistantMessageId: z.string().optional(),
+});
+
 export const Route = createFileRoute("/(dashboard)/$chatId")({
 	component: RouteComponent,
-	validateSearch: (search: Record<string, unknown>) => ({
-		initialMessage: search.initialMessage as string | undefined,
-		assistantMessageId: search.assistantMessageId as string | undefined,
-	}),
+	validateSearch: (search) => searchSchema.parse(search),
 });
 
 function RouteComponent() {
+	const navigate = useNavigate();
 	const { chatId } = Route.useParams();
 	const { initialMessage, assistantMessageId } = useSearch({
 		from: "/(dashboard)/$chatId",
@@ -61,7 +69,7 @@ function RouteComponent() {
 							if (part.type === "reasoning") {
 								return {
 									type: "reasoning" as const,
-									text: (part as any).text,
+									text: (part as { type: "reasoning"; text: string }).text,
 									state: "done" as const,
 								};
 							}
@@ -107,9 +115,17 @@ function RouteComponent() {
 					parts: msg.parts?.length
 						? msg.parts.map((p) => {
 								if (p.type === "text")
-									return { type: "text" as const, text: p.text };
+									return {
+										type: "text" as const,
+										text: p.text,
+										state: p.state,
+									};
 								if (p.type === "reasoning")
-									return { type: "reasoning" as const, text: p.text };
+									return {
+										type: "reasoning" as const,
+										text: p.text,
+										state: p.state,
+									};
 								if (p.type === "step-start")
 									return { type: "step-start" as const };
 								return p as any;
@@ -123,13 +139,18 @@ function RouteComponent() {
 	// Trigger AI call for initial message from /new route
 	useEffect(() => {
 		// Only trigger if we have the search params AND messages are initialized AND status is ready
+		const isAwaitingFirstResponse = convexMessages?.every(
+			(msg) => msg.role !== "assistant" || !msg.content,
+		);
+
 		if (
 			convexMessages &&
 			initialMessage &&
 			assistantMessageId &&
 			hasInitialized.current &&
 			!hasSentInitialMessage.current &&
-			status === "ready"
+			status === "ready" &&
+			isAwaitingFirstResponse
 		) {
 			hasSentInitialMessage.current = true;
 			pendingAssistantId.current = assistantMessageId as Id<"messages">;
@@ -139,9 +160,22 @@ function RouteComponent() {
 				role: "user",
 				parts: [{ type: "text", text: initialMessage }],
 			});
+
+			navigate({
+				from: Route.fullPath,
+				search: {},
+				replace: true,
+			});
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [initialMessage, assistantMessageId, status, sendMessage, convexMessages]);
+	}, [
+		initialMessage,
+		assistantMessageId,
+		status,
+		sendMessage,
+		convexMessages,
+		navigate,
+	]);
 
 	// Reset refs when chatId changes
 	useEffect(() => {
