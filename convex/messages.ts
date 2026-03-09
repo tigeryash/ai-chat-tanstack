@@ -335,7 +335,7 @@ export const createAssistantMessage = mutation({
       userId: user._id,
       role: "assistant",
       parts: args.parts,
-      status: "pending",
+      status: "pending" as const,
       model: args.model,
       modelProvider: args.modelProvider,
       parentId: args.parentId,
