@@ -66,42 +66,46 @@ function RouteComponent() {
 		onFinish: async ({ message, messages }) => {
 			if (message.role !== "assistant") return;
 
-        	try {
-            const parentId =
-                (messages
-                    .slice()
-                    .reverse()
-                    .find((m) => m.role === "user")?.id as Id<"messages"> | undefined) ??
-                lastUserMessageIdRef.current;
+			try {
+				const parentId =
+					(messages
+						.slice()
+						.reverse()
+						.find((m) => m.role === "user")?.id as
+						| Id<"messages">
+						| undefined) ?? lastUserMessageIdRef.current;
 
-            if (!parentId) {
-                console.error("Cannot save assistant message: no parent user message found");
-                return;
-            }
+				if (!parentId) {
+					console.error(
+						"Cannot save assistant message: no parent user message found",
+					);
+					return;
+				}
 
-            const textContent =
-                message.parts
-                    ?.filter(
-                        (p): p is { type: "text"; text: string; state: "done" } => p.type === "text",
-                    )
-                    .map((p) => p.text)
-                    .join("") || "";
-					console.log(textContent)
+				const textContent =
+					message.parts
+						?.filter(
+							(p): p is { type: "text"; text: string; state: "done" } =>
+								p.type === "text",
+						)
+						.map((p) => p.text)
+						.join("") || "";
+				console.log(textContent);
 
-            const convexParts = convertAISDKPartsToConvex(message.parts || []);
+				const convexParts = convertAISDKPartsToConvex(message.parts || []);
 
-            await saveAssistantMessage({
-                conversationId: chatId as Id<"conversations">,
-                parentId,
-                content: textContent,
-                parts: convexParts,
-                model: "glm-4.6v-flash",
-                modelProvider: "lmstudio",
-            });
-        } catch (error) {
-            console.error("Failed to save assistant message:", error);
-        }
-    },
+				await saveAssistantMessage({
+					conversationId: chatId as Id<"conversations">,
+					parentId,
+					content: textContent,
+					parts: convexParts,
+					model: "glm-4.6v-flash",
+					modelProvider: "lmstudio",
+				});
+			} catch (error) {
+				console.error("Failed to save assistant message:", error);
+			}
+		},
 	});
 	//this causes the messages for useChat to save the first user message.
 	useEffect(() => {
@@ -129,27 +133,27 @@ function RouteComponent() {
 	const handleSubmit = useCallback(
 		async (userMessage: string) => {
 			try {
-				 const lastMessage = convexMessages?.[convexMessages.length - 1];
+				const lastMessage = convexMessages?.[convexMessages.length - 1];
 
-            // 1) Save user message in Convex first
-            const userMessageId = await sendUserMessage({
-                conversationId: chatId as Id<"conversations">,
-                content: userMessage,
-                parts: [{ type: "text", text: userMessage }],
-                parentId: lastMessage?._id,
-            });
+				// 1) Save user message in Convex first
+				const userMessageId = await sendUserMessage({
+					conversationId: chatId as Id<"conversations">,
+					content: userMessage,
+					parts: [{ type: "text", text: userMessage }],
+					parentId: lastMessage?._id,
+				});
 
-            lastUserMessageIdRef.current = userMessageId;
+				lastUserMessageIdRef.current = userMessageId;
 
-            // 2) Trigger AI response, carrying Convex id into useChat message
-            sendMessage({
-                id: userMessageId as string,
-                role: "user",
-                parts: [{ type: "text", text: userMessage }],
-            });
-        } catch (error) {
-            console.error("Failed to send message:", error);
-        }
+				// 2) Trigger AI response, carrying Convex id into useChat message
+				sendMessage({
+					id: userMessageId as string,
+					role: "user",
+					parts: [{ type: "text", text: userMessage }],
+				});
+			} catch (error) {
+				console.error("Failed to send message:", error);
+			}
 		},
 		[chatId, convexMessages, sendUserMessage, sendMessage],
 	);

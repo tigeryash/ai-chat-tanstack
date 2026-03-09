@@ -35,26 +35,26 @@ function RouteComponent() {
 		if (!result.success) {
 			return {
 				errors: result.error.flatten().fieldErrors,
-			}
+			};
 		}
 
 		const { error } = await authClient.signIn.email({
 			email: result.data.email,
 			password: result.data.password,
-		})
+		});
 
 		if (error) {
 			return {
 				errors: { form: [error.message || "Login failed"] },
-			}
+			};
 		}
 
 		await router.navigate({ to: "/new" });
 
 		return {
 			errors: {},
-		}
-	}
+		};
+	};
 	useGSAP(
 		() => {
 			gsap.fromTo(
@@ -71,10 +71,10 @@ function RouteComponent() {
 					ease: "power2.inOut",
 					delay: 0.1,
 				},
-			)
+			);
 		},
 		{ scope: formRef },
-	)
+	);
 	return (
 		<Form
 			ref={formRef}
@@ -122,5 +122,5 @@ function RouteComponent() {
 				Login
 			</button>
 		</Form>
-	)
+	);
 }
