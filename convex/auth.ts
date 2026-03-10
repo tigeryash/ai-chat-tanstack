@@ -6,17 +6,18 @@ import { query } from './_generated/server'
 import type { GenericCtx } from '@convex-dev/better-auth'
 import type { DataModel } from './_generated/dataModel'
 import { sendEmail } from "./email";
-
+import authConfig from "./auth.config";
 
 const siteUrl = process.env.SITE_URL!
 
 export const authComponent = createClient<DataModel>(components.betterAuth)
+
+
 export const createAuth = (
   ctx: GenericCtx<DataModel>,
   { optionsOnly } = { optionsOnly: false },
 ) => {
   return betterAuth({
-  
     logger: {
       disabled: optionsOnly,
     },
@@ -76,10 +77,8 @@ export const createAuth = (
         clientSecret: process.env.DISCORD_CLIENT_SECRET as string,
       },
     },
-    plugins: [
-      convex(),
-    ],
-  })
+    plugins: [convex({ authConfig, jwksRotateOnTokenGenerationError: true, })],
+  }) 
 }
 export const getCurrentUser = query({
   args: {},

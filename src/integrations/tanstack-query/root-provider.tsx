@@ -7,7 +7,9 @@ if (!CONVEX_URL) {
 }
 
 export function getContext() {
-	const convexQueryClient = new ConvexQueryClient(CONVEX_URL);
+	const convexQueryClient = new ConvexQueryClient(CONVEX_URL, {
+		expectAuth: true,
+	});
 
 	const queryClient = new QueryClient({
 		defaultOptions: {
