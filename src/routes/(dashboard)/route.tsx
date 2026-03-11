@@ -44,7 +44,7 @@ const DashboardLayout = () => {
 
 export const Route = createFileRoute("/(dashboard)")({
 	beforeLoad: ({ context }) => {
-		if (!context.userId) {
+		if (!context.isAuthenticated) {
 			throw redirect({ to: "/login" });
 		}
 	},

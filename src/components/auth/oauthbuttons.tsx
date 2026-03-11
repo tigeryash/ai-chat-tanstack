@@ -33,6 +33,7 @@ const OAuthButtons = () => {
 	const handleProviderSignIn = async (provider: string) => {
 		await authClient.signIn.social({
 			provider: provider as "google" | "github" | "discord",
+			callbackURL: `/new`,
 		});
 	};
 

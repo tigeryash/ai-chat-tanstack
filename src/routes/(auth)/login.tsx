@@ -9,7 +9,7 @@ import { authClient } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/(auth)/login")({
 	beforeLoad: ({ context }) => {
-		if (context.userId) {
+		if (context.isAuthenticated) {
 			throw redirect({ to: "/new" });
 		}
 	},
