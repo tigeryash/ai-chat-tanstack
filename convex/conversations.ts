@@ -1,22 +1,41 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-import { Id } from "./_generated/dataModel";
+import { getConversationIfAccessible, getCurrentUser, getCurrentUserOrNull } from "./authHelpers";
 
-// ============================================================================
-// HELPERS
-// ============================================================================
+const conversationSettingsValidator = v.object({
+  temperature: v.optional(v.number()),
+  maxTokens: v.optional(v.number()),
+  topP: v.optional(v.number()),
+  reasoningEffort: v.optional(
+    v.union(v.literal("low"), v.literal("medium"), v.literal("high"))
+  ),
+  webSearchEnabled: v.optional(v.boolean()),
+  deepResearchEnabled: v.optional(v.boolean()),
+  contextWindow: v.optional(v.number()),
+  metadata: v.optional(v.any()),
+});
 
-async function getCurrentUser(ctx:  any) {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) throw new Error("Unauthenticated");
+async function removeConversationFromActiveSessions(ctx: any, conversationId: any) {
+  const sessions = await ctx.db.query("activeChatSessions").collect();
 
-  const user = await ctx.db
-    .query("users")
-    .withIndex("by_token", (q:  any) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-    .first();
+  for (const session of sessions) {
+    if (!session.conversationIds.includes(conversationId)) {
+      continue;
+    }
 
-  if (!user) throw new Error("User not found");
-  return user;
+    const nextConversationIds = session.conversationIds.filter(
+      (id: any) => id !== conversationId,
+    );
+
+    await ctx.db.patch(session._id, {
+      conversationIds: nextConversationIds,
+      focusedConversationId:
+        session.focusedConversationId === conversationId
+          ? nextConversationIds[nextConversationIds.length - 1]
+          : session.focusedConversationId,
+      updatedAt: Date.now(),
+    });
+  }
 }
 
 // ============================================================================
@@ -33,14 +52,7 @@ export const list = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return [];
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-      .first();
-
+    const user = await getCurrentUserOrNull(ctx);
     if (!user) return [];
 
     const status = args.status ??  "active";
@@ -68,45 +80,10 @@ export const list = query({
 export const get = query({
   args: { id: v.id("conversations") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return null;
-
-    const conversation = await ctx.db. get(args.id);
-    if (!conversation) return null;
-
-    // Check access - owner or participant
-    const user = await ctx.db
-      . query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-      .first();
-
+    const user = await getCurrentUserOrNull(ctx);
     if (!user) return null;
 
-    // Direct owner
-    if (conversation.userId === user._id) {
-      return conversation;
-    }
-
-    // Group chat participant
-    if (conversation.isGroupChat) {
-      const participant = await ctx. db
-        .query("conversationParticipants")
-        .withIndex("by_user_conversation", (q) =>
-          q.eq("userId", user._id).eq("conversationId", args.id)
-        )
-        .first();
-
-      if (participant && ! participant.leftAt) {
-        return conversation;
-      }
-    }
-
-    // Shared conversation (read-only access)
-    if (conversation.isShared) {
-      return conversation;
-    }
-
-    return null;
+    return await getConversationIfAccessible(ctx, args.id, user._id);
   },
 });
 
@@ -168,14 +145,7 @@ export const search = query({
 export const listPinned = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return [];
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-      .first();
-
+    const user = await getCurrentUserOrNull(ctx);
     if (!user) return [];
 
     const conversations = await ctx.db
@@ -202,6 +172,7 @@ export const create = mutation({
     model: v.optional(v.string()),
     modelProvider: v.optional(v.string()),
     systemPrompt: v.optional(v.string()),
+    settings: v.optional(conversationSettingsValidator),
     title: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -212,8 +183,9 @@ export const create = mutation({
       userId: user._id,
       title: args.title,
       model: args.model ??  user.preferences?.defaultModel,
-      modelProvider: args.modelProvider,
+      modelProvider: args.modelProvider ?? user.preferences?.defaultModelProvider,
       systemPrompt: args.systemPrompt,
+      settings: args.settings,
       status: "active",
       messageCount: 0,
       createdAt: now,
@@ -255,6 +227,7 @@ export const updateModel = mutation({
     id: v.id("conversations"),
     model: v.string(),
     modelProvider: v.string(),
+    settings: v.optional(conversationSettingsValidator),
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
@@ -267,7 +240,31 @@ export const updateModel = mutation({
     await ctx.db.patch(args.id, {
       model: args.model,
       modelProvider: args.modelProvider,
+      ...(args.settings !== undefined && { settings: args.settings }),
       updatedAt:  Date.now(),
+    });
+  },
+});
+
+/**
+ * Update conversation runtime settings
+ */
+export const updateSettings = mutation({
+  args: {
+    id: v.id("conversations"),
+    settings: conversationSettingsValidator,
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUser(ctx);
+    const conversation = await ctx.db.get(args.id);
+
+    if (!conversation || conversation.userId !== user._id) {
+      throw new Error("Conversation not found");
+    }
+
+    await ctx.db.patch(args.id, {
+      settings: args.settings,
+      updatedAt: Date.now(),
     });
   },
 });
@@ -349,6 +346,8 @@ export const remove = mutation({
       status: "deleted",
       updatedAt: Date.now(),
     });
+
+    await removeConversationFromActiveSessions(ctx, args.id);
   },
 });
 
@@ -401,6 +400,8 @@ export const permanentDelete = mutation({
 
     // Delete conversation
     await ctx.db.delete(args.id);
+
+    await removeConversationFromActiveSessions(ctx, args.id);
   },
 });
 
@@ -413,8 +414,12 @@ export const generateTitle = mutation({
     title: v.string(),
   },
   handler: async (ctx, args) => {
+    const user = await getCurrentUser(ctx);
     const conversation = await ctx.db.get(args.id);
     if (!conversation) return;
+    if (conversation.userId !== user._id) {
+      throw new Error("Access denied");
+    }
 
     // Only set title if not already set
     if (!conversation. title) {

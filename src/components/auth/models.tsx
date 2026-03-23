@@ -17,7 +17,6 @@ import { useMemo, useRef, useState } from "react";
 import {
 	Marquee,
 	MarqueeContent,
-	MarqueeFade,
 	MarqueeItem,
 } from "@/components/ui/shadcn-io/marquee";
 

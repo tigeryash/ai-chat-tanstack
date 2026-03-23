@@ -4,6 +4,8 @@ import { useState } from "react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 
+const model = "qwen/qwen3.5-9b";
+
 export const useChatMessages = () => {
 	const [isCreating, setIsCreating] = useState(false);
 	const [error, setError] = useState<Error | null>(null);
@@ -31,7 +33,7 @@ export const useChatMessages = () => {
 			const assistantMessageId = await createAssistantMessage({
 				conversationId,
 				parentId: userMessageId,
-				model: "zai-org/glm-4.6v-flash",
+				model: model,
 				modelProvider: "lmstudio",
 			});
 
@@ -66,7 +68,7 @@ export const useChatMessages = () => {
 			const assistantMessageId = await createAssistantMessage({
 				conversationId,
 				parentId: userMessageId,
-				model: "zai-org/glm-4.6v-flash",
+				model: model,
 				modelProvider: "lmstudio",
 			});
 

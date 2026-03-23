@@ -1,23 +1,7 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
-
-// ============================================================================
-// HELPERS
-// ============================================================================
-
-async function getCurrentUser(ctx: any) {
-  const identity = await ctx. auth.getUserIdentity();
-  if (!identity) throw new Error("Unauthenticated");
-
-  const user = await ctx.db
-    .query("users")
-    .withIndex("by_token", (q: any) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-    .first();
-
-  if (!user) throw new Error("User not found");
-  return user;
-}
+import { getCurrentUser, getCurrentUserOrNull, requireMessageAccess } from "./authHelpers";
 
 // ============================================================================
 // QUERIES
@@ -29,7 +13,10 @@ async function getCurrentUser(ctx: any) {
 export const getBranchInfo = query({
   args: { messageId: v. id("messages") },
   handler: async (ctx, args) => {
-    const message = await ctx.db.get(args.messageId);
+    const user = await getCurrentUserOrNull(ctx);
+    if (!user) return null;
+
+    const message = await requireMessageAccess(ctx, args.messageId, user._id);
     if (!message) return null;
 
     // Get all siblings
@@ -95,7 +82,7 @@ export const switchBranch = mutation({
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
-    const message = await ctx. db.get(args.messageId);
+    const message = await requireMessageAccess(ctx, args.messageId, user._id);
 
     if (!message) throw new Error("Message not found");
 
@@ -141,7 +128,7 @@ export const createBranch = mutation({
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
-    const parentMessage = await ctx.db.get(args.parentId);
+    const parentMessage = await requireMessageAccess(ctx, args.parentId, user._id);
 
     if (!parentMessage) throw new Error("Parent message not found");
 

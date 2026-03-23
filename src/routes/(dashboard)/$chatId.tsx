@@ -1,51 +1,78 @@
 import { useChat } from "@ai-sdk/react";
 import { createFileRoute } from "@tanstack/react-router";
+import type { UIMessage } from "ai";
 import { useMutation, useQuery } from "convex/react";
 import { useCallback, useEffect, useRef } from "react";
 import ChatHeader from "@/components/chat/chatstuff/chat-header";
 import MessagesList from "@/components/chat/chatstuff/messages-list";
 import { Input } from "@/components/chat/input";
 import { api } from "../../../convex/_generated/api";
-import type { Id } from "../../../convex/_generated/dataModel";
+import type { Doc, Id } from "../../../convex/_generated/dataModel";
 
 export const Route = createFileRoute("/(dashboard)/$chatId")({
 	component: RouteComponent,
 });
 
-function convertConvexPartsToAISDK(parts: any[]) {
-	return parts?.length
-		? parts.map((p) => {
-				if (p.type === "text")
-					return { type: "text" as const, text: p.text, state: p.state };
-				if (p.type === "reasoning")
-					return { type: "reasoning" as const, text: p.text, state: p.state };
-				if (p.type === "step-start") return { type: "step-start" as const };
-				return p as any;
-			})
+const model = "qwen/qwen3.5-9b";
+
+type AISDKPart = UIMessage["parts"][number];
+type ConvexMessagePart = Doc<"messages">["parts"][number];
+type TextPart = Extract<AISDKPart, { type: "text" }>;
+type ReasoningPart = Extract<AISDKPart, { type: "reasoning" }>;
+type StepStartPart = Extract<AISDKPart, { type: "step-start" }>;
+
+function convertConvexPartToAISDK(part: ConvexMessagePart): AISDKPart | null {
+	switch (part.type) {
+		case "text":
+			return {
+				type: "text",
+				text: part.text,
+				state: part.state,
+			} satisfies TextPart;
+		case "reasoning":
+			return {
+				type: "reasoning",
+				text: part.text,
+				state: part.state,
+			} satisfies ReasoningPart;
+		case "step-start":
+			return { type: "step-start" } satisfies StepStartPart;
+		default:
+			return null;
+	}
+}
+
+function convertConvexPartsToAISDK(
+	parts: ConvexMessagePart[] | undefined,
+): UIMessage["parts"] {
+	return parts
+		? parts
+				.map(convertConvexPartToAISDK)
+				.filter((part): part is AISDKPart => part !== null)
 		: [];
 }
 
-function convertAISDKPartsToConvex(parts: any[]) {
-	return (
-		parts
-			?.map((part) => {
-				if (part.type === "text")
-					return {
-						type: "text" as const,
-						text: part.text,
-						state: "done" as const,
-					};
-				if (part.type === "reasoning")
-					return {
-						type: "reasoning" as const,
-						text: (part as any).text,
-						state: "done" as const,
-					};
-				if (part.type === "step-start") return { type: "step-start" as const };
-				return null;
-			})
-			.filter((part): part is any => part !== null) || []
-	);
+function convertAISDKPartToConvex(part: AISDKPart): ConvexMessagePart | null {
+	switch (part.type) {
+		case "text":
+			return { type: "text", text: part.text, state: "done" };
+		case "reasoning":
+			return { type: "reasoning", text: part.text, state: "done" };
+		case "step-start":
+			return { type: "step-start" };
+		default:
+			return null;
+	}
+}
+
+function convertAISDKPartsToConvex(
+	parts: UIMessage["parts"] | undefined,
+): ConvexMessagePart[] {
+	return parts
+		? parts
+				.map(convertAISDKPartToConvex)
+				.filter((part): part is ConvexMessagePart => part !== null)
+		: [];
 }
 
 function RouteComponent() {
@@ -99,7 +126,7 @@ function RouteComponent() {
 					parentId,
 					content: textContent,
 					parts: convexParts,
-					model: "glm-4.6v-flash",
+					model: model,
 					modelProvider: "lmstudio",
 				});
 			} catch (error) {
@@ -170,11 +197,11 @@ function RouteComponent() {
 	const isLoading = status === "submitted" || status === "streaming";
 
 	return (
-		<div className="flex flex-col h-full items-center pb-4 ">
+		<div className="flex h-full flex-col items-center pb-4">
 			<ChatHeader />
-			<div className="flex-1 overflow-auto w-full">
+			<div className="w-full flex-1 overflow-auto">
 				{messages.length === 0 ? (
-					<div className="flex items-center justify-center h-full text-muted-foreground">
+					<div className="flex h-full items-center justify-center text-muted-foreground">
 						No messages yet.
 					</div>
 				) : (

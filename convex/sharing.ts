@@ -1,23 +1,7 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
-
-// ============================================================================
-// HELPERS
-// ============================================================================
-
-async function getCurrentUser(ctx: any) {
-  const identity = await ctx. auth.getUserIdentity();
-  if (!identity) throw new Error("Unauthenticated");
-
-  const user = await ctx.db
-    .query("users")
-    .withIndex("by_token", (q:  any) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-    .first();
-
-  if (!user) throw new Error("User not found");
-  return user;
-}
+import { getCurrentUser } from "./authHelpers";
 
 function generateShareId(): string {
   // Generate a URL-safe random string

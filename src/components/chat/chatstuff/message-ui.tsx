@@ -11,7 +11,21 @@ import {
 import type { MessageUIProps } from "@/types/types";
 import MessageActions from "./message-actions";
 
+const createPartKeyFactory = (messageId: string) => {
+	const counts = new Map<string, number>();
+
+	return (part: { type: string; text?: string }) => {
+		const signature = `${part.type}:${part.text ?? ""}`;
+		const count = counts.get(signature) ?? 0;
+		counts.set(signature, count + 1);
+
+		return `${messageId}-${signature}-${count}`;
+	};
+};
+
 const MessageUI = ({ message }: MessageUIProps) => {
+	const getPartKey = createPartKeyFactory(message.id);
+
 	return (
 		<Message from={message.role} key={`${message.id}`}>
 			<div>
@@ -32,11 +46,11 @@ const MessageUI = ({ message }: MessageUIProps) => {
 				<ReasoningUI message={message} />
 
 				<MessageContent>
-					{message.parts.map((part, index) => {
+					{message.parts.map((part) => {
 						switch (part.type) {
 							case "text":
 								return (
-									<MessageResponse key={`${message.id}-${index}`}>
+									<MessageResponse key={getPartKey(part)}>
 										{part.text}
 									</MessageResponse>
 								);
@@ -55,6 +69,8 @@ const MessageUI = ({ message }: MessageUIProps) => {
 export default MessageUI;
 
 const ReasoningUI = ({ message }: MessageUIProps) => {
+	const getPartKey = createPartKeyFactory(message.id);
+
 	return (
 		message.parts[1] && (
 			<Reasoning
@@ -67,11 +83,11 @@ const ReasoningUI = ({ message }: MessageUIProps) => {
 				{/* //duration={message.reasoning.duration} */}
 				<ReasoningTrigger />
 
-				{message.parts.map((part, idx) => {
+				{message.parts.map((part) => {
 					switch (part.type) {
 						case "reasoning":
 							return (
-								<ReasoningContent key={`${message.id}-${idx}`}>
+								<ReasoningContent key={getPartKey(part)}>
 									{part.text}
 								</ReasoningContent>
 							);

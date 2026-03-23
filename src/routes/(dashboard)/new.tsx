@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Input } from "@/components/chat/input";
 import { api } from "../../../convex/_generated/api";
 
+const model = "qwen/qwen3.5-9b";
+
 export const Route = createFileRoute("/(dashboard)/new")({
 	component: RouteComponent,
 });
@@ -23,7 +25,7 @@ function RouteComponent() {
 			// 1. Create conversation
 			const conversationId = await createConversation({
 				title: message.slice(0, 50),
-				model: "glm-4.6v-flash",
+				model: model,
 				modelProvider: "lmstudio",
 			});
 

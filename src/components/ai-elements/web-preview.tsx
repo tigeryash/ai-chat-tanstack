@@ -238,7 +238,7 @@ export const WebPreviewConsole = ({
 					{logs.length === 0 ? (
 						<p className="text-muted-foreground">No console output</p>
 					) : (
-						logs.map((log, index) => (
+						logs.map((log) => (
 							<div
 								className={cn(
 									"text-xs",
@@ -246,7 +246,7 @@ export const WebPreviewConsole = ({
 									log.level === "warn" && "text-yellow-600",
 									log.level === "log" && "text-foreground",
 								)}
-								key={`${log.timestamp.getTime()}-${index}`}
+								key={getConsoleLogKey(log)}
 							>
 								<span className="text-muted-foreground">
 									{log.timestamp.toLocaleTimeString()}
@@ -261,3 +261,11 @@ export const WebPreviewConsole = ({
 		</Collapsible>
 	);
 };
+
+function getConsoleLogKey(log: {
+	level: "log" | "warn" | "error";
+	message: string;
+	timestamp: Date;
+}) {
+	return `${log.level}-${log.timestamp.toISOString()}-${log.message}`;
+}

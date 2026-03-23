@@ -1,24 +1,12 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import {
+  getCurrentUser,
+  getCurrentUserOrNull,
+  requireMultiChatConversation,
+} from "./authHelpers";
 
 const MAX_CONCURRENT_CHATS = 8;
-
-// ============================================================================
-// HELPERS
-// ============================================================================
-
-async function getCurrentUser(ctx: any) {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) throw new Error("Unauthenticated");
-
-  const user = await ctx.db
-    .query("users")
-    .withIndex("by_token", (q:  any) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-    .first();
-
-  if (!user) throw new Error("User not found");
-  return user;
-}
 
 // ============================================================================
 // QUERIES
@@ -30,14 +18,7 @@ async function getCurrentUser(ctx: any) {
 export const get = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return null;
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-      .first();
-
+    const user = await getCurrentUserOrNull(ctx);
     if (!user) return null;
 
     const session = await ctx.db
@@ -72,6 +53,10 @@ export const initialize = mutation({
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
+
+    if (args.conversationId) {
+      await requireMultiChatConversation(ctx, args.conversationId, user._id);
+    }
 
     let session = await ctx.db
       .query("activeChatSessions")
@@ -116,6 +101,7 @@ export const addChat = mutation({
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
+    await requireMultiChatConversation(ctx, args.conversationId, user._id);
 
     let session = await ctx.db
       .query("activeChatSessions")
@@ -208,6 +194,10 @@ export const setFocus = mutation({
       .first();
 
     if (!session) return;
+
+    if (!session.conversationIds.includes(args.conversationId)) {
+      throw new Error("Conversation is not in the active session");
+    }
 
     await ctx.db.patch(session._id, {
       focusedConversationId: args.conversationId,

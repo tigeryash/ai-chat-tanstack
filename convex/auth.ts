@@ -57,7 +57,7 @@ export const createAuth = (
       accountLinking: {
         enabled: true,
         trustedProviders: ["email-password", "github", "discord", "google"],
-        allowDifferentEmails: true,
+        allowDifferentEmails: false,
         allowUnlinkingAll: true,
         updateUserInfoOnLink: true,
       },

@@ -79,6 +79,19 @@ const artifactTypeValidator = v.union(
   v.literal("csv")
 );
 
+const conversationSettingsValidator = v.object({
+  temperature: v.optional(v.number()),
+  maxTokens: v.optional(v.number()),
+  topP: v.optional(v.number()),
+  reasoningEffort: v.optional(
+    v.union(v.literal("low"), v.literal("medium"), v.literal("high"))
+  ),
+  webSearchEnabled: v.optional(v.boolean()),
+  deepResearchEnabled: v.optional(v.boolean()),
+  contextWindow: v.optional(v.number()),
+  metadata: v.optional(v.any()),
+});
+
 // ============================================================================
 // SCHEMA
 // ============================================================================
@@ -89,19 +102,22 @@ export default defineSchema({
   // ==========================================================================
   
   users: defineTable({
-    tokenIdentifier: v.string(),
+    authUserId: v.optional(v.string()),
+    tokenIdentifier: v.optional(v.string()),
     name: v.optional(v.string()),
     email: v.optional(v.string()),
     avatarUrl: v.optional(v.string()),
     
     preferences: v.optional(v.object({
       defaultModel: v. optional(v.string()),
+      defaultModelProvider: v.optional(v.string()),
       theme: v.optional(v. union(v.literal("light"), v.literal("dark"), v.literal("system"))),
     })),
     
     createdAt: v.number(),
     updatedAt: v.number(),
   })
+    .index("by_auth_user", ["authUserId"])
     .index("by_token", ["tokenIdentifier"])
     .index("by_email", ["email"]),
 
@@ -117,6 +133,7 @@ export default defineSchema({
     model: v.optional(v.string()),
     modelProvider: v.optional(v. string()),
     systemPrompt: v. optional(v.string()),
+    settings: v.optional(conversationSettingsValidator),
     
     status: v.union(
       v.literal("active"),
@@ -187,6 +204,24 @@ export default defineSchema({
     
     // For group chats - which user is being addressed
     mentionedUserId: v.optional(v. id("users")),
+
+    inputMode: v.optional(
+      v.union(
+        v.literal("text"),
+        v.literal("voice"),
+        v.literal("image"),
+        v.literal("file"),
+        v.literal("mixed")
+      )
+    ),
+    transcription: v.optional(v.object({
+      provider: v.optional(v.string()),
+      model: v.optional(v.string()),
+      language: v.optional(v.string()),
+      durationMs: v.optional(v.number()),
+      confidence: v.optional(v.number()),
+      audioAttachmentId: v.optional(v.id("attachments")),
+    })),
     
     role: messageRoleValidator,
     parts:  v.array(messagePartValidator),
@@ -341,7 +376,24 @@ export default defineSchema({
   })
     .index("by_conversation", ["conversationId"])
     .index("by_message", ["messageId"])
-    .index("by_user", ["userId"]),
+    .index("by_user", ["userId"])
+    .index("by_storage", ["storageId"]),
+
+  // ==========================================================================
+  // MESSAGE PINS
+  // ==========================================================================
+
+  messagePins: defineTable({
+    userId: v.id("users"),
+    conversationId: v.id("conversations"),
+    messageId: v.id("messages"),
+
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_conversation", ["conversationId"])
+    .index("by_message", ["messageId"])
+    .index("by_user_message", ["userId", "messageId"]),
 
   // ==========================================================================
   // USAGE TRACKING

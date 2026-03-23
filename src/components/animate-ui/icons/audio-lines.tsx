@@ -3,10 +3,10 @@
 import { motion, type Variants } from "motion/react";
 
 import {
-	getVariants,
 	type IconProps,
 	IconWrapper,
 	useAnimateIconContext,
+	useIconVariants,
 } from "@/components/animate-ui/icons/icon";
 
 type AudioLinesProps = IconProps<keyof typeof animations>;
@@ -108,7 +108,7 @@ const animations = {
 
 function IconComponent({ size, ...props }: AudioLinesProps) {
 	const { controls } = useAnimateIconContext();
-	const variants = getVariants(animations);
+	const variants = useIconVariants(animations);
 
 	return (
 		<motion.svg

@@ -60,7 +60,7 @@ function Home() {
 		todos = await addTodo({ data: todo });
 		setTodo("");
 		router.invalidate();
-	}, [ todo, todos, router.invalidate]);
+	}, [todo, router]);
 
 	return (
 		<div

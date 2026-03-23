@@ -1,6 +1,13 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-import { Id, Doc } from "./_generated/dataModel";
+import { Id } from "./_generated/dataModel";
+import {
+  getConversationIfAccessible,
+  getCurrentUser,
+  getCurrentUserOrNull,
+  requireConversationAccess,
+  requireMessageAccess,
+} from "./authHelpers";
 
 // ============================================================================
 // VALIDATORS
@@ -59,51 +66,6 @@ const messagePartValidator = v.union(
 );
 
 // ============================================================================
-// HELPERS
-// ============================================================================
-
-async function getCurrentUser(ctx: any) {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) throw new Error("Unauthenticated");
-
-  const user = await ctx.db
-    .query("users")
-    .withIndex("by_token", (q: any) =>
-      q.eq("tokenIdentifier", identity.tokenIdentifier),
-    )
-    .first();
-
-  if (!user) throw new Error("User not found");
-  return user;
-}
-
-async function verifyConversationAccess(
-  ctx: any,
-  conversationId: Id<"conversations">,
-  userId: Id<"users">,
-) {
-  const conversation = await ctx.db.get(conversationId);
-  if (!conversation) throw new Error("Conversation not found");
-
-  // Owner has access
-  if (conversation.userId === userId) return conversation;
-
-  // Check group chat participant
-  if (conversation.isGroupChat) {
-    const participant = await ctx.db
-      .query("conversationParticipants")
-      .withIndex("by_user_conversation", (q: any) =>
-        q.eq("userId", userId).eq("conversationId", conversationId),
-      )
-      .first();
-
-    if (participant && !participant.leftAt) return conversation;
-  }
-
-  throw new Error("Access denied");
-}
-
-// ============================================================================
 // QUERIES
 // ============================================================================
 
@@ -117,34 +79,15 @@ export const list = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return [];
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_token", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier),
-      )
-      .first();
-
+    const user = await getCurrentUserOrNull(ctx);
     if (!user) return [];
 
-    // Verify access (allows shared conversations)
-    const conversation = await ctx.db.get(args.conversationId);
+    const conversation = await getConversationIfAccessible(
+      ctx,
+      args.conversationId,
+      user._id,
+    );
     if (!conversation) return [];
-
-    const hasAccess =
-      conversation.userId === user._id ||
-      conversation.isShared ||
-      (conversation.isGroupChat &&
-        (await ctx.db
-          .query("conversationParticipants")
-          .withIndex("by_user_conversation", (q) =>
-            q.eq("userId", user._id).eq("conversationId", args.conversationId),
-          )
-          .first()));
-
-    if (!hasAccess) return [];
 
     const messages = await ctx.db
       .query("messages")
@@ -169,7 +112,7 @@ export const listWithBranches = query({
   args: { conversationId: v.id("conversations") },
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
-    await verifyConversationAccess(ctx, args.conversationId, user._id);
+    await requireConversationAccess(ctx, args.conversationId, user._id);
 
     const messages = await ctx.db
       .query("messages")
@@ -189,7 +132,10 @@ export const listWithBranches = query({
 export const getSiblings = query({
   args: { messageId: v.id("messages") },
   handler: async (ctx, args) => {
-    const message = await ctx.db.get(args.messageId);
+    const user = await getCurrentUserOrNull(ctx);
+    if (!user) return [];
+
+    const message = await requireMessageAccess(ctx, args.messageId, user._id);
     if (!message) return [];
 
     if (!message.parentId) {
@@ -234,7 +180,7 @@ export const sendUserMessage = mutation({
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
-    await verifyConversationAccess(ctx, args.conversationId, user._id);
+    await requireConversationAccess(ctx, args.conversationId, user._id);
 
     const now = Date.now();
 
@@ -309,7 +255,7 @@ export const createAssistantMessage = mutation({
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
-    await verifyConversationAccess(ctx, args.conversationId, user._id);
+    await requireConversationAccess(ctx, args.conversationId, user._id);
 
     const now = Date.now();
 
@@ -389,7 +335,8 @@ export const updateAssistantMessage = mutation({
     toolCallIds: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
-    const message = await ctx.db.get(args.messageId);
+    const user = await getCurrentUser(ctx);
+    const message = await requireMessageAccess(ctx, args.messageId, user._id);
     if (!message) throw new Error("Message not found");
 
     const now = Date.now();
@@ -469,7 +416,7 @@ export const addFeedback = mutation({
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
-    const message = await ctx.db.get(args.messageId);
+    const message = await requireMessageAccess(ctx, args.messageId, user._id);
 
     if (!message) throw new Error("Message not found");
     if (message.role !== "assistant") {
@@ -512,7 +459,8 @@ export const remove = mutation({
 export const cancelStreaming = mutation({
   args: { messageId: v.id("messages") },
   handler: async (ctx, args) => {
-    const message = await ctx.db.get(args.messageId);
+    const user = await getCurrentUser(ctx);
+    const message = await requireMessageAccess(ctx, args.messageId, user._id);
     if (!message) throw new Error("Message not found");
 
     if (message.status === "streaming" || message.status === "pending") {

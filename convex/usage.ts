@@ -1,23 +1,11 @@
 import { mutation, query, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
-
-// ============================================================================
-// HELPERS
-// ============================================================================
-
-async function getCurrentUser(ctx: any) {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) throw new Error("Unauthenticated");
-
-  const user = await ctx.db
-    .query("users")
-    .withIndex("by_token", (q:  any) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-    .first();
-
-  if (!user) throw new Error("User not found");
-  return user;
-}
+import {
+  getCurrentUser,
+  getCurrentUserOrNull,
+  requireConversationAccess,
+} from "./authHelpers";
 
 // ============================================================================
 // QUERIES
@@ -32,14 +20,7 @@ export const getSummary = query({
     endDate: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return null;
-
-    const user = await ctx.db
-      . query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-      .first();
-
+    const user = await getCurrentUserOrNull(ctx);
     if (!user) return null;
 
     const now = Date.now();
@@ -103,6 +84,11 @@ export const getSummary = query({
 export const getConversationUsage = query({
   args: { conversationId: v.id("conversations") },
   handler: async (ctx, args) => {
+    const user = await getCurrentUserOrNull(ctx);
+    if (!user) return null;
+
+    await requireConversationAccess(ctx, args.conversationId, user._id);
+
     const usageEvents = await ctx.db
       .query("usageEvents")
       .withIndex("by_conversation", (q) => q.eq("conversationId", args. conversationId))
@@ -167,6 +153,8 @@ export const record = mutation({
 
     // Update conversation totals if applicable
     if (args.conversationId) {
+      await requireConversationAccess(ctx, args.conversationId, user._id);
+
       const conversation = await ctx.db.get(args.conversationId);
       if (conversation) {
         await ctx.db.patch(args.conversationId, {

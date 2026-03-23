@@ -3,10 +3,10 @@
 import { motion, type Variants } from "motion/react";
 
 import {
-	getVariants,
 	type IconProps,
 	IconWrapper,
 	useAnimateIconContext,
+	useIconVariants,
 } from "@/components/animate-ui/icons/icon";
 
 type PaperclipProps = IconProps<keyof typeof animations>;
@@ -40,7 +40,7 @@ const animations = {
 
 function IconComponent({ size, ...props }: PaperclipProps) {
 	const { controls } = useAnimateIconContext();
-	const variants = getVariants(animations);
+	const variants = useIconVariants(animations);
 
 	return (
 		<motion.svg

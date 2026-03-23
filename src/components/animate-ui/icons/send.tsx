@@ -1,13 +1,12 @@
 "use client";
 
 import { motion, type Variants } from "motion/react";
-import * as React from "react";
 
 import {
-	getVariants,
 	type IconProps,
 	IconWrapper,
 	useAnimateIconContext,
+	useIconVariants,
 } from "@/components/animate-ui/icons/icon";
 
 type SendProps = IconProps<keyof typeof animations>;
@@ -46,7 +45,7 @@ const animations = {
 
 function IconComponent({ size, ...props }: SendProps) {
 	const { controls } = useAnimateIconContext();
-	const variants = getVariants(animations);
+	const variants = useIconVariants(animations);
 
 	return (
 		<motion.svg

@@ -10,6 +10,7 @@ import {
 	type Variants,
 } from "motion/react";
 import * as React from "react";
+import { useEffect } from "react";
 import {
 	Slot,
 	type WithAsChild,
@@ -123,7 +124,15 @@ function composeEventHandlers<E extends React.SyntheticEvent<unknown>>(
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyProps = Record<string, any>;
+type AnyProps = {
+	className?: string;
+	style?: React.CSSProperties;
+	onMouseEnter?: (event: React.MouseEvent<HTMLElement>) => void;
+	onMouseLeave?: (event: React.MouseEvent<HTMLElement>) => void;
+	onPointerDown?: (event: React.PointerEvent<HTMLElement>) => void;
+	onPointerUp?: (event: React.PointerEvent<HTMLElement>) => void;
+	[key: string]: unknown;
+};
 
 function AnimateIcon({
 	asChild = false,
@@ -206,15 +215,15 @@ function AnimateIcon({
 		activeRef.current = localAnimate;
 	}, [localAnimate]);
 
-	React.useEffect(() => {
+	useEffect(() => {
 		if (animate === undefined) return;
 		setCurrentAnimation(typeof animate === "string" ? animate : animation);
 		if (animate) startAnimation(animate as TriggerProp);
 		else stopAnimation();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [animate]);
+	}, [animate, animation, startAnimation, stopAnimation]);
 
-	React.useEffect(() => {
+	useEffect(() => {
 		return () => {
 			if (delayRef.current) clearTimeout(delayRef.current);
 			if (loopDelayRef.current) clearTimeout(loopDelayRef.current);
@@ -246,7 +255,7 @@ function AnimateIcon({
 		else stopAnimation();
 	}, [isInView, animateOnView, startAnimation, stopAnimation]);
 
-	React.useEffect(() => {
+	useEffect(() => {
 		const gen = ++runGenRef.current;
 		cancelledRef.current = false;
 
@@ -371,7 +380,16 @@ function AnimateIcon({
 			}
 		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [localAnimate, controls]);
+	}, [
+		localAnimate,
+		completeOnStop,
+		persistOnAnimateEnd,
+		initialOnAnimateEnd,
+		loop,
+		loopDelay,
+		startAnim,
+		status,
+	]);
 
 	const childProps = (
 		React.isValidElement(children) ? (children as React.ReactElement).props : {}
@@ -616,13 +634,10 @@ function IconWrapper<T extends string>({
 	);
 }
 
-function getVariants<
+function resolveVariants<
 	V extends { default: T; [key: string]: T },
 	T extends Record<string, Variants>,
->(animations: V): T {
-	// eslint-disable-next-line react-hooks/rules-of-hooks
-	const { animation: animationType } = useAnimateIconContext();
-
+>(animationType: string, animations: V): T {
 	let result: T;
 
 	if (animationType in staticAnimations) {
@@ -643,13 +658,25 @@ function getVariants<
 	return result;
 }
 
+function useIconVariants<
+	V extends { default: T; [key: string]: T },
+	T extends Record<string, Variants>,
+>(animations: V): T {
+	const { animation: animationType } = useAnimateIconContext();
+
+	return React.useMemo(
+		() => resolveVariants(animationType, animations),
+		[animationType, animations],
+	);
+}
+
 export {
 	pathClassName,
 	staticAnimations,
 	AnimateIcon,
 	IconWrapper,
 	useAnimateIconContext,
-	getVariants,
+	useIconVariants,
 	type IconProps,
 	type IconWrapperProps,
 	type AnimateIconProps,

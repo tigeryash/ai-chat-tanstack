@@ -1,22 +1,11 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-
-// ============================================================================
-// HELPERS
-// ============================================================================
-
-async function getCurrentUser(ctx: any) {
-  const identity = await ctx. auth.getUserIdentity();
-  if (!identity) throw new Error("Unauthenticated");
-
-  const user = await ctx.db
-    .query("users")
-    .withIndex("by_token", (q:  any) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-    .first();
-
-  if (!user) throw new Error("User not found");
-  return user;
-}
+import {
+  getCurrentUser,
+  getCurrentUserOrNull,
+  requireAttachmentAccess,
+  requireConversationAccess,
+} from "./authHelpers";
 
 // ============================================================================
 // QUERIES
@@ -39,7 +28,10 @@ export const generateUploadUrl = mutation({
 export const get = query({
   args: { id: v.id("attachments") },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.id);
+    const user = await getCurrentUserOrNull(ctx);
+    if (!user) return null;
+
+    return await requireAttachmentAccess(ctx, args.id, user._id);
   },
 });
 
@@ -49,6 +41,17 @@ export const get = query({
 export const getUrl = query({
   args: { storageId: v.id("_storage") },
   handler: async (ctx, args) => {
+    const user = await getCurrentUserOrNull(ctx);
+    if (!user) return null;
+
+    const attachment = await ctx.db
+      .query("attachments")
+      .withIndex("by_storage", (q) => q.eq("storageId", args.storageId))
+      .first();
+
+    if (!attachment) return null;
+    await requireAttachmentAccess(ctx, attachment._id, user._id);
+
     return await ctx.storage.getUrl(args.storageId);
   },
 });
@@ -59,6 +62,11 @@ export const getUrl = query({
 export const listByConversation = query({
   args: { conversationId: v.id("conversations") },
   handler: async (ctx, args) => {
+    const user = await getCurrentUserOrNull(ctx);
+    if (!user) return [];
+
+    await requireConversationAccess(ctx, args.conversationId, user._id);
+
     const attachments = await ctx.db
       .query("attachments")
       .withIndex("by_conversation", (q) => q.eq("conversationId", args.conversationId))
@@ -80,14 +88,7 @@ export const listByConversation = query({
 export const listRecent = query({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return [];
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-      .first();
-
+    const user = await getCurrentUserOrNull(ctx);
     if (!user) return [];
 
     const attachments = await ctx.db
@@ -126,6 +127,10 @@ export const create = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
 
+    if (args.conversationId) {
+      await requireConversationAccess(ctx, args.conversationId, user._id);
+    }
+
     const attachmentId = await ctx.db. insert("attachments", {
       userId: user._id,
       storageId: args.storageId,
@@ -154,10 +159,8 @@ export const linkToMessage = mutation({
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
-    const attachment = await ctx.db.get(args.attachmentId);
-
-    if (!attachment) throw new Error("Attachment not found");
-    if (attachment.userId !== user._id) throw new Error("Access denied");
+    const attachment = await requireAttachmentAccess(ctx, args.attachmentId, user._id);
+    await requireConversationAccess(ctx, args.conversationId, user._id);
 
     await ctx.db.patch(args. attachmentId, {
       messageId: args.messageId,
@@ -173,10 +176,7 @@ export const remove = mutation({
   args: { id: v.id("attachments") },
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
-    const attachment = await ctx.db.get(args.id);
-
-    if (!attachment) throw new Error("Attachment not found");
-    if (attachment.userId !== user._id) throw new Error("Access denied");
+    const attachment = await requireAttachmentAccess(ctx, args.id, user._id);
 
     // Delete from storage
     await ctx.storage. delete(attachment.storageId);
