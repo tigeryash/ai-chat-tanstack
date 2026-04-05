@@ -16,6 +16,9 @@ function RouteComponent() {
 
 	const createConversation = useMutation(api.conversations.create);
 	const sendUserMessage = useMutation(api.messages.sendUserMessage);
+	const createAssistantMessage = useMutation(
+		api.messages.createAssistantMessage,
+	);
 
 	const handleNewMessage = async (message: string) => {
 		if (isCreating) return;
@@ -30,10 +33,19 @@ function RouteComponent() {
 			});
 
 			// 2. Save user message
-			await sendUserMessage({
+			const userMessageId = await sendUserMessage({
 				conversationId,
 				content: message,
 				parts: [{ type: "text", text: message }],
+			});
+
+			await createAssistantMessage({
+				conversationId,
+				parentId: userMessageId,
+				model: model,
+				modelProvider: "lmstudio",
+				content: "",
+				parts: [],
 			});
 
 			await navigate({

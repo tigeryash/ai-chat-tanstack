@@ -35,6 +35,8 @@ export const useChatMessages = () => {
 				parentId: userMessageId,
 				model: model,
 				modelProvider: "lmstudio",
+				content: "",
+				parts: [],
 			});
 
 			await router.navigate({
@@ -70,6 +72,8 @@ export const useChatMessages = () => {
 				parentId: userMessageId,
 				model: model,
 				modelProvider: "lmstudio",
+				content: "",
+				parts: [],
 			});
 
 			return { userMessageId, assistantMessageId };

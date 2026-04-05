@@ -281,6 +281,7 @@ export const createAssistantMessage = mutation({
       userId: user._id,
       role: "assistant",
       parts: args.parts,
+      content: args.content,
       status: "pending" as const,
       model: args.model,
       modelProvider: args.modelProvider,
@@ -342,17 +343,15 @@ export const updateAssistantMessage = mutation({
     const now = Date.now();
 
     await ctx.db.patch(args.messageId, {
-      ...(args.parts && { parts: args.parts }),
-      ...(args.content && { content: args.content }),
-      ...(args.status && { status: args.status }),
-      ...(args.finishReason && { finishReason: args.finishReason }),
-      ...(args.usage && { usage: args.usage }),
-      ...(args.latencyMs && { latencyMs: args.latencyMs }),
-      ...(args.hasToolCalls !== undefined && {
-        hasToolCalls: args.hasToolCalls,
-      }),
-      ...(args.toolCallIds && { toolCallIds: args.toolCallIds }),
-      updatedAt: now,
+      ...(args.parts !== undefined && { parts: args.parts }),
+      ...(args.content !== undefined && { content: args.content }),
+      ...(args.status !== undefined && { status: args.status }),
+      ...(args.finishReason !== undefined && { finishReason: args.finishReason }),
+      ...(args.usage !== undefined && { usage: args.usage }),
+      ...(args.latencyMs !== undefined && { latencyMs: args.latencyMs }),
+      ...(args.hasToolCalls !== undefined && { hasToolCalls: args.hasToolCalls }),
+      ...(args.toolCallIds !== undefined && { toolCallIds: args.toolCallIds }),
+        updatedAt: now,
     });
 
     // Update conversation stats if completed
