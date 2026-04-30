@@ -1,26 +1,35 @@
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { createFileRoute } from "@tanstack/react-router";
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
+import { getToken } from "@/lib/auth-server";
 import { createThinkTagModel } from "@/lib/reasoning-middleware";
-
-const lmstudio = createOpenAICompatible({
-	name: "lmstudio",
-	baseURL: process.env.LMSTUDIO_BASE_URL || "http://localhost:1234/v1",
-});
-
-const model = lmstudio("qwen/qwen3.5-9b");
+import { getServerChatConfig } from "@/utilities/chat-config";
 
 export const Route = createFileRoute("/api/chat")({
 	server: {
 		handlers: {
 			POST: async ({ request }) => {
 				try {
+					const token = await getToken();
+					if (!token) {
+						return new Response(JSON.stringify({ error: "Unauthorized" }), {
+							status: 401,
+							headers: { "Content-Type": "application/json" },
+						});
+					}
+
+					const chatConfig = getServerChatConfig();
 					const { messages }: { messages: UIMessage[] } = await request.json();
 
 					console.log("Received messages:", messages);
 
+					const provider = createOpenAICompatible({
+						name: chatConfig.provider,
+						baseURL: chatConfig.baseUrl,
+					});
+
 					const result = streamText({
-						model: createThinkTagModel(model),
+						model: createThinkTagModel(provider(chatConfig.model)),
 						messages: await convertToModelMessages(messages),
 					});
 

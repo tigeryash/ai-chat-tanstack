@@ -14,6 +14,9 @@ export const env = createEnv({
 
 	client: {
 		VITE_APP_TITLE: z.string().min(1).optional(),
+		VITE_CHAT_MODEL: z.string().min(1).optional(),
+		VITE_CHAT_PROVIDER: z.string().min(1).optional(),
+		VITE_LMSTUDIO_BASE_URL: z.string().url().optional(),
 	},
 
 	/**
@@ -37,3 +40,7 @@ export const env = createEnv({
 	 */
 	emptyStringAsUndefined: true,
 });
+
+export const DEFAULT_CHAT_MODEL = "google/gemma-4-26b-a4b";
+export const DEFAULT_CHAT_PROVIDER = "lmstudio";
+export const DEFAULT_LMSTUDIO_BASE_URL = "http://localhost:1234/v1";

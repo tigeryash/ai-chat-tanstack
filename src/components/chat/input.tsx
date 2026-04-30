@@ -85,7 +85,6 @@ export const Input = ({ onSubmit, isLoading }: InputProps) => {
 						setFiles={setFiles}
 						webSearchEnabled={webSearchEnabled}
 						setWebSearchEnabled={setWebSearchEnabled}
-						handleSubmit={handleSubmit}
 						input={input}
 						handleKeyDown={handleKeyDown}
 					/>
@@ -99,7 +98,6 @@ type InputButtonsProps = {
 	setFiles: React.Dispatch<React.SetStateAction<FileObject[] | null>>;
 	webSearchEnabled: boolean;
 	setWebSearchEnabled: React.Dispatch<React.SetStateAction<boolean>>;
-	handleSubmit: (e: React.FormEvent, input: string) => Promise<void>;
 	input: string;
 	handleKeyDown: (e: React.KeyboardEvent) => void;
 };
@@ -108,7 +106,6 @@ const InputButtons = ({
 	setFiles,
 	webSearchEnabled,
 	setWebSearchEnabled,
-	handleSubmit,
 	input,
 	handleKeyDown,
 }: InputButtonsProps) => {
@@ -129,7 +126,6 @@ const InputButtons = ({
 					<button
 						type="submit"
 						className="input-button self-end disabled:hidden"
-						onClick={(e) => handleSubmit(e, input)}
 						disabled={!input.trim()}
 						onKeyDown={handleKeyDown}
 					>

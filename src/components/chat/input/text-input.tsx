@@ -15,14 +15,12 @@ export const TextInput = ({ input, setInput, onKeyDown }: TextInputProps) => {
 		const textarea = textareaRef.current;
 		if (!textarea) return;
 
-		const _trigger = input;
-
 		textarea.style.height = "0px";
 		const scrollHeight = textarea.scrollHeight;
 		const newHeight = Math.min(Math.max(scrollHeight, 35), 208);
 		setHeight(newHeight);
 		textarea.style.height = `${newHeight}px`;
-	}, [input]);
+	});
 	return (
 		<motion.div layout="position" className="w-full">
 			<motion.div

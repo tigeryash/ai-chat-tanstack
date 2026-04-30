@@ -1,204 +1,351 @@
-import { useChat } from "@ai-sdk/react";
-import { createFileRoute } from "@tanstack/react-router";
+import { convexQuery } from "@convex-dev/react-query";
+import { createFileRoute, notFound } from "@tanstack/react-router";
+import type { UIMessage } from "ai";
 import { useMutation, useQuery } from "convex/react";
-import { useCallback, useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import ChatHeader from "@/components/chat/chatstuff/chat-header";
 import MessagesList from "@/components/chat/chatstuff/messages-list";
 import { Input } from "@/components/chat/input";
+import { getClientChatConfig } from "@/utilities/chat-config";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
-import {
-	convertAISDKPartsToConvex,
-	convertConvexPartsToAISDK,
-} from "../../utilities/conversions";
+import { convertConvexPartsToAISDK } from "../../utilities/conversions";
+import { streamAssistantTurn } from "../../utilities/streamAssistantTurn";
 
 export const Route = createFileRoute("/(dashboard)/$chatId")({
+	loader: async ({ context, params }) => {
+		const conversationId = params.chatId as Id<"conversations">;
+		const conversation = await context.queryClient.ensureQueryData(
+			convexQuery(api.conversations.get, { id: conversationId }),
+		);
+
+		if (!conversation) {
+			throw notFound();
+		}
+
+		return { conversationId };
+	},
 	component: RouteComponent,
 });
 
-const model = "qwen/qwen3.5-9b";
-
 function RouteComponent() {
-	//get chat id from params
-	const { chatId } = Route.useParams();
-	//find messages that belong to the chat id using convex query
-	const convexMessages = useQuery(api.messages.list, {
-		conversationId: chatId as Id<"conversations">,
+	const { conversationId } = Route.useLoaderData();
+	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [streamingMessageId, setStreamingMessageId] =
+		useState<Id<"messages"> | null>(null);
+	const [streamingTextByMessageId, setStreamingTextByMessageId] = useState<
+		Partial<Record<Id<"messages">, string>>
+	>({});
+	const triggeredAssistantMessageIdRef = useRef<Id<"messages"> | null>(null);
+	const claimedAssistantMessageIdRef = useRef<Id<"messages"> | null>(null);
+	const activeStreamAbortControllerRef = useRef<AbortController | null>(null);
+	const activeStreamMessageIdRef = useRef<Id<"messages"> | null>(null);
+	const activeConversationIdRef = useRef(conversationId);
+	const chatConfig = getClientChatConfig();
+
+	const conversation = useQuery(api.conversations.get, {
+		id: conversationId,
 	});
-	const userMessages = convexMessages?.filter((m) => m.role === "user");
-	const assistantMessages = convexMessages?.filter(
-		(m) => m.role === "assistant",
+
+	const convexMessages = useQuery(api.messages.list, {
+		conversationId,
+	});
+
+	const sendUserMessage = useMutation(api.messages.sendUserMessage);
+	const createAssistantMessage = useMutation(
+		api.messages.createAssistantMessage,
+	);
+	const updateAssistantMessage = useMutation(
+		api.messages.updateAssistantMessage,
 	);
 
-	const shouldBootstrap =
-		userMessages?.length === 1 && assistantMessages?.length === 0;
+	const convexMessagesById = useMemo(
+		() =>
+			new Map(convexMessages?.map((message) => [message._id, message]) ?? []),
+		[convexMessages],
+	);
 
-	const { status } = useChat({});
+	// Convert Convex docs → UIMessage[] for rendering
+	const uiMessages: UIMessage[] = useMemo(
+		() =>
+			convexMessages?.map((m) => ({
+				id: m._id,
+				role: m.role as "user" | "assistant",
+				parts: convertConvexPartsToAISDK(m.parts),
+			})) ?? [],
+		[convexMessages],
+	);
+
+	const displayMessages: UIMessage[] = useMemo(
+		() =>
+			uiMessages.map((message) => {
+				const overlayText =
+					streamingTextByMessageId[message.id as Id<"messages">];
+				const convexMessage = convexMessagesById.get(
+					message.id as Id<"messages">,
+				);
+
+				if (
+					message.role !== "assistant" ||
+					overlayText === undefined ||
+					(convexMessage?.status !== "pending" &&
+						convexMessage?.status !== "streaming")
+				) {
+					return message;
+				}
+
+				return {
+					...message,
+					parts: [{ type: "text", text: overlayText, state: "streaming" }],
+				};
+			}),
+		[convexMessagesById, streamingTextByMessageId, uiMessages],
+	);
+
+	const pendingAssistantTurn = useMemo(() => {
+		if (!convexMessages || convexMessages.length < 2) {
+			return null;
+		}
+
+		const assistantMessage = convexMessages[convexMessages.length - 1];
+		const parentMessage = convexMessages[convexMessages.length - 2];
+
+		if (
+			assistantMessage.role !== "assistant" ||
+			assistantMessage.status !== "pending" ||
+			claimedAssistantMessageIdRef.current === assistantMessage._id ||
+			parentMessage.role !== "user" ||
+			assistantMessage.content !== "" ||
+			assistantMessage.parts.length > 0
+		) {
+			return null;
+		}
+
+		return {
+			assistantMessageId: assistantMessage._id,
+			messagesForApi: convexMessages.slice(0, -1).map((message) => ({
+				id: message._id,
+				role: message.role as "user" | "assistant",
+				parts: convertConvexPartsToAISDK(message.parts),
+			})) satisfies UIMessage[],
+		};
+	}, [convexMessages]);
+
+	const isAssistantTurnPending = pendingAssistantTurn !== null;
 
 	useEffect(() => {
-		if (shouldBootstrap && userMessages) {
+		if (activeConversationIdRef.current === conversationId) {
+			return;
 		}
-	}, [userMessages, shouldBootstrap]);
 
-	const handleSubmit = async ({ message }: { message: string }) => {
+		activeStreamAbortControllerRef.current?.abort();
+		activeStreamAbortControllerRef.current = null;
+		activeStreamMessageIdRef.current = null;
+		activeConversationIdRef.current = conversationId;
+	}, [conversationId]);
+
+	useEffect(
+		() => () => {
+			activeStreamAbortControllerRef.current?.abort();
+			activeStreamAbortControllerRef.current = null;
+			activeStreamMessageIdRef.current = null;
+		},
+		[],
+	);
+
+	useEffect(() => {
+		if (!convexMessages) {
+			return;
+		}
+
+		setStreamingTextByMessageId((current) => {
+			let nextState: Partial<Record<Id<"messages">, string>> | null = null;
+
+			for (const [messageId, overlayText] of Object.entries(current) as [
+				Id<"messages">,
+				string,
+			][]) {
+				const message = convexMessagesById.get(messageId);
+				const isCompletedWithCurrentContent =
+					message?.role === "assistant" &&
+					message.status === "completed" &&
+					message.content === overlayText;
+
+				if (
+					!message ||
+					message.status === "failed" ||
+					message.status === "cancelled" ||
+					isCompletedWithCurrentContent
+				) {
+					nextState ??= { ...current };
+					delete nextState[messageId];
+				}
+			}
+
+			return nextState ?? current;
+		});
+	}, [convexMessages, convexMessagesById]);
+
+	useEffect(() => {
+		if (
+			pendingAssistantTurn &&
+			triggeredAssistantMessageIdRef.current !==
+				pendingAssistantTurn.assistantMessageId
+		) {
+			const abortController = new AbortController();
+			let frameId: number | null = null;
+			let latestScheduledText: string | null = null;
+			const flushOverlayText = (text: string) => {
+				setStreamingTextByMessageId((current) =>
+					current[pendingAssistantTurn.assistantMessageId] === text
+						? current
+						: {
+								...current,
+								[pendingAssistantTurn.assistantMessageId]: text,
+							},
+				);
+			};
+			const scheduleOverlayText = (text: string) => {
+				latestScheduledText = text;
+
+				if (frameId !== null) {
+					return;
+				}
+
+				frameId = requestAnimationFrame(() => {
+					frameId = null;
+					if (latestScheduledText !== null) {
+						flushOverlayText(latestScheduledText);
+					}
+				});
+			};
+
+			setStreamingMessageId(pendingAssistantTurn.assistantMessageId);
+			claimedAssistantMessageIdRef.current =
+				pendingAssistantTurn.assistantMessageId;
+			triggeredAssistantMessageIdRef.current =
+				pendingAssistantTurn.assistantMessageId;
+			activeStreamAbortControllerRef.current?.abort();
+			activeStreamAbortControllerRef.current = abortController;
+			activeStreamMessageIdRef.current =
+				pendingAssistantTurn.assistantMessageId;
+
+			streamAssistantTurn({
+				messages: pendingAssistantTurn.messagesForApi,
+				assistantMessageId: pendingAssistantTurn.assistantMessageId,
+				updateAssistantMessage,
+				signal: abortController.signal,
+				onUpdate: ({ text, isFinal }) => {
+					if (isFinal) {
+						if (frameId !== null) {
+							cancelAnimationFrame(frameId);
+							frameId = null;
+						}
+						latestScheduledText = null;
+						flushOverlayText(text);
+						return;
+					}
+
+					scheduleOverlayText(text);
+				},
+			})
+				.catch((error) => {
+					if (abortController.signal.aborted) {
+						return;
+					}
+
+					setStreamingTextByMessageId((current) => {
+						if (
+							current[pendingAssistantTurn.assistantMessageId] === undefined
+						) {
+							return current;
+						}
+
+						const nextState = { ...current };
+						delete nextState[pendingAssistantTurn.assistantMessageId];
+						return nextState;
+					});
+					console.error("Failed to stream assistant response:", error);
+				})
+				.finally(() => {
+					if (frameId !== null) {
+						cancelAnimationFrame(frameId);
+					}
+					claimedAssistantMessageIdRef.current =
+						claimedAssistantMessageIdRef.current ===
+						pendingAssistantTurn.assistantMessageId
+							? null
+							: claimedAssistantMessageIdRef.current;
+					if (
+						activeStreamMessageIdRef.current ===
+						pendingAssistantTurn.assistantMessageId
+					) {
+						activeStreamAbortControllerRef.current = null;
+						activeStreamMessageIdRef.current = null;
+					}
+					setStreamingMessageId((current) =>
+						current === pendingAssistantTurn.assistantMessageId
+							? null
+							: current,
+					);
+				});
+		}
+	}, [pendingAssistantTurn, updateAssistantMessage]);
+
+	const handleSubmit = async (message: string) => {
+		if (
+			isSubmitting ||
+			isAssistantTurnPending ||
+			!convexMessages ||
+			!conversation
+		) {
+			return;
+		}
+
+		setIsSubmitting(true);
 		try {
-			console.log("Submitting message:", message);
+			const lastMessage = convexMessages[convexMessages.length - 1];
+
+			const userMessageId = await sendUserMessage({
+				conversationId,
+				content: message,
+				parts: [{ type: "text", text: message }],
+				parentId: lastMessage?._id,
+			});
+
+			await createAssistantMessage({
+				conversationId,
+				parentId: userMessageId,
+				model: conversation.model ?? chatConfig.model,
+				modelProvider: conversation.modelProvider ?? chatConfig.provider,
+				content: "",
+				parts: [],
+			});
 		} catch (error) {
 			console.error("Failed to send message:", error);
+		} finally {
+			setIsSubmitting(false);
 		}
 	};
-
-	const isLoading = status === "submitted" || status === "streaming";
 
 	return (
 		<div className="flex h-full flex-col items-center pb-4">
 			<ChatHeader />
 			<div className="w-full flex-1 overflow-auto">
-				{convexMessages?.length === 0 ? (
+				{uiMessages.length === 0 ? (
 					<div className="flex h-full items-center justify-center text-muted-foreground">
 						No messages yet.
 					</div>
 				) : (
-					<MessagesList messages={convexMessages} />
+					<MessagesList messages={displayMessages} />
 				)}
 			</div>
-			<Input onSubmit={handleSubmit} isLoading={isLoading} />
+			<Input
+				onSubmit={handleSubmit}
+				isLoading={
+					isSubmitting || isAssistantTurnPending || streamingMessageId !== null
+				}
+			/>
 		</div>
 	);
 }
-
-// const hasInitialized = useRef(false);
-// const hasTriggeredInitialResponse = useRef(false);
-// const lastUserMessageIdRef = useRef<Id<"messages"> | null>(null);
-// const assistantMessageIdRef = useRef<Id<"messages"> | null>(null);
-
-// const convexMessages = useQuery(api.messages.list, {
-// 	conversationId: chatId as Id<"conversations">,
-// });
-// const sendUserMessage = useMutation(api.messages.sendUserMessage);
-// const saveAssistantMessage = useMutation(api.messages.createAssistantMessage);
-// const updateAssistantMessage = useMutation(api.messages.updateAssistantMessage);
-
-// const { messages, sendMessage, status, setMessages } = useChat({
-// 	id: chatId,
-// 	onFinish: async ({ message }) => {
-// 		const assistantId = assistantMessageIdRef.current;
-// 		if (!assistantId) return;
-
-// 		const textContent =
-// 			message.parts
-// 				?.filter(
-// 					(p): p is { type: "text"; text: string; state: "done" } =>
-// 						p.type === "text",
-// 				)
-// 				.map((p) => p.text)
-// 				.join("") ?? "";
-
-// 		await updateAssistantMessage({
-// 			messageId: assistantId,
-// 			content: textContent,
-// 			parts: convertAISDKPartsToConvex(message.parts),
-// 			status: "completed",
-// 		});
-
-// 		assistantMessageIdRef.current = null;
-// 	},
-// });
-// //this causes the messages for useChat to save the first user message.
-// useEffect(() => {
-// 	if (convexMessages && !hasInitialized.current) {
-// 		hasInitialized.current = true;
-// 		if (convexMessages.length === 1 && convexMessages[0]?.role === "user") {
-// 			lastUserMessageIdRef.current = convexMessages[0]._id;
-// 			sendMessage({
-// 				role: "user",
-// 				parts: [{ type: "text", text: convexMessages[0].content || "" }],
-// 			});
-// 		} else if (convexMessages.length > 1) {
-// 			setMessages(
-// 				convexMessages.map((msg) => ({
-// 					id: msg._id,
-// 					role: msg.role as "user" | "assistant",
-// 					content: msg.content || "",
-// 					parts: convertConvexPartsToAISDK(msg.parts || []),
-// 				})),
-// 			);
-// 		}
-// 	}
-// }, [convexMessages, setMessages, sendMessage]);
-
-// useEffect(() => {
-// 	const assistantId = assistantMessageIdRef.current;
-// 	if (!assistantId) return;
-
-// 	const latestAssistant = [...messages]
-// 		.reverse()
-// 		.find((m) => m.role === "assistant");
-// 	if (!latestAssistant) return;
-
-// 	const content =
-// 		latestAssistant.parts
-// 			?.filter((p): p is { type: "text"; text: string } => p.type === "text")
-// 			.map((p) => p.text)
-// 			.join("") ?? "";
-
-// 	const parts = convertAISDKPartsToConvex(latestAssistant.parts);
-
-// 	const timeout = setTimeout(() => {
-// 		void updateAssistantMessage({
-// 			messageId: assistantId,
-// 			status: "streaming",
-// 			content,
-// 			parts,
-// 		});
-// 	}, 250);
-
-// 	return () => clearTimeout(timeout);
-// }, [messages, updateAssistantMessage]);
-
-// const handleSubmit = useCallback(
-// 	async (userMessage: string) => {
-// 		try {
-// 			const lastMessage = convexMessages?.[convexMessages.length - 1];
-
-// 			// 1) Save user message in Convex first
-// 			const userMessageId = await sendUserMessage({
-// 				conversationId: chatId as Id<"conversations">,
-// 				content: userMessage,
-// 				parts: [{ type: "text", text: userMessage }],
-// 				parentId: lastMessage?._id,
-// 			});
-
-// 			lastUserMessageIdRef.current = userMessageId;
-
-// 			const assistantMessageId = await saveAssistantMessage({
-// 				conversationId: chatId as Id<"conversations">,
-// 				parentId: userMessageId,
-// 				content: "",
-// 				parts: [],
-// 				model,
-// 				modelProvider: "lmstudio",
-// 			});
-
-// 			assistantMessageIdRef.current = assistantMessageId;
-
-// 			sendMessage({
-// 				id: userMessageId as string,
-// 				role: "user",
-// 				parts: [{ type: "text", text: userMessage }],
-// 			});
-// 		} catch (error) {
-// 			console.error("Failed to send message:", error);
-// 		}
-// 	},
-// 	[chatId, convexMessages, sendUserMessage, sendMessage, saveAssistantMessage],
-// );
-
-// useEffect(() => {
-// 	console.log("ChatId changed, resetting state", chatId);
-// 	return () => {
-// 		hasInitialized.current = false;
-// 		hasTriggeredInitialResponse.current = false;
-// 		lastUserMessageIdRef.current = null;
-// 	};
-// }, [chatId]);
