@@ -1,0 +1,147 @@
+# Security
+
+Threat model and rules for this app. Agents working on any slice that touches keys, rendering, tools, local
+endpoints, or Convex writes must follow this file. References: OWASP Top 10 for LLM Applications (2026),
+OWASP Top 10 for Agentic Applications (Dec 2025), "Design Patterns for Securing LLM Agents against Prompt
+Injections" (arXiv 2506.08837), Google DeepMind's CaMeL (arXiv 2503.18813), and Meta's "Agents Rule of Two".
+
+## What we're protecting, ranked
+
+1. **Users' API keys.** They live in the browser (roadmap decision 2), so any script running in our page can read
+   them. The main threats are XSS (including XSS through model output) and a compromised npm dependency.
+2. **Users' chats.** Private content stored locally, and in Convex when synced or shared.
+3. **Users' machines.** Local model servers we ask them to expose to the browser.
+4. **Our backend.** Convex writes (sync, shares, invites) can be spammed. There's no inference spend to abuse.
+
+## Baseline (roadmap 1.0, ships before the key UI)
+
+**Content Security Policy.** Ship a strict CSP from the server:
+- `script-src 'nonce-…' 'strict-dynamic'`: no inline scripts without the nonce, and no `unsafe-eval`.
+- `connect-src` lists exactly the provider API origins we support, the Convex URL, the analytics/Sentry endpoints,
+  and `http://localhost:*` / `http://127.0.0.1:*` for local models. A script injected by XSS then can't send a key
+  to an attacker's server.
+- `object-src 'none'`, `base-uri 'none'`, `frame-ancestors 'none'`, and `frame-src` limited to the artifacts sandbox origin.
+- Roll it out with `Content-Security-Policy-Report-Only` first, then enforce. Consider Trusted Types
+  (`require-trusted-types-for 'script'`) once the codebase is clean, since it blocks DOM XSS sinks in Chromium.
+
+**Security headers.** `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `Referrer-Policy:
+strict-origin-when-cross-origin`, `Permissions-Policy` (microphone allowed for self only, camera and geolocation
+denied), and `Cross-Origin-Opener-Policy: same-origin`.
+
+**Rendering model output.** Treat every model reply as attacker-controlled (a web page or file the model read may
+have put words in its mouth).
+- Never render model output as raw HTML. Markdown goes through Streamdown's hardening with an allowlist of link
+  and image URL prefixes. Test reference-style links (`[x][1]`) too, which bypassed a filter in the EchoLeak attack.
+- Don't auto-load remote images from model output. Show a "load image from example.com" placeholder instead,
+  because an image URL can carry chat data to an attacker in its query string.
+- Links open with `rel="noopener noreferrer"` and show the real domain on hover.
+- Artifacts and HTML previews render in an iframe on a **separate origin** (e.g. `sandbox.<domain>`) with
+  `sandbox="allow-scripts"` and never `allow-same-origin`. That's how Claude, ChatGPT, and GitHub isolate user content.
+
+**Dependency hygiene.** A compromised package runs inside our page and can read keys, so:
+- Commit `bun.lock`, and use `bun install --frozen-lockfile` in CI.
+- Set a minimum release age (Bun supports `--minimum-release-age`; put it in `bunfig.toml`) so brand-new versions,
+  where most npm worm payloads live, aren't installed for a few days.
+- Bun never runs dependency lifecycle scripts unless they're in `trustedDependencies`. Keep that list empty unless
+  there's a reason.
+- Automated update PRs (Renovate/Dependabot), grouped and reviewed. Prefer fewer dependencies.
+
+**Scrubbing.** One `redact()` utility used by `track()`, the Sentry `beforeSend`, and any logging. It drops anything
+key-shaped (`sk-…`, `sk-ant-…`, `AIza…`, `xai-…`, bearer headers), and analytics never receive prompt or reply text at all.
+
+## API keys (roadmap 1.1)
+
+- Keys are sent only to their own provider's origin (the one exception is the opt-in durable run below). The
+  transport builds headers; no other code touches the key.
+- "Session only" keeps the key in memory. "Remember" stores it in IndexedDB encrypted with a non-extractable
+  WebCrypto `CryptoKey`. Be honest in the UI: this stops someone copying the browser profile, not malicious script.
+- Never show a full key after saving (show the last 4 characters). Never put keys in URLs, exports, or sync payloads.
+- Recommend scoped keys with spend limits. OpenRouter's OAuth flow lets users cap the minted key.
+- Anthropic needs `anthropic-dangerous-direct-browser-access: true` for browser calls. The name is a warning about
+  exposing *your own* key in a public site; with user-supplied keys it's the intended BYOK pattern.
+
+## Server-held keys for durable agent runs (opt-in, roadmap decision 25)
+
+The only case where a key reaches our backend. Rules:
+- **Consent screen first.** It explains that the key will be stored on our server for this run and deleted when
+  the run ends. It recommends a dedicated key with a spend limit, and links to that provider's key-management page
+  so the user can revoke it afterwards. Keep provider key-page URLs in `curation.ts` and check them when adding providers.
+- **Envelope encryption.** A random data key per stored API key encrypts it (AES-GCM). The data key is encrypted with
+  a master key held in a Convex environment variable, never in the database. Ciphertext is readable only by the
+  internal action executing the run. No query or mutation ever returns it, and it never appears in logs.
+- **Scoped and short-lived.** Bound to the user and the run id. Hard-deleted (not soft-deleted) when the run
+  completes, fails, or is cancelled, plus a scheduled sweep that deletes anything older than 24 hours as a backstop.
+  "Keep for future runs" is opt-in and deletable any time from settings.
+- **Visible.** Settings lists stored keys with when they were last used and by which run, and a "Delete now" button.
+- **Backups.** Check Convex backup retention, and state honestly in the privacy policy how long an encrypted key
+  could survive in a backup.
+
+## Permission modes and YOLO (roadmap decision 26)
+
+| Mode | Behavior |
+|---|---|
+| Ask | Every tool call asks first. |
+| Read-only auto *(default)* | Read-only tools run; anything with side effects asks. |
+| Auto except risky | Everything runs except the always-ask list below. |
+| YOLO | Everything runs except the always-ask list below. The data-flow rule (see "Agents") also stays on. |
+
+**Always ask, in every mode:** spending or moving money, deleting the user's data, sending messages or posting
+publicly on the user's behalf, changing account or security settings, adding MCP servers / skills / plugins, and
+entering credentials anywhere.
+
+**YOLO scope.** Per chat, off by default, expires when the run ends, and shown with a persistent banner and in the
+tab title. It's disabled automatically in group chats and shared workspaces, because a chat containing other people's
+messages is untrusted input and the agent could leak their content.
+
+**Who YOLO affects.** Mostly the person who turned it on: their keys, spend, data, and connected accounts. It
+reaches others when the agent acts outward (emails, posts, requests to third-party sites) or reads other people's
+content (group chats). It can also load our infrastructure (the fetch proxy), which is why rate limits and the
+enforcement layers (CSP, sandbox origin, SSRF checks) are never part of what YOLO skips.
+
+## Local model servers (roadmap 2.3)
+
+- **CORS.** By default a local server rejects requests from other websites. "Enable CORS" in LM Studio (as far as
+  we know, an all-or-nothing switch) lets every website the user visits call their local model. Ollama can allow
+  only our origin with `OLLAMA_ORIGINS=https://<our-domain>`.
+- **Detect, then warn.** On "test connection", read `Access-Control-Allow-Origin`. If it's `*`, show the warning
+  with safer setup steps, plus a per-endpoint "don't show again". If it echoes only our origin, show a green check.
+- **Chrome Local Network Access.** Chrome asks the user before a public site can reach `localhost`, and a denial is
+  sticky. Show our own explainer first, trigger the request from a user click, and handle denial with instructions.
+- Never call local endpoints in the background on page load. Only after the user has added one.
+
+## Agents and tools (Phase 4)
+
+The industry consensus: **you cannot filter your way out of prompt injection; you limit what an injected model can do.**
+
+- **Break the "lethal trifecta"** (private data + untrusted content + a way to send data out). Meta's "Rule of Two":
+  in one turn, an agent may have at most two of: (A) untrusted input, (B) sensitive data or systems, (C) the ability
+  to change state or communicate externally. Implementation: once a turn has read untrusted content (web page,
+  file, MCP result), any tool that sends data out or changes state requires explicit approval for the rest of that turn.
+- **Least privilege.** Tools are read-only by default, and each tool declares its risk level. Side-effecting tools
+  require approval (AI SDK 7 approval policies; the HMAC option binds the approved arguments so they can't be
+  swapped after approval).
+- **Patterns for bigger agents.** Plan-then-execute: the plan is fixed from the user's request before any
+  untrusted content is read. Dual LLM: a "reader" call with no tools summarizes untrusted pages, and only its
+  summary reaches the planner. CaMeL-style data-flow tracking is the strongest option known, at some cost in
+  usefulness. Worth it only for high-risk tools.
+- **Server fetch proxy (SSRF).** Resolve DNS and block private, loopback, link-local, and cloud-metadata IP ranges.
+  Re-check after every redirect. Cap response size and time. Only `http(s)` schemes. No cookies forwarded.
+- **MCP.** User-added servers only. Show each tool's description, pin a hash of the tool definitions, and warn when
+  they change (a "rug pull"). Approvals on by default.
+- **Memory (later).** Treat memory writes as untrusted input that the user can see and delete; never let
+  retrieved memory grant new tool permissions.
+
+## Convex
+
+- Every mutation checks membership and authorship. Clients can't write `streaming` partials, other users'
+  messages, or usage records (audit items 1–3).
+- Public queries return projections, never whole documents. Share IDs come from `crypto.getRandomValues`.
+- Rate limits on sync, share creation, and invites (roadmap 6.2).
+
+## Testing
+
+- Playwright tests that render malicious model output (script tags, `javascript:` links, reference-style links,
+  remote images, huge payloads) and assert nothing executes or loads.
+- A CSP test asserting the header is present and enforced.
+- For Phase 4, an injection suite: pages and files with hidden instructions, asserting that no data-sending tool
+  runs without approval. Tools like promptfoo can generate variants.
