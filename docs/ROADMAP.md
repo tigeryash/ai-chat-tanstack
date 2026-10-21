@@ -125,8 +125,8 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   and unused ai-elements files.
   *Done when:* `bunx tsc --noEmit` and `bunx biome check` pass; app runs; a chat with LM Studio streams.
   *Status (2026-10-20):* tsc, Biome, and `bun run build` pass; the login page renders in dev and in the production
-  preview. Not checked with real LM Studio (it wasn't reachable). The stream path (`/api/chat` logic, `<think>`
-  middleware, `streamAssistantTurn`) passed against a mock OpenAI-compatible server. Notes:
+  preview. The stream path (`/api/chat` logic, `<think>` middleware, `streamAssistantTurn`) streams from LM Studio
+  (`google/gemma-4-26b-a4b`): reasoning and text arrive as separate live parts. Not yet tried from the signed-in UI. Notes:
   `@lobehub/icons` stays on 2.48.0 (5.x needs `@lobehub/ui@5` + `antd@6`); `__root.tsx` carries a
   `@ts-expect-error` for an upstream `@convex-dev/better-auth` type bug; Vite 8's Node-style CJS interop needed a
   `.default` unwrap for `react-fast-marquee` and `ssr.noExternal` for `@lobehub/*`.
