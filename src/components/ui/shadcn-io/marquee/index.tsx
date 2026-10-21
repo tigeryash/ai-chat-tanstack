@@ -2,8 +2,14 @@
 
 import type { HTMLAttributes } from "react";
 import type { MarqueeProps as FastMarqueeProps } from "react-fast-marquee";
-import FastMarquee from "react-fast-marquee";
+import FastMarqueeModule from "react-fast-marquee";
 import { cn } from "@/lib/utils";
+
+// react-fast-marquee is CommonJS. Vite 8 and Node hand an ESM importer `module.exports` as the
+// default import, so the component is on `.default`.
+const FastMarquee =
+	(FastMarqueeModule as unknown as { default?: typeof FastMarqueeModule })
+		.default ?? FastMarqueeModule;
 
 export type MarqueeProps = HTMLAttributes<HTMLDivElement>;
 

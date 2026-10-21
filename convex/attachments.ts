@@ -159,7 +159,7 @@ export const linkToMessage = mutation({
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
-    const attachment = await requireAttachmentAccess(ctx, args.attachmentId, user._id);
+    await requireAttachmentAccess(ctx, args.attachmentId, user._id);
     await requireConversationAccess(ctx, args.conversationId, user._id);
 
     await ctx.db.patch(args. attachmentId, {

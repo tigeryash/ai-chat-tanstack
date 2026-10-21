@@ -29,14 +29,14 @@ export const createAuth = (
      maxPasswordLength: 128,
      autoSignIn: true,
      requireEmailVerification: true,
-     sendResetPassword: async ({user, url, token}, request) => {
+     sendResetPassword: async ({ user, url }) => {
        await sendEmail({
          to: user.email,
          subject: "Reset your password",
          text: `Click the link to reset your password: ${url}`,
        });
      },
-     onPasswordReset: async ({ user }, request) => {
+     onPasswordReset: async ({ user }) => {
        await sendEmail({
          to: user.email,
          subject: "Your password has been reset",
@@ -45,7 +45,7 @@ export const createAuth = (
      },
     },
     emailVerification: {
-       sendVerificationEmail: async ( { user, url, token }, request) => {
+       sendVerificationEmail: async ({ user, url }) => {
          await sendEmail({
            to: user.email,
            subject: "Verify your email address",

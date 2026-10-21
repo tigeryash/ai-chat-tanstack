@@ -1,7 +1,8 @@
 import { defineConfig } from 'vite'
 import { devtools } from '@tanstack/devtools-vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
-import viteReact from '@vitejs/plugin-react'
+import viteReact, { reactCompilerPreset } from '@vitejs/plugin-react'
+import babel from '@rolldown/plugin-babel'
 import viteTsConfigPaths from 'vite-tsconfig-paths'
 import tailwindcss from '@tailwindcss/vite'
 import { nitro } from 'nitro/vite'
@@ -10,7 +11,8 @@ import glslify from 'vite-plugin-glslify'
 
 const config = defineConfig({
    ssr: {
-    noExternal: ['@convex-dev/better-auth'],
+    // @lobehub/* ESM builds use directory imports, which Node can't load unbundled.
+    noExternal: ['@convex-dev/better-auth', /^@lobehub\//],
   },
   plugins: [
     devtools(),
@@ -23,11 +25,9 @@ const config = defineConfig({
     }),
     tailwindcss(),
     tanstackStart(),
-    viteReact({
-      babel: {
-        plugins: ['babel-plugin-react-compiler'],
-      },
-    }),
+    viteReact(),
+    // plugin-react v6 dropped its `babel` option; the compiler runs through rolldown's babel plugin.
+    babel({ presets: [reactCompilerPreset()] }),
     glslify(),
     // glsl({
     //   include: [

@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000
+    },
+    {
+      "name": "serve",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "serve", "--port", "4173", "--strictPort"],
+      "port": 4173
+    }
+  ]
+}
