@@ -30,10 +30,18 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
 
 ## Owner to-dos (Yash)
 
-- [ ] Buy a domain. Needed for stable auth and email links, and for the separate sandbox subdomain (4.8).
-- [ ] Separate dev and prod Convex deployments before Milestone 1 goes live.
-- [ ] Artificial Analysis API key (free tier) for 2.1.
-- [ ] Vercel Hobby is fine while this is a portfolio piece; move to Pro before charging money.
+- [x] Buy a domain. Needed for stable auth and email links, and for the separate sandbox subdomain (4.8).
+  *Bought 2026-10-23.* Not connected yet: add it in Vercel, then update `SITE_URL` and the OAuth redirect URLs.
+- [x] Separate dev and prod Convex deployments before Milestone 1 goes live. *Checked 2026-10-23:* the production
+  site (`ai-chat-tanstack.vercel.app`) talks to a different Convex deployment than `.env.local`.
+- [ ] Deploy Convex with the app. Vercel's build runs only `vite build`, so production Convex functions change only
+  when someone runs `bunx convex deploy`. Before Milestone 1: create a production deploy key in the Convex dashboard
+  and add it to Vercel as `CONVEX_DEPLOY_KEY`; the build command then becomes `npx convex deploy --cmd '…'`.
+- [x] Artificial Analysis API key (free tier) for 2.1. *In `.env.local` as `ARTIFICIAL_ANALYSIS_API_KEY`
+  (2026-10-23).* The 2.1 sync runs as a Convex action, so the key also has to be set on each Convex deployment
+  (`bunx convex env set ARTIFICIAL_ANALYSIS_API_KEY …`).
+- [ ] Vercel Hobby is fine while this is a portfolio piece; move to Pro before charging money. *Still on Hobby
+  (2026-10-23).*
 
 ## Key decisions
 
@@ -141,7 +149,7 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   Better Auth `databaseHooks.account` create/update hook, and clear the existing rows.
   *Done when:* each item has a test or a manual repro that now fails safely, and Google/GitHub/Discord sign-in and
   account linking still work with the token fields empty.
-- [ ] **0.4 Guardrails for agent-built code.**
+- [x] **0.4 Guardrails for agent-built code.**
   - `CLAUDE.md`: commands, architecture, conventions, and the hard rules (decisions 2, 5, 22, 23).
   - Vitest working, with a first unit test (`conversions.ts`).
   - Playwright with a smoke test and screenshot tests of the composer's expanded and collapsed states. Chat e2e
@@ -151,7 +159,7 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   - `.claude/launch.json` so agents can open the app in the preview browser.
   - Keep `docs/data-inventory.md` current (started 2026-10-20).
   *Done when:* CI is green on a PR, and a deliberately broken commit is blocked by the hook.
-  *Status (2026-10-23):* everything is in place and passes locally; waiting on the first CI run on a PR. `CLAUDE.md`
+  *Status (2026-10-23):* CI green on [PR #2](https://github.com/tigeryash/ai-chat-tanstack/pull/2). `CLAUDE.md`
   added. Vitest has its own `vitest.config.ts` (the app's Nitro/Start plugins caused the "module is not defined"
   crash and the hang), with 11 tests for `conversions.ts`. Playwright 1.64.1: smoke tests (signed out, `/` and
   `/new` land on `/login`), composer behavior tests, and pill/card screenshots with macOS and Linux baselines.
