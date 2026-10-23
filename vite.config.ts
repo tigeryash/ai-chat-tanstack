@@ -15,7 +15,10 @@ const config = defineConfig({
     noExternal: ['@convex-dev/better-auth', /^@lobehub\//],
   },
   plugins: [
-    devtools(),
+    // devtools-vite (0.8.1–0.8.5) re-runs `bun outdated` on every package.json change, and `bun outdated`
+    // itself fires a package.json change, so dev loops and nitro full-reloads every tab ~10x/s.
+    // Drop only that sub-plugin (the devtools "outdated packages" panel); the rest stays.
+    devtools().filter((plugin) => plugin.name !== '@tanstack/devtools:event-client-setup'),
     nitro({
       preset: "vercel"
     }),
