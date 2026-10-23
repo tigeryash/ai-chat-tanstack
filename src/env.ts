@@ -17,6 +17,8 @@ export const env = createEnv({
 		VITE_CHAT_MODEL: z.string().min(1).optional(),
 		VITE_CHAT_PROVIDER: z.string().min(1).optional(),
 		VITE_LMSTUDIO_BASE_URL: z.string().url().optional(),
+		// Build-time switch for the /e2e test pages (on in dev regardless). Set only by playwright.config.ts.
+		VITE_E2E: z.enum(["true", "false"]).optional(),
 	},
 
 	/**

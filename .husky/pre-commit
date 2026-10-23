@@ -1,0 +1,3 @@
+# Fast checks on every commit. CI runs the full `bun run verify` plus Playwright.
+bunx biome check --staged --no-errors-on-unmatched --files-ignore-unknown=true
+bun run typecheck

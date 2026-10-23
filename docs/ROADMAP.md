@@ -151,6 +151,17 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   - `.claude/launch.json` so agents can open the app in the preview browser.
   - Keep `docs/data-inventory.md` current (started 2026-10-20).
   *Done when:* CI is green on a PR, and a deliberately broken commit is blocked by the hook.
+  *Status (2026-10-23):* everything is in place and passes locally; waiting on the first CI run on a PR. `CLAUDE.md`
+  added. Vitest has its own `vitest.config.ts` (the app's Nitro/Start plugins caused the "module is not defined"
+  crash and the hang), with 11 tests for `conversions.ts`. Playwright 1.64.1: smoke tests (signed out, `/` and
+  `/new` land on `/login`), composer behavior tests, and pill/card screenshots with macOS and Linux baselines.
+  Signed out, tests reach the composer through `/e2e/composer`, a test page that exists only in dev and
+  `VITE_E2E` builds (404 in production). e2e runs a production build against a local Convex/Better Auth stub, so no
+  test account, secrets, or auth changes were needed. A fixture fails any test whose page sends a request off the
+  machine or throws. No chat e2e yet: today's chat path needs a session and goes away in 1.2, which adds the first
+  one on `MockLanguageModelV4`. The Husky pre-commit hook (Biome on staged files + tsc) blocked a deliberately
+  broken commit. CI runs `verify` and Playwright (in the same `mcr.microsoft.com/playwright` image as
+  `bun run test:e2e:linux`). `.claude/launch.json` kept as is; nothing new stores data.
 - [x] **0.5 TanStack Start stable.** 1.168 RC → 1.169.x per "Migrate from the Release Candidate". Vite 8 and
   `nitro/vite` are already done; `useSession` and `.inputValidator()` aren't used outside the demo routes. Re-test the
   Better Auth SSR token flow (`@convex-dev/better-auth/react-start` uses `getRequestHeaders`).
@@ -181,7 +192,8 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   key sent only to its provider.
 - [ ] **1.2 `useChat` with a browser transport** (decision 7). Render every part type (text, reasoning while
   streaming, file, source, tool). Stop and regenerate. Remove `/api/chat` and `streamAssistantTurn.ts`.
-  *Done when:* the route component is under ~100 lines, reasoning streams live, and Stop works.
+  *Done when:* the route component is under ~100 lines, reasoning streams live, Stop works, and a Playwright chat
+  test streams a reply from `MockLanguageModelV4` (`ai/test`).
 - [ ] **1.3 `ChatStore` + IndexedDB** (decisions 8–10): Dexie store, format versioning with a migration test,
   persistent-storage request and status, export/import as versioned JSON.
   Drop the old Convex test conversations and the unused `artifacts` and `activeChatSessions` tables (pane layout
