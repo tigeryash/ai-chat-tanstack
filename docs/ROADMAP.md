@@ -31,12 +31,15 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
 ## Owner to-dos (Yash)
 
 - [x] Buy a domain. Needed for stable auth and email links, and for the separate sandbox subdomain (4.8).
-  *Bought 2026-10-23.* Not connected yet: add it in Vercel, then update `SITE_URL` and the OAuth redirect URLs.
+  *Bought and connected 2026-10-23:* `www.highelollms.com` serves the app (the apex redirects to `www`), prod
+  Convex `SITE_URL` points at it, and the Discord, Google, and GitHub OAuth redirect URLs use it. Sign-in works only
+  from that origin now, not from `ai-chat-tanstack.vercel.app`.
 - [x] Separate dev and prod Convex deployments before Milestone 1 goes live. *Checked 2026-10-23:* the production
-  site (`ai-chat-tanstack.vercel.app`) talks to a different Convex deployment than `.env.local`.
-- [ ] Deploy Convex with the app. Vercel's build runs only `vite build`, so production Convex functions change only
-  when someone runs `bunx convex deploy`. Before Milestone 1: create a production deploy key in the Convex dashboard
-  and add it to Vercel as `CONVEX_DEPLOY_KEY`; the build command then becomes `npx convex deploy --cmd '…'`.
+  site talks to a different Convex deployment (`small-marmot-598`) than `.env.local`.
+- [x] Deploy Convex with the app. Vercel's build used to run only `vite build`, so production Convex functions
+  changed only when someone ran `bunx convex deploy`. *Done 2026-10-23 (PR #3):* `vercel.json` runs
+  `scripts/vercel-build.sh`, which runs `convex deploy` around the Vite build only when `VERCEL_ENV=production`, and
+  fails that build if the key is missing. `CONVEX_DEPLOY_KEY` is set in Vercel, Production scope only.
 - [x] Artificial Analysis API key (free tier) for 2.1. *In `.env.local` as `ARTIFICIAL_ANALYSIS_API_KEY`
   (2026-10-23).* The 2.1 sync runs as a Convex action, so the key also has to be set on each Convex deployment
   (`bunx convex env set ARTIFICIAL_ANALYSIS_API_KEY …`).

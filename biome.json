@@ -10,6 +10,7 @@
 		"includes": [
 			"**/src/**/*",
 			"**/e2e/**/*.ts",
+			"**/scripts/**/*.ts",
 			"**/vitest.config.ts",
 			"**/playwright.config.ts",
 			"**/.vscode/**/*",

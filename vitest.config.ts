@@ -7,7 +7,11 @@ export default defineConfig({
 		tsconfigPaths: true,
 	},
 	test: {
-		include: ["src/**/*.test.{ts,tsx}", "convex/**/*.test.ts"],
+		include: [
+			"src/**/*.test.{ts,tsx}",
+			"convex/**/*.test.ts",
+			"scripts/**/*.test.ts",
+		],
 		// Pure logic by default. A test that needs the DOM opts in with `// @vitest-environment jsdom`.
 		environment: "node",
 	},
