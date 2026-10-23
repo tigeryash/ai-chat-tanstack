@@ -186,9 +186,9 @@ function AudioLines(props: AudioLinesProps) {
 }
 
 export {
-	animations,
 	AudioLines,
 	AudioLines as AudioLinesIcon,
 	type AudioLinesProps,
 	type AudioLinesProps as AudioLinesIconProps,
+	animations,
 };

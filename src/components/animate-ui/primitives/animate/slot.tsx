@@ -69,9 +69,12 @@ function Slot<T extends HTMLElement = HTMLElement>({
 		children.type !== null &&
 		isMotionComponent(children.type);
 
-	const Base = isAlreadyMotion
-		? (children.type as React.ElementType)
-		: motion.create(children.type as React.ElementType);
+	// Typed as a component (not React.ElementType) so `ref` isn't narrowed to `never`.
+	const Base = (
+		isAlreadyMotion
+			? children.type
+			: motion.create(children.type as React.ElementType)
+	) as React.ComponentType<AnyProps>;
 
 	const { ref: childRef, ...childProps } = children.props as AnyProps;
 
@@ -83,9 +86,9 @@ function Slot<T extends HTMLElement = HTMLElement>({
 }
 
 export {
+	type AnyProps,
+	type DOMMotionProps,
 	Slot,
 	type SlotProps,
 	type WithAsChild,
-	type DOMMotionProps,
-	type AnyProps,
 };

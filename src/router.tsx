@@ -14,7 +14,9 @@ export const getRouter = () => {
 		},
 		defaultPreload: "intent",
 		scrollRestoration: true,
-		defaultErrorComponent: (err) => <p>{err.error.stack}</p>,
+		defaultErrorComponent: (err) => (
+			<p>{err.error instanceof Error ? err.error.stack : String(err.error)}</p>
+		),
 		defaultNotFoundComponent: () => <p>not found</p>,
 		Wrap: (props: { children: React.ReactNode }) => {
 			return (

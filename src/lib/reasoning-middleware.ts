@@ -1,11 +1,10 @@
-import {
-	extractReasoningMiddleware,
-	type LanguageModelV3,
-	wrapLanguageModel,
-} from "ai";
+import { extractReasoningMiddleware, wrapLanguageModel } from "ai";
+
+// `ai` no longer re-exports the provider spec types (LanguageModelV2/V3/V4).
+type BaseModel = Parameters<typeof wrapLanguageModel>[0]["model"];
 
 // For models that use <think> tags (DeepSeek R1, GLM, etc.)
-export function createThinkTagModel(baseModel: LanguageModelV3) {
+export function createThinkTagModel(baseModel: BaseModel) {
 	return wrapLanguageModel({
 		model: baseModel,
 		middleware: extractReasoningMiddleware({
@@ -15,7 +14,7 @@ export function createThinkTagModel(baseModel: LanguageModelV3) {
 }
 
 // For models that use [THINK] tags (Mistral, etc.)
-export function createBracketThinkModel(baseModel: LanguageModelV3) {
+export function createBracketThinkModel(baseModel: BaseModel) {
 	return wrapLanguageModel({
 		model: baseModel,
 		middleware: extractReasoningMiddleware({

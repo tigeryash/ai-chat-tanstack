@@ -671,14 +671,14 @@ function useIconVariants<
 }
 
 export {
+	AnimateIcon,
+	type AnimateIconContextValue,
+	type AnimateIconProps,
+	type IconProps,
+	IconWrapper,
+	type IconWrapperProps,
 	pathClassName,
 	staticAnimations,
-	AnimateIcon,
-	IconWrapper,
 	useAnimateIconContext,
 	useIconVariants,
-	type IconProps,
-	type IconWrapperProps,
-	type AnimateIconProps,
-	type AnimateIconContextValue,
 };

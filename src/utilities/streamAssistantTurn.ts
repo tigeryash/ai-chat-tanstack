@@ -52,7 +52,7 @@ const toPersistedParts = ({
 	parts: UIMessage["parts"];
 	state: "streaming" | "done";
 }): PersistedAssistantPart[] =>
-	parts.flatMap((part) => {
+	parts.flatMap<PersistedAssistantPart>((part) => {
 		switch (part.type) {
 			case "text":
 				return [{ type: "text", text: part.text, state }];

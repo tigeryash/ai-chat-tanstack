@@ -1,0 +1,329 @@
+# Roadmap
+
+Goal: a Vercel-AI-Playground-style app. Several chat panes side by side, each with its own model,
+covering hosted models, local models (LM Studio / Ollama / in-browser), voice, and tools/agents.
+Users bring their own keys or local models. Chats are saved locally first, with optional cloud sync.
+Today it's a portfolio piece, but it's built to production standards.
+
+Related docs: [audit-2026-10.md](./audit-2026-10.md) (findings), [security.md](./security.md) (threat model and rules).
+
+## How to use this file
+
+Each numbered item is a **slice**: small enough for one agent session, and shippable on its own.
+Every slice has a "Done when" line. That's the acceptance check to run before marking it done.
+Tick slices off here as they land so the next session knows where things stand.
+
+Critical path: **Phase 0 → 1 → 2 → 3**. Phases 4 (tools/agents) and 5 (voice) can start any time after
+Phase 1 and interleave with Phase 3. Phase 6 (cloud) comes after the local-first core is solid. Phase 7 is launch prep.
+
+## Milestones (agreed 2026-10-20)
+
+Each milestone is deployable and demo-able on its own, so the portfolio piece is live long before everything is built.
+
+1. **Playground MVP:** Phase 0, 1.0–1.5, 2.1–2.3, 3.1–3.2. Bring your own keys or LM Studio, pick models from the
+   live catalog, chat in 2–4 synced panes, chats saved on your device.
+2. **Serious playground:** 1.6–1.8, 2.4–2.5, 3.3–3.6, 3.10. Attachments, branching, per-model settings, cost and
+   speed stats, prompt library with versions, tab status and notifications.
+3. **Agents:** Phase 4, starting with the 4.0 design session.
+4. **Voice:** Phase 5.
+5. **Cloud and launch:** Phases 6 and 7.
+
+## Owner to-dos (Yash)
+
+- [ ] Buy a domain. Needed for stable auth and email links, and for the separate sandbox subdomain (4.8).
+- [ ] Separate dev and prod Convex deployments before Milestone 1 goes live.
+- [ ] Artificial Analysis API key (free tier) for 2.1.
+- [ ] Vercel Hobby is fine while this is a portfolio piece; move to Pro before charging money.
+
+## Key decisions
+
+### Money, keys, and where models run
+1. **Users pay for inference; the app never does.** Sources: per-provider API keys, "Connect OpenRouter" (OAuth
+   PKCE, which mints a user-owned key the user can cap), the user's own AI Gateway key, and local servers.
+2. **Keys never leave the browser except to their provider**, with one opt-in exception: durable agent runs
+   (decision 25). Never sent to our server, Convex, logs, analytics, error reports, or URLs. Two storage modes: "this session only" (memory) and "remember on this device"
+   (IndexedDB, encrypted with a non-extractable WebCrypto key; this protects against disk theft, not XSS).
+   Encourage limited keys (OpenRouter credit limits, OpenAI project budgets).
+3. **Model calls go browser → provider.** CORS preflights verified on 2026-10-20 for OpenAI, Anthropic (needs the
+   `anthropic-dangerous-direct-browser-access` header), Google Gemini, xAI, Mistral, DeepSeek, Groq, Together,
+   Fireworks, Moonshot, Cerebras, OpenRouter, Hugging Face router, and AI Gateway. There is no inference route on
+   our server, so there are no inference costs, no server timeouts for chat, and no rate limiting needed for chat.
+4. **No login wall.** Chatting needs no account, since keys and chats are local. Signing in is only for cloud
+   features (sync, share, invite). This replaces the earlier "anonymous guest session" plan.
+5. **Stay on Better Auth 1.6.x** until `@convex-dev/better-auth` supports 1.7 (current peer range is `<1.7.0`).
+6. **Security baseline before key handling.** Because keys live in the page, an XSS bug or a malicious dependency
+   means stolen keys. The baseline in [security.md](./security.md) ships before the key settings UI.
+
+### Chat engine and storage
+7. **`useChat` is the chat engine.** Each pane is one `useChat({ id })` with a browser-side `ChatTransport` that
+   runs `streamText` against the chosen provider. The hand-rolled stream reader, the 250 ms Convex writes, and
+   `/api/chat` all go away.
+8. **IndexedDB behind a `ChatStore` interface** (Dexie). localStorage is synchronous, string-only, and capped around 5 MB.
+9. **Persistent storage is requested at a meaningful moment.** Call `navigator.storage.persist()` after the first
+   chat is saved (Firefox shows a prompt; Chrome decides from engagement; Safari support is partial). Show the result
+   in settings. Export/import and cloud sync are the real backstops, because Safari can wipe site data after 7 days
+   of Safari use without a visit to the site.
+10. **Stored chats are versioned.** Every stored chat has a `formatVersion`. Loading runs it through an ordered list of
+    pure migration functions up to the current version, then validates it. Each AI SDK upgrade that changes message
+    shape adds one migration plus a fixture from the old version to the tests. Exports carry the same version.
+11. **Who saves a reply.** The browser saves once when a reply finishes. With sync on, it also uploads the finished
+    message to Convex. Convex only accepts finished messages, written by a member of that chat and attributed to them.
+12. **Chat routes render in the browser** (TanStack Start `ssr: false`). Landing and `/share/$id` stay server-rendered.
+
+### Models and settings
+13. **The model catalog is synced data, not code.** A daily Convex cron pulls the public AI Gateway catalog and
+    Artificial Analysis scores, merges a curated overrides file, and upserts a `models` table read through a public
+    query. A model is *runnable* for a user when one of their connections serves it.
+14. **Every model is usable; "High Elo" is the default view.** The picker opens on top-N by Artificial Analysis
+    Intelligence Index plus curated pins, with an "All models" toggle and a High Elo badge. Vanished models are
+    marked `removed` (never deleted): old chats stay readable, and a banner suggests the newest model from the
+    same family.
+15. **Settings come from capabilities.** One parameter registry (label, control, range, default, mapping to AI SDK
+    call settings or `providerOptions`). The UI renders only what the model supports, and the transport strips the rest.
+
+### Multi-pane behavior
+16. **Re-syncing panes just sends.** Panes never see each other's history. A "diverged" badge shows when synced
+    panes have different histories, so comparisons aren't silently apples-to-oranges.
+17. **Attachments are checked when attached, not at send time.** If a synced pane's model can't take the file, that
+    pane's composer shows an inline notice with a choice: send text only, send extracted text (PDFs), or skip that pane.
+18. **Stop:** the composer's Stop stops all synced panes; each pane's own Stop stops just that pane. Unsynced panes
+    stop individually.
+19. **System prompts:** shared by default. Precedence is pane override → model-specific default → shared prompt.
+    A prompt library stores named, tagged prompts (3.6).
+
+### Cross-cutting
+20. **Sharing and invites.** Single chats can be shared read-only and can become group chats. Multi-pane
+    workspaces can be shared read-only but never accept invites. Shared snapshots exclude the system prompt unless the
+    owner opts in.
+21. **One UI primitive layer: Base UI**, with shadcn's AI Elements patterns replacing Vercel's ai-elements. The app
+    shell stays a basic skeleton styled by those components; a design pass happens only when a screen needs one.
+22. **Reduced motion is respected everywhere.** `<MotionConfig reducedMotion="user">` at the root, `gsap.matchMedia()`
+    for GSAP, and a single static frame for the WebGL scene. Agents must keep this rule (it goes in `CLAUDE.md`).
+23. **Analytics never capture content.** No prompts, replies, file contents, or keys. One `track()` module enforces
+    this. Cookieless by default, with an opt-out in settings. Users get their own insights computed locally (3.9).
+24. **Legal pages are drafted from a living data inventory.** [data-inventory.md](./data-inventory.md) is updated by
+    any slice that adds, moves, or stores data, and its "Commitments" section is the seed of the privacy policy.
+    Terms and privacy drafts start early and get revised as features land (7.1).
+
+### Agents
+25. **Durable agent runs may hold a key server-side, opt-in only.** To run a long agent on the server, the user
+    provides a key for that run. It's stored encrypted in Convex, readable only by the run, and **deleted
+    automatically when the run ends** unless the user ticks "keep for future runs" (then deletable any time from
+    settings). The opt-in screen recommends a dedicated, spend-limited key and links to that provider's key page so
+    they can revoke it afterwards. Details in [security.md](./security.md).
+26. **Permission modes, not a single YOLO switch.** Modes range from "ask every time" to "auto-approve everything"
+    (YOLO). YOLO only skips confirmations. It never disables the enforcement layers (CSP, sandbox origin, SSRF
+    proxy, rate limits) or the hard-blocked actions. Details in [security.md](./security.md).
+
+---
+
+## Phase 0: Stabilize and add guardrails
+
+- [x] **0.1 Green build on the new deps.** Patch the vendored ai-elements type errors minimally (replaced in 0.7);
+  fix `reasoning-middleware.ts` (`LanguageModelV3` import), Better Auth client typing in `__root.tsx`,
+  `streamAssistantTurn.ts`, `models.tsx`, and `slot.tsx`. Delete `src/routes/demo/*`, `src/hooks/useChatMessages.tsx`,
+  and unused ai-elements files.
+  *Done when:* `bunx tsc --noEmit` and `bunx biome check` pass; app runs; a chat with LM Studio streams.
+  *Status (2026-10-20):* tsc, Biome, and `bun run build` pass; the login page renders in dev and in the production
+  preview. The stream path (`/api/chat` logic, `<think>` middleware, `streamAssistantTurn`) streams from LM Studio
+  (`google/gemma-4-26b-a4b`): reasoning and text arrive as separate live parts. Not yet tried from the signed-in UI. Notes:
+  `@lobehub/icons` stays on 2.48.0 (5.x needs `@lobehub/ui@5` + `antd@6`); `__root.tsx` carries a
+  `@ts-expect-error` for an upstream `@convex-dev/better-auth` type bug; Vite 8's Node-style CJS interop needed a
+  `.default` unwrap for `react-fast-marquee` and `ssr.noExternal` for `@lobehub/*`.
+- [x] **0.2 React Compiler actually on.** `@rolldown/plugin-babel` + `reactCompilerPreset()`.
+  *Done when:* no `vite.config.ts` type error, and React DevTools shows the "Memo ✨" badge.
+  *Status (2026-10-20):* no type error; compiler output (`react.memo_cache_sentinel`) is in 9 of 17 client chunks.
+  The DevTools badge itself wasn't checked.
+- [ ] **0.3 Convex security fixes** (audit items 1–7): read-only user lookup in queries; attachment ownership checks;
+  restrict message writes to members and their own authorship; make `usage.record` internal; crypto share IDs and a
+  projected `getShared`; `type="password"` with matching min length; no stack traces or devtools in prod; drop the
+  message `console.log`. Stop storing OAuth access/refresh/id tokens (sign-in is the only use): null them in a
+  Better Auth `databaseHooks.account` create/update hook, and clear the existing rows.
+  *Done when:* each item has a test or a manual repro that now fails safely, and Google/GitHub/Discord sign-in and
+  account linking still work with the token fields empty.
+- [ ] **0.4 Guardrails for agent-built code.**
+  - `CLAUDE.md`: commands, architecture, conventions, and the hard rules (decisions 2, 5, 22, 23).
+  - Vitest working, with a first unit test (`conversions.ts`).
+  - Playwright with a smoke test and screenshot tests of the composer's expanded and collapsed states. Chat e2e
+    tests use the AI SDK mock model from `ai/test`, so they never call a real model.
+  - `bun run verify` (tsc + biome + vitest) and a pre-commit hook running Biome and the type check.
+  - GitHub Actions running `verify` and Playwright on PRs.
+  - `.claude/launch.json` so agents can open the app in the preview browser.
+  - Keep `docs/data-inventory.md` current (started 2026-10-20).
+  *Done when:* CI is green on a PR, and a deliberately broken commit is blocked by the hook.
+- [x] **0.5 TanStack Start stable.** 1.168 RC → 1.169.x per "Migrate from the Release Candidate". Vite 8 and
+  `nitro/vite` are already done; `useSession` and `.inputValidator()` aren't used outside the demo routes. Re-test the
+  Better Auth SSR token flow (`@convex-dev/better-auth/react-start` uses `getRequestHeaders`).
+  *Done when:* login → chat works in `bun run build && bun run serve`.
+  *Status (2026-10-20):* on `@tanstack/react-start` 1.169.3 / `react-router` 1.170.45. In the production preview
+  the signed-out SSR path works (`/` → `/login`, `/api/auth/get-session` → `null`, `/api/chat` → 401). A signed-in
+  login → chat still needs a manual pass with a real account.
+- [x] **0.6 Commit the dependency upgrade** with 0.1 and 0.5 so `main` builds.
+  *Status (2026-10-20):* committed on branch `phase-0-green-build` (not pushed or merged yet).
+- [ ] **0.7 Base UI + shadcn AI Elements** (decision 21). Base UI style in `components.json`, re-add the shadcn
+  components in use, rebuild the ai-elements wrappers in use on shadcn's patterns (each has a migration prompt; export
+  names and props stay the same), move the login form to `@base-ui/react`, remove `@radix-ui/*`.
+  *Done when:* no `@radix-ui` imports remain and the composer, reasoning, and auth pages look and animate the same.
+- [ ] **0.8 Reduced motion** (decision 22). Also cap the WebGL DPR and lazy-load three.js on the auth route.
+  *Done when:* with "Reduce motion" on in the OS, the composer resizes without animating, GSAP reveals are instant,
+  and the WebGL scene is a still frame.
+
+## Phase 1: New chat core (BYOK, browser-direct, local-first)
+
+- [ ] **1.0 Security baseline** ([security.md](./security.md) "Baseline"): strict CSP with nonces and a
+  `connect-src` allowlist, security headers, hardened markdown rendering, dependency hygiene, a log/analytics
+  scrubber, and Playwright tests with XSS payloads in model output.
+  *Done when:* the XSS tests pass and the CSP report shows no violations in normal use.
+- [ ] **1.1 Keys and connections.** Settings panel: add a key per provider, choose session-only or remember,
+  "test key" (lists models), and delete. "Connect OpenRouter" via OAuth PKCE. Show which providers are connected
+  and never display a full key after saving.
+  *Done when:* keys work after reload in "remember" mode, vanish in "session" mode, and a network capture shows a
+  key sent only to its provider.
+- [ ] **1.2 `useChat` with a browser transport** (decision 7). Render every part type (text, reasoning while
+  streaming, file, source, tool). Stop and regenerate. Remove `/api/chat` and `streamAssistantTurn.ts`.
+  *Done when:* the route component is under ~100 lines, reasoning streams live, and Stop works.
+- [ ] **1.3 `ChatStore` + IndexedDB** (decisions 8–10): Dexie store, format versioning with a migration test,
+  persistent-storage request and status, export/import as versioned JSON.
+  Drop the old Convex test conversations and the unused `artifacts` and `activeChatSessions` tables (pane layout
+  is stored locally).
+  *Done when:* chats survive reload offline; a v0 fixture loads through migration; export → wipe → import
+  restores everything.
+- [ ] **1.4 Sidebar.** List, new, rename, delete, pin, search by title. Auto-title with the user's chosen
+  "utility model" (settings), falling back to the first line of the message.
+- [ ] **1.5 No login wall** (decision 4). Chat works signed out. The auth pages become "Sign in to sync and share",
+  with real sign-up and forgot-password flows (or magic link / email OTP).
+- [ ] **1.6 Attachments that send.** Images/PDFs as `file` parts where supported; blobs in IndexedDB; unified
+  drag-drop and paperclip validation; revoke object URLs.
+- [ ] **1.7 Edit and branch.** Edit a user message → new branch; switch between siblings.
+- [ ] **1.8 Analytics foundation** (decision 23). A `track()` wrapper with an allowlist of event names and
+  properties; cookieless page analytics and Web Vitals (`web-vitals` is already installed); Sentry with scrubbing.
+  From here on, each slice lists the events it adds.
+
+## Phase 2: Models and providers
+
+- [ ] **2.1 Model catalog sync.** Convex `models` table + daily `crons.ts` action:
+  1. AI Gateway `GET https://ai-gateway.vercel.sh/v1/models` (public): developer, name, description, context,
+     max output, pricing, release date, knowledge cutoff, modalities, tags, supported parameters, reasoning
+     options, ZDR / no-training flags.
+  2. `GET /v1/models/{id}/endpoints`: which providers serve it, per-provider pricing, uptime.
+  3. Artificial Analysis free API (key, 1k req/day, attribution required): intelligence/coding/agentic indices.
+  4. Each provider's native model id for direct-key calls (models.dev lists per-provider ids), and OpenRouter
+     `GET /api/v1/models` for its ids and finer `supported_parameters`.
+  5. Merge `src/models/curation.ts` (pins, hides, display and parameter overrides).
+  A failed source never wipes data. Record `lastSyncedAt` per source and log a diff each run.
+  *Done when:* a manual run populates the table, and a run with one source offline leaves it intact.
+- [ ] **2.1b Availability.** High Elo set, `removed` marking and banner, and per-user runnability (which of the
+  user's connections can run each model; unrunnable models show "Connect <provider>").
+- [ ] **2.2 Model picker + model card.** Logos, capability badges, search, filters (developer, price, context,
+  capabilities), sort (Intelligence Index, price, newest), the High Elo / All toggle. Empty pane shows the model card:
+  developer, description, context, prices, providers, knowledge cutoff, release date, Intelligence Index (credited),
+  and data-policy badges. Local models show only what the local server reports.
+- [ ] **2.3 Local models.** Endpoint settings for LM Studio / Ollama: test connection, list models, and keep the
+  `<think>` middleware. Handle Chrome's Local Network Access prompt: explain it before it appears, and if the user
+  denies it, show how to re-allow it in site settings (Chrome won't ask twice). CORS warning per [security.md](./security.md):
+  warn only when the server allows every origin (`*`), with Ollama `OLLAMA_ORIGINS` instructions and a "don't show
+  again" per endpoint.
+  *Done when:* the deployed app chats with LM Studio on your laptop.
+- [ ] **2.4a Parameter probe script.** Sends one tiny request per parameter per model with the developer's own keys
+  (cents per run), records accept / reject / ignored, and writes results into `curation.ts`.
+- [ ] **2.4b Parameter registry + settings panel** (decision 15), including provider-specific options and local
+  sampling settings.
+  *Done when:* switching models shows/hides the right controls and no supported model errors across any control's range.
+- [ ] **2.5 Usage and cost display.** Tokens, TTFT, tokens/sec, and estimated cost per message, chat, and provider,
+  from catalog pricing. It's the user's money, so make it visible.
+- [ ] **2.6 (Stretch) In-browser models.** WebGPU (transformers.js / WebLLM) and browser built-in AI (e.g. Chrome's
+  Prompt API) as extra connection types.
+
+## Phase 3: Multi-pane playground (the signature feature)
+
+- [ ] **3.1 Pane layout.** 1–4 resizable panes (`react-resizable-panels`), add/remove/reorder with `LayoutGroup`.
+- [ ] **3.2 Synced composers + Stop** (decisions 16 and 18). Per-pane composer with a "Synced" toggle and mirrored
+  input, the "diverged" badge, and the Stop behavior.
+- [ ] **3.3 Capability-aware attachments** (decision 17).
+- [ ] **3.4 Compare tools.** Per-pane TTFT, tokens/sec, cost; sync scroll; thumbs up/down; "copy settings to all panes".
+- [ ] **3.5 Workspaces.** Save/restore layouts and models; deep link `?models=a,b,c`.
+- [ ] **3.6 Prompt library** (decision 19). Save, name, tag, search, apply; set per-model defaults; version history
+  (every edit is a version, with diff view and restore, and each reply records which prompt version produced it).
+  Later: variables (`{{date}}`).
+- [ ] **3.7 Blind mode** *(deferred; revisit with monetization)*. Hide model names, pick the better answer, reveal.
+  Votes stay local and feed a personal leaderboard. Runs on the user's keys.
+- [ ] **3.8 Mobile.** Panes become swipeable tabs below `md`.
+- [ ] **3.9 Insights.** Local dashboard: spend per provider, latency per model, blind-mode win rates, most-used prompts.
+- [ ] **3.10 Status in the tab and notifications.** The tab title and favicon reflect status (e.g. "● 2 replying",
+  "✓ Done") while the tab is in the background. Browser notifications when a reply or agent run finishes or needs
+  approval and the tab is hidden. Ask for notification permission only when the user first starts something long,
+  never on page load. On/off per event type in settings.
+
+## Phase 4: Agent harness
+
+This is effectively a small agent harness. Slices below are a draft; 4.0 settles the design first.
+
+- [ ] **4.0 Harness design session (with Yash).** Decide: which capabilities agents get and where each runs
+  (browser / server / sandbox); permission modes and the hard-blocked list (decision 26); skills, plugins, and
+  hooks; subagent limits; durable-run runtime (Vercel Workflow via `@ai-sdk/workflow` vs the Convex workflow
+  component). Output: an ADR-style section in this file.
+- [ ] **4.1 Runners.** Browser runner (default): checkpoints each step to IndexedDB, holds a wake lock, warns before
+  the tab closes. Provider background mode where supported (e.g. OpenAI Responses `background`). Durable server
+  runs with opt-in key custody (decision 25).
+- [ ] **4.2 First tools.** Web search through provider-native search tools or the user's own search API key; a
+  URL-fetch tool through a small server proxy with SSRF protection; date/time/calculator. Multi-step with `stopWhen`.
+- [ ] **4.3 Permissions and approvals.** Permission modes (decision 26), per-tool risk levels, AI SDK 7 approval
+  policies, and the data-flow rule from [security.md](./security.md) "Agents".
+- [ ] **4.4 MCP servers.** User-added only; show and pin tool definitions, flag changes; approvals by default.
+- [ ] **4.5 Skills.** Agent Skills format (a folder with `SKILL.md` instructions plus optional files) loaded on
+  demand. Instruction-only skills first; skills with scripts only run in a sandbox.
+- [ ] **4.6 Subagents.** A subagent is a tool that runs its own agent loop with its own context, tools, and model.
+  Depth and count limits, a per-run cost estimate (it's the user's money), and the shadcn Subagent UI pattern.
+- [ ] **4.7 Deep Research agent.** Plan-then-execute with tool-less "reader" subagents; progress UI; cited report.
+- [ ] **4.8 Artifacts.** Rendered in a sandboxed iframe on a separate origin.
+- [ ] **4.9 Hooks and plugins (later).** Declarative hooks first (e.g. "before tool X: require approval", "after
+  reply: run prompt Y"); no user-supplied code outside a sandbox. Plugins bundle skills + MCP servers + hooks and
+  need a trust and review story before they ship.
+
+## Phase 5: Voice
+
+- [ ] **5.1 Dictation (hosted).** `MediaRecorder` → `transcribe()` from the browser with the user's key →
+  composer. Recording state animates the composer.
+- [ ] **5.2 Dictation (on-device).** Moonshine v2 in a Web Worker (ONNX Runtime Web / WebGPU). Confirm v2 browser
+  builds first.
+- [ ] **5.3 Voice agent (realtime).** `experimental_useRealtime` with a session created from the user's key; tools
+  via `onToolCall`; full-screen voice mode with an audio-reactive WebGL orb.
+- [ ] **5.4 Voice with local models (cascade).** On-device speech-to-text → any model → text-to-speech.
+
+## Phase 6: Accounts and cloud
+
+- [ ] **6.1 Convex `ChatStore` + sync** (decision 11). On sign-in, offer to upload local chats. Keys never sync.
+- [ ] **6.2 Abuse protection on Convex writes.** Rate limits (`@convex-dev/rate-limiter`) on sync, share
+  creation, and invites; captcha on sign-up (Better Auth captcha plugin with Turnstile).
+- [ ] **6.3 Sharing.** Read-only links for chats and workspaces via a server-rendered `/share/$id`, "Fork" into
+  your own chats, and a report-abuse link.
+- [ ] **6.3b Group chats.** Invites on single chats only; add the missing inverse check in
+  `requireMultiChatConversation`. Each sender's message runs on their own key.
+- [ ] **6.4 Better Auth extras.** Passkeys, magic link / email OTP, session list with revoke, account linking, 2FA.
+- [ ] **6.5 (Deferred) Pro tier.** Revisit with blind mode. Idea so far: charge for software, not tokens (sync,
+  sharing, team workspaces, prompt-library sync) via the Better Auth Stripe or Polar plugin.
+
+## Phase 7: Launch prep
+
+- [ ] **7.1 Terms and privacy.** Drafts start now from [data-inventory.md](./data-inventory.md) and are revised as
+  features land. Finalize and have them reviewed before the first public sign-up (Google's OAuth consent screen
+  also wants a privacy policy link when you publish).
+- [ ] **7.2 Account deletion and data export** for cloud data.
+- [ ] **7.3 Security review** against OWASP Top 10 for LLM Applications (2026) and for Agentic Applications, plus
+  a dependency and CSP audit.
+- [ ] **7.4 Accessibility audit.** Keyboard-only pass, screen reader pass with streaming replies, contrast.
+
+## Open questions (build first, decide later)
+
+- **Blind mode and monetization** (3.7, 6.5). Revisit later.
+- **Agent harness design** (4.0): capabilities, permission modes, skills/plugins/hooks, subagents.
+- **Agent memory across chats.** What's remembered, where it lives, and how users view and delete it.
+- **User settings polish.** Defaults, privacy, notification preferences.
+- **Other "connect an account" options** beyond OpenRouter (verify Hugging Face OAuth for Inference Providers).
+- **Voice model choice** for on-device dictation (5.2).
+
+## Out of scope for now
+
+- Image generation / editing, video generation.
+- PWA / offline shell.
+- Effect (effect.website). Revisit only if server-side orchestration outgrows AI SDK + Convex actions.

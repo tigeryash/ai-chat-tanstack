@@ -69,6 +69,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 	return (
 		<ConvexBetterAuthProvider
 			client={context.convexQueryClient.convexClient}
+			// @convex-dev/better-auth 0.12's `AuthClient` type collapses `useSession().data`
+			// to `never` on better-auth >=1.6.16, so no real client satisfies it. Runtime is
+			// fine. Remove this once the adapter fixes the type (tsc flags it as unused).
+			// @ts-expect-error -- upstream type bug, see above
 			authClient={authClient}
 			initialToken={context.token}
 		>
