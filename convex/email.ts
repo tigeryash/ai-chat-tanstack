@@ -1,3 +1,7 @@
+const BREVO_SEND_URL = "https://api.brevo.com/v3/smtp/email";
+
+// Brevo rejects senders that aren't verified in its dashboard, so there is no safe default address.
+const REQUIRED_ENV = ["BREVO_API_KEY", "EMAIL_FROM_ADDRESS"] as const;
 
 interface EmailOptions {
   to: string;
@@ -6,28 +10,39 @@ interface EmailOptions {
   html?: string;
 }
 
+/**
+ * Thrown when this Convex deployment can't send email. Emails carry verification and reset links
+ * (bearer tokens), so a missing key fails loudly instead of logging the email (hard rule 4).
+ */
+export class EmailNotConfiguredError extends Error {
+  constructor(missing: readonly string[]) {
+    super(`Email is not configured on this Convex deployment: set ${missing.join(" and ")}.`);
+    this.name = "EmailNotConfiguredError";
+  }
+}
+
+/** Names of the env vars sending email needs that are unset. Names only, never values. */
+export function missingEmailEnv(): string[] {
+  return REQUIRED_ENV.filter((name) => !process.env[name]);
+}
+
 export async function sendEmail({ to, subject, text, html }: EmailOptions) {
   const apiKey = process.env.BREVO_API_KEY;
-  
-  if (!apiKey) {
-    // In development, just log the email
-    console.log(`[DEV EMAIL] To: ${to}, Subject: ${subject}`);
-    console.log(`[DEV EMAIL] Body: ${text}`);
-    return;
+  const fromAddress = process.env.EMAIL_FROM_ADDRESS;
+  if (!apiKey || !fromAddress) {
+    throw new EmailNotConfiguredError(missingEmailEnv());
   }
 
-  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-    method: 'POST',
+  const response = await fetch(BREVO_SEND_URL, {
+    method: "POST",
     headers: {
-      'accept': 'application/json',
-      'api-key': apiKey,
-      'content-type': 'application/json',
+      accept: "application/json",
+      "api-key": apiKey,
+      "content-type": "application/json",
     },
     body: JSON.stringify({
-      sender: {
-        name: process.env.EMAIL_FROM_NAME || 'Your App',
-        email: process.env.EMAIL_FROM_ADDRESS || 'noreply@yourdomain.com',
-      },
+      // JSON.stringify drops an undefined name, and Brevo then shows the address alone.
+      sender: { name: process.env.EMAIL_FROM_NAME || undefined, email: fromAddress },
       to: [{ email: to }],
       subject,
       textContent: text,
@@ -36,10 +51,16 @@ export async function sendEmail({ to, subject, text, html }: EmailOptions) {
   });
 
   if (!response.ok) {
-    const error = await response.text();
-    console.error('Failed to send email:', error);
-    throw new Error(`Failed to send email: ${response.status}`);
+    throw new Error(`Brevo rejected the email: HTTP ${response.status}${await brevoErrorCode(response)}`);
   }
 
   return response.json();
+}
+
+// Brevo's error `message` can quote the request (recipient, sender), so only its `code` is kept, and
+// only when it looks like one of Brevo's identifiers (`invalid_parameter`, `unauthorized`, ...).
+async function brevoErrorCode(response: Response): Promise<string> {
+  const body: unknown = await response.json().catch(() => null);
+  const code = typeof body === "object" && body !== null && "code" in body ? body.code : null;
+  return typeof code === "string" && /^[a-z_]{1,64}$/.test(code) ? ` (${code})` : "";
 }

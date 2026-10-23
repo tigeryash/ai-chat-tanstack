@@ -26,7 +26,7 @@ Promises the design already makes. Changing one of these is a product decision, 
 | Password hash (email sign-in) | Convex (Better Auth `account.password`) | Nobody in plain text | Until account deletion | Today |
 | OAuth tokens from Google / GitHub / Discord (access, refresh, id tokens) | Convex (Better Auth `account`) | Us as operators | Until unlinked or account deletion | Today. **Decided 2026-10-20:** stop storing them, since sign-in is the only use (roadmap 0.3). |
 | Sessions: IP address, user agent, expiry | Convex (Better Auth `session`) | Us as operators | Until session expiry | Today |
-| Email verification and password-reset tokens | Convex (Better Auth `verification`) | Nobody | Until used or expired | Today |
+| Email verification and password-reset tokens | Convex (Better Auth `verification`) | Nobody; the link reaches you through Brevo and is never logged | Until used or expired | Today |
 | Conversations and messages (text, reasoning, model used, token usage, feedback) | Convex today; **IndexedDB on your device** after 1.3 | You (and group members / share-link viewers if you share) | Until you delete them | Today in Convex; moving local-first in Phase 1 |
 | Attachments (images, PDFs, files) | Convex file storage today; IndexedDB after 1.6 | Same as messages | Until you delete them | Today / planned |
 | Usage events (model, tokens, cost estimate) | Convex today; local only after Phase 1 | You; us as operators while in Convex | Until account deletion | Today; moving local |

@@ -152,6 +152,9 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   Better Auth `databaseHooks.account` create/update hook, and clear the existing rows.
   *Done when:* each item has a test or a manual repro that now fails safely, and Google/GitHub/Discord sign-in and
   account linking still work with the token fields empty.
+  *Status (2026-10-23):* related fix outside the list: with `BREVO_API_KEY` or `EMAIL_FROM_ADDRESS` unset,
+  `convex/email.ts` used to log the whole email (verification/reset link included); it now throws, and
+  `convex/emailGuard.ts` answers email sign-up and reset requests with a 503. Audit items 1–7 are still open.
 - [x] **0.4 Guardrails for agent-built code.**
   - `CLAUDE.md`: commands, architecture, conventions, and the hard rules (decisions 2, 5, 22, 23).
   - Vitest working, with a first unit test (`conversions.ts`).

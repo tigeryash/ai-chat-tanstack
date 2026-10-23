@@ -6,6 +6,7 @@ import { query } from './_generated/server'
 import type { GenericCtx } from '@convex-dev/better-auth'
 import type { DataModel } from './_generated/dataModel'
 import { sendEmail } from "./email";
+import { requireEmailConfigured } from "./emailGuard";
 import authConfig from "./auth.config";
 
 const siteUrl = process.env.SITE_URL!
@@ -23,6 +24,9 @@ export const createAuth = (
     },
     baseURL: siteUrl,
     database: authComponent.adapter(ctx),
+    hooks: {
+      before: requireEmailConfigured,
+    },
     emailAndPassword: {
      enabled: true,
      minPasswordLength: 8,
