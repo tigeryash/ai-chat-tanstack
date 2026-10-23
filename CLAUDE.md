@@ -17,10 +17,11 @@ touching keys, rendering, tools, local endpoints, or Convex writes, and keep
 | `bun run dev` | Vite dev server on :3000. Needs `.env.local` (Convex URLs). |
 | `bunx convex dev` | Push Convex functions and schema to the dev deployment and watch. Separate from `bun run dev`. |
 | `bun run build` | Production build (Nitro, Vercel preset) into `.vercel/output`. |
+| `sh scripts/vercel-build.sh` | Vercel's build command. `VERCEL_ENV=production` runs `convex deploy` (needs `CONVEX_DEPLOY_KEY`, Vercel Production scope only) around the Vite build; preview and local builds only run Vite. `--dry-run` prints the command. |
 | `bun run serve` | Preview the production build (`vite preview`). |
 | `bun run typecheck` | `tsc --noEmit -p .` |
 | `bun run check` / `bun run fix` | Biome lint + format check / apply safe fixes. |
-| `bun run test` | Vitest unit tests (`src/**/*.test.ts(x)`, `convex/**/*.test.ts`). |
+| `bun run test` | Vitest unit tests (`src/**/*.test.ts(x)`, `convex/**/*.test.ts`, `scripts/**/*.test.ts`). |
 | `bun run verify` | typecheck + Biome + Vitest. Run before every commit you hand over. |
 | `bun run test:e2e` | Playwright against a production build (macOS screenshot baselines when run on a Mac). |
 | `bun run test:e2e:linux` | Playwright inside CI's Linux image via Docker. Add `--update-snapshots` to refresh Linux baselines. |

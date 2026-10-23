@@ -37,6 +37,9 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
 - [ ] Deploy Convex with the app. Vercel's build runs only `vite build`, so production Convex functions change only
   when someone runs `bunx convex deploy`. Before Milestone 1: create a production deploy key in the Convex dashboard
   and add it to Vercel as `CONVEX_DEPLOY_KEY`; the build command then becomes `npx convex deploy --cmd '…'`.
+  *Build side done (2026-10-23):* `vercel.json` runs `scripts/vercel-build.sh`, which deploys Convex only when
+  `VERCEL_ENV=production` and fails that build if the key is missing. Waiting on the key in Vercel (Production scope
+  only) before the PR merges.
 - [x] Artificial Analysis API key (free tier) for 2.1. *In `.env.local` as `ARTIFICIAL_ANALYSIS_API_KEY`
   (2026-10-23).* The 2.1 sync runs as a Convex action, so the key also has to be set on each Convex deployment
   (`bunx convex env set ARTIFICIAL_ANALYSIS_API_KEY …`).
