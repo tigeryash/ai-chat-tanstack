@@ -19,7 +19,7 @@ touching keys, rendering, tools, local endpoints, or Convex writes, and keep
 | `bun run build` | Production build (Nitro, Vercel preset) into `.vercel/output`. |
 | `sh scripts/vercel-build.sh` | Vercel's build command. `VERCEL_ENV=production` runs `convex deploy` (needs `CONVEX_DEPLOY_KEY`, Vercel Production scope only) around the Vite build; preview and local builds only run Vite. `--dry-run` prints the command. |
 | `bun run serve` | Preview the production build (`vite preview`). |
-| `bun run typecheck` | `tsc --noEmit -p .` |
+| `bun run typecheck` | `tsc --noEmit` for the app, then for `convex/` with its own tsconfig (the check `convex deploy` runs). |
 | `bun run check` / `bun run fix` | Biome lint + format check / apply safe fixes. |
 | `bun run test` | Vitest unit tests (`src/**/*.test.ts(x)`, `convex/**/*.test.ts`, `scripts/**/*.test.ts`). |
 | `bun run verify` | typecheck + Biome + Vitest. Run before every commit you hand over. |
