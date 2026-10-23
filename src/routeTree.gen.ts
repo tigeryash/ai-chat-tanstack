@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as authRouteRouteImport } from './routes/(auth)/route'
 import { Route as dashboardRouteRouteImport } from './routes/(dashboard)/route'
+import { Route as E2eRouteRouteImport } from './routes/e2e/route'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as authResetPasswordRouteImport } from './routes/(auth)/reset-password'
@@ -19,6 +20,7 @@ import { Route as authSignupRouteImport } from './routes/(auth)/signup'
 import { Route as dashboardChatIdRouteImport } from './routes/(dashboard)/$chatId'
 import { Route as dashboardNewRouteImport } from './routes/(dashboard)/new'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as E2eComposerRouteImport } from './routes/e2e/composer'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const IndexRoute = IndexRouteImport.update({
@@ -32,6 +34,11 @@ const authRouteRoute = authRouteRouteImport.update({
 } as any)
 const dashboardRouteRoute = dashboardRouteRouteImport.update({
   id: '/(dashboard)',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const E2eRouteRoute = E2eRouteRouteImport.update({
+  id: '/e2e',
+  path: '/e2e',
   getParentRoute: () => rootRouteImport,
 } as any)
 const authForgotPasswordRoute = authForgotPasswordRouteImport.update({
@@ -69,6 +76,11 @@ const ApiChatRoute = ApiChatRouteImport.update({
   path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const E2eComposerRoute = E2eComposerRouteImport.update({
+  id: '/composer',
+  path: '/composer',
+  getParentRoute: () => E2eRouteRoute,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -77,6 +89,7 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/e2e': typeof E2eRouteRouteWithChildren
   '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
   '/reset-password': typeof authResetPasswordRoute
@@ -84,10 +97,12 @@ export interface FileRoutesByFullPath {
   '/$chatId': typeof dashboardChatIdRoute
   '/new': typeof dashboardNewRoute
   '/api/chat': typeof ApiChatRoute
+  '/e2e/composer': typeof E2eComposerRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/e2e': typeof E2eRouteRouteWithChildren
   '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
   '/reset-password': typeof authResetPasswordRoute
@@ -95,6 +110,7 @@ export interface FileRoutesByTo {
   '/$chatId': typeof dashboardChatIdRoute
   '/new': typeof dashboardNewRoute
   '/api/chat': typeof ApiChatRoute
+  '/e2e/composer': typeof E2eComposerRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
@@ -102,6 +118,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/(auth)': typeof authRouteRouteWithChildren
   '/(dashboard)': typeof dashboardRouteRouteWithChildren
+  '/e2e': typeof E2eRouteRouteWithChildren
   '/(auth)/forgot-password': typeof authForgotPasswordRoute
   '/(auth)/login': typeof authLoginRoute
   '/(auth)/reset-password': typeof authResetPasswordRoute
@@ -109,12 +126,14 @@ export interface FileRoutesById {
   '/(dashboard)/$chatId': typeof dashboardChatIdRoute
   '/(dashboard)/new': typeof dashboardNewRoute
   '/api/chat': typeof ApiChatRoute
+  '/e2e/composer': typeof E2eComposerRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/e2e'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
@@ -122,10 +141,12 @@ export interface FileRouteTypes {
     | '/$chatId'
     | '/new'
     | '/api/chat'
+    | '/e2e/composer'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/e2e'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
@@ -133,12 +154,14 @@ export interface FileRouteTypes {
     | '/$chatId'
     | '/new'
     | '/api/chat'
+    | '/e2e/composer'
     | '/api/auth/$'
   id:
     | '__root__'
     | '/'
     | '/(auth)'
     | '/(dashboard)'
+    | '/e2e'
     | '/(auth)/forgot-password'
     | '/(auth)/login'
     | '/(auth)/reset-password'
@@ -146,6 +169,7 @@ export interface FileRouteTypes {
     | '/(dashboard)/$chatId'
     | '/(dashboard)/new'
     | '/api/chat'
+    | '/e2e/composer'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
@@ -153,6 +177,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   authRouteRoute: typeof authRouteRouteWithChildren
   dashboardRouteRoute: typeof dashboardRouteRouteWithChildren
+  E2eRouteRoute: typeof E2eRouteRouteWithChildren
   ApiChatRoute: typeof ApiChatRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
@@ -178,6 +203,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: ''
       preLoaderRoute: typeof dashboardRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/e2e': {
+      id: '/e2e'
+      path: '/e2e'
+      fullPath: '/e2e'
+      preLoaderRoute: typeof E2eRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(auth)/forgot-password': {
@@ -229,6 +261,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/e2e/composer': {
+      id: '/e2e/composer'
+      path: '/composer'
+      fullPath: '/e2e/composer'
+      preLoaderRoute: typeof E2eComposerRouteImport
+      parentRoute: typeof E2eRouteRoute
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -271,10 +310,23 @@ const dashboardRouteRouteWithChildren = dashboardRouteRoute._addFileChildren(
   dashboardRouteRouteChildren,
 )
 
+interface E2eRouteRouteChildren {
+  E2eComposerRoute: typeof E2eComposerRoute
+}
+
+const E2eRouteRouteChildren: E2eRouteRouteChildren = {
+  E2eComposerRoute: E2eComposerRoute,
+}
+
+const E2eRouteRouteWithChildren = E2eRouteRoute._addFileChildren(
+  E2eRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   authRouteRoute: authRouteRouteWithChildren,
   dashboardRouteRoute: dashboardRouteRouteWithChildren,
+  E2eRouteRoute: E2eRouteRouteWithChildren,
   ApiChatRoute: ApiChatRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
