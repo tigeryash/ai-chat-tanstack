@@ -40,6 +40,10 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   changed only when someone ran `bunx convex deploy`. *Done 2026-10-23 (PR #3):* `vercel.json` runs
   `scripts/vercel-build.sh`, which runs `convex deploy` around the Vite build only when `VERCEL_ENV=production`, and
   fails that build if the key is missing. `CONVEX_DEPLOY_KEY` is set in Vercel, Production scope only.
+  *Update 2026-10-23:* the production builds for the PR #3 and PR #4 merges both failed at `convex deploy` with
+  "You do not have permission to perform this operation (deployment:data:view)". convex 1.42's CLI read table
+  sizes when a push drops an index, which a deploy-only key can't do (fixed upstream in 1.46). Now on convex 1.47.
+  Not yet confirmed by a successful production build.
 - [x] Artificial Analysis API key (free tier) for 2.1. *In `.env.local` as `ARTIFICIAL_ANALYSIS_API_KEY`
   (2026-10-23).* The 2.1 sync runs as a Convex action, so the key also has to be set on each Convex deployment
   (`bunx convex env set ARTIFICIAL_ANALYSIS_API_KEY …`).
