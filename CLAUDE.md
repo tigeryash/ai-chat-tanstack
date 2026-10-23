@@ -100,6 +100,9 @@ the `/e2e/*` test pages render (see Testing).
 
 ## Gotchas (learned in Phase 0)
 
+- **Keep `convex` at 1.46 or newer.** `CONVEX_DEPLOY_KEY` can deploy but not read data. Older CLIs read table sizes
+  when a push drops an index, so production builds failed with "You do not have permission to perform this operation
+  (deployment:data:view)". Upgrade the CLI rather than giving the key data access.
 - **Vite 8 uses Node-style CJS interop** (the package is `"type": "module"`): a default import of a CommonJS
   module is `module.exports`, even with `__esModule`. "Element type is invalid … got: object" usually means a
   `.default` unwrap is needed (see `src/components/ui/shadcn-io/marquee/index.tsx`).
