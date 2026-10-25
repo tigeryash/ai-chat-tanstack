@@ -5,6 +5,8 @@ import {
   getCurrentUserOrNull,
   requireAttachmentAccess,
   requireConversationAccess,
+  requireOwnAttachment,
+  requireOwnMessage,
 } from "./authHelpers";
 
 // ============================================================================
@@ -127,8 +129,27 @@ export const create = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
 
+    // Storage IDs aren't tied to an uploader, so the first record to claim an upload owns it.
+    // Claiming one that's already recorded would hand its file to someone else.
+    if (!(await ctx.db.system.get(args.storageId))) {
+      throw new Error("Upload not found");
+    }
+    const existing = await ctx.db
+      .query("attachments")
+      .withIndex("by_storage", (q) => q.eq("storageId", args.storageId))
+      .first();
+    if (existing) {
+      throw new Error("Upload is already attached");
+    }
+
     if (args.conversationId) {
       await requireConversationAccess(ctx, args.conversationId, user._id);
+    }
+    if (args.messageId) {
+      const message = await requireOwnMessage(ctx, args.messageId, user._id);
+      if (message.conversationId !== args.conversationId) {
+        throw new Error("Message is not in this conversation");
+      }
     }
 
     const attachmentId = await ctx.db. insert("attachments", {
@@ -159,8 +180,14 @@ export const linkToMessage = mutation({
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
-    await requireAttachmentAccess(ctx, args.attachmentId, user._id);
-    await requireConversationAccess(ctx, args.conversationId, user._id);
+    const attachment = await requireOwnAttachment(ctx, args.attachmentId, user._id);
+    const message = await requireOwnMessage(ctx, args.messageId, user._id);
+    if (message.conversationId !== args.conversationId) {
+      throw new Error("Message is not in this conversation");
+    }
+    if (attachment.messageId !== undefined && attachment.messageId !== args.messageId) {
+      throw new Error("Attachment is already linked to another message");
+    }
 
     await ctx.db.patch(args. attachmentId, {
       messageId: args.messageId,
@@ -176,7 +203,7 @@ export const remove = mutation({
   args: { id: v.id("attachments") },
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
-    const attachment = await requireAttachmentAccess(ctx, args.id, user._id);
+    const attachment = await requireOwnAttachment(ctx, args.id, user._id);
 
     // Delete from storage
     await ctx.storage. delete(attachment.storageId);

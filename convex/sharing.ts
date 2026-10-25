@@ -1,16 +1,16 @@
-import { mutation, query } from "./_generated/server";
+import { type QueryCtx, mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-import { Id } from "./_generated/dataModel";
+import type { Id } from "./_generated/dataModel";
 import { getCurrentUser } from "./authHelpers";
+import { generateShareId } from "./lib/shareId";
 
-function generateShareId(): string {
-  // Generate a URL-safe random string
-  const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let result = "";
-  for (let i = 0; i < 12; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
+async function findSharedConversation(ctx: QueryCtx, shareId: string) {
+  const conversation = await ctx.db
+    .query("conversations")
+    .withIndex("by_share_id", (q) => q.eq("shareId", shareId))
+    .first();
+
+  return conversation?.isShared ? conversation : null;
 }
 
 // ============================================================================
@@ -23,26 +23,22 @@ function generateShareId(): string {
 export const getShared = query({
   args: { shareId: v.string() },
   handler: async (ctx, args) => {
-    const conversation = await ctx.db
-      . query("conversations")
-      .withIndex("by_share_id", (q) => q.eq("shareId", args.shareId))
-      .first();
-
-    if (!conversation || ! conversation.isShared) {
+    const conversation = await findSharedConversation(ctx, args.shareId);
+    if (!conversation) {
       return null;
     }
 
-    // Get owner info (limited)
-    const owner = await ctx. db. get(conversation.userId);
+    const owner = await ctx.db.get(conversation.userId);
 
+    // Only what the shared view shows. The system prompt, settings, usage, cost, metadata, and
+    // internal IDs stay private to the owner.
     return {
-      ...conversation,
-      owner: owner
-        ? {
-            name: owner.name,
-            avatarUrl: owner.avatarUrl,
-          }
-        : null,
+      title: conversation.title,
+      model: conversation.model,
+      modelProvider: conversation.modelProvider,
+      createdAt: conversation.createdAt,
+      lastMessageAt: conversation.lastMessageAt,
+      owner: owner ? { name: owner.name, avatarUrl: owner.avatarUrl } : null,
     };
   },
 });
@@ -53,12 +49,8 @@ export const getShared = query({
 export const getSharedMessages = query({
   args: { shareId: v.string() },
   handler: async (ctx, args) => {
-    const conversation = await ctx.db
-      . query("conversations")
-      .withIndex("by_share_id", (q) => q.eq("shareId", args.shareId))
-      .first();
-
-    if (!conversation || !conversation.isShared) {
+    const conversation = await findSharedConversation(ctx, args.shareId);
+    if (!conversation) {
       return [];
     }
 
@@ -70,10 +62,18 @@ export const getSharedMessages = query({
       .order("asc")
       .collect();
 
-    // Filter to active branch only, exclude deleted
-    return messages.filter(
-      (m) => !m.deletedAt && (m.isActiveBranch === undefined || m.isActiveBranch)
-    );
+    // Filter to active branch only, exclude deleted. Project to what a viewer renders: no user IDs,
+    // usage, feedback, edit history, or metadata.
+    return messages
+      .filter((m) => !m.deletedAt && (m.isActiveBranch === undefined || m.isActiveBranch))
+      .map((m) => ({
+        _id: m._id,
+        role: m.role,
+        parts: m.parts,
+        status: m.status,
+        model: m.model,
+        createdAt: m.createdAt,
+      }));
   },
 });
 
@@ -156,12 +156,8 @@ export const forkSharedConversation = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
 
-    const originalConversation = await ctx.db
-      .query("conversations")
-      .withIndex("by_share_id", (q) => q.eq("shareId", args.shareId))
-      .first();
-
-    if (!originalConversation || !originalConversation.isShared) {
+    const originalConversation = await findSharedConversation(ctx, args.shareId);
+    if (!originalConversation) {
       throw new Error("Shared conversation not found");
     }
 
@@ -175,7 +171,7 @@ export const forkSharedConversation = mutation({
         : "Forked conversation",
       model: originalConversation.model,
       modelProvider: originalConversation.modelProvider,
-      systemPrompt: originalConversation. systemPrompt,
+      // The system prompt isn't part of what's shared, so a fork doesn't copy it either.
       status: "active",
       messageCount: 0,
       createdAt: now,

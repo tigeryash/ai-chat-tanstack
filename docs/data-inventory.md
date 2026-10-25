@@ -24,7 +24,8 @@ Promises the design already makes. Changing one of these is a product decision, 
 |---|---|---|---|---|
 | Account profile: name, email, avatar URL, email-verified flag | Convex (Better Auth `user`, app `users`) | You; us as operators | Until account deletion | Today |
 | Password hash (email sign-in) | Convex (Better Auth `account.password`) | Nobody in plain text | Until account deletion | Today |
-| OAuth tokens from Google / GitHub / Discord (access, refresh, id tokens) | Convex (Better Auth `account`) | Us as operators | Until unlinked or account deletion | Today. **Decided 2026-10-20:** stop storing them, since sign-in is the only use (roadmap 0.3). |
+| Linked sign-in accounts (Google / GitHub / Discord): provider, provider account ID, granted scope | Convex (Better Auth `account`) | Us as operators | Until unlinked or account deletion | Today |
+| OAuth tokens from Google / GitHub / Discord (access, refresh, id tokens) | Not stored. A Better Auth `databaseHooks.account` hook nulls them on every account write (roadmap 0.3, 2026-10-25) | Nobody | Not kept | Since 0.3. Rows written before it are cleared by `authMaintenance:clearStoredOAuthTokens`, which the owner runs once per deployment |
 | Sessions: IP address, user agent, expiry | Convex (Better Auth `session`) | Us as operators | Until session expiry | Today |
 | Email verification and password-reset tokens | Convex (Better Auth `verification`) | Nobody; the link reaches you through Brevo and is never logged | Until used or expired | Today |
 | Conversations and messages (text, reasoning, model used, token usage, feedback) | Convex today; **IndexedDB on your device** after 1.3 | You (and group members / share-link viewers if you share) | Until you delete them | Today in Convex; moving local-first in Phase 1 |

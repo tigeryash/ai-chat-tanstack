@@ -1,21 +1,21 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-import { getCurrentUser, getCurrentUserOrNull } from "./authHelpers";
+import { getCurrentUser, getCurrentUserOrNull, upsertCurrentUser } from "./authHelpers";
 
 /**
  * Get or create user from auth token
- * Called on app load / sign in
+ * Called on app load / sign in. The only place a `users` row is created or its profile refreshed.
  */
 export const getOrCreate = mutation({
   args: {},
   handler: async (ctx) => {
-    const user = await getCurrentUser(ctx);
+    const user = await upsertCurrentUser(ctx);
     return user._id;
   },
 });
 
 /**
- * Get current user
+ * Get current user (null until `getOrCreate` has run)
  */
 export const current = query({
   args: {},
