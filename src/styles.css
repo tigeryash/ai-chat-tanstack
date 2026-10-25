@@ -140,3 +140,22 @@ code {
 .input-button {
   @apply p-2 hover:bg-black/10 hover:ring-1 hover:ring-black/20 text-black rounded-full transition-all duration-300 ease-in-out;
 }
+
+/*
+  Hard rule 3 (decision 22) for CSS: Motion and GSAP read the setting themselves, but CSS animations
+  and transitions (Tailwind's animate-*, tw-animate-css enter and exit, hover:scale and friends) need
+  this. With "Reduce motion" on they jump to their end state. They still run for 0.01ms instead of
+  being removed, so animationend and transitionend still fire for code that waits on them, like
+  Radix's exit animations. Loading spinners are the exception: a stopped spinner looks like a plain
+  icon and no longer says "working", so animate-spin keeps turning.
+*/
+@media (prefers-reduced-motion: reduce) {
+  *:not(.animate-spin),
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

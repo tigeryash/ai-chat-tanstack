@@ -8,6 +8,7 @@ import {
 	memo,
 	useMemo,
 } from "react";
+import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { cn } from "@/lib/utils";
 
 export type TextShimmerProps = {
@@ -25,6 +26,7 @@ const ShimmerComponent = ({
 	duration = 2,
 	spread = 2,
 }: TextShimmerProps) => {
+	const reduceMotion = usePrefersReducedMotion();
 	const MotionComponent = motion.create(
 		Component as keyof JSX.IntrinsicElements,
 	);
@@ -33,6 +35,23 @@ const ShimmerComponent = ({
 		() => (children?.length ?? 0) * spread,
 		[children, spread],
 	);
+
+	// The root MotionConfig only stops position and size animations, and this loops
+	// backgroundPosition, so with reduced motion the text stands still in the shimmer's base color.
+	if (reduceMotion) {
+		// Not every intrinsic tag takes these props (React Three Fiber adds three.js ones), so narrow `as`.
+		const StillComponent = Component as ElementType<{
+			className: string;
+			children: string;
+		}>;
+		return (
+			<StillComponent
+				className={cn("relative inline-block text-muted-foreground", className)}
+			>
+				{children}
+			</StillComponent>
+		);
+	}
 
 	return (
 		<MotionComponent

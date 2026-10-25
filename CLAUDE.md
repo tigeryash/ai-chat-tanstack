@@ -63,9 +63,10 @@ the `/e2e/*` test pages render (see Testing).
 3. **Respect reduced motion** (decision 22). Every animation must honor `prefers-reduced-motion`: Motion through
    `<MotionConfig reducedMotion="user">`, GSAP through `gsap.matchMedia()`, and WebGL renders a single still frame.
    New animations ship with their reduced-motion behavior. The root `MotionConfig` makes Motion's position, size
-   and layout animations instant (fades still play); anything outside Motion, like a CSS loop or the marquee, needs
-   its own check. Use `FULL_MOTION` and `usePrefersReducedMotion()` from `src/lib/reduced-motion.ts`, and cover it
-   in `e2e/reduced-motion.spec.ts`.
+   and layout animations instant (fades still play), and a rule at the end of `src/styles.css` makes CSS animations
+   and transitions instant (spinners with `animate-spin` keep turning). Anything else, like the marquee or a Motion
+   loop on a non-positional key (Shimmer's `backgroundPosition`), needs its own check. Use `FULL_MOTION` and
+   `usePrefersReducedMotion()` from `src/lib/reduced-motion.ts`, and cover it in `e2e/reduced-motion.spec.ts`.
 4. **Analytics never capture content** (decision 23). No prompts, replies, file contents, or keys in analytics,
    logs, or error reports. All events go through the one `track()` module and its allowlist (roadmap 1.8).
 5. **Treat model output as untrusted.** Never render it as raw HTML; see [security.md](docs/security.md).

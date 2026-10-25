@@ -1,10 +1,12 @@
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import { expect, test } from "./support/fixtures";
 
 // Hard rule 3 (roadmap 0.8): with the OS "Reduce motion" setting on, the composer resizes without
 // animating, the GSAP reveals on the auth pages are instant, and the WebGL background is one still
-// frame. Each check has a full-motion twin, which shows the probe can see motion and that the
-// normal animations still play.
+// frame. Outside Motion and GSAP, CSS transitions and animations finish instantly (the reduced-motion
+// rule in `styles.css`), the "Thinking..." shimmer is still text, and loading spinners keep turning.
+// Each check has a full-motion twin, which shows the probe can see motion and that the normal
+// animations still play.
 
 const MULTI_LINE_MESSAGE = "one\ntwo\nthree\nfour";
 
@@ -32,41 +34,118 @@ async function composerHeightsWhileTyping(page: Page, text: string) {
 	}, text);
 }
 
-// Heights strictly between where the composer started and where it settled: animation frames.
-function inBetweenHeights(heights: number[]) {
-	const start = heights[0] ?? 0;
-	const end = heights[heights.length - 1] ?? 0;
+// Samples strictly between where a measurement started and where it settled: animation frames.
+function inBetween(samples: number[]) {
+	const start = samples[0] ?? 0;
+	const end = samples[samples.length - 1] ?? 0;
 	const [low, high] = [Math.min(start, end), Math.max(start, end)];
-	return heights.filter((height) => height > low + 0.5 && height < high - 0.5);
+	return samples.filter((sample) => sample > low + 0.5 && sample < high - 0.5);
 }
 
-// From the first frame on, remembers the lowest opacity any GSAP reveal target shows. The reveals
-// fade these in from 0, so with full motion the number drops; with reduced motion it stays 1.
+const REVEAL_TARGETS = [
+	".auth",
+	".form-root",
+	".auth-button > button",
+	".footer",
+];
+
+// From the first frame on, remembers the lowest opacity each GSAP reveal target shows. The reveals
+// fade these in from 0, so with full motion the numbers drop; with reduced motion they stay 1.
 async function recordRevealOpacity(page: Page) {
-	await page.addInitScript(() => {
-		const record = window as unknown as { lowestRevealOpacity: number };
-		record.lowestRevealOpacity = 1;
+	await page.addInitScript((targets) => {
+		const lowest: Record<string, number> = {};
+		(
+			window as unknown as { lowestRevealOpacity: typeof lowest }
+		).lowestRevealOpacity = lowest;
 		const sample = () => {
-			for (const element of document.querySelectorAll(
-				".auth, .form-root, .auth-button > button",
-			)) {
-				record.lowestRevealOpacity = Math.min(
-					record.lowestRevealOpacity,
-					Number(getComputedStyle(element).opacity),
-				);
+			for (const target of targets) {
+				for (const element of document.querySelectorAll(target)) {
+					lowest[target] = Math.min(
+						lowest[target] ?? 1,
+						Number(getComputedStyle(element).opacity),
+					);
+				}
 			}
+			requestAnimationFrame(sample);
+		};
+		requestAnimationFrame(sample);
+	}, REVEAL_TARGETS);
+}
+
+// The reveal targets that have shown an opacity below 1 so far, in REVEAL_TARGETS order.
+function fadedRevealTargets(page: Page) {
+	return page.evaluate((targets) => {
+		const lowest = (
+			window as unknown as { lowestRevealOpacity: Record<string, number> }
+		).lowestRevealOpacity;
+		return targets.filter((target) => (lowest[target] ?? 1) < 1);
+	}, REVEAL_TARGETS);
+}
+
+// Moves the mouse onto a button and records its rendered width (hover scale included) on every
+// animation frame for about 0.75 s. Sampling starts before the mouse arrives, so the first sample is
+// the resting width.
+async function buttonWidthsWhileHovering(page: Page, button: Locator) {
+	const box = await button.boundingBox();
+	if (!box) throw new Error("button has no box");
+	await button.evaluate((element) => {
+		const record = window as unknown as { hoverWidths?: number[] };
+		const widths = [element.getBoundingClientRect().width];
+		const sample = () => {
+			widths.push(element.getBoundingClientRect().width);
+			if (widths.length < 46) requestAnimationFrame(sample);
+			else record.hoverWidths = widths;
+		};
+		requestAnimationFrame(sample);
+	});
+	await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+	await page.waitForFunction(
+		() => (window as unknown as { hoverWidths?: number[] }).hoverWidths,
+	);
+	return page.evaluate(
+		() => (window as unknown as { hoverWidths: number[] }).hoverWidths,
+	);
+}
+
+// From the first frame on, records the opacity of the composer's tooltip on every frame it is open.
+async function recordTooltipOpacity(page: Page) {
+	await page.addInitScript(() => {
+		const opacities: number[] = [];
+		(window as unknown as { tooltipOpacities: number[] }).tooltipOpacities =
+			opacities;
+		const sample = () => {
+			const tooltip = document.querySelector("[data-slot='tooltip-content']");
+			if (tooltip) opacities.push(Number(getComputedStyle(tooltip).opacity));
 			requestAnimationFrame(sample);
 		};
 		requestAnimationFrame(sample);
 	});
 }
 
-function lowestRevealOpacity(page: Page) {
-	return page.evaluate(
+// Hovers the composer's attach button until its tooltip is open and settled, then returns the
+// tooltip opacities that were neither hidden nor fully shown: frames of a fade.
+async function tooltipFadeFrames(page: Page) {
+	await page.getByRole("button", { name: "Upload files" }).hover();
+	await expect(page.locator("[data-slot='tooltip-content']")).toBeVisible();
+	await page.waitForTimeout(500);
+	const opacities = await page.evaluate(
 		() =>
-			(window as unknown as { lowestRevealOpacity: number })
-				.lowestRevealOpacity,
+			(window as unknown as { tooltipOpacities: number[] }).tooltipOpacities,
 	);
+	expect(opacities.at(-1)).toBe(1);
+	return opacities.filter((opacity) => opacity > 0.01 && opacity < 0.99);
+}
+
+// How many different values a computed style property takes over about half a second of frames.
+function distinctStyleValues(element: Locator, property: string) {
+	return element.evaluate(async (target, name) => {
+		const values = new Set<string>();
+		for (let frame = 0; frame < 30; frame++) {
+			values.add(getComputedStyle(target).getPropertyValue(name));
+			await new Promise(requestAnimationFrame);
+		}
+		return values.size;
+	}, property);
 }
 
 // Screenshots of the canvas's area with the page content layered over it hidden. A page screenshot
@@ -112,7 +191,7 @@ test.describe("with Reduce motion on", () => {
 		const heights = await composerHeightsWhileTyping(page, MULTI_LINE_MESSAGE);
 
 		expect(heights[heights.length - 1]).toBeGreaterThan(heights[0] ?? 0);
-		expect(inBetweenHeights(heights)).toEqual([]);
+		expect(inBetween(heights)).toEqual([]);
 	});
 
 	test("login reveals are instant and the WebGL scene is one still frame", async ({
@@ -134,11 +213,53 @@ test.describe("with Reduce motion on", () => {
 			true,
 		);
 
-		expect(await lowestRevealOpacity(page)).toBe(1);
+		expect(await fadedRevealTargets(page)).toEqual([]);
 		// The still frame is a real frame, not an empty canvas.
 		expect((await sceneShot(page)).equals(await backgroundShot(page))).toBe(
 			false,
 		);
+	});
+
+	test("the Login button grows on hover without a transition", async ({
+		page,
+	}) => {
+		await page.goto("/login");
+		await expect(page.locator("canvas")).toBeVisible();
+
+		const widths = await buttonWidthsWhileHovering(
+			page,
+			page.getByRole("button", { name: "Login", exact: true }),
+		);
+
+		expect(widths[widths.length - 1]).toBeGreaterThan(widths[0] ?? 0);
+		expect(inBetween(widths)).toEqual([]);
+	});
+
+	test("the composer's tooltip appears without fading in", async ({ page }) => {
+		await recordTooltipOpacity(page);
+		await page.goto("/e2e/composer");
+		await expect(page.locator("main[data-hydrated='true']")).toBeAttached();
+
+		expect(await tooltipFadeFrames(page)).toEqual([]);
+	});
+
+	test("the Thinking... shimmer is still text", async ({ page }) => {
+		await page.goto("/e2e/loading");
+		await expect(page.locator("main[data-hydrated='true']")).toBeAttached();
+		const shimmer = page.getByText("Thinking...");
+
+		// Readable text, not the shimmer's transparent text over a frozen gradient.
+		await expect(shimmer).not.toHaveCSS("color", "rgba(0, 0, 0, 0)");
+		expect(await distinctStyleValues(shimmer, "background-position")).toBe(1);
+	});
+
+	test("loading spinners keep turning", async ({ page }) => {
+		await page.goto("/e2e/loading");
+
+		// A stopped spinner looks like a plain icon and no longer says "working", so it keeps turning.
+		expect(
+			await distinctStyleValues(page.locator(".animate-spin"), "transform"),
+		).toBeGreaterThan(1);
 	});
 });
 
@@ -151,7 +272,7 @@ test.describe("with full motion", () => {
 
 		const heights = await composerHeightsWhileTyping(page, MULTI_LINE_MESSAGE);
 
-		expect(inBetweenHeights(heights).length).toBeGreaterThan(0);
+		expect(inBetween(heights).length).toBeGreaterThan(0);
 	});
 
 	test("login reveals play and the WebGL scene moves", async ({ page }) => {
@@ -159,11 +280,51 @@ test.describe("with full motion", () => {
 		await page.goto("/login");
 		await expect(page.locator("canvas")).toBeVisible();
 
-		await expect.poll(() => lowestRevealOpacity(page)).toBeLessThan(1);
+		await expect.poll(() => fadedRevealTargets(page)).toEqual(REVEAL_TARGETS);
 		// Give the scene a moment to draw its first frames before comparing two of them.
 		await page.waitForTimeout(1_000);
 		expect(await looksTheSameAfter(page, 500, () => sceneShot(page))).toBe(
 			false,
 		);
+	});
+
+	test("the Login button eases into its hover growth", async ({ page }) => {
+		await page.goto("/login");
+		await expect(page.locator("canvas")).toBeVisible();
+
+		const widths = await buttonWidthsWhileHovering(
+			page,
+			page.getByRole("button", { name: "Login", exact: true }),
+		);
+
+		expect(inBetween(widths).length).toBeGreaterThan(0);
+	});
+
+	test("the composer's tooltip fades in", async ({ page }) => {
+		await recordTooltipOpacity(page);
+		await page.goto("/e2e/composer");
+		await expect(page.locator("main[data-hydrated='true']")).toBeAttached();
+
+		expect((await tooltipFadeFrames(page)).length).toBeGreaterThan(0);
+	});
+
+	test("the Thinking... shimmer sweeps", async ({ page }) => {
+		await page.goto("/e2e/loading");
+		await expect(page.locator("main[data-hydrated='true']")).toBeAttached();
+
+		expect(
+			await distinctStyleValues(
+				page.getByText("Thinking..."),
+				"background-position",
+			),
+		).toBeGreaterThan(1);
+	});
+
+	test("loading spinners turn", async ({ page }) => {
+		await page.goto("/e2e/loading");
+
+		expect(
+			await distinctStyleValues(page.locator(".animate-spin"), "transform"),
+		).toBeGreaterThan(1);
 	});
 });
