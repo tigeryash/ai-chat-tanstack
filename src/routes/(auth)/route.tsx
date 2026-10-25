@@ -51,7 +51,7 @@ const AuthLayout = () => {
 					ease: "power2.inOut",
 				});
 
-				gsap.from("#footer", {
+				gsap.from(".footer", {
 					opacity: 0,
 					duration: 0.7,
 					ease: "power2.in",

@@ -21,6 +21,7 @@ import { Route as dashboardChatIdRouteImport } from './routes/(dashboard)/$chatI
 import { Route as dashboardNewRouteImport } from './routes/(dashboard)/new'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as E2eComposerRouteImport } from './routes/e2e/composer'
+import { Route as E2eLoadingRouteImport } from './routes/e2e/loading'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const IndexRoute = IndexRouteImport.update({
@@ -81,6 +82,11 @@ const E2eComposerRoute = E2eComposerRouteImport.update({
   path: '/composer',
   getParentRoute: () => E2eRouteRoute,
 } as any)
+const E2eLoadingRoute = E2eLoadingRouteImport.update({
+  id: '/loading',
+  path: '/loading',
+  getParentRoute: () => E2eRouteRoute,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -98,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/new': typeof dashboardNewRoute
   '/api/chat': typeof ApiChatRoute
   '/e2e/composer': typeof E2eComposerRoute
+  '/e2e/loading': typeof E2eLoadingRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
@@ -111,6 +118,7 @@ export interface FileRoutesByTo {
   '/new': typeof dashboardNewRoute
   '/api/chat': typeof ApiChatRoute
   '/e2e/composer': typeof E2eComposerRoute
+  '/e2e/loading': typeof E2eLoadingRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
@@ -127,6 +135,7 @@ export interface FileRoutesById {
   '/(dashboard)/new': typeof dashboardNewRoute
   '/api/chat': typeof ApiChatRoute
   '/e2e/composer': typeof E2eComposerRoute
+  '/e2e/loading': typeof E2eLoadingRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
@@ -142,6 +151,7 @@ export interface FileRouteTypes {
     | '/new'
     | '/api/chat'
     | '/e2e/composer'
+    | '/e2e/loading'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -155,6 +165,7 @@ export interface FileRouteTypes {
     | '/new'
     | '/api/chat'
     | '/e2e/composer'
+    | '/e2e/loading'
     | '/api/auth/$'
   id:
     | '__root__'
@@ -170,6 +181,7 @@ export interface FileRouteTypes {
     | '/(dashboard)/new'
     | '/api/chat'
     | '/e2e/composer'
+    | '/e2e/loading'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
@@ -268,6 +280,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof E2eComposerRouteImport
       parentRoute: typeof E2eRouteRoute
     }
+    '/e2e/loading': {
+      id: '/e2e/loading'
+      path: '/loading'
+      fullPath: '/e2e/loading'
+      preLoaderRoute: typeof E2eLoadingRouteImport
+      parentRoute: typeof E2eRouteRoute
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -312,10 +331,12 @@ const dashboardRouteRouteWithChildren = dashboardRouteRoute._addFileChildren(
 
 interface E2eRouteRouteChildren {
   E2eComposerRoute: typeof E2eComposerRoute
+  E2eLoadingRoute: typeof E2eLoadingRoute
 }
 
 const E2eRouteRouteChildren: E2eRouteRouteChildren = {
   E2eComposerRoute: E2eComposerRoute,
+  E2eLoadingRoute: E2eLoadingRoute,
 }
 
 const E2eRouteRouteWithChildren = E2eRouteRoute._addFileChildren(

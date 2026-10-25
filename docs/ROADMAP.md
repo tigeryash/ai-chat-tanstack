@@ -239,6 +239,12 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   own 237 kB chunk). Cost: `MotionConfig` pulls Motion's core (~40 kB gzipped) from the composer chunk into the main
   chunk. Helpers are in `src/lib/reduced-motion.ts`. `e2e/reduced-motion.spec.ts` checks all three "Done when"
   points with `reducedMotion: "reduce"`, and each has a full-motion twin. No screenshot baselines changed.
+  *Follow-up (2026-10-25):* a `prefers-reduced-motion: reduce` rule in `src/styles.css` makes CSS animations and
+  transitions instant (tw-animate-css enter/exit, `hover:scale-105` on the auth buttons). `animate-spin` is exempt,
+  because a stopped spinner no longer shows that work is happening. The "Thinking..." Shimmer renders still text
+  under reduced motion, and the auth layout's footer fade now targets `.footer`, so it plays under full motion.
+  New e2e cases (with twins) cover the hover scale, the composer tooltip, the Shimmer (`/e2e/loading`), spinners,
+  and the footer fade.
 
 ## Phase 1: New chat core (BYOK, browser-direct, local-first)
 
