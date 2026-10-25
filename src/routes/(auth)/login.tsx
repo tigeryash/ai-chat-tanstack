@@ -1,131 +1,68 @@
-import { Field } from "@base-ui-components/react/field";
-import { Form } from "@base-ui-components/react/form";
-import { useGSAP } from "@gsap/react";
-import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
-import gsap from "gsap";
-import { useRef, useState } from "react";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import {
+	AuthField,
+	AuthForm,
+	FormAlert,
+	LINK_CLASS,
+	SubmitButton,
+	useAuthSubmit,
+} from "@/components/auth/auth-form";
 import { authClient } from "@/lib/auth-client";
+import { authErrorMessage, requestAuth } from "@/lib/auth-errors";
 import { loginSchema } from "@/lib/auth-schemas";
-import { FULL_MOTION } from "@/lib/reduced-motion";
 
 export const Route = createFileRoute("/(auth)/login")({
-	beforeLoad: ({ context }) => {
-		if (context.isAuthenticated) {
-			throw redirect({ to: "/new" });
-		}
-	},
 	component: RouteComponent,
 });
 
 function RouteComponent() {
-	const [errors, setErrors] = useState({});
-	const formRef = useRef<HTMLFormElement>(null);
 	const router = useRouter();
-
-	const submitForm = async (event: React.FormEvent<HTMLFormElement>) => {
-		event.preventDefault();
-
-		const formData = new FormData(event.currentTarget);
-		const result = loginSchema.safeParse(Object.fromEntries(formData));
-
-		if (!result.success) {
-			return {
-				errors: result.error.flatten().fieldErrors,
-			};
-		}
-
-		const { error } = await authClient.signIn.email({
-			email: result.data.email,
-			password: result.data.password,
-		});
-
-		if (error) {
-			return {
-				errors: { form: [error.message || "Login failed"] },
-			};
-		}
-
-		await router.navigate({ to: "/new" });
-
-		return {
-			errors: {},
-		};
-	};
-	useGSAP(
-		() => {
-			gsap.matchMedia().add(FULL_MOTION, () => {
-				gsap.fromTo(
-					".form-root",
-					{
-						opacity: 0,
-						y: 50,
-					},
-					{
-						opacity: 1,
-						y: 0,
-						duration: 1.1,
-						stagger: 0.1,
-						ease: "power2.inOut",
-						delay: 0.1,
-					},
-				);
-			});
+	const { errors, formError, pending, onSubmit } = useAuthSubmit(
+		loginSchema,
+		async ({ email, password }) => {
+			const error = await requestAuth(() =>
+				authClient.signIn.email({ email, password }),
+			);
+			if (error?.code === "EMAIL_NOT_VERIFIED") {
+				return "Verify your email first: open the link we sent when you signed up.";
+			}
+			if (error) {
+				return authErrorMessage(error, error.message || "Login failed");
+			}
+			await router.navigate({ to: "/new" });
+			return null;
 		},
-		{ scope: formRef },
 	);
+
 	return (
-		<Form
-			ref={formRef}
-			// Submitted before hydration, the browser sends the form itself. The default GET would put the
-			// password in the URL (history, server logs); POST keeps it in the body.
-			method="post"
-			className="w-full max-w-md space-y-4 flex flex-col items-center justify-center px-2 "
-			errors={errors}
-			onSubmit={async (event) => {
-				const response = await submitForm(event);
-				setErrors(response.errors);
-			}}
-		>
-			<Field.Root
+		<AuthForm errors={errors} onSubmit={onSubmit}>
+			<AuthField
 				name="email"
-				className="flex flex-col w-full space-y-2 form-root "
-			>
-				<Field.Label className="text-xl font-semibold text-white/90">
-					Email
-				</Field.Label>
-				<Field.Control
-					type="email"
-					autoComplete="email"
-					placeholder="Enter email"
-					className=" text-lg bg-[#101010]/60 hover:bg-[#101010]/80 focus:bg-[#101010]/80 rounded-lg p-3 placeholder:text-slate-400 focus:outline-none focus:ring-2
-           focus:ring-blue-400 text-white"
-				/>
-				<Field.Error className="" />
-			</Field.Root>
-			<Field.Root
+				label="Email"
+				type="email"
+				autoComplete="email"
+				placeholder="Enter email"
+			/>
+			<AuthField
 				name="password"
-				className="flex flex-col w-full space-y-2 form-root"
-			>
-				<Field.Label className="text-xl font-semibold text-white/90">
-					Password
-				</Field.Label>
-				<Field.Control
-					type="password"
-					autoComplete="current-password"
-					placeholder="Enter password"
-					className=" text-lg bg-[#101010]/60 hover:bg-[#101010]/80 focus:bg-[#101010]/80 rounded-lg p-3 placeholder:text-slate-400 focus:outline-none focus:ring-2
-           focus:ring-blue-400 text-white"
-				/>
-				<Field.Error className="" />
-			</Field.Root>
-			<button
-				type="submit"
-				className="py-3 px-4 rounded-xl border border-white hover:bg-white w-full
-         hover:text-black transition-all duration-300 hover:scale-105 hover:shadow-lg 
-         hover:border-white text-lg overflow-hidden cursor-pointer"
-			>
-				Login
-			</button>
-		</Form>
+				label="Password"
+				type="password"
+				autoComplete="current-password"
+				placeholder="Enter password"
+				labelAside={
+					<Link to="/forgot-password" className={LINK_CLASS}>
+						Forgot password?
+					</Link>
+				}
+			/>
+			<FormAlert message={formError} />
+			<SubmitButton pending={pending}>Login</SubmitButton>
+			<p className="text-white/80">
+				New here?{" "}
+				<Link to="/signup" className={LINK_CLASS}>
+					Create an account
+				</Link>
+			</p>
+		</AuthForm>
 	);
 }

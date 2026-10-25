@@ -29,16 +29,17 @@ touching keys, rendering, tools, local endpoints, or Convex writes, and keep
 The **pre-commit hook** (`.husky/pre-commit`) runs Biome on staged files and the type check. Don't bypass it with
 `--no-verify`; fix the error instead. **CI** (`.github/workflows/ci.yml`) runs `verify` and Playwright on every PR.
 
-`.claude/launch.json` has `dev` (:3000) and `serve` (:4173) for the preview browser. Signed out, only `/login` and
-the `/e2e/*` test pages render (see Testing).
+`.claude/launch.json` has `dev` (:3000) and `serve` (:4173) for the preview browser. Signed out, only the auth pages
+(`/login`, `/signup`, `/forgot-password`, `/reset-password`) and the `/e2e/*` test pages render (see Testing).
 
 ## Architecture
 
 - **TanStack Start 1.169** (React 19, Vite 8 with Rolldown, Nitro). File routes live in `src/routes/`;
   `src/routeTree.gen.ts` is generated, so never edit it. `src/routes/__root.tsx` fetches the auth token during SSR
   (`beforeLoad`) and wraps the app in `ConvexBetterAuthProvider`. `(dashboard)` routes require a session today;
-  `(auth)` holds login/signup. Server routes sit in `src/routes/api/` (`/api/auth/$` proxies to Convex,
-  `/api/chat` streams a reply).
+  `(auth)` holds login, sign-up, forgot and reset password (its layout sends signed-in visitors to `/new`; the forms
+  share `src/components/auth/auth-form.tsx`). Server routes sit in `src/routes/api/` (`/api/auth/$` proxies to
+  Convex, `/api/chat` streams a reply).
 - **Convex** (`convex/`) is the backend: `schema.ts` (message `parts` mirror AI SDK `UIMessage` parts),
   access checks in `authHelpers.ts`, `_generated/` is generated. Query keys go through `@convex-dev/react-query`.
 - **Better Auth 1.6.x** via `@convex-dev/better-auth` (server config `convex/auth.ts`, client

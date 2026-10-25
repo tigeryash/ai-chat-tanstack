@@ -265,6 +265,19 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   "utility model" (settings), falling back to the first line of the message.
 - [ ] **1.5 No login wall** (decision 4). Chat works signed out. The auth pages become "Sign in to sync and share",
   with real sign-up and forgot-password flows (or magic link / email OTP).
+  *Status (2026-10-25):* the sign-up, forgot-password and reset-password pages landed early; the login wall and the
+  "Sign in to sync and share" wording are still to do. They use Better Auth's email/password endpoints and share the
+  login form's parts (`src/components/auth/auth-form.tsx`: Base UI `Form`, the `FULL_MOTION` reveal, `method="post"`).
+  Sign-up ends on "check your email" because verification is required, and Better Auth answers an address that
+  already has an account like a new one. Forgot-password shows one message for every address. Reset-password reads
+  `?token=` and `?error=INVALID_TOKEN`, and a used or expired token offers a new link. A 503 from
+  `convex/emailGuard.ts` and a 429 get their own messages. Signed-in visitors are redirected from every `(auth)` page
+  (the check moved from `login.tsx` to the layout route). Also fixed on login: form-level errors (wrong password,
+  unverified email) were never shown, because Base UI only shows errors for named fields. Schemas are in
+  `src/lib/auth-schemas.ts`, with e2e specs per page (JavaScript-off submits are POSTs with nothing in the URL), and
+  `e2e/reduced-motion.spec.ts` now checks the reveal on all four pages. Not
+  done: a way to resend the verification email once its link expires, and the login page ignores the `?error=` a
+  failed verification link redirects with. Not yet tried against a real deployment with Brevo.
 - [ ] **1.6 Attachments that send.** Images/PDFs as `file` parts where supported; blobs in IndexedDB; unified
   drag-drop and paperclip validation; revoke object URLs.
 - [ ] **1.7 Edit and branch.** Edit a user message → new branch; switch between siblings.

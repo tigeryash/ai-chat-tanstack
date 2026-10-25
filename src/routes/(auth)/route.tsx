@@ -6,6 +6,7 @@ import {
 	ClientOnly,
 	createFileRoute,
 	Outlet,
+	redirect,
 	useLocation,
 } from "@tanstack/react-router";
 import { gsap } from "gsap";
@@ -92,6 +93,16 @@ const AuthLayout = () => {
 	);
 };
 
+const PAGE_TITLES: Record<string, string> = {
+	"/login": "Login",
+	"/signup": "Sign up",
+	"/forgot-password": "Forgot password",
+	"/reset-password": "Reset password",
+};
+
+const pageTitle = (pathname: string) =>
+	PAGE_TITLES[pathname.replace(/\/+$/, "")] ?? "Welcome";
+
 const FormContainer = ({
 	pathname,
 	children,
@@ -104,9 +115,7 @@ const FormContainer = ({
 			className="inset-shadow-lg bg-slate-300/30 flex flex-col py-10  
     items-center space-y-5 xl:space-y-10 rounded-2xl backdrop-blur-md border-[2px] lg:pt-6  lg:space-y-6 lg:h-full border-white/20"
 		>
-			<h2 className="text-[2.5rem] font-semibold capitalize ">
-				{pathname.split("/")}
-			</h2>
+			<h2 className="text-[2.5rem] font-semibold">{pageTitle(pathname)}</h2>
 			{children}
 			<OAuthButtons />
 		</div>
@@ -190,5 +199,11 @@ const Footer = () => {
 };
 
 export const Route = createFileRoute("/(auth)")({
+	// Every page here is for signed-out visitors: login, sign-up, forgot and reset password.
+	beforeLoad: ({ context }) => {
+		if (context.isAuthenticated) {
+			throw redirect({ to: "/new" });
+		}
+	},
 	component: AuthLayout,
 });

@@ -39,6 +39,42 @@ test("a password shorter than the server's minimum is rejected before sign-in", 
 	expect(signInRequests).toEqual([]);
 });
 
+test("links to sign-up and to password reset", async ({ page }) => {
+	await page.goto("/login");
+	await page.waitForLoadState("networkidle");
+
+	await page.getByRole("link", { name: "Create an account" }).click();
+	await expect(page).toHaveURL(/\/signup$/);
+	await expect(page.getByRole("heading", { name: "Sign up" })).toBeVisible();
+
+	await page.getByRole("link", { name: "Sign in", exact: true }).click();
+	await page.getByRole("link", { name: "Forgot password?" }).click();
+	await expect(page).toHaveURL(/\/forgot-password$/);
+	await expect(
+		page.getByRole("heading", { name: "Forgot password" }),
+	).toBeVisible();
+});
+
+test("a sign-in the server refuses says why", async ({ page }) => {
+	await page.route("**/api/auth/sign-in/email", (route) =>
+		route.fulfill({
+			status: 403,
+			json: { code: "EMAIL_NOT_VERIFIED", message: "Email not verified" },
+		}),
+	);
+	await page.goto("/login");
+	await page.waitForLoadState("networkidle");
+
+	await page.getByLabel("Email").fill(EMAIL);
+	await page.getByLabel("Password").fill("a long enough password");
+	await page.getByRole("button", { name: "Login", exact: true }).click();
+
+	await expect(page.getByRole("alert")).toContainText(
+		"Verify your email first",
+	);
+	await expect(page).toHaveURL(/\/login$/);
+});
+
 test.describe("before the page hydrates", () => {
 	test.use({ javaScriptEnabled: false });
 

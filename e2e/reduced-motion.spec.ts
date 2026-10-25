@@ -7,6 +7,12 @@ import { expect, test } from "./support/fixtures";
 // normal animations still play.
 
 const MULTI_LINE_MESSAGE = "one\ntwo\nthree\nfour";
+// The other auth pages share the login form's reveal (src/components/auth/auth-form.tsx).
+const OTHER_AUTH_PAGES = [
+	"/signup",
+	"/forgot-password",
+	"/reset-password?token=test-reset-token",
+];
 
 // Types into the composer from inside the page and records the form's height on every animation
 // frame for about 0.75 s, so the samples don't depend on Playwright round trips.
@@ -140,6 +146,18 @@ test.describe("with Reduce motion on", () => {
 			false,
 		);
 	});
+
+	for (const path of OTHER_AUTH_PAGES) {
+		test(`${path} reveals are instant`, async ({ page }) => {
+			await recordRevealOpacity(page);
+			await page.goto(path);
+			await expect(page.locator("canvas")).toBeVisible();
+			// Longer than the reveals' start delay, so a reveal that ran would have dimmed something.
+			await page.waitForTimeout(1_000);
+
+			expect(await lowestRevealOpacity(page)).toBe(1);
+		});
+	}
 });
 
 test.describe("with full motion", () => {
@@ -166,4 +184,14 @@ test.describe("with full motion", () => {
 			false,
 		);
 	});
+
+	for (const path of OTHER_AUTH_PAGES) {
+		test(`${path} reveals play`, async ({ page }) => {
+			await recordRevealOpacity(page);
+			await page.goto(path);
+			await expect(page.locator("canvas")).toBeVisible();
+
+			await expect.poll(() => lowestRevealOpacity(page)).toBeLessThan(1);
+		});
+	}
 });
