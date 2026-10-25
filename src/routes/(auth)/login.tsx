@@ -1,131 +1,157 @@
-import { Field } from "@base-ui-components/react/field";
-import { Form } from "@base-ui-components/react/form";
-import { useGSAP } from "@gsap/react";
-import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
-import gsap from "gsap";
-import { useRef, useState } from "react";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
+import {
+	AuthField,
+	AuthForm,
+	FormAlert,
+	LINK_CLASS,
+	SubmitButton,
+	useAuthSubmit,
+} from "@/components/auth/auth-form";
 import { authClient } from "@/lib/auth-client";
-import { loginSchema } from "@/lib/auth-schemas";
-import { FULL_MOTION } from "@/lib/reduced-motion";
+import { authErrorMessage, requestAuth } from "@/lib/auth-errors";
+import {
+	loginSchema,
+	loginSearchSchema,
+	type VerifyLinkError,
+} from "@/lib/auth-schemas";
 
 export const Route = createFileRoute("/(auth)/login")({
-	beforeLoad: ({ context }) => {
-		if (context.isAuthenticated) {
-			throw redirect({ to: "/new" });
-		}
-	},
+	validateSearch: loginSearchSchema,
 	component: RouteComponent,
 });
 
+// Shown when a verification link redirects here with `?error=`. Signing in with the unverified address
+// then offers a new link.
+const VERIFY_LINK_MESSAGES: Record<VerifyLinkError, string> = {
+	TOKEN_EXPIRED:
+		"That verification link has expired. Sign in to get a new one.",
+	INVALID_TOKEN:
+		"That verification link didn't work. It may have been cut short. Sign in to get a new one.",
+	USER_NOT_FOUND:
+		"We couldn't find an account for that verification link. Create an account to continue.",
+	INVALID_USER: "That verification link didn't work. Sign in to get a new one.",
+};
+
 function RouteComponent() {
-	const [errors, setErrors] = useState({});
-	const formRef = useRef<HTMLFormElement>(null);
 	const router = useRouter();
-
-	const submitForm = async (event: React.FormEvent<HTMLFormElement>) => {
-		event.preventDefault();
-
-		const formData = new FormData(event.currentTarget);
-		const result = loginSchema.safeParse(Object.fromEntries(formData));
-
-		if (!result.success) {
-			return {
-				errors: result.error.flatten().fieldErrors,
-			};
-		}
-
-		const { error } = await authClient.signIn.email({
-			email: result.data.email,
-			password: result.data.password,
-		});
-
-		if (error) {
-			return {
-				errors: { form: [error.message || "Login failed"] },
-			};
-		}
-
-		await router.navigate({ to: "/new" });
-
-		return {
-			errors: {},
-		};
-	};
-	useGSAP(
-		() => {
-			gsap.matchMedia().add(FULL_MOTION, () => {
-				gsap.fromTo(
-					".form-root",
-					{
-						opacity: 0,
-						y: 50,
-					},
-					{
-						opacity: 1,
-						y: 0,
-						duration: 1.1,
-						stagger: 0.1,
-						ease: "power2.inOut",
-						delay: 0.1,
-					},
-				);
-			});
+	const { error: linkError } = Route.useSearch();
+	// The address the last sign-in was refused for because it isn't verified yet.
+	const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
+	const { errors, formError, pending, onSubmit } = useAuthSubmit(
+		loginSchema,
+		async ({ email, password }) => {
+			setUnverifiedEmail(null);
+			const error = await requestAuth(() =>
+				authClient.signIn.email({ email, password }),
+			);
+			if (error?.code === "EMAIL_NOT_VERIFIED") {
+				setUnverifiedEmail(email);
+				return "Verify your email first: open the link we sent when you signed up.";
+			}
+			if (error) {
+				return authErrorMessage(error, error.message || "Login failed");
+			}
+			await router.navigate({ to: "/new" });
+			return null;
 		},
-		{ scope: formRef },
 	);
+
 	return (
-		<Form
-			ref={formRef}
-			// Submitted before hydration, the browser sends the form itself. The default GET would put the
-			// password in the URL (history, server logs); POST keeps it in the body.
-			method="post"
-			className="w-full max-w-md space-y-4 flex flex-col items-center justify-center px-2 "
-			errors={errors}
-			onSubmit={async (event) => {
-				const response = await submitForm(event);
-				setErrors(response.errors);
-			}}
-		>
-			<Field.Root
+		<AuthForm errors={errors} onSubmit={onSubmit}>
+			<FormAlert message={linkError ? VERIFY_LINK_MESSAGES[linkError] : null} />
+			<AuthField
 				name="email"
-				className="flex flex-col w-full space-y-2 form-root "
-			>
-				<Field.Label className="text-xl font-semibold text-white/90">
-					Email
-				</Field.Label>
-				<Field.Control
-					type="email"
-					autoComplete="email"
-					placeholder="Enter email"
-					className=" text-lg bg-[#101010]/60 hover:bg-[#101010]/80 focus:bg-[#101010]/80 rounded-lg p-3 placeholder:text-slate-400 focus:outline-none focus:ring-2
-           focus:ring-blue-400 text-white"
-				/>
-				<Field.Error className="" />
-			</Field.Root>
-			<Field.Root
+				label="Email"
+				type="email"
+				autoComplete="email"
+				placeholder="Enter email"
+			/>
+			<AuthField
 				name="password"
-				className="flex flex-col w-full space-y-2 form-root"
-			>
-				<Field.Label className="text-xl font-semibold text-white/90">
-					Password
-				</Field.Label>
-				<Field.Control
-					type="password"
-					autoComplete="current-password"
-					placeholder="Enter password"
-					className=" text-lg bg-[#101010]/60 hover:bg-[#101010]/80 focus:bg-[#101010]/80 rounded-lg p-3 placeholder:text-slate-400 focus:outline-none focus:ring-2
-           focus:ring-blue-400 text-white"
-				/>
-				<Field.Error className="" />
-			</Field.Root>
+				label="Password"
+				type="password"
+				autoComplete="current-password"
+				placeholder="Enter password"
+				labelAside={
+					<Link to="/forgot-password" className={LINK_CLASS}>
+						Forgot password?
+					</Link>
+				}
+			/>
+			<FormAlert message={formError} />
+			{/* Cleared with the alert when the form is submitted again. */}
+			{formError && unverifiedEmail && (
+				<ResendVerification email={unverifiedEmail} />
+			)}
+			<SubmitButton pending={pending}>Login</SubmitButton>
+			<p className="text-white/80">
+				New here?{" "}
+				<Link to="/signup" className={LINK_CLASS}>
+					Create an account
+				</Link>
+			</p>
+		</AuthForm>
+	);
+}
+
+function ResendVerification({ email }: { email: string }) {
+	const [sending, setSending] = useState(false);
+	const [sent, setSent] = useState(false);
+	const [error, setError] = useState<string | null>(null);
+
+	const resend = async () => {
+		setSending(true);
+		setError(null);
+		const failure = await requestAuth(() =>
+			// The new link lands back here, like the one sent at sign-up.
+			authClient.sendVerificationEmail({ email, callbackURL: "/login" }),
+		);
+		setSending(false);
+		if (failure) {
+			// A 500 can carry Brevo's rejection, so never show the server's message.
+			setError(
+				authErrorMessage(failure, "Couldn't send the email. Try again."),
+			);
+			return;
+		}
+		setSent(true);
+	};
+
+	if (sent) return <ResendConfirmation />;
+	return (
+		<>
 			<button
-				type="submit"
-				className="py-3 px-4 rounded-xl border border-white hover:bg-white w-full
-         hover:text-black transition-all duration-300 hover:scale-105 hover:shadow-lg 
-         hover:border-white text-lg overflow-hidden cursor-pointer"
+				type="button"
+				onClick={resend}
+				disabled={sending}
+				aria-busy={sending}
+				className={`${LINK_CLASS} cursor-pointer disabled:cursor-wait disabled:opacity-60`}
 			>
-				Login
+				{sending ? "Sending…" : "Resend verification email"}
 			</button>
-		</Form>
+			<FormAlert message={error} />
+		</>
+	);
+}
+
+// Signed out, Better Auth answers the same for an unknown, a verified and an unverified address, so this
+// can't say whether an email went out. Focus moves here because the button it replaces is gone.
+function ResendConfirmation() {
+	const ref = useRef<HTMLParagraphElement>(null);
+
+	useEffect(() => {
+		ref.current?.focus();
+	}, []);
+
+	return (
+		<p
+			ref={ref}
+			tabIndex={-1}
+			className="w-full rounded-lg border border-white/30 bg-white/10 p-3 text-white/90 focus:outline-none"
+		>
+			If that address still needs verifying, we've sent it a new link. Open it,
+			then sign in. Nothing after a few minutes? Check your spam folder.
+		</p>
 	);
 }
