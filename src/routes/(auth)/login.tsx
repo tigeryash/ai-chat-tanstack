@@ -6,6 +6,7 @@ import gsap from "gsap";
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { authClient } from "@/lib/auth-client";
+import { FULL_MOTION } from "@/lib/reduced-motion";
 
 export const Route = createFileRoute("/(auth)/login")({
 	beforeLoad: ({ context }) => {
@@ -57,21 +58,23 @@ function RouteComponent() {
 	};
 	useGSAP(
 		() => {
-			gsap.fromTo(
-				".form-root",
-				{
-					opacity: 0,
-					y: 50,
-				},
-				{
-					opacity: 1,
-					y: 0,
-					duration: 1.1,
-					stagger: 0.1,
-					ease: "power2.inOut",
-					delay: 0.1,
-				},
-			);
+			gsap.matchMedia().add(FULL_MOTION, () => {
+				gsap.fromTo(
+					".form-root",
+					{
+						opacity: 0,
+						y: 50,
+					},
+					{
+						opacity: 1,
+						y: 0,
+						duration: 1.1,
+						stagger: 0.1,
+						ease: "power2.inOut",
+						delay: 0.1,
+					},
+				);
+			});
 		},
 		{ scope: formRef },
 	);

@@ -1,15 +1,25 @@
 "use client";
 
 import { useGSAP } from "@gsap/react";
-import { createFileRoute, Outlet, useLocation } from "@tanstack/react-router";
+import {
+	CatchBoundary,
+	ClientOnly,
+	createFileRoute,
+	Outlet,
+	useLocation,
+} from "@tanstack/react-router";
 import { gsap } from "gsap";
 import { SplitText } from "gsap/all";
-import { useRef } from "react";
+import { lazy, Suspense, useRef } from "react";
 import Models from "@/components/auth/models";
 import OAuthButtons from "@/components/auth/oauthbuttons";
-import Scene from "@/components/background/scene";
+import { FULL_MOTION } from "@/lib/reduced-motion";
 
 gsap.registerPlugin(SplitText);
+
+// three.js and React Three Fiber are most of this route's JavaScript. Loading the background after
+// hydration keeps them off the critical path, so the form works before the scene arrives.
+const Scene = lazy(() => import("@/components/background/scene"));
 
 const AuthLayout = () => {
 	const location = useLocation();
@@ -19,30 +29,32 @@ const AuthLayout = () => {
 		() => {
 			if (!containerRef.current) return;
 
-			const subtitle = new SplitText(".subtitle", {
-				type: "lines",
-			});
+			gsap.matchMedia().add(FULL_MOTION, () => {
+				const subtitle = new SplitText(".subtitle", {
+					type: "lines",
+				});
 
-			gsap.set(subtitle.lines, {
-				y: 100,
-			});
-			gsap.to(subtitle.lines, {
-				y: 0,
-				delay: 0.3,
-				duration: 1.2,
-				stagger: 0.075,
-				ease: "power2.inOut",
-			});
-			gsap.from(".auth", {
-				opacity: 0,
-				duration: 0.9,
-				ease: "power2.inOut",
-			});
+				gsap.set(subtitle.lines, {
+					y: 100,
+				});
+				gsap.to(subtitle.lines, {
+					y: 0,
+					delay: 0.3,
+					duration: 1.2,
+					stagger: 0.075,
+					ease: "power2.inOut",
+				});
+				gsap.from(".auth", {
+					opacity: 0,
+					duration: 0.9,
+					ease: "power2.inOut",
+				});
 
-			gsap.from("#footer", {
-				opacity: 0,
-				duration: 0.7,
-				ease: "power2.in",
+				gsap.from("#footer", {
+					opacity: 0,
+					duration: 0.7,
+					ease: "power2.in",
+				});
 			});
 		},
 		{ dependencies: [], scope: containerRef },
@@ -52,7 +64,18 @@ const AuthLayout = () => {
 			ref={containerRef}
 			className="flex relative flex-col-reverse items-center xl:flex-row min-h-screen xl:h-screen  overflow-hidden p-6 md:p-3 bg-slate-900"
 		>
-			<Scene />
+			<ClientOnly>
+				{/* The scene is decoration: if it can't load or WebGL is missing, show the plain background. */}
+				<CatchBoundary
+					getResetKey={() => "scene"}
+					errorComponent={() => null}
+					onCatch={(error) => console.error("Background scene failed", error)}
+				>
+					<Suspense fallback={null}>
+						<Scene />
+					</Suspense>
+				</CatchBoundary>
+			</ClientOnly>
 
 			<div className="space-y-7 xl:w-full pt-10 md:pt-18 pb-12 text-gray-300 h-full flex flex-col md:rounded-2xl relative overflow-hidden">
 				<Body />
@@ -95,19 +118,22 @@ const Body = () => {
 	useGSAP(
 		() => {
 			if (!titleRef.current) return;
-			const title = new SplitText(titleRef.current, {
-				type: "lines",
-				mask: "lines",
-			});
-			gsap.set(title.lines, {
-				y: 200,
-			});
-			gsap.to(title.lines, {
-				y: 0,
-				delay: 0.27,
-				duration: 1.2,
-				stagger: 0.03,
-				ease: "power2.inOut",
+			const titleElement = titleRef.current;
+			gsap.matchMedia().add(FULL_MOTION, () => {
+				const title = new SplitText(titleElement, {
+					type: "lines",
+					mask: "lines",
+				});
+				gsap.set(title.lines, {
+					y: 200,
+				});
+				gsap.to(title.lines, {
+					y: 0,
+					delay: 0.27,
+					duration: 1.2,
+					stagger: 0.03,
+					ease: "power2.inOut",
+				});
 			});
 		},
 		{ dependencies: [], scope: titleRef },
