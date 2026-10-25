@@ -90,6 +90,9 @@ the `/e2e/*` test pages render (see Testing).
 
 - **Vitest** config is `vitest.config.ts`, deliberately separate from `vite.config.ts` (the app's plugins crash
   Vitest and keep it from exiting).
+- **Convex function tests** use `convex-test` through `convex/test.helpers.ts`: `createConvexTest()` registers the
+  Better Auth component, and `signIn(t, name)` seeds a Better Auth user and session and returns a client acting as
+  them. Files with two dots (`*.test.ts`, `test.helpers.ts`) are never deployed by Convex.
 - **Playwright** (`e2e/`, config `playwright.config.ts`) builds the app with `VITE_E2E=true` and runs it on :4174
   against `e2e/support/convex-stub.ts`, a local stand-in for Convex and Better Auth where everyone is signed out.
   No secrets or network needed.

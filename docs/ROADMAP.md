@@ -43,10 +43,15 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   *Update 2026-10-23:* the production builds for the PR #3 and PR #4 merges both failed at `convex deploy` with
   "You do not have permission to perform this operation (deployment:data:view)". convex 1.42's CLI read table
   sizes when a push drops an index, which a deploy-only key can't do (fixed upstream in 1.46). Now on convex 1.47.
-  Not yet confirmed by a successful production build.
+  The production build for the PR #5 merge (`1591c9e`, 2026-10-23) deployed Convex successfully.
 - [x] Artificial Analysis API key (free tier) for 2.1. *In `.env.local` as `ARTIFICIAL_ANALYSIS_API_KEY`
   (2026-10-23).* The 2.1 sync runs as a Convex action, so the key also has to be set on each Convex deployment
   (`bunx convex env set ARTIFICIAL_ANALYSIS_API_KEY …`).
+- [ ] After roadmap 0.3 is deployed: clear the OAuth tokens already stored on Better Auth `account` rows, once per
+  deployment, with `bunx convex run authMaintenance:clearStoredOAuthTokens` (dev) and the same command with `--prod`.
+  It pages through the rows and schedules itself until done; re-running is harmless. Then sign in with Google,
+  GitHub, and Discord on `www.highelollms.com` and link one of them to an email account, to confirm real providers
+  still work with the token fields empty (tests cover this only against a stubbed GitHub).
 - [ ] Vercel Hobby is fine while this is a portfolio piece; move to Pro before charging money. *Still on Hobby
   (2026-10-23).*
 
@@ -149,7 +154,7 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   *Done when:* no `vite.config.ts` type error, and React DevTools shows the "Memo ✨" badge.
   *Status (2026-10-20):* no type error; compiler output (`react.memo_cache_sentinel`) is in 9 of 17 client chunks.
   The DevTools badge itself wasn't checked.
-- [ ] **0.3 Convex security fixes** (audit items 1–7): read-only user lookup in queries; attachment ownership checks;
+- [x] **0.3 Convex security fixes** (audit items 1–7): read-only user lookup in queries; attachment ownership checks;
   restrict message writes to members and their own authorship; make `usage.record` internal; crypto share IDs and a
   projected `getShared`; `type="password"` with matching min length; no stack traces or devtools in prod; drop the
   message `console.log`. Stop storing OAuth access/refresh/id tokens (sign-in is the only use): null them in a
@@ -158,7 +163,36 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   account linking still work with the token fields empty.
   *Status (2026-10-23):* related fix outside the list: with `BREVO_API_KEY` or `EMAIL_FROM_ADDRESS` unset,
   `convex/email.ts` used to log the whole email (verification/reset link included); it now throws, and
-  `convex/emailGuard.ts` answers email sign-up and reset requests with a 503. Audit items 1–7 are still open.
+  `convex/emailGuard.ts` answers email sign-up and reset requests with a 503.
+  *Status (2026-10-25):* all items done; each has tests (`convex-test` 0.0.62 for Convex functions, helpers in
+  `convex/test.helpers.ts`), and 21 of the new Convex tests fail against the old code.
+  (1) `getCurrentUser`/`getCurrentUserOrNull` are read-only and typed with `QueryCtx`, so a write in a query no longer
+  compiles. Only `users.getOrCreate` creates or refreshes the row (`upsertCurrentUser`). Before, a brand-new user's
+  first query threw.
+  (2) Only an attachment's uploader can link, move, or delete it. `sendUserMessage` links only your own unlinked
+  uploads, and `attachments.create` rejects storage IDs that don't exist or are already claimed.
+  (3) A message's parent must be in the same conversation (before, any user could deactivate branches in someone
+  else's chat). `updateAssistantMessage` is limited to the member who started the reply, and only while it's pending or
+  streaming. Its `usage` argument is gone. Feedback, cancel, edit, and delete are author-only and need current
+  membership. `usage.record` is internal (merged with the old `recordInternal`).
+  (4) Share IDs are 22 characters from `crypto.getRandomValues` (`convex/lib/shareId.ts`). `getShared` and
+  `getSharedMessages` return only what a viewer renders, and a fork no longer copies the system prompt. Links made
+  before this keep their old ID until regenerated (there's no sharing UI yet, so probably none exist).
+  (5) The login password field is `type="password"` with `autocomplete`, and the client limits come from
+  `convex/lib/passwordPolicy.ts`, shared with Better Auth (8–128). Also found: a login submitted before hydration went
+  out as a native GET with the password in the URL. The form is now `method="post"` (e2e test with JavaScript off).
+  (6) The router's error screen shows a stack only in dev. Devtools were already absent from production:
+  `@tanstack/devtools-vite` strips them on build (`removeDevtoolsOnBuild`). Building before and after showed no
+  devtools code in `.vercel/output`, and with stripping off the production server doesn't start, so it can't slip
+  through quietly. `/api/chat` no longer logs messages; errors log only the error name and return a generic message.
+  Audit item 7 (rate-limiting `/api/chat`) is moot: the route is deleted in 1.2, and the model isn't client-selectable.
+  OAuth tokens: `databaseHooks.account` (`dropOAuthTokens` in `convex/lib/oauthTokens.ts`) nulls access, refresh, and
+  ID tokens and their expiries on every account write. A test drives Better Auth's real GitHub callback against
+  stubbed GitHub endpoints for sign-up, a repeat sign-in, linking on sign-in, and linking from a session: all sign in
+  with the fields empty, and without the hook all four store the tokens. Google and Discord use the same callback
+  code but weren't tried against the real providers (owner to-do). `authMaintenance:clearStoredOAuthTokens` clears
+  existing rows and hasn't been run. Also, `onPasswordReset` no longer turns a successful reset into an error when
+  the confirmation email fails (`sendPasswordChangedNotice`).
 - [x] **0.4 Guardrails for agent-built code.**
   - `CLAUDE.md`: commands, architecture, conventions, and the hard rules (decisions 2, 5, 22, 23).
   - Vitest working, with a first unit test (`conversions.ts`).

@@ -1,12 +1,40 @@
-import { mutation, query } from "./_generated/server";
+import { type MutationCtx, mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
 import {
   getConversationIfAccessible,
   getCurrentUser,
   getCurrentUserOrNull,
   requireConversationAccess,
   requireMessageAccess,
+  requireOwnAttachment,
+  requireOwnMessage,
+  requireParentInConversation,
 } from "./authHelpers";
+
+// An assistant message's content can change only while its reply is still being written.
+const OPEN_ASSISTANT_STATUSES = new Set(["pending", "streaming"]);
+
+/**
+ * Attachments linked to a new message must be the sender's own uploads, not yet linked to another
+ * message or conversation. Otherwise linking would hand the conversation's members access to them.
+ */
+async function requireLinkableAttachments(
+  ctx: MutationCtx,
+  attachmentIds: Id<"attachments">[],
+  conversationId: Id<"conversations">,
+  userId: Id<"users">,
+) {
+  for (const attachmentId of attachmentIds) {
+    const attachment = await requireOwnAttachment(ctx, attachmentId, userId);
+    const linkedElsewhere =
+      attachment.messageId !== undefined ||
+      (attachment.conversationId !== undefined && attachment.conversationId !== conversationId);
+    if (linkedElsewhere) {
+      throw new Error("Attachment is already linked to another message");
+    }
+  }
+}
 
 // ============================================================================
 // VALIDATORS
@@ -180,6 +208,12 @@ export const sendUserMessage = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
     await requireConversationAccess(ctx, args.conversationId, user._id);
+    if (args.parentId) {
+      await requireParentInConversation(ctx, args.parentId, args.conversationId);
+    }
+    if (args.attachmentIds) {
+      await requireLinkableAttachments(ctx, args.attachmentIds, args.conversationId, user._id);
+    }
 
     const now = Date.now();
 
@@ -255,6 +289,7 @@ export const createAssistantMessage = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
     await requireConversationAccess(ctx, args.conversationId, user._id);
+    await requireParentInConversation(ctx, args.parentId, args.conversationId);
 
     const now = Date.now();
 
@@ -321,23 +356,20 @@ export const updateAssistantMessage = mutation({
         v.literal("cancelled"),
       ),
     ),
-    usage: v.optional(
-      v.object({
-        promptTokens: v.number(),
-        completionTokens: v.number(),
-        totalTokens: v.number(),
-        reasoningTokens: v.optional(v.number()),
-        cachedTokens: v.optional(v.number()),
-      }),
-    ),
     latencyMs: v.optional(v.number()),
     hasToolCalls: v.optional(v.boolean()),
     toolCallIds: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
+    // Token usage is not client-writable (audit item 3); it moves to the device in Phase 1.
     const user = await getCurrentUser(ctx);
-    const message = await requireMessageAccess(ctx, args.messageId, user._id);
-    if (!message) throw new Error("Message not found");
+    const message = await requireOwnMessage(ctx, args.messageId, user._id);
+    if (message.role !== "assistant") {
+      throw new Error("Can only update assistant messages");
+    }
+    if (!OPEN_ASSISTANT_STATUSES.has(message.status)) {
+      throw new Error("Message is already finished");
+    }
 
     const now = Date.now();
 
@@ -346,25 +378,11 @@ export const updateAssistantMessage = mutation({
       ...(args.content !== undefined && { content: args.content }),
       ...(args.status !== undefined && { status: args.status }),
       ...(args.finishReason !== undefined && { finishReason: args.finishReason }),
-      ...(args.usage !== undefined && { usage: args.usage }),
       ...(args.latencyMs !== undefined && { latencyMs: args.latencyMs }),
       ...(args.hasToolCalls !== undefined && { hasToolCalls: args.hasToolCalls }),
       ...(args.toolCallIds !== undefined && { toolCallIds: args.toolCallIds }),
-        updatedAt: now,
+      updatedAt: now,
     });
-
-    // Update conversation stats if completed
-    if (args.status === "completed" && args.usage) {
-      const conversation = await ctx.db.get(message.conversationId);
-      if (conversation) {
-        await ctx.db.patch(message.conversationId, {
-          messageCount: (conversation.messageCount ?? 0) + 1,
-          totalTokens: (conversation.totalTokens ?? 0) + args.usage.totalTokens,
-          lastMessageAt: now,
-          updatedAt: now,
-        });
-      }
-    }
   },
 });
 
@@ -379,10 +397,7 @@ export const editUserMessage = mutation({
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
-    const message = await ctx.db.get(args.messageId);
-
-    if (!message) throw new Error("Message not found");
-    if (message.userId !== user._id) throw new Error("Access denied");
+    const message = await requireOwnMessage(ctx, args.messageId, user._id);
     if (message.role !== "user") throw new Error("Can only edit user messages");
 
     const now = Date.now();
@@ -413,10 +428,9 @@ export const addFeedback = mutation({
     comment: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Feedback is one field per message, so only the member who asked for the reply sets it.
     const user = await getCurrentUser(ctx);
-    const message = await requireMessageAccess(ctx, args.messageId, user._id);
-
-    if (!message) throw new Error("Message not found");
+    const message = await requireOwnMessage(ctx, args.messageId, user._id);
     if (message.role !== "assistant") {
       throw new Error("Can only add feedback to assistant messages");
     }
@@ -439,10 +453,7 @@ export const remove = mutation({
   args: { messageId: v.id("messages") },
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
-    const message = await ctx.db.get(args.messageId);
-
-    if (!message) throw new Error("Message not found");
-    if (message.userId !== user._id) throw new Error("Access denied");
+    await requireOwnMessage(ctx, args.messageId, user._id);
 
     await ctx.db.patch(args.messageId, {
       deletedAt: Date.now(),
@@ -458,8 +469,7 @@ export const cancelStreaming = mutation({
   args: { messageId: v.id("messages") },
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
-    const message = await requireMessageAccess(ctx, args.messageId, user._id);
-    if (!message) throw new Error("Message not found");
+    const message = await requireOwnMessage(ctx, args.messageId, user._id);
 
     if (message.status === "streaming" || message.status === "pending") {
       await ctx.db.patch(args.messageId, {

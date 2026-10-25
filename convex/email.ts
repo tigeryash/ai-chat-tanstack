@@ -57,6 +57,26 @@ export async function sendEmail({ to, subject, text, html }: EmailOptions) {
   return response.json();
 }
 
+/**
+ * Better Auth's `onPasswordReset`. It's awaited after the password has already changed, so a failed
+ * notice is logged, not thrown: otherwise `/reset-password` reports an error for a reset that worked.
+ * `sendEmail` errors name the cause (missing env, Brevo status) without the address or the message.
+ */
+export async function sendPasswordChangedNotice(to: string) {
+  try {
+    await sendEmail({
+      to,
+      subject: "Your password has been reset",
+      text: "Your password has been reset.",
+    });
+  } catch (error) {
+    console.error(
+      "Password reset succeeded, but the confirmation email failed:",
+      error instanceof Error ? error.message : "unknown error",
+    );
+  }
+}
+
 // Brevo's error `message` can quote the request (recipient, sender), so only its `code` is kept, and
 // only when it looks like one of Brevo's identifiers (`invalid_parameter`, `unauthorized`, ...).
 async function brevoErrorCode(response: Response): Promise<string> {

@@ -1,5 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { EmailNotConfiguredError, missingEmailEnv, sendEmail } from "./email";
+import {
+  EmailNotConfiguredError,
+  missingEmailEnv,
+  sendEmail,
+  sendPasswordChangedNotice,
+} from "./email";
 
 // Made-up values. Never put a real Brevo key in a test.
 const FAKE_KEY = "xkeysib-not-a-real-key";
@@ -143,6 +148,59 @@ describe("convex/email.ts sendEmail", () => {
 
     expect(String(error)).toContain("400");
     expect(String(error)).not.toContain(RECIPIENT);
+  });
+});
+
+describe("convex/email.ts sendPasswordChangedNotice", () => {
+  let fetchMock: ReturnType<typeof vi.fn>;
+  let consoleSpies: ReturnType<typeof spyOnConsole>;
+
+  beforeEach(() => {
+    fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    consoleSpies = spyOnConsole();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it("resolves when Brevo rejects the notice, logging the cause without the address", async () => {
+    configureEmail();
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify({ code: "unauthorized", message: `bad ${RECIPIENT}` }), {
+        status: 401,
+      }),
+    );
+
+    await expect(sendPasswordChangedNotice(RECIPIENT)).resolves.toBeUndefined();
+
+    const logged = loggedText(consoleSpies);
+    expect(logged).toContain("401");
+    expect(logged).not.toContain(RECIPIENT);
+  });
+
+  it("resolves when email isn't configured", async () => {
+    vi.stubEnv("BREVO_API_KEY", undefined);
+    vi.stubEnv("EMAIL_FROM_ADDRESS", undefined);
+
+    await expect(sendPasswordChangedNotice(RECIPIENT)).resolves.toBeUndefined();
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(loggedText(consoleSpies)).not.toContain(RECIPIENT);
+  });
+
+  it("sends the notice when email works", async () => {
+    configureEmail();
+    fetchMock.mockResolvedValue(new Response("{}", { status: 201 }));
+
+    await sendPasswordChangedNotice(RECIPIENT);
+
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(String(init.body)).to).toEqual([{ email: RECIPIENT }]);
+    expect(loggedText(consoleSpies)).toBe("");
   });
 });
 

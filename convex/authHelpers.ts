@@ -1,46 +1,42 @@
+import type { UserIdentity } from "convex/server";
 import { authComponent } from "./auth";
 import type { Doc, Id } from "./_generated/dataModel";
-
-type Ctx = any;
+import type { MutationCtx, QueryCtx } from "./_generated/server";
 
 type AppUser = Doc<"users">;
 type Conversation = Doc<"conversations">;
 type Message = Doc<"messages">;
 type Attachment = Doc<"attachments">;
+type AuthUser = NonNullable<Awaited<ReturnType<typeof authComponent.safeGetAuthUser>>>;
 
-function getAuthUserId(authUser: any): string {
-  return authUser._id ?? authUser.id;
+function getAuthUserAvatar(authUser: AuthUser, identity: UserIdentity): string | undefined {
+  return authUser.image ?? identity.pictureUrl ?? undefined;
 }
 
-function getAuthUserAvatar(authUser: any, identity: any): string | undefined {
-  return authUser.image ?? authUser.avatarUrl ?? identity?.pictureUrl;
-}
-
-function buildUserProfilePatch(user: AppUser | null, authUser: any, identity: any) {
-  const authUserId = getAuthUserId(authUser);
-  const name = authUser.name ?? identity?.name;
-  const email = authUser.email ?? identity?.email;
+function buildUserProfilePatch(user: AppUser, authUser: AuthUser, identity: UserIdentity) {
+  const name = authUser.name ?? identity.name;
+  const email = authUser.email ?? identity.email;
   const avatarUrl = getAuthUserAvatar(authUser, identity);
 
   const patch: Partial<AppUser> = {};
 
-  if (!user?.authUserId || user.authUserId !== authUserId) {
-    patch.authUserId = authUserId;
+  if (user.authUserId !== authUser._id) {
+    patch.authUserId = authUser._id;
   }
 
-  if (identity?.tokenIdentifier && user?.tokenIdentifier !== identity.tokenIdentifier) {
+  if (user.tokenIdentifier !== identity.tokenIdentifier) {
     patch.tokenIdentifier = identity.tokenIdentifier;
   }
 
-  if (name !== undefined && user?.name !== name) {
+  if (name !== undefined && user.name !== name) {
     patch.name = name;
   }
 
-  if (email !== undefined && user?.email !== email) {
+  if (email !== undefined && user.email !== email) {
     patch.email = email;
   }
 
-  if (avatarUrl !== undefined && user?.avatarUrl !== avatarUrl) {
+  if (avatarUrl !== undefined && user.avatarUrl !== avatarUrl) {
     patch.avatarUrl = avatarUrl;
   }
 
@@ -48,14 +44,14 @@ function buildUserProfilePatch(user: AppUser | null, authUser: any, identity: an
 }
 
 async function findUserByLegacyFields(
-  ctx: Ctx,
-  authUser: any,
-  identity: any,
+  ctx: QueryCtx,
+  authUser: AuthUser,
+  identity: UserIdentity,
 ): Promise<AppUser | null> {
   if (authUser.email) {
     const byEmail = await ctx.db
       .query("users")
-      .withIndex("by_email", (q: any) => q.eq("email", authUser.email))
+      .withIndex("by_email", (q) => q.eq("email", authUser.email))
       .first();
 
     if (byEmail) {
@@ -63,51 +59,73 @@ async function findUserByLegacyFields(
     }
   }
 
-  if (identity?.tokenIdentifier) {
-    const byToken = await ctx.db
-      .query("users")
-      .withIndex("by_token", (q: any) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier),
-      )
-      .first();
-
-    if (byToken) {
-      return byToken;
-    }
-  }
-
-  return null;
+  return await ctx.db
+    .query("users")
+    .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
+    .first();
 }
 
-export async function getCurrentUserOrNull(ctx: Ctx): Promise<AppUser | null> {
+async function getAuthIdentity(ctx: QueryCtx) {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) {
     return null;
   }
 
-  let authUser: any;
-  try {
-    authUser = await authComponent.getAuthUser(ctx);
-  } catch {
+  const authUser = await authComponent.safeGetAuthUser(ctx);
+  if (!authUser) {
     return null;
   }
 
-  const authUserId = getAuthUserId(authUser);
-  let user = await ctx.db
+  return { identity, authUser };
+}
+
+async function findAppUser(ctx: QueryCtx, authUser: AuthUser, identity: UserIdentity) {
+  const user = await ctx.db
     .query("users")
-    .withIndex("by_auth_user", (q: any) => q.eq("authUserId", authUserId))
+    .withIndex("by_auth_user", (q) => q.eq("authUserId", authUser._id))
     .first();
 
-  if (!user) {
-    user = await findUserByLegacyFields(ctx, authUser, identity);
+  return user ?? (await findUserByLegacyFields(ctx, authUser, identity));
+}
+
+/**
+ * The signed-in user's `users` row, or null. Read-only, so it's safe in queries. The row is created
+ * by `users.getOrCreate` (see `upsertCurrentUser`), which the dashboard calls on load.
+ */
+export async function getCurrentUserOrNull(ctx: QueryCtx): Promise<AppUser | null> {
+  const auth = await getAuthIdentity(ctx);
+  if (!auth) {
+    return null;
   }
 
-  const patch = buildUserProfilePatch(user, authUser, identity);
+  return await findAppUser(ctx, auth.authUser, auth.identity);
+}
+
+export async function getCurrentUser(ctx: QueryCtx): Promise<AppUser> {
+  const user = await getCurrentUserOrNull(ctx);
+  if (!user) {
+    throw new Error("Unauthenticated");
+  }
+  return user;
+}
+
+/**
+ * Creates the signed-in user's `users` row, or refreshes its profile fields from Better Auth.
+ * Mutations only; queries use `getCurrentUserOrNull`.
+ */
+export async function upsertCurrentUser(ctx: MutationCtx): Promise<AppUser> {
+  const auth = await getAuthIdentity(ctx);
+  if (!auth) {
+    throw new Error("Unauthenticated");
+  }
+
+  const { identity, authUser } = auth;
+  const user = await findAppUser(ctx, authUser, identity);
+  const now = Date.now();
 
   if (!user) {
-    const now = Date.now();
     const userId = await ctx.db.insert("users", {
-      authUserId,
+      authUserId: authUser._id,
       tokenIdentifier: identity.tokenIdentifier,
       name: authUser.name ?? identity.name,
       email: authUser.email ?? identity.email,
@@ -116,35 +134,24 @@ export async function getCurrentUserOrNull(ctx: Ctx): Promise<AppUser | null> {
       updatedAt: now,
     });
 
-    return await ctx.db.get(userId);
+    const created = await ctx.db.get(userId);
+    if (!created) {
+      throw new Error("Failed to create user");
+    }
+    return created;
   }
 
-  if (Object.keys(patch).length > 0) {
-    await ctx.db.patch(user._id, {
-      ...patch,
-      updatedAt: Date.now(),
-    });
-
-    return {
-      ...user,
-      ...patch,
-      updatedAt: Date.now(),
-    };
+  const patch = buildUserProfilePatch(user, authUser, identity);
+  if (Object.keys(patch).length === 0) {
+    return user;
   }
 
-  return user;
-}
-
-export async function getCurrentUser(ctx: Ctx): Promise<AppUser> {
-  const user = await getCurrentUserOrNull(ctx);
-  if (!user) {
-    throw new Error("Unauthenticated");
-  }
-  return user;
+  await ctx.db.patch(user._id, { ...patch, updatedAt: now });
+  return { ...user, ...patch, updatedAt: now };
 }
 
 export async function requireConversationAccess(
-  ctx: Ctx,
+  ctx: QueryCtx,
   conversationId: Id<"conversations">,
   userId: Id<"users">,
 ): Promise<Conversation> {
@@ -160,7 +167,7 @@ export async function requireConversationAccess(
   if (conversation.isGroupChat) {
     const participant = await ctx.db
       .query("conversationParticipants")
-      .withIndex("by_user_conversation", (q: any) =>
+      .withIndex("by_user_conversation", (q) =>
         q.eq("userId", userId).eq("conversationId", conversationId),
       )
       .first();
@@ -174,7 +181,7 @@ export async function requireConversationAccess(
 }
 
 export async function getConversationIfAccessible(
-  ctx: Ctx,
+  ctx: QueryCtx,
   conversationId: Id<"conversations">,
   userId: Id<"users">,
 ): Promise<Conversation | null> {
@@ -186,7 +193,7 @@ export async function getConversationIfAccessible(
 }
 
 export async function requireMessageAccess(
-  ctx: Ctx,
+  ctx: QueryCtx,
   messageId: Id<"messages">,
   userId: Id<"users">,
 ): Promise<Message> {
@@ -199,8 +206,37 @@ export async function requireMessageAccess(
   return message;
 }
 
+/**
+ * A message the caller wrote (or, for an assistant message, started), in a conversation they can
+ * still access. Use for anything that changes a message.
+ */
+export async function requireOwnMessage(
+  ctx: QueryCtx,
+  messageId: Id<"messages">,
+  userId: Id<"users">,
+): Promise<Message> {
+  const message = await requireMessageAccess(ctx, messageId, userId);
+  if (message.userId !== userId) {
+    throw new Error("Access denied");
+  }
+  return message;
+}
+
+/** A parent message must sit in the same conversation as the reply being written to it. */
+export async function requireParentInConversation(
+  ctx: QueryCtx,
+  parentId: Id<"messages">,
+  conversationId: Id<"conversations">,
+): Promise<Message> {
+  const parent = await ctx.db.get(parentId);
+  if (!parent || parent.deletedAt || parent.conversationId !== conversationId) {
+    throw new Error("Parent message not found");
+  }
+  return parent;
+}
+
 export async function requireAttachmentAccess(
-  ctx: Ctx,
+  ctx: QueryCtx,
   attachmentId: Id<"attachments">,
   userId: Id<"users">,
 ): Promise<Attachment> {
@@ -221,8 +257,27 @@ export async function requireAttachmentAccess(
   throw new Error("Access denied");
 }
 
+/**
+ * An attachment the caller uploaded. Reading is shared with conversation members
+ * (`requireAttachmentAccess`), but only the uploader can link, move, or delete it.
+ */
+export async function requireOwnAttachment(
+  ctx: QueryCtx,
+  attachmentId: Id<"attachments">,
+  userId: Id<"users">,
+): Promise<Attachment> {
+  const attachment = await ctx.db.get(attachmentId);
+  if (!attachment) {
+    throw new Error("Attachment not found");
+  }
+  if (attachment.userId !== userId) {
+    throw new Error("Access denied");
+  }
+  return attachment;
+}
+
 export async function requireMultiChatConversation(
-  ctx: Ctx,
+  ctx: QueryCtx,
   conversationId: Id<"conversations">,
   userId: Id<"users">,
 ): Promise<Conversation> {
