@@ -5,9 +5,11 @@ import { EmailNotConfiguredError, missingEmailEnv } from "./email";
 const EMAIL_SENDING_PATHS = new Set(["/sign-up/email", "/request-password-reset", "/send-verification-email"]);
 
 /**
- * Better Auth `hooks.before`. A failed send on sign-up or a reset request is caught and only logged by
- * Better Auth, which still reports success (and creates the user on sign-up). So when this deployment
- * can't send email, refuse those requests up front, and log which env vars are missing (names only).
+ * Better Auth `hooks.before`. Sign-up and reset emails are sent outside the request, from a scheduled
+ * action (`queueEmail`), so a failed send can't reach the person: they'd see success (and on sign-up, an
+ * account would be created) for an email that never comes. So when this deployment can't send email,
+ * refuse those requests up front, and log which env vars are missing (names only). The check doesn't
+ * depend on the address, so a 503 reveals nothing about which accounts exist.
  */
 export const requireEmailConfigured = createAuthMiddleware(async (ctx) => {
   if (!EMAIL_SENDING_PATHS.has(ctx.path)) return;

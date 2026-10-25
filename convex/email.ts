@@ -1,3 +1,9 @@
+import type { GenericCtx } from "@convex-dev/better-auth";
+import { v } from "convex/values";
+import { internal } from "./_generated/api";
+import type { DataModel } from "./_generated/dataModel";
+import { internalAction } from "./_generated/server";
+
 const BREVO_SEND_URL = "https://api.brevo.com/v3/smtp/email";
 
 // Brevo rejects senders that aren't verified in its dashboard, so there is no safe default address.
@@ -56,6 +62,31 @@ export async function sendEmail({ to, subject, text, html }: EmailOptions) {
 
   return response.json();
 }
+
+/**
+ * Sends `email` from a scheduled action instead of inside the current request. Only a real account
+ * gets a reset email, and only a new address gets a verification email, so a request that waited on
+ * Brevo would take longer exactly when it reveals something (docs/security.md, "Accounts"). It's
+ * scheduled rather than left running because Convex may drop work still pending when an action returns.
+ *
+ * Scheduled arguments stay in `_scheduled_functions` for 7 days after the send, so `email` must carry
+ * nothing longer-lived than the reset and verification links, which expire within an hour.
+ */
+export async function queueEmail(ctx: GenericCtx<DataModel>, email: EmailOptions): Promise<void> {
+  if (!("scheduler" in ctx)) {
+    throw new Error("Email can only be queued from a mutation or an action.");
+  }
+  await ctx.scheduler.runAfter(0, internal.email.deliver, email);
+}
+
+/** Runs a queued email. On failure Convex logs `sendEmail`'s error, which leaves out the address and link. */
+export const deliver = internalAction({
+  args: { to: v.string(), subject: v.string(), text: v.string(), html: v.optional(v.string()) },
+  handler: async (_ctx, email): Promise<null> => {
+    await sendEmail(email);
+    return null;
+  },
+});
 
 /**
  * Better Auth's `onPasswordReset`. It's awaited after the password has already changed, so a failed

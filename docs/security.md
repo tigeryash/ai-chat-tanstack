@@ -138,6 +138,26 @@ The industry consensus: **you cannot filter your way out of prompt injection; yo
 - Public queries return projections, never whole documents. Share IDs come from `crypto.getRandomValues`.
 - Rate limits on sync, share creation, and invites (roadmap 6.2).
 
+## Accounts
+
+Sign-up and password reset must not reveal whether an address has an account, by their answer or by how long they
+take (fixed 2026-10-25; checked through the real HTTP router by `convex/auth.test.ts`).
+- **Same answer.** Forgot-password shows one message for every address. `/sign-up/email` answers
+  `{ token: null, user: null }` for a new or a taken address (`convex/lib/hideAccountExistence.ts`); before, Better
+  Auth's stand-in user for a taken address had a different shape (dates as strings, extra null fields, another id
+  format). The 503 from `convex/emailGuard.ts` depends only on config, not the address.
+- **Same time.** Only a real account gets a reset email, and only a new address gets a verification email, so a
+  request that waited on Brevo was slower exactly when it gave something away. Reset and verification emails are now
+  queued (`queueEmail` in `convex/email.ts`, which schedules `email:deliver`) instead of sent inside the request. Not
+  Better Auth's `backgroundTasks` hook: Convex may drop work an action leaves running after it returns. The leftover
+  database work still differs, so the reset and sign-up responses also wait out a floor (`RESPONSE_FLOOR_MS`:
+  500 ms and 1,000 ms) measured from Better Auth's before hook. If Convex logs say a route ran "past its … ms floor",
+  raise the floor. Better Auth's own `/send-verification-email` already has a 500 ms floor.
+- **Queued links.** A scheduled function's arguments (here the address and the link) stay in `_scheduled_functions`
+  for 7 days after it runs, readable in the dashboard. The links expire within an hour, and a reset token works
+  once. Anyone with dashboard access can already read the `verification` table and `BETTER_AUTH_SECRET`, so
+  queueing gives no one new access. Don't queue anything longer-lived than these links.
+
 ## Testing
 
 - Playwright tests that render malicious model output (script tags, `javascript:` links, reference-style links,
