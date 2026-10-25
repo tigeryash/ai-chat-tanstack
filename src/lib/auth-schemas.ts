@@ -44,6 +44,23 @@ export const resetPasswordSearchSchema = z.object({
 	error: z.string().optional().catch(undefined),
 });
 
+// The codes Better Auth's verify-email endpoint adds when a verification link fails: it redirects to the
+// sign-up `callbackURL` (`/login`) with `?error=<code>`.
+export const VERIFY_LINK_ERRORS = [
+	"TOKEN_EXPIRED",
+	"INVALID_TOKEN",
+	"USER_NOT_FOUND",
+	"INVALID_USER",
+] as const;
+
+export type VerifyLinkError = (typeof VERIFY_LINK_ERRORS)[number];
+
+// `/login` search params. Only the known codes are read, so the page picks its own message and never shows
+// text from the URL. Anything else counts as no error.
+export const loginSearchSchema = z.object({
+	error: z.enum(VERIFY_LINK_ERRORS).optional().catch(undefined),
+});
+
 /** A failed parse as Base UI `Form` errors: field name → messages, for fields that have any. */
 export function fieldErrors(error: z.ZodError): Record<string, string[]> {
 	return Object.fromEntries(

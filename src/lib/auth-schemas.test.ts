@@ -7,10 +7,12 @@ import {
 	fieldErrors,
 	forgotPasswordSchema,
 	loginSchema,
+	loginSearchSchema,
 	MAX_NAME_LENGTH,
 	resetPasswordSchema,
 	resetPasswordSearchSchema,
 	signupSchema,
+	VERIFY_LINK_ERRORS,
 } from "./auth-schemas";
 
 const EMAIL = "someone@example.test";
@@ -143,6 +145,37 @@ describe("resetPasswordSearchSchema", () => {
 		["a list", ["a", "b"]],
 	])("treats a token that is %s as missing", (_, token) => {
 		expect(resetPasswordSearchSchema.parse({ token }).token).toBeUndefined();
+	});
+});
+
+describe("loginSearchSchema", () => {
+	it("lists the codes Better Auth's verify-email endpoint redirects with", () => {
+		expect(VERIFY_LINK_ERRORS).toEqual([
+			"TOKEN_EXPIRED",
+			"INVALID_TOKEN",
+			"USER_NOT_FOUND",
+			"INVALID_USER",
+		]);
+	});
+
+	it.each(VERIFY_LINK_ERRORS)("reads the %s error", (error) => {
+		expect(loginSearchSchema.parse({ error })).toEqual({ error });
+	});
+
+	it("reads no error when the link worked", () => {
+		expect(loginSearchSchema.parse({}).error).toBeUndefined();
+	});
+
+	it.each([
+		["an unknown code", "SOMETHING_ELSE"],
+		["free text", "Your account was deleted, call 555-0100"],
+		["markup", "<img src=x onerror=alert(1)>"],
+		["a known code in the wrong case", "token_expired"],
+		["empty", ""],
+		["not a string", 12345],
+		["a list", ["TOKEN_EXPIRED", "INVALID_TOKEN"]],
+	])("ignores an error that is %s", (_, error) => {
+		expect(loginSearchSchema.parse({ error }).error).toBeUndefined();
 	});
 });
 

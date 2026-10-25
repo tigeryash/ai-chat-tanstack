@@ -275,9 +275,16 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   (the check moved from `login.tsx` to the layout route). Also fixed on login: form-level errors (wrong password,
   unverified email) were never shown, because Base UI only shows errors for named fields. Schemas are in
   `src/lib/auth-schemas.ts`, with e2e specs per page (JavaScript-off submits are POSTs with nothing in the URL), and
-  `e2e/reduced-motion.spec.ts` now checks the reveal on all four pages. Not
-  done: a way to resend the verification email once its link expires, and the login page ignores the `?error=` a
-  failed verification link redirects with. Not yet tried against a real deployment with Brevo.
+  `e2e/reduced-motion.spec.ts` now checks the reveal on all four pages.
+  *Update (2026-10-25):* a sign-in refused with `EMAIL_NOT_VERIFIED` now offers "Resend verification email"
+  (`authClient.sendVerificationEmail`, landing back on `/login`). Signed out, Better Auth answers the same for unknown,
+  verified and unverified addresses, so the page shows one conditional confirmation and never names the address.
+  503, 429, network and send failures get their own messages, never the server's text. `/login` reads the `?error=`
+  a failed verification link adds (`TOKEN_EXPIRED`, `INVALID_TOKEN`, `USER_NOT_FOUND`, `INVALID_USER`, via
+  `loginSearchSchema`) and shows its own message; any other value shows nothing. Covered in `e2e/login.spec.ts` with
+  faked Better Auth answers. Known gap, server side: a Brevo rejection on resend comes back as an error only for a
+  real unverified address, and a Brevo call slower than Better Auth's 500 ms floor shows in the response time.
+  Not yet tried against a real deployment with Brevo.
 - [ ] **1.6 Attachments that send.** Images/PDFs as `file` parts where supported; blobs in IndexedDB; unified
   drag-drop and paperclip validation; revoke object URLs.
 - [ ] **1.7 Edit and branch.** Edit a user message → new branch; switch between siblings.
