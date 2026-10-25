@@ -1,10 +1,6 @@
-import { mutation, query, internalMutation } from "./_generated/server";
+import { query, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
-import {
-  getCurrentUser,
-  getCurrentUserOrNull,
-  requireConversationAccess,
-} from "./authHelpers";
+import { getCurrentUserOrNull, requireConversationAccess } from "./authHelpers";
 
 // ============================================================================
 // QUERIES
@@ -115,60 +111,10 @@ export const getConversationUsage = query({
 // ============================================================================
 
 /**
- * Record a usage event (called after AI response completes)
+ * Record a usage event (called after AI response completes). Internal: token and cost numbers come
+ * from the server, never from a client (audit item 3).
  */
-export const record = mutation({
-  args:  {
-    conversationId: v.optional(v.id("conversations")),
-    messageId: v.optional(v. id("messages")),
-    model: v.string(),
-    modelProvider: v.string(),
-    promptTokens: v.number(),
-    completionTokens: v. number(),
-    totalTokens: v.number(),
-    reasoningTokens: v.optional(v.number()),
-    cachedTokens: v.optional(v. number()),
-    costUsd: v.number(),
-    latencyMs: v.optional(v.number()),
-  },
-  handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx);
-
-    await ctx.db.insert("usageEvents", {
-      userId: user._id,
-      conversationId: args.conversationId,
-      messageId: args.messageId,
-      model: args.model,
-      modelProvider: args. modelProvider,
-      promptTokens: args.promptTokens,
-      completionTokens: args. completionTokens,
-      totalTokens: args.totalTokens,
-      reasoningTokens:  args.reasoningTokens,
-      cachedTokens: args. cachedTokens,
-      costUsd: args.costUsd,
-      latencyMs: args.latencyMs,
-      createdAt: Date.now(),
-    });
-
-    // Update conversation totals if applicable
-    if (args.conversationId) {
-      await requireConversationAccess(ctx, args.conversationId, user._id);
-
-      const conversation = await ctx.db.get(args.conversationId);
-      if (conversation) {
-        await ctx.db.patch(args.conversationId, {
-          totalTokens: (conversation.totalTokens ?? 0) + args.totalTokens,
-          totalCostUsd: (conversation. totalCostUsd ?? 0) + args.costUsd,
-        });
-      }
-    }
-  },
-});
-
-/**
- * Internal mutation for recording usage from HTTP actions
- */
-export const recordInternal = internalMutation({
+export const record = internalMutation({
   args: {
     userId: v.id("users"),
     conversationId: v.optional(v.id("conversations")),
@@ -178,22 +124,37 @@ export const recordInternal = internalMutation({
     promptTokens: v.number(),
     completionTokens: v.number(),
     totalTokens: v.number(),
+    reasoningTokens: v.optional(v.number()),
+    cachedTokens: v.optional(v.number()),
     costUsd: v.number(),
     latencyMs: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    const conversation = args.conversationId
+      ? await requireConversationAccess(ctx, args.conversationId, args.userId)
+      : null;
+
     await ctx.db.insert("usageEvents", {
       userId: args.userId,
       conversationId: args.conversationId,
       messageId: args.messageId,
       model: args.model,
-      modelProvider: args. modelProvider,
+      modelProvider: args.modelProvider,
       promptTokens: args.promptTokens,
-      completionTokens: args. completionTokens,
+      completionTokens: args.completionTokens,
       totalTokens: args.totalTokens,
+      reasoningTokens: args.reasoningTokens,
+      cachedTokens: args.cachedTokens,
       costUsd: args.costUsd,
       latencyMs: args.latencyMs,
       createdAt: Date.now(),
     });
+
+    if (conversation) {
+      await ctx.db.patch(conversation._id, {
+        totalTokens: (conversation.totalTokens ?? 0) + args.totalTokens,
+        totalCostUsd: (conversation.totalCostUsd ?? 0) + args.costUsd,
+      });
+    }
   },
 });

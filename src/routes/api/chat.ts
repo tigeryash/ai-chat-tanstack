@@ -21,8 +21,6 @@ export const Route = createFileRoute("/api/chat")({
 					const chatConfig = getServerChatConfig();
 					const { messages }: { messages: UIMessage[] } = await request.json();
 
-					console.log("Received messages:", messages);
-
 					const provider = createOpenAICompatible({
 						name: chatConfig.provider,
 						baseURL: chatConfig.baseUrl,
@@ -35,11 +33,14 @@ export const Route = createFileRoute("/api/chat")({
 
 					return result.toUIMessageStreamResponse();
 				} catch (error) {
-					console.error("Chat API error:", error);
+					// Name only: AI SDK errors can carry the request body (the user's messages), which
+					// never goes in logs (hard rule 4), and details stay out of the response.
+					console.error(
+						"Chat API error:",
+						error instanceof Error ? error.name : "unknown error",
+					);
 					return new Response(
-						JSON.stringify({
-							error: error instanceof Error ? error.message : "Unknown error",
-						}),
+						JSON.stringify({ error: "The chat request failed." }),
 						{
 							status: 500,
 							headers: { "Content-Type": "application/json" },

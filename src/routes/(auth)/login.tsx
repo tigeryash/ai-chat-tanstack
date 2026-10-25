@@ -4,8 +4,8 @@ import { useGSAP } from "@gsap/react";
 import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import gsap from "gsap";
 import { useRef, useState } from "react";
-import { z } from "zod";
 import { authClient } from "@/lib/auth-client";
+import { loginSchema } from "@/lib/auth-schemas";
 import { FULL_MOTION } from "@/lib/reduced-motion";
 
 export const Route = createFileRoute("/(auth)/login")({
@@ -17,11 +17,6 @@ export const Route = createFileRoute("/(auth)/login")({
 	component: RouteComponent,
 });
 
-const schema = z.object({
-	email: z.string().email(),
-	password: z.string().min(6),
-});
-
 function RouteComponent() {
 	const [errors, setErrors] = useState({});
 	const formRef = useRef<HTMLFormElement>(null);
@@ -31,7 +26,7 @@ function RouteComponent() {
 		event.preventDefault();
 
 		const formData = new FormData(event.currentTarget);
-		const result = schema.safeParse(Object.fromEntries(formData));
+		const result = loginSchema.safeParse(Object.fromEntries(formData));
 
 		if (!result.success) {
 			return {
@@ -81,6 +76,9 @@ function RouteComponent() {
 	return (
 		<Form
 			ref={formRef}
+			// Submitted before hydration, the browser sends the form itself. The default GET would put the
+			// password in the URL (history, server logs); POST keeps it in the body.
+			method="post"
 			className="w-full max-w-md space-y-4 flex flex-col items-center justify-center px-2 "
 			errors={errors}
 			onSubmit={async (event) => {
@@ -96,6 +94,8 @@ function RouteComponent() {
 					Email
 				</Field.Label>
 				<Field.Control
+					type="email"
+					autoComplete="email"
 					placeholder="Enter email"
 					className=" text-lg bg-[#101010]/60 hover:bg-[#101010]/80 focus:bg-[#101010]/80 rounded-lg p-3 placeholder:text-slate-400 focus:outline-none focus:ring-2
            focus:ring-blue-400 text-white"
@@ -110,6 +110,8 @@ function RouteComponent() {
 					Password
 				</Field.Label>
 				<Field.Control
+					type="password"
+					autoComplete="current-password"
 					placeholder="Enter password"
 					className=" text-lg bg-[#101010]/60 hover:bg-[#101010]/80 focus:bg-[#101010]/80 rounded-lg p-3 placeholder:text-slate-400 focus:outline-none focus:ring-2
            focus:ring-blue-400 text-white"

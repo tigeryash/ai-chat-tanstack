@@ -5,9 +5,11 @@ import { components } from './_generated/api'
 import { query } from './_generated/server'
 import type { GenericCtx } from '@convex-dev/better-auth'
 import type { DataModel } from './_generated/dataModel'
-import { sendEmail } from "./email";
+import { sendEmail, sendPasswordChangedNotice } from "./email";
 import { requireEmailConfigured } from "./emailGuard";
 import authConfig from "./auth.config";
+import { dropOAuthTokens } from "./lib/oauthTokens";
+import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "./lib/passwordPolicy";
 
 const siteUrl = process.env.SITE_URL!
 
@@ -27,10 +29,14 @@ export const createAuth = (
     hooks: {
       before: requireEmailConfigured,
     },
+    databaseHooks: {
+      // Sign-in is the only use of Google/GitHub/Discord, so their OAuth tokens are never stored.
+      account: dropOAuthTokens,
+    },
     emailAndPassword: {
      enabled: true,
-     minPasswordLength: 8,
-     maxPasswordLength: 128,
+     minPasswordLength: MIN_PASSWORD_LENGTH,
+     maxPasswordLength: MAX_PASSWORD_LENGTH,
      autoSignIn: true,
      requireEmailVerification: true,
      sendResetPassword: async ({ user, url }) => {
@@ -41,11 +47,7 @@ export const createAuth = (
        });
      },
      onPasswordReset: async ({ user }) => {
-       await sendEmail({
-         to: user.email,
-         subject: "Your password has been reset",
-         text: `Your password has been reset.`,
-       });
+       await sendPasswordChangedNotice(user.email);
      },
     },
     emailVerification: {
