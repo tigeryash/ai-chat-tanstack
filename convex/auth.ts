@@ -5,9 +5,10 @@ import { components } from './_generated/api'
 import { query } from './_generated/server'
 import type { GenericCtx } from '@convex-dev/better-auth'
 import type { DataModel } from './_generated/dataModel'
-import { sendEmail, sendPasswordChangedNotice } from "./email";
+import { queueEmail, sendPasswordChangedNotice } from "./email";
 import { requireEmailConfigured } from "./emailGuard";
 import authConfig from "./auth.config";
+import { hideAccountExistence } from "./lib/hideAccountExistence";
 import { dropOAuthTokens } from "./lib/oauthTokens";
 import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "./lib/passwordPolicy";
 
@@ -39,8 +40,9 @@ export const createAuth = (
      maxPasswordLength: MAX_PASSWORD_LENGTH,
      autoSignIn: true,
      requireEmailVerification: true,
+     // Queued, not sent here: only real accounts get one, so waiting on Brevo would reveal them.
      sendResetPassword: async ({ user, url }) => {
-       await sendEmail({
+       await queueEmail(ctx, {
          to: user.email,
          subject: "Reset your password",
          text: `Click the link to reset your password: ${url}`,
@@ -51,8 +53,9 @@ export const createAuth = (
      },
     },
     emailVerification: {
+       // Queued for the same reason: on sign-up, only a new address gets one.
        sendVerificationEmail: async ({ user, url }) => {
-         await sendEmail({
+         await queueEmail(ctx, {
            to: user.email,
            subject: "Verify your email address",
            text: `Click the link to verify your email: ${url}`,
@@ -83,7 +86,7 @@ export const createAuth = (
         clientSecret: process.env.DISCORD_CLIENT_SECRET as string,
       },
     },
-    plugins: [convex({ authConfig, jwksRotateOnTokenGenerationError: true, })],
+    plugins: [convex({ authConfig, jwksRotateOnTokenGenerationError: true, }), hideAccountExistence()],
   }) 
 }
 export const getCurrentUser = query({
