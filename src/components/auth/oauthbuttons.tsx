@@ -4,6 +4,7 @@ import { Github, Google } from "@lobehub/icons";
 import gsap from "gsap";
 import { useRef } from "react";
 import { authClient } from "@/lib/auth-client";
+import { FULL_MOTION } from "@/lib/reduced-motion";
 import DiscordIcon from "../../../public/discord-icon.svg";
 import AuthButton from "./authbutton";
 
@@ -11,21 +12,23 @@ const OAuthButtons = () => {
 	const containerRef = useRef<HTMLDivElement>(null);
 	useGSAP(
 		() => {
-			gsap.fromTo(
-				".auth-button > button",
-				{
-					opacity: 0,
-					y: -180,
-				},
-				{
-					opacity: 1,
-					y: 0,
-					stagger: 0.1,
-					duration: 0.3,
-					ease: "power2.inOut",
-					delay: 0.12,
-				},
-			);
+			gsap.matchMedia().add(FULL_MOTION, () => {
+				gsap.fromTo(
+					".auth-button > button",
+					{
+						opacity: 0,
+						y: -180,
+					},
+					{
+						opacity: 1,
+						y: 0,
+						stagger: 0.1,
+						duration: 0.3,
+						ease: "power2.inOut",
+						delay: 0.12,
+					},
+				);
+			});
 		},
 		{ scope: containerRef },
 	);

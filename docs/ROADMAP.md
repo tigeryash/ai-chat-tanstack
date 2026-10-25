@@ -227,9 +227,18 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   components in use, rebuild the ai-elements wrappers in use on shadcn's patterns (each has a migration prompt; export
   names and props stay the same), move the login form to `@base-ui/react`, remove `@radix-ui/*`.
   *Done when:* no `@radix-ui` imports remain and the composer, reasoning, and auth pages look and animate the same.
-- [ ] **0.8 Reduced motion** (decision 22). Also cap the WebGL DPR and lazy-load three.js on the auth route.
+- [x] **0.8 Reduced motion** (decision 22). Also cap the WebGL DPR and lazy-load three.js on the auth route.
   *Done when:* with "Reduce motion" on in the OS, the composer resizes without animating, GSAP reveals are instant,
   and the WebGL scene is a still frame.
+  *Status (2026-10-25):* `<MotionConfig reducedMotion="user">` wraps the app in `__root.tsx`. Motion 12.42 then
+  makes size and layout animations instant, so the composer needed no changes. Every GSAP reveal on the auth pages
+  runs inside `gsap.matchMedia().add(FULL_MOTION, …)`; with reduced motion they never start and the content renders
+  at rest. The model strip (marquee) also stops. The WebGL scene switches to `frameloop="demand"` and holds the
+  animation's first frame, its DPR is capped at 1.5, and it is lazy-loaded after hydration inside a boundary that
+  falls back to the plain background. The auth route chunk went from 294 kB to 57 kB gzipped (three.js is now its
+  own 237 kB chunk). Cost: `MotionConfig` pulls Motion's core (~40 kB gzipped) from the composer chunk into the main
+  chunk. Helpers are in `src/lib/reduced-motion.ts`. `e2e/reduced-motion.spec.ts` checks all three "Done when"
+  points with `reducedMotion: "reduce"`, and each has a full-motion twin. No screenshot baselines changed.
 
 ## Phase 1: New chat core (BYOK, browser-direct, local-first)
 

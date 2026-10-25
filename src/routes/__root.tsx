@@ -10,6 +10,7 @@ import {
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { createServerFn } from "@tanstack/react-start";
+import { MotionConfig } from "motion/react";
 import { authClient } from "@/lib/auth-client";
 import { getToken } from "@/lib/auth-server";
 import TanStackQueryDevtools from "../integrations/tanstack-query/devtools";
@@ -81,7 +82,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 					<HeadContent />
 				</head>
 				<body>
-					{children}
+					{/* Hard rule 3: with "Reduce motion" on, Motion makes position, size and layout animations
+					    instant (the composer resizes without animating). Opacity fades still play. */}
+					<MotionConfig reducedMotion="user">{children}</MotionConfig>
 					<TanStackDevtools
 						config={{
 							position: "bottom-right",

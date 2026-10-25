@@ -19,6 +19,7 @@ import {
 	MarqueeContent,
 	MarqueeItem,
 } from "@/components/ui/shadcn-io/marquee";
+import { FULL_MOTION, usePrefersReducedMotion } from "@/lib/reduced-motion";
 
 const modelIcons = {
 	openai: OpenAI.Combine,
@@ -37,27 +38,32 @@ const Models = () => {
 
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [speed, setSpeed] = useState(500);
+	// A scrolling strip is motion too: with reduced motion it stands still.
+	const reduceMotion = usePrefersReducedMotion();
 	useGSAP(
 		() => {
 			if (!containerRef.current) return;
-			const speedObj = { speed: 500 };
-			gsap.set(containerRef.current, {
-				opacity: 0,
-			});
-			gsap.to(containerRef.current, {
-				opacity: 1,
-				delay: 1,
-				duration: 1.5,
-				ease: "power2.inOut",
-			});
-			gsap.to(speedObj, {
-				delay: 1.7,
-				speed: 70,
-				duration: 1.5,
-				ease: "power2.out",
-				onUpdate: () => {
-					setSpeed(speedObj.speed);
-				},
+			const container = containerRef.current;
+			gsap.matchMedia().add(FULL_MOTION, () => {
+				const speedObj = { speed: 500 };
+				gsap.set(container, {
+					opacity: 0,
+				});
+				gsap.to(container, {
+					opacity: 1,
+					delay: 1,
+					duration: 1.5,
+					ease: "power2.inOut",
+				});
+				gsap.to(speedObj, {
+					delay: 1.7,
+					speed: 70,
+					duration: 1.5,
+					ease: "power2.out",
+					onUpdate: () => {
+						setSpeed(speedObj.speed);
+					},
+				});
 			});
 		},
 		{ scope: containerRef, dependencies: [] },
@@ -70,6 +76,7 @@ const Models = () => {
 			<Marquee className="w-full  ">
 				<MarqueeContent
 					pauseOnHover={true}
+					play={!reduceMotion}
 					className=""
 					speed={speed}
 					direction="left"
