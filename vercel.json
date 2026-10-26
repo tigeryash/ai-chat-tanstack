@@ -1,5 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "rm -rf node_modules && bun install --frozen-lockfile",
   "buildCommand": "sh scripts/vercel-build.sh",
   "outputDirectory": ".vercel/output",
   "framework": null
