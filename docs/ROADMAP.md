@@ -47,11 +47,15 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
 - [x] Artificial Analysis API key (free tier) for 2.1. *In `.env.local` as `ARTIFICIAL_ANALYSIS_API_KEY`
   (2026-10-23).* The 2.1 sync runs as a Convex action, so the key also has to be set on each Convex deployment
   (`bunx convex env set ARTIFICIAL_ANALYSIS_API_KEY …`).
-- [ ] After roadmap 0.3 is deployed: clear the OAuth tokens already stored on Better Auth `account` rows, once per
+- [x] After roadmap 0.3 is deployed: clear the OAuth tokens already stored on Better Auth `account` rows, once per
   deployment, with `bunx convex run authMaintenance:clearStoredOAuthTokens` (dev) and the same command with `--prod`.
   It pages through the rows and schedules itself until done; re-running is harmless. Then sign in with Google,
   GitHub, and Discord on `www.highelollms.com` and link one of them to an email account, to confirm real providers
   still work with the token fields empty (tests cover this only against a stubbed GitHub).
+  *Done 2026-10-25:* cleanup run on dev and prod. Google, GitHub, and Discord sign-in work on
+  `www.highelollms.com`. Discord first failed with "invalid OAuth2 redirect_uri": prod's `DISCORD_CLIENT_ID`
+  pointed at a different Discord app than the one with the callback URL. All deployments now use the `ai-chat-2`
+  app (`1386085325612515519`). Linking a provider to an email account wasn't tried against the real providers.
 - [ ] Vercel Hobby is fine while this is a portfolio piece; move to Pro before charging money. *Still on Hobby
   (2026-10-23).*
 

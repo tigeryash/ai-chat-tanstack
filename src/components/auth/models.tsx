@@ -1,41 +1,30 @@
 "use client";
 
 import { useGSAP } from "@gsap/react";
-import {
-	Claude,
-	DeepSeek,
-	Gemini,
-	Grok,
-	Meta,
-	Moonshot,
-	OpenAI,
-	Qwen,
-	ZAI,
-} from "@lobehub/icons";
 import gsap from "gsap";
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
 	Marquee,
 	MarqueeContent,
 	MarqueeItem,
 } from "@/components/ui/shadcn-io/marquee";
 import { FULL_MOTION, usePrefersReducedMotion } from "@/lib/reduced-motion";
+import { BrandCombine } from "./brand-combine";
+import { brandLogos } from "./brand-logos";
 
-const modelIcons = {
-	openai: OpenAI.Combine,
-	claude: Claude.Combine,
-	gemini: Gemini.Combine,
-	deepseek: DeepSeek.Combine,
-	qwen: Qwen.Combine,
-	grok: Grok.Combine,
-	kimi: Moonshot.Combine,
-	zai: ZAI.Combine,
-	llama: Meta.Combine,
-} as const;
+const modelLogos = [
+	brandLogos.openai,
+	brandLogos.claude,
+	brandLogos.gemini,
+	brandLogos.deepseek,
+	brandLogos.qwen,
+	brandLogos.grok,
+	brandLogos.kimi,
+	brandLogos.zai,
+	brandLogos.meta,
+];
 
 const Models = () => {
-	const modelEntries = useMemo(() => Object.entries(modelIcons), []);
-
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [speed, setSpeed] = useState(500);
 	// A scrolling strip is motion too: with reduced motion it stands still.
@@ -81,9 +70,9 @@ const Models = () => {
 					speed={speed}
 					direction="left"
 				>
-					{modelEntries.map(([model, Icon]) => (
-						<MarqueeItem key={model} className="">
-							<Icon size={80} type="color" className="" />
+					{modelLogos.map((logo) => (
+						<MarqueeItem key={logo.title}>
+							<BrandCombine logo={logo} size={80} />
 						</MarqueeItem>
 					))}
 				</MarqueeContent>

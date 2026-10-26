@@ -3,16 +3,16 @@ import { devtools } from '@tanstack/devtools-vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import viteReact, { reactCompilerPreset } from '@vitejs/plugin-react'
 import babel from '@rolldown/plugin-babel'
-import viteTsConfigPaths from 'vite-tsconfig-paths'
 import tailwindcss from '@tailwindcss/vite'
 import { nitro } from 'nitro/vite'
 import glslify from 'vite-plugin-glslify'
 
 
 const config = defineConfig({
+   // Vite 8 resolves the `@/` alias from tsconfig.json itself.
+   resolve: { tsconfigPaths: true },
    ssr: {
-    // @lobehub/* ESM builds use directory imports, which Node can't load unbundled.
-    noExternal: ['@convex-dev/better-auth', /^@lobehub\//],
+    noExternal: ['@convex-dev/better-auth'],
   },
   plugins: [
     // devtools-vite (0.8.1–0.8.5) re-runs `bun outdated` on every package.json change, and `bun outdated`
@@ -21,10 +21,6 @@ const config = defineConfig({
     devtools().filter((plugin) => plugin.name !== '@tanstack/devtools:event-client-setup'),
     nitro({
       preset: "vercel"
-    }),
-    // this is the plugin that enables path aliases
-    viteTsConfigPaths({
-      projects: ['./tsconfig.json'],
     }),
     tailwindcss(),
     tanstackStart(),
