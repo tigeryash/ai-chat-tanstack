@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { REDACTED, redact, redactString } from "@/lib/redact";
+import {
+	forgetSecret,
+	REDACTED,
+	redact,
+	redactString,
+	registerSecret,
+} from "@/lib/redact";
 
 describe("redactString", () => {
 	it.each([
@@ -12,6 +18,10 @@ describe("redactString", () => {
 		["Groq", "gsk_abcdefghijklmnopqrstuvwxyz"],
 		["Hugging Face", "hf_abcdefghijklmnopqrstuvwxyz"],
 		["AI Gateway", "vck_abcdefghijklmnopqrstuvwxyz"],
+		["Cerebras", "csk-abcdefghijklmnopqrstuvwxyz"],
+		["Together", "tgp_v1_abcdefghijklmnopqrstuvwxyz"],
+		["Fireworks", "fw_abcdefghijklmnopqrstuvwxyz"],
+		["DeepSeek / Moonshot", "sk-0123456789abcdef0123456789abcdef"],
 		[
 			"JWT",
 			"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N",
@@ -33,6 +43,7 @@ describe("redactString", () => {
 		['{"apiKey":"0123456789"}', `{"apiKey":"${REDACTED}"}`],
 		["/reset?token=abcdef123456&next=/", `/reset?token=${REDACTED}&next=/`],
 		["password=hunter22", `password=${REDACTED}`],
+		['{"code_verifier":"abcdefgh"}', `{"code_verifier":"${REDACTED}"}`],
 	])("removes the value in %s", (input, expected) => {
 		expect(redactString(input)).toBe(expected);
 	});
@@ -74,5 +85,27 @@ describe("redact", () => {
 		const loop: Record<string, unknown> = { name: "a" };
 		loop.self = loop;
 		expect(redact(loop)).toEqual({ name: "a", self: "[omitted]" });
+	});
+});
+
+describe("registered secrets", () => {
+	it("scrubs a prefix-less key (Mistral) only once registered", () => {
+		// Built at runtime so GitHub's secret scanning doesn't take it for a real Mistral key.
+		const mistralKey = ["Fake", "Mistral", "Key", "0123456789", "QrStUw"].join(
+			"",
+		);
+		expect(redactString(mistralKey)).toBe(mistralKey);
+
+		registerSecret(mistralKey);
+		expect(redactString(`401 for ${mistralKey}`)).toBe(`401 for ${REDACTED}`);
+		expect(redact({ note: mistralKey })).toEqual({ note: REDACTED });
+
+		forgetSecret(mistralKey);
+		expect(redactString(mistralKey)).toBe(mistralKey);
+	});
+
+	it("ignores strings too short to be a key", () => {
+		registerSecret("abc");
+		expect(redactString("abc")).toBe("abc");
 	});
 });

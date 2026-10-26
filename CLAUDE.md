@@ -65,7 +65,8 @@ The **pre-commit hook** (`.husky/pre-commit`) runs Biome on staged files and the
 
 1. **Keys never leave the browser except to their own provider** (decision 2). Never send a user's API key to our
    server, Convex, logs, analytics, error reports, URLs, exports, or sync payloads. Only the chat transport builds
-   provider headers. The single exception is the opt-in durable agent run (decision 25,
+   provider headers (plus the settings key test in `src/lib/keys/test-key.ts`); read keys only through
+   `getProviderKey` from `@/lib/keys`. The single exception is the opt-in durable agent run (decision 25,
    [security.md](docs/security.md)).
 2. **Stay on Better Auth 1.6.x** (decision 5). `@convex-dev/better-auth` 0.12 requires `better-auth <1.7.0`.
    Don't bump `better-auth` until the adapter supports 1.7.
@@ -133,6 +134,9 @@ The **pre-commit hook** (`.husky/pre-commit`) runs Biome on staged files and the
 
 ## Gotchas (learned in Phase 0)
 
+- **Biome skips this repo when it sits under `.claude/`** (`biome.json` ignores `.claude`, which also matches a
+  worktree's own path), so in a worktree `bun run check` and the pre-commit hook check nothing. Lint there with a
+  copy of `biome.json` minus the `!!**/.claude` line: `bunx biome check --config-path=<dir with that copy> src e2e`.
 - **Keep `convex` at 1.46 or newer.** `CONVEX_DEPLOY_KEY` can deploy but not read data. Older CLIs read table sizes
   when a push drops an index, so production builds failed with "You do not have permission to perform this operation
   (deployment:data:view)". Upgrade the CLI rather than giving the key data access.

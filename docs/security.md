@@ -74,7 +74,8 @@ have put words in its mouth).
 - Automated update PRs (Renovate/Dependabot), grouped and reviewed. Prefer fewer dependencies.
 
 **Scrubbing.** One `redact()` utility used by `track()`, the Sentry `beforeSend`, and any logging. It drops anything
-key-shaped (`sk-…`, `sk-ant-…`, `AIza…`, `xai-…`, bearer headers), and analytics never receive prompt or reply text at all.
+key-shaped (`sk-…`, `sk-ant-…`, `AIza…`, `xai-…`, bearer headers) plus every key the vault holds (1.1), and
+analytics never receive prompt or reply text at all.
 It is `src/lib/redact.ts`; app code logs through `logError`/`logWarn` in `src/lib/log.ts`, which run it first.
 `convex/` has its own logging (names and config only) and doesn't import it yet.
 
@@ -93,6 +94,29 @@ It is `src/lib/redact.ts`; app code logs through `logError`/`logWarn` in `src/li
 - Recommend scoped keys with spend limits. OpenRouter's OAuth flow lets users cap the minted key.
 - Anthropic needs `anthropic-dangerous-direct-browser-access: true` for browser calls. The name is a warning about
   exposing *your own* key in a public site; with user-supplied keys it's the intended BYOK pattern.
+
+*Where it stands (1.1, 2026-10-26).* The vault is `src/lib/keys/`; other code reads a key only through
+`getProviderKey(providerId)` (`index.ts`).
+- **Storage.** Session keys sit in a `Map` in the vault module. Remembered keys are AES-GCM encrypted (random IV, the
+  provider id as additional data, so a record moved to another provider won't decrypt) under one non-extractable
+  device key, both in their own IndexedDB database `highelo-keys`. No cache: every read decrypts, so a key deleted in
+  one tab is gone in the others.
+- **Who sends keys.** Besides the chat transport, only the key test (`test-key.ts`) puts a key in a request: one GET
+  to the provider's own API, key in a header (Google's too, never `?key=`), `credentials: "omit"`,
+  `referrerPolicy: "origin"`. Error bodies are never read, since some quote the key. OpenRouter's, Hugging Face's and
+  AI Gateway's model lists are public, so their tests call `/api/v1/key`, `huggingface.co/api/whoami-v2` and
+  `/v1/credits`. `huggingface.co` was added to `connect-src` for this.
+- **Forms.** The settings routes render client-only (`ssr: false`), and the key input has no `name`, so even a
+  native form submit has nothing to send to our server.
+- **Connect OpenRouter** (`openrouter-oauth.ts`): PKCE S256 plus `state`. The verifier and state wait in
+  sessionStorage, are removed before the exchange (one use), and expire with the code after 10 minutes. A callback
+  that this tab didn't start makes no request. The page strips `?code=&state=` with `history.replaceState` first.
+- **Scrubbing.** `redact()` now also knows Cerebras (`csk-`) and Together (`tgp_`) keys and `code_verifier`, and
+  scrubs every key the vault has saved or read by exact match (`registerSecret`), which covers keys with no prefix
+  (Mistral, older Together and Fireworks keys).
+- **Tested.** `e2e/keys.spec.ts` fakes every provider origin and records every request and Convex WebSocket frame:
+  each key appears only in requests to its own provider. It also checks reload behavior per mode, that IndexedDB
+  holds no plaintext and a non-extractable key, the PKCE exchange, and that a planted callback connects nothing.
 
 ## Server-held keys for durable agent runs (opt-in, roadmap decision 25)
 

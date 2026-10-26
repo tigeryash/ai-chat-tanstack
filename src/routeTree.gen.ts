@@ -19,9 +19,11 @@ import { Route as authResetPasswordRouteImport } from './routes/(auth)/reset-pas
 import { Route as authSignupRouteImport } from './routes/(auth)/signup'
 import { Route as dashboardChatIdRouteImport } from './routes/(dashboard)/$chatId'
 import { Route as dashboardNewRouteImport } from './routes/(dashboard)/new'
+import { Route as dashboardSettingsRouteImport } from './routes/(dashboard)/settings'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiCspReportRouteImport } from './routes/api/csp-report'
 import { Route as E2eComposerRouteImport } from './routes/e2e/composer'
+import { Route as E2eKeysRouteImport } from './routes/e2e/keys'
 import { Route as E2eLoadingRouteImport } from './routes/e2e/loading'
 import { Route as E2eMarkdownRouteImport } from './routes/e2e/markdown'
 import { Route as E2eMessagesRouteImport } from './routes/e2e/messages'
@@ -75,6 +77,11 @@ const dashboardNewRoute = dashboardNewRouteImport.update({
   path: '/new',
   getParentRoute: () => dashboardRouteRoute,
 } as any)
+const dashboardSettingsRoute = dashboardSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => dashboardRouteRoute,
+} as any)
 const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
   path: '/api/chat',
@@ -88,6 +95,11 @@ const ApiCspReportRoute = ApiCspReportRouteImport.update({
 const E2eComposerRoute = E2eComposerRouteImport.update({
   id: '/composer',
   path: '/composer',
+  getParentRoute: () => E2eRouteRoute,
+} as any)
+const E2eKeysRoute = E2eKeysRouteImport.update({
+  id: '/keys',
+  path: '/keys',
   getParentRoute: () => E2eRouteRoute,
 } as any)
 const E2eLoadingRoute = E2eLoadingRouteImport.update({
@@ -120,9 +132,11 @@ export interface FileRoutesByFullPath {
   '/signup': typeof authSignupRoute
   '/$chatId': typeof dashboardChatIdRoute
   '/new': typeof dashboardNewRoute
+  '/settings': typeof dashboardSettingsRoute
   '/api/chat': typeof ApiChatRoute
   '/api/csp-report': typeof ApiCspReportRoute
   '/e2e/composer': typeof E2eComposerRoute
+  '/e2e/keys': typeof E2eKeysRoute
   '/e2e/loading': typeof E2eLoadingRoute
   '/e2e/markdown': typeof E2eMarkdownRoute
   '/e2e/messages': typeof E2eMessagesRoute
@@ -137,9 +151,11 @@ export interface FileRoutesByTo {
   '/signup': typeof authSignupRoute
   '/$chatId': typeof dashboardChatIdRoute
   '/new': typeof dashboardNewRoute
+  '/settings': typeof dashboardSettingsRoute
   '/api/chat': typeof ApiChatRoute
   '/api/csp-report': typeof ApiCspReportRoute
   '/e2e/composer': typeof E2eComposerRoute
+  '/e2e/keys': typeof E2eKeysRoute
   '/e2e/loading': typeof E2eLoadingRoute
   '/e2e/markdown': typeof E2eMarkdownRoute
   '/e2e/messages': typeof E2eMessagesRoute
@@ -157,9 +173,11 @@ export interface FileRoutesById {
   '/(auth)/signup': typeof authSignupRoute
   '/(dashboard)/$chatId': typeof dashboardChatIdRoute
   '/(dashboard)/new': typeof dashboardNewRoute
+  '/(dashboard)/settings': typeof dashboardSettingsRoute
   '/api/chat': typeof ApiChatRoute
   '/api/csp-report': typeof ApiCspReportRoute
   '/e2e/composer': typeof E2eComposerRoute
+  '/e2e/keys': typeof E2eKeysRoute
   '/e2e/loading': typeof E2eLoadingRoute
   '/e2e/markdown': typeof E2eMarkdownRoute
   '/e2e/messages': typeof E2eMessagesRoute
@@ -176,9 +194,11 @@ export interface FileRouteTypes {
     | '/signup'
     | '/$chatId'
     | '/new'
+    | '/settings'
     | '/api/chat'
     | '/api/csp-report'
     | '/e2e/composer'
+    | '/e2e/keys'
     | '/e2e/loading'
     | '/e2e/markdown'
     | '/e2e/messages'
@@ -193,9 +213,11 @@ export interface FileRouteTypes {
     | '/signup'
     | '/$chatId'
     | '/new'
+    | '/settings'
     | '/api/chat'
     | '/api/csp-report'
     | '/e2e/composer'
+    | '/e2e/keys'
     | '/e2e/loading'
     | '/e2e/markdown'
     | '/e2e/messages'
@@ -212,9 +234,11 @@ export interface FileRouteTypes {
     | '/(auth)/signup'
     | '/(dashboard)/$chatId'
     | '/(dashboard)/new'
+    | '/(dashboard)/settings'
     | '/api/chat'
     | '/api/csp-report'
     | '/e2e/composer'
+    | '/e2e/keys'
     | '/e2e/loading'
     | '/e2e/markdown'
     | '/e2e/messages'
@@ -303,6 +327,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof dashboardNewRouteImport
       parentRoute: typeof dashboardRouteRoute
     }
+    '/(dashboard)/settings': {
+      id: '/(dashboard)/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof dashboardSettingsRouteImport
+      parentRoute: typeof dashboardRouteRoute
+    }
     '/api/chat': {
       id: '/api/chat'
       path: '/api/chat'
@@ -322,6 +353,13 @@ declare module '@tanstack/react-router' {
       path: '/composer'
       fullPath: '/e2e/composer'
       preLoaderRoute: typeof E2eComposerRouteImport
+      parentRoute: typeof E2eRouteRoute
+    }
+    '/e2e/keys': {
+      id: '/e2e/keys'
+      path: '/keys'
+      fullPath: '/e2e/keys'
+      preLoaderRoute: typeof E2eKeysRouteImport
       parentRoute: typeof E2eRouteRoute
     }
     '/e2e/loading': {
@@ -376,11 +414,13 @@ const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
 interface dashboardRouteRouteChildren {
   dashboardChatIdRoute: typeof dashboardChatIdRoute
   dashboardNewRoute: typeof dashboardNewRoute
+  dashboardSettingsRoute: typeof dashboardSettingsRoute
 }
 
 const dashboardRouteRouteChildren: dashboardRouteRouteChildren = {
   dashboardChatIdRoute: dashboardChatIdRoute,
   dashboardNewRoute: dashboardNewRoute,
+  dashboardSettingsRoute: dashboardSettingsRoute,
 }
 
 const dashboardRouteRouteWithChildren = dashboardRouteRoute._addFileChildren(
@@ -389,6 +429,7 @@ const dashboardRouteRouteWithChildren = dashboardRouteRoute._addFileChildren(
 
 interface E2eRouteRouteChildren {
   E2eComposerRoute: typeof E2eComposerRoute
+  E2eKeysRoute: typeof E2eKeysRoute
   E2eLoadingRoute: typeof E2eLoadingRoute
   E2eMarkdownRoute: typeof E2eMarkdownRoute
   E2eMessagesRoute: typeof E2eMessagesRoute
@@ -396,6 +437,7 @@ interface E2eRouteRouteChildren {
 
 const E2eRouteRouteChildren: E2eRouteRouteChildren = {
   E2eComposerRoute: E2eComposerRoute,
+  E2eKeysRoute: E2eKeysRoute,
   E2eLoadingRoute: E2eLoadingRoute,
   E2eMarkdownRoute: E2eMarkdownRoute,
   E2eMessagesRoute: E2eMessagesRoute,

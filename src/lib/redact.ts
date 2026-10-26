@@ -14,29 +14,49 @@ const SECRET_PATTERNS: ReadonlyArray<readonly [RegExp, string]> = [
 	[/\bsk-[A-Za-z0-9_-]{16,}/g, REDACTED],
 	// Google API keys.
 	[/\bAIza[A-Za-z0-9_-]{30,}/g, REDACTED],
-	// xAI, Groq, Hugging Face, Fireworks, Replicate, Vercel AI Gateway.
+	// xAI, Cerebras, Groq, Hugging Face, Fireworks, Together, Replicate, Vercel AI Gateway.
 	[/\bxai-[A-Za-z0-9_-]{16,}/g, REDACTED],
-	[/\b(gsk|hf|fw|r8|vck)_[A-Za-z0-9_-]{16,}/g, REDACTED],
+	[/\bcsk-[A-Za-z0-9_-]{16,}/g, REDACTED],
+	[/\b(gsk|hf|fw|tgp|r8|vck)_[A-Za-z0-9_-]{16,}/g, REDACTED],
 	// JSON Web Tokens (session and Convex auth tokens).
 	[/\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}/g, REDACTED],
-	// Header, JSON and query forms: `x-api-key: …`, `"apiKey":"…"`, `token=…`, `password=…`.
+	// Header, JSON and query forms: `x-api-key: …`, `"apiKey":"…"`, `token=…`, `password=…`, and the
+	// OAuth PKCE verifier (roadmap 1.1).
 	[
-		/\b(x-api-key|x-goog-api-key|api[_-]?key|access[_-]?token|refresh[_-]?token|token|secret|password)(["']?\s*[:=]\s*["']?)[^\s"'&,;}]{4,}/gi,
+		/\b(x-api-key|x-goog-api-key|api[_-]?key|access[_-]?token|refresh[_-]?token|token|secret|password|code[_-]?verifier)(["']?\s*[:=]\s*["']?)[^\s"'&,;}]{4,}/gi,
 		`$1$2${REDACTED}`,
 	],
 ];
 
-/** Replaces every key-shaped substring of `text` with `[redacted]`. */
+// Mistral keys, and older Together and Fireworks keys, have no prefix: 32 to 64 letters and digits,
+// the same shape as hashes and IDs. So the key vault (src/lib/keys/) registers every key it holds,
+// and those exact strings are scrubbed whatever they look like.
+const knownSecrets = new Set<string>();
+const MIN_KNOWN_SECRET_LENGTH = 8;
+
+/** Scrubs this exact string from now on. The key vault calls it for every key it saves or reads. */
+export function registerSecret(secret: string): void {
+	if (secret.length >= MIN_KNOWN_SECRET_LENGTH) knownSecrets.add(secret);
+}
+
+export function forgetSecret(secret: string): void {
+	knownSecrets.delete(secret);
+}
+
+/** Replaces every key-shaped substring of `text`, and every registered secret, with `[redacted]`. */
 export function redactString(text: string): string {
+	let scrubbed = text;
+	for (const secret of knownSecrets) {
+		scrubbed = scrubbed.replaceAll(secret, REDACTED);
+	}
 	return SECRET_PATTERNS.reduce(
-		(scrubbed, [pattern, replacement]) =>
-			scrubbed.replace(pattern, replacement),
-		text,
+		(result, [pattern, replacement]) => result.replace(pattern, replacement),
+		scrubbed,
 	);
 }
 
 const SENSITIVE_FIELD =
-	/^(authorization|cookie|set-cookie|x-api-key|x-goog-api-key|api[_-]?key|token|access[_-]?token|refresh[_-]?token|id[_-]?token|secret|password|key)$/i;
+	/^(authorization|cookie|set-cookie|x-api-key|x-goog-api-key|api[_-]?key|token|access[_-]?token|refresh[_-]?token|id[_-]?token|secret|password|key|code[_-]?verifier)$/i;
 const MAX_DEPTH = 6;
 
 /**

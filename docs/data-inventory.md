@@ -32,7 +32,8 @@ Promises the design already makes. Changing one of these is a product decision, 
 | Conversations and messages (text, reasoning, model used, token usage, feedback) | Convex today; **IndexedDB on your device** after 1.3 | You (and group members / share-link viewers if you share) | Until you delete them | Today in Convex; moving local-first in Phase 1 |
 | Attachments (images, PDFs, files) | Convex file storage today; IndexedDB after 1.6 | Same as messages | Until you delete them | Today / planned |
 | Usage events (model, tokens, cost estimate) | Convex today; local only after Phase 1 | You; us as operators while in Convex | Until account deletion | Today; moving local |
-| Provider API keys | Your browser (memory or encrypted IndexedDB) | Only the provider you send them to | Until you delete them or the session ends | Planned (1.1) |
+| Provider API keys | Your browser: "This session only" keeps it in the tab's memory; "Remember on this device" keeps it in IndexedDB (`highelo-keys`), AES-GCM encrypted under a non-extractable key stored next to it, with the last 4 characters in plain text for display | Only the provider it belongs to (a key test, and from 1.2 your chats). Never our server, Convex, logs, URLs or exports | Session keys: until reload or tab close. Remembered keys: until you delete them or clear site data | Since 1.1 (2026-10-26) |
+| OpenRouter sign-in (Connect OpenRouter): a one-time PKCE verifier and state, then a one-time code in the callback URL (`/settings?code=…&state=…`) | Verifier and state: your tab's sessionStorage until the sign-in finishes (codes expire after 10 minutes). Code: the callback URL, removed from the address bar and history as the page loads | OpenRouter. The code also reaches Vercel's request log as part of the URL, but it's useless without the verifier, which never leaves your browser except to OpenRouter | Verifier: until used. Code: Vercel log retention | Since 1.1 (2026-10-26) |
 | Server-held key for durable agent runs | Convex, envelope-encrypted | The run that uses it | Deleted at run end, or kept until you delete it | Planned (4.1, opt-in) |
 | Local model endpoint URLs | Your browser | Nobody else | Until you delete them | Planned (2.3) |
 | Prompt library and versions | Your browser; Convex if synced | You | Until you delete them | Planned (3.6) |
@@ -53,6 +54,8 @@ Promises the design already makes. Changing one of these is a product decision, 
 | Google, GitHub, Discord | The sign-in handshake | OAuth sign-in | Today |
 | Brevo | Your email address and the message | Verification and password-reset emails | Today |
 | AI providers you connect (OpenAI, Anthropic, Google, OpenRouter, …) | Your prompts, files, and key, sent directly from your browser | Generating replies | Today via our server for LM Studio; browser-direct from Phase 1 |
+| The provider of a key you test (settings → API keys) | The key, in one request to its own API (a model list, or for OpenRouter, Hugging Face (`huggingface.co`) and AI Gateway an account endpoint), with our origin but no page path | Checking the key works | Since 1.1 |
+| OpenRouter (Connect OpenRouter) | The sign-in on their site; then the code and verifier, from your browser, in exchange for a key you own | Making a key without copy-paste | Since 1.1 |
 | Your local model server (LM Studio, Ollama) | Your prompts, from your browser to your own machine | Local generation | Planned (2.3) |
 | AI Gateway (public catalog), Artificial Analysis | Nothing about users; our server fetches public model data | Model catalog | Planned (2.1) |
 | Analytics provider, Sentry | Content-free events and scrubbed errors | Product analytics, debugging | Planned (1.8) |
