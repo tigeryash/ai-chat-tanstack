@@ -266,8 +266,12 @@ test.describe("with Reduce motion on", () => {
 		await expect(page.locator("main[data-hydrated='true']")).toBeAttached();
 		const shimmer = page.getByText("Thinking...");
 
-		// Readable text, not the shimmer's transparent text over a frozen gradient.
-		await expect(shimmer).not.toHaveCSS("color", "rgba(0, 0, 0, 0)");
+		// Readable text, not the shimmer's transparent text over a frozen gradient (the shimmer utility
+		// hides the text through -webkit-text-fill-color and paints it with the background).
+		await expect(shimmer).not.toHaveCSS(
+			"-webkit-text-fill-color",
+			"rgba(0, 0, 0, 0)",
+		);
 		expect(await distinctStyleValues(shimmer, "background-position")).toBe(1);
 	});
 

@@ -5,6 +5,7 @@ import {
 	ConversationContent,
 	ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
+import { MessageScrollerItem } from "@/components/ui/message-scroller";
 import MessageUI from "./message-ui";
 
 type MessagesListProps = {
@@ -18,7 +19,15 @@ const MessagesList = ({ messages }: MessagesListProps) => {
 			<Conversation className=" relative size-full">
 				<ConversationContent className="w-[80%] mx-auto">
 					{messages.map(({ ...message }) => (
-						<MessageUI key={message.id} message={message} />
+						// The person's message is the scroll anchor: a new question settles near the top and
+						// the reply streams in under it.
+						<MessageScrollerItem
+							key={message.id}
+							messageId={message.id}
+							scrollAnchor={message.role === "user"}
+						>
+							<MessageUI message={message} />
+						</MessageScrollerItem>
 					))}
 				</ConversationContent>
 				<ConversationScrollButton />

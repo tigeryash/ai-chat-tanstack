@@ -1,5 +1,5 @@
-import { Field } from "@base-ui-components/react/field";
-import { Form } from "@base-ui-components/react/form";
+import { Field } from "@base-ui/react/field";
+import { Form } from "@base-ui/react/form";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { type RefObject, useEffect, useRef, useState } from "react";
