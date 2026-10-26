@@ -67,18 +67,6 @@ const messagePartValidator = v.union(
   })
 );
 
-const artifactTypeValidator = v.union(
-  v.literal("code"),
-  v.literal("document"),
-  v.literal("html"),
-  v.literal("react_component"),
-  v.literal("svg"),
-  v.literal("mermaid"),
-  v.literal("markdown"),
-  v.literal("json"),
-  v.literal("csv")
-);
-
 const conversationSettingsValidator = v.object({
   temperature: v.optional(v.number()),
   maxTokens: v.optional(v.number()),
@@ -283,74 +271,6 @@ export default defineSchema({
     .index("by_parent", ["parentId"])
     .index("by_tool_call_id", ["toolCallId"])
     .index("by_user", ["userId"]),
-
-  // ==========================================================================
-  // ACTIVE CHAT SESSIONS (for multi-chat support)
-  // ==========================================================================
-
-  activeChatSessions: defineTable({
-    userId: v.id("users"),
-    
-    // Array of currently open conversation IDs (max 8)
-    conversationIds: v.array(v.id("conversations")),
-    
-    // Layout preferences
-    layout: v.optional(v.union(
-      v. literal("single"),
-      v.literal("split-2"),
-      v.literal("split-3"),
-      v.literal("split-4"),
-      v.literal("grid-4"),
-      v.literal("grid-6"),
-      v.literal("grid-8")
-    )),
-    
-    // Which chat is currently focused
-    focusedConversationId: v.optional(v.id("conversations")),
-    
-    // Position/order of chats
-    chatPositions: v.optional(v. array(v.object({
-      conversationId: v.id("conversations"),
-      position: v.number(),
-      width: v.optional(v.number()),
-      height: v.optional(v.number()),
-    }))),
-    
-    updatedAt: v.number(),
-  })
-    .index("by_user", ["userId"]),
-
-  // ==========================================================================
-  // ARTIFACTS
-  // ==========================================================================
-
-  artifacts: defineTable({
-    conversationId: v.id("conversations"),
-    messageId: v.id("messages"),
-    userId: v.id("users"),
-    
-    artifactType: artifactTypeValidator,
-    title: v.string(),
-    
-    content: v.optional(v.string()),
-    storageId: v.optional(v.id("_storage")),
-    
-    language: v.optional(v.string()),
-    
-    version: v.number(),
-    parentArtifactId: v.optional(v.id("artifacts")),
-    
-    isPublished: v.optional(v.boolean()),
-    shareId: v.optional(v. string()),
-    
-    metadata:  v.optional(v.any()),
-    
-    createdAt:  v.number(),
-    updatedAt: v.number(),
-  })
-    .index("by_conversation", ["conversationId"])
-    .index("by_message", ["messageId"])
-    .index("by_share_id", ["shareId"]),
 
   // ==========================================================================
   // ATTACHMENTS

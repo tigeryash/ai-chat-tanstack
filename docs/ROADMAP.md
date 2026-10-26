@@ -62,6 +62,11 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   app (`1386085325612515519`). Linking a provider to an email account wasn't tried against the real providers.
 - [ ] After 1.1 is deployed: on `www.highelollms.com`, Settings → API keys → Connect OpenRouter with your account,
   then "Test key" (e2e fakes OpenRouter, so the real consent page and code exchange are untried).
+- [ ] After 1.3: check that prod's `activeChatSessions` and `artifacts` tables are empty
+  (`bunx convex data activeChatSessions --prod`, same for `artifacts`). 1.3 dropped them from the schema; Convex
+  keeps any rows but stops validating them, so the deploy is safe either way. Agents can't read prod. Clear them
+  in the dashboard if they have rows. Once 1.2 has moved chat to the browser, decide whether to delete the old test
+  conversations and messages on dev and prod (dev has a handful from LM Studio testing).
 - [ ] Vercel Hobby is fine while this is a portfolio piece; move to Pro before charging money. *Still on Hobby
   (2026-10-23).*
 
@@ -321,12 +326,14 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   streaming, file, source, tool). Stop and regenerate. Remove `/api/chat` and `streamAssistantTurn.ts`.
   *Done when:* the route component is under ~100 lines, reasoning streams live, Stop works, and a Playwright chat
   test streams a reply from `MockLanguageModelV4` (`ai/test`).
-- [ ] **1.3 `ChatStore` + IndexedDB** (decisions 8–10): Dexie store, format versioning with a migration test,
+- [x] **1.3 `ChatStore` + IndexedDB** (decisions 8–10): Dexie store, format versioning with a migration test,
   persistent-storage request and status, export/import as versioned JSON.
   Drop the old Convex test conversations and the unused `artifacts` and `activeChatSessions` tables (pane layout
   is stored locally).
   *Done when:* chats survive reload offline; a v0 fixture loads through migration; export → wipe → import
   restores everything.
+  *Status (2026-10-26):* `src/lib/storage/` (Dexie store, format migrations, persistence, export/import),
+  `/e2e/storage`; unused Convex tables dropped, old test conversations left until 1.2 lands. PR: PR_LINK
 - [ ] **1.4 Sidebar.** List, new, rename, delete, pin, search by title. Auto-title with the user's chosen
   "utility model" (settings), falling back to the first line of the message.
 - [ ] **1.5 No login wall** (decision 4). Chat works signed out. The auth pages become "Sign in to sync and share",
