@@ -38,7 +38,7 @@ every script it emits) and the root route's `headers` sends two policies:
 - Every Playwright test fails on any CSP violation, report-only ones included (`e2e/support/fixtures.ts`), so the
   report stays clean in normal use. **To enforce:** move the strict policy into `Content-Security-Policy` once
   production logs show no `[csp]` lines from real use (signed-in chat included, which e2e can't reach yet).
-- Things the policy needed: Zod 4 compiles schemas with `new Function`, so `src/lib/zod-jitless.ts` turns that off
+- Things the policy needed: Zod 4 compiles schemas with `new Function`, so `src/lib/zod.ts` (the only allowed Zod import) turns that off
   before any schema runs. The composer's image compression ran in a worker that loaded its library from
   `cdn.jsdelivr.net`; it now runs on the page (`useWebWorker: false`).
 

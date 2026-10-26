@@ -129,8 +129,10 @@ The **pre-commit hook** (`.husky/pre-commit`) runs Biome on staged files and the
   touches `package.json`, so dev reloads every tab about 10 times a second. Keep the filter until upstream fixes it.
 - `src/routes/__root.tsx` has a `@ts-expect-error` for an upstream `@convex-dev/better-auth` `AuthClient` type bug.
   tsc flags it as unused once upstream fixes it; then delete it.
-- **Keep `import "@/lib/zod-jitless"` first in `src/router.tsx`.** Zod 4 compiles schemas with `new Function`,
-  which the CSP forbids; jitless mode must be on before any schema parses.
+- **Import Zod only from `@/lib/zod`** (Biome's `noRestrictedImports` enforces it). Zod 4 compiles schemas with
+  `new Function`, which the CSP forbids, and since 4.6 it probes for eval when an object schema is *created*.
+  `src/lib/zod.ts` turns jitless mode on before any importer can create a schema, whatever order the bundler
+  evaluates chunks in. A single "first import" in `router.tsx` stopped being enough once chunks loaded earlier.
 - **Nitro's dev server 404s requests with `Sec-Fetch-Dest: report`** (it treats them as static assets). The
   `cspReportsInDev` plugin in `vite.config.ts` relabels CSP reports so they reach `/api/csp-report` in dev.
 - **In `__root.tsx`, keep `headers` after `beforeLoad`.** TypeScript infers the route context in key order;
