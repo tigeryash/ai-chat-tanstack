@@ -47,8 +47,11 @@ The **pre-commit hook** (`.husky/pre-commit`) runs Biome on staged files and the
 - **AI SDK 7.** Today `/api/chat` calls LM Studio from the server with the `<think>` middleware
   (`src/lib/reasoning-middleware.ts`), and `src/utilities/streamAssistantTurn.ts` writes the stream to Convex.
   Phase 1 replaces both with `useChat` and a browser-side transport (roadmap decision 7). Don't extend the old path.
-- **UI**: Tailwind 4, shadcn components (Radix today, Base UI after roadmap 0.7), vendored ai-elements in
-  `src/components/ai-elements/`, Motion for the composer, GSAP and React Three Fiber on the auth pages. The React
+- **UI**: Tailwind 4, shadcn components on Base UI (`base-vega` style; add more with `bunx shadcn add <name>`,
+  then change their `cn` import from `"cn"` to `@/lib/utils`), no Radix. `src/components/ai-elements/` keeps the
+  AI SDK Elements export names but is built on shadcn's AI Elements patterns (Message, Trace, Message Scroller).
+  The shadcn variants and utilities (`data-open:`, `shimmer`, `scroll-fade-*`) come from the vendored
+  `src/shadcn-tailwind.css`. Motion for the composer, GSAP and React Three Fiber on the auth pages. The React
   Compiler runs through `@rolldown/plugin-babel`, so don't add `useMemo`/`useCallback` just for performance.
 - **Env**: client vars are validated in `src/env.ts` (`VITE_` prefix). The server reads `VITE_CONVEX_URL` and
   `VITE_CONVEX_SITE_URL` from `process.env`. Convex's own secrets live in the Convex dashboard, not `.env.local`.

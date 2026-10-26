@@ -222,11 +222,39 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   the signed-out SSR path works (`/` → `/login`, `/api/auth/get-session` → `null`, `/api/chat` → 401). A signed-in
   login → chat still needs a manual pass with a real account.
 - [x] **0.6 Commit the dependency upgrade** with 0.1 and 0.5 so `main` builds.
-  *Status (2026-10-20):* committed on branch `phase-0-green-build` (not pushed or merged yet).
-- [ ] **0.7 Base UI + shadcn AI Elements** (decision 21). Base UI style in `components.json`, re-add the shadcn
+  *Status (2026-10-20):* committed on branch `phase-0-green-build`; merged to `main` as
+  [PR #1](https://github.com/tigeryash/ai-chat-tanstack/pull/1).
+- [x] **0.7 Base UI + shadcn AI Elements** (decision 21). Base UI style in `components.json`, re-add the shadcn
   components in use, rebuild the ai-elements wrappers in use on shadcn's patterns (each has a migration prompt; export
   names and props stay the same), move the login form to `@base-ui/react`, remove `@radix-ui/*`.
   *Done when:* no `@radix-ui` imports remain and the composer, reasoning, and auth pages look and animate the same.
+  *Status (2026-10-25):* `components.json` uses `base-vega` (the Base UI build of the new-york look). Button,
+  Button Group, Separator, Collapsible, and Tooltip were re-added on `@base-ui/react` 1.9 with shadcn 4.22.1, plus
+  Message, Bubble, Trace, and Message Scroller for the patterns. The 14 shadcn components nothing imported (Dialog,
+  Dropdown Menu, Hover Card, Select, Scroll Area, Command, Carousel, ...) were deleted; re-add them with
+  `bunx shadcn add` when a slice needs them. Their Base UI versions all exist: Hover Card is built on Base UI's
+  Preview Card, and Context Menu and Toast are Base UI components, so there are no gaps.
+  The ai-elements wrappers follow the AI Elements migration prompts and keep their exports and props:
+  `message.tsx` on Message, Bubble, and Tooltip; `actions.tsx` re-exports its `MessageActions`/`MessageAction`;
+  `reasoning.tsx` on Trace (the streaming title uses the Trace `shimmer` utility instead of our Shimmer, so
+  `shimmer.tsx` is deleted); `conversation.tsx` on Message Scroller (`@shadcn/react`) instead of
+  `use-stick-to-bottom`, with each message wrapped in a `MessageScrollerItem` and the person's as scroll anchor.
+  Reasoning keeps its old icon and wording ("Thinking...", "Thought for N seconds") and its open/close behavior,
+  except that once the person opens or closes it, it no longer closes itself. The auth forms import
+  `@base-ui/react`. Removed: every `@radix-ui/*` package, `@base-ui-components/react`, `use-stick-to-bottom`,
+  `cmdk`, `embla-carousel-react`, and the `ai-elements` CLI package.
+  Choices worth knowing: components still import `cn` from `@/lib/utils` (shadcn now imports it from its `cn`
+  package; switching is a separate dependency decision). `shadcn/tailwind.css` (the `data-open:`-style variants and
+  the `shimmer`/`scroll-fade` utilities the components use) is vendored as `src/shadcn-tailwind.css`, because the
+  `shadcn` package that ships it brings about 250 packages. One `TooltipProvider` at the root keeps tooltips opening
+  without delay, and `TooltipContent` keeps Radix's `sideOffset` of 0.
+  Checks: `grep -r "@radix-ui" src package.json` finds nothing; `bun run verify` passes; Playwright passes on macOS
+  with no screenshot changes. In the Linux image (emulated on Apple silicon) 55 of 57 passed, Linux screenshots
+  included; the two failures are timing flakes: the login resend test passed 4 of 4 on rerun, and "the composer's
+  tooltip fades in" failed 8 of 8 on `main` in the same setup (3 of 4 passed on this branch). CI runs native x86. `/e2e/loading` now shows a streaming and a finished Reasoning, and the reduced-motion
+  shimmer test checks `-webkit-text-fill-color`, which is how the Trace shimmer hides text. In the e2e build the
+  composer tooltip, the Reasoning open/close, and the login page were checked by eye. The chat thread itself sits
+  behind sign-in, so `MessageScroller` was only type-checked, not tried with a real conversation.
 - [x] **0.8 Reduced motion** (decision 22). Also cap the WebGL DPR and lazy-load three.js on the auth route.
   *Done when:* with "Reduce motion" on in the OS, the composer resizes without animating, GSAP reveals are instant,
   and the WebGL scene is a still frame.

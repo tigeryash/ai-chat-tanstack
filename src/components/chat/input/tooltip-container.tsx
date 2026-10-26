@@ -4,12 +4,13 @@ export const ToolTipContainer = ({
 	children,
 	Tip,
 }: {
-	children: React.ReactNode;
+	/** One element; Base UI's `render` makes it the trigger, like Radix's `asChild` did. */
+	children: React.ReactElement;
 	Tip: string;
 }) => {
 	return (
 		<Tooltip>
-			<TooltipTrigger asChild>{children}</TooltipTrigger>
+			<TooltipTrigger render={children} />
 			<TooltipContent>
 				<p>{Tip}</p>
 			</TooltipContent>
