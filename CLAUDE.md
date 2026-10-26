@@ -4,8 +4,9 @@ AI chat app being rebuilt into a Vercel-AI-Playground-style app: several chat pa
 their own keys or local models, chats stored on their device first. Agents write most of the code, so the rules
 and checks below are how mistakes get caught.
 
-**Start here:** [docs/ROADMAP.md](docs/ROADMAP.md) is the plan. Work one slice at a time, meet its "Done when"
-line, then tick the box and add a short *Status* note. Also read [docs/security.md](docs/security.md) before
+**Start here:** [docs/ROADMAP.md](docs/ROADMAP.md) is the plan. Work one slice per session, meet its "Done when"
+line, then tick the box and add one *Status* line with the PR link (details go in the PR description, not the
+roadmap). Also read [docs/security.md](docs/security.md) before
 touching keys, rendering, tools, local endpoints, or Convex writes, and keep
 [docs/data-inventory.md](docs/data-inventory.md) current whenever a change adds, moves, or stores data.
 
@@ -92,7 +93,21 @@ The **pre-commit hook** (`.husky/pre-commit`) runs Biome on staged files and the
 - Unit tests sit next to the code as `*.test.ts`. Vitest runs in Node; a test that needs the DOM adds
   `// @vitest-environment jsdom` at the top.
 - Commit messages: `<type>: <description>` (feat, fix, refactor, docs, test, chore, perf, ci). Commit on a branch
-  per slice. Ask Yash before pushing or opening a PR.
+  per slice.
+
+## Workflow (agreed with Yash, 2026-10-26)
+
+- **Push and open PRs without asking.** Once `bun run verify` passes (and Playwright, if the change touches UI),
+  push your own branch and open a PR against `main`. Yash reviews and merges. Never merge, push to `main`, or
+  force-push a branch someone else is using.
+- **Lead with what needs Yash.** Final reports and PR descriptions start with a "Needs Yash" section: at most 3
+  bullets (manual checks, keys, decisions), or "Nothing". Keep the rest of a report short. Yash skims long ones.
+- **Owner tasks go in the roadmap.** Anything only Yash can do (accounts, keys, real-device or real-email checks)
+  also goes under "Owner to-dos" in `docs/ROADMAP.md`.
+- **Stay in scope.** Fix what blocks your slice. Propose anything else you find as a follow-up instead of doing it.
+- **Parallel sessions.** Other slices may be in progress in worktrees under `.claude/worktrees/` (Biome ignores
+  that folder). Expect small conflicts in `bun.lock`, `convex/schema.ts`, and `docs/ROADMAP.md`. Rebase on
+  `origin/main` before opening the PR.
 - Don't change the composer's animations or behavior (`src/components/chat/input*`) unless the slice is about it.
 
 ## Testing
