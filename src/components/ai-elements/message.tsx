@@ -43,11 +43,11 @@ export const Message = ({ className, from, ...props }: MessageProps) => (
 		<MessageRoot
 			align={from === "user" ? "end" : "start"}
 			// Callers put the actions beside the content rather than in it, so stack them the way the
-			// AI SDK Elements version did instead of shadcn/ui's row.
-			className={cn(
-				"flex-col data-[align=end]:flex-col data-[align=end]:items-end",
-				className,
-			)}
+			// AI SDK Elements version did instead of shadcn/ui's row. Children stretch to full width on both
+			// sides: the bubble's 80% cap is a percentage of its parent, so a shrink-to-fit parent (as with
+			// `items-end`) squeezed every user message to 80% of its own text and wrapped it. The bubble and
+			// footer align themselves to the end instead.
+			className={cn("flex-col data-[align=end]:flex-col", className)}
 			{...props}
 		/>
 	</MessageFromContext.Provider>

@@ -24,6 +24,7 @@ import { Route as ApiCspReportRouteImport } from './routes/api/csp-report'
 import { Route as E2eComposerRouteImport } from './routes/e2e/composer'
 import { Route as E2eLoadingRouteImport } from './routes/e2e/loading'
 import { Route as E2eMarkdownRouteImport } from './routes/e2e/markdown'
+import { Route as E2eMessagesRouteImport } from './routes/e2e/messages'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const IndexRoute = IndexRouteImport.update({
@@ -99,6 +100,11 @@ const E2eMarkdownRoute = E2eMarkdownRouteImport.update({
   path: '/markdown',
   getParentRoute: () => E2eRouteRoute,
 } as any)
+const E2eMessagesRoute = E2eMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => E2eRouteRoute,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -119,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/e2e/composer': typeof E2eComposerRoute
   '/e2e/loading': typeof E2eLoadingRoute
   '/e2e/markdown': typeof E2eMarkdownRoute
+  '/e2e/messages': typeof E2eMessagesRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
@@ -135,6 +142,7 @@ export interface FileRoutesByTo {
   '/e2e/composer': typeof E2eComposerRoute
   '/e2e/loading': typeof E2eLoadingRoute
   '/e2e/markdown': typeof E2eMarkdownRoute
+  '/e2e/messages': typeof E2eMessagesRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
@@ -154,6 +162,7 @@ export interface FileRoutesById {
   '/e2e/composer': typeof E2eComposerRoute
   '/e2e/loading': typeof E2eLoadingRoute
   '/e2e/markdown': typeof E2eMarkdownRoute
+  '/e2e/messages': typeof E2eMessagesRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
@@ -172,6 +181,7 @@ export interface FileRouteTypes {
     | '/e2e/composer'
     | '/e2e/loading'
     | '/e2e/markdown'
+    | '/e2e/messages'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -188,6 +198,7 @@ export interface FileRouteTypes {
     | '/e2e/composer'
     | '/e2e/loading'
     | '/e2e/markdown'
+    | '/e2e/messages'
     | '/api/auth/$'
   id:
     | '__root__'
@@ -206,6 +217,7 @@ export interface FileRouteTypes {
     | '/e2e/composer'
     | '/e2e/loading'
     | '/e2e/markdown'
+    | '/e2e/messages'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
@@ -326,6 +338,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof E2eMarkdownRouteImport
       parentRoute: typeof E2eRouteRoute
     }
+    '/e2e/messages': {
+      id: '/e2e/messages'
+      path: '/messages'
+      fullPath: '/e2e/messages'
+      preLoaderRoute: typeof E2eMessagesRouteImport
+      parentRoute: typeof E2eRouteRoute
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -372,12 +391,14 @@ interface E2eRouteRouteChildren {
   E2eComposerRoute: typeof E2eComposerRoute
   E2eLoadingRoute: typeof E2eLoadingRoute
   E2eMarkdownRoute: typeof E2eMarkdownRoute
+  E2eMessagesRoute: typeof E2eMessagesRoute
 }
 
 const E2eRouteRouteChildren: E2eRouteRouteChildren = {
   E2eComposerRoute: E2eComposerRoute,
   E2eLoadingRoute: E2eLoadingRoute,
   E2eMarkdownRoute: E2eMarkdownRoute,
+  E2eMessagesRoute: E2eMessagesRoute,
 }
 
 const E2eRouteRouteWithChildren = E2eRouteRoute._addFileChildren(

@@ -49,7 +49,13 @@ const MessageUI = ({ message }: MessageUIProps) => {
 					{message.parts.map((part) => {
 						switch (part.type) {
 							case "text":
-								return (
+								// The person's own text shows exactly as typed: line breaks and spacing kept, no
+								// markdown. Only model replies render as markdown.
+								return message.role === "user" ? (
+									<p key={getPartKey(part)} className="whitespace-pre-wrap">
+										{part.text}
+									</p>
+								) : (
 									<MessageResponse key={getPartKey(part)}>
 										{part.text}
 									</MessageResponse>
