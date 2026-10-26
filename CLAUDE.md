@@ -127,11 +127,6 @@ The **pre-commit hook** (`.husky/pre-commit`) runs Biome on staged files and the
 - **`vite.config.ts` filters out one devtools sub-plugin** (`@tanstack/devtools:event-client-setup`). In
   `@tanstack/devtools-vite` 0.8.1–0.8.5 it runs `bun outdated` on every `package.json` change, which itself
   touches `package.json`, so dev reloads every tab about 10 times a second. Keep the filter until upstream fixes it.
-- **`ssr.noExternal` includes `/^@lobehub\//`** because their ESM builds use directory imports Node can't load.
-  `@lobehub/icons` is pinned to 2.48.0 (5.x needs `@lobehub/ui@5` and `antd@6`).
-- **If dev SSR fails strangely** ("The specifiers must be a non-empty string", reload loops), check
-  `node_modules/@lobehub/ui/es/index.js` for stray exports, then `bun install --force` and delete
-  `node_modules/.vite`.
 - `src/routes/__root.tsx` has a `@ts-expect-error` for an upstream `@convex-dev/better-auth` `AuthClient` type bug.
   tsc flags it as unused once upstream fixes it; then delete it.
 - **Keep `import "@/lib/zod-jitless"` first in `src/router.tsx`.** Zod 4 compiles schemas with `new Function`,

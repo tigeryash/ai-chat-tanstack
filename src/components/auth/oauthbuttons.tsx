@@ -1,12 +1,12 @@
 "use client";
 import { useGSAP } from "@gsap/react";
-import { Github, Google } from "@lobehub/icons";
 import gsap from "gsap";
 import { useRef } from "react";
 import { authClient } from "@/lib/auth-client";
 import { FULL_MOTION } from "@/lib/reduced-motion";
 import DiscordIcon from "../../../public/discord-icon.svg";
 import AuthButton from "./authbutton";
+import { brandLogos } from "./brand-logos";
 
 const OAuthButtons = () => {
 	const containerRef = useRef<HTMLDivElement>(null);
@@ -53,14 +53,14 @@ const OAuthButtons = () => {
 			>
 				<div className="auth-button">
 					<AuthButton
-						Icon={Google}
+						Icon={brandLogos.google.mono}
 						name="google"
 						onClick={() => handleProviderSignIn("google")}
 					/>
 				</div>
 				<div className="auth-button ">
 					<AuthButton
-						Icon={Github}
+						Icon={brandLogos.github.mono}
 						name="github"
 						onClick={() => handleProviderSignIn("github")}
 					/>
