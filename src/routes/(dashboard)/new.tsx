@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import { useState } from "react";
 import { Input } from "@/components/chat/input";
+import { logError } from "@/lib/log";
 import { getClientChatConfig } from "@/utilities/chat-config";
 import { api } from "../../../convex/_generated/api";
 
@@ -48,7 +49,7 @@ function RouteComponent() {
 
 			await navigate({ to: "/$chatId", params: { chatId: conversationId } });
 		} catch (error) {
-			console.error("Failed to create chat:", error);
+			logError("Failed to create chat:", error);
 		} finally {
 			setIsCreating(false);
 		}

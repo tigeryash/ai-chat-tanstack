@@ -1,0 +1,8 @@
+# Dependency hygiene (docs/security.md, "Baseline"). A compromised package runs inside our page, where
+# users' API keys live.
+
+[install]
+# Don't install a version until it has been public for 3 days (in seconds). Most npm worm payloads are
+# caught and pulled within that window. A fix that can't wait: `bun add pkg@x --minimum-release-age=0`,
+# and say why in the PR.
+minimumReleaseAge = 259200

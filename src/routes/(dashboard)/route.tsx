@@ -7,6 +7,7 @@ import {
 import { useMutation } from "convex/react";
 import { useEffect } from "react";
 import { authClient } from "@/lib/auth-client";
+import { logError } from "@/lib/log";
 import { api } from "../../../convex/_generated/api";
 
 const DashboardLayout = () => {
@@ -14,7 +15,9 @@ const DashboardLayout = () => {
 	const getOrCreateUser = useMutation(api.users.getOrCreate);
 
 	useEffect(() => {
-		getOrCreateUser().catch(console.error);
+		getOrCreateUser().catch((error) =>
+			logError("Failed to create the user record:", error),
+		);
 	}, [getOrCreateUser]);
 
 	const handleSignOut = async () => {

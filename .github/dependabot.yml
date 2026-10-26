@@ -1,0 +1,43 @@
+# Grouped weekly update PRs (docs/security.md, "Dependency hygiene"). Review each like code: a
+# compromised package runs inside the page where users' API keys live.
+version: 2
+updates:
+  - package-ecosystem: bun
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    # Same idea as bunfig.toml's minimumReleaseAge: let new versions sit for a few days first.
+    cooldown:
+      default-days: 3
+      semver-major-days: 7
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      # Hard rule 2: @convex-dev/better-auth 0.12 requires better-auth <1.7.0.
+      - dependency-name: better-auth
+        versions: [">=1.7.0"]
+      # Pinned: 5.x needs @lobehub/ui@5 and antd@6 (CLAUDE.md, Gotchas).
+      - dependency-name: "@lobehub/icons"
+        update-types: [version-update:semver-major]
+      # Bumped by hand together with the Playwright image tag in ci.yml (screenshot baselines).
+      - dependency-name: "@playwright/test"
+    commit-message:
+      prefix: chore
+      include: scope
+
+  # The workflows pin actions to commit SHAs; this keeps those pins current.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    cooldown:
+      default-days: 3
+    groups:
+      actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: ci

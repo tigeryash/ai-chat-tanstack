@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { AnimateIcon } from "@/components/animate-ui/icons/icon";
 import { Paperclip } from "@/components/animate-ui/icons/paperclip";
+import { logError } from "@/lib/log";
 import type { FileObject } from "../input";
 import { ToolTipContainer } from "./tooltip-container";
 
@@ -183,10 +184,12 @@ export const FileInput = ({
 					processedFile = await imageCompression(file, {
 						maxSizeMB: 1,
 						maxWidthOrHeight: 1920,
-						useWebWorker: true,
+						// Its worker mode loads the library from cdn.jsdelivr.net (third-party code with no
+						// integrity check, and blocked by the CSP's script-src), so it runs on the page.
+						useWebWorker: false,
 					});
 				} catch (error) {
-					console.error("Compression failed", error);
+					logError("Compression failed", error);
 				}
 			}
 

@@ -24,9 +24,29 @@ Injections" (arXiv 2506.08837), Google DeepMind's CaMeL (arXiv 2503.18813), and 
 - Roll it out with `Content-Security-Policy-Report-Only` first, then enforce. Consider Trusted Types
   (`require-trusted-types-for 'script'`) once the codebase is clean, since it blocks DOM XSS sinks in Chromium.
 
+*Where it stands (1.0, 2026-10-25).* The policy is built in `src/lib/security/csp.ts`; the provider list is
+`src/lib/security/provider-origins.ts`. `getRouter` makes a nonce per server render (`ssr.nonce`; Start puts it on
+every script it emits) and the root route's `headers` sends two policies:
+- **Enforced:** `object-src 'none'; base-uri 'none'; frame-ancestors 'none'`. These break nothing, so they didn't
+  wait. (`frame-ancestors` is ignored in report-only policies, so this is what actually stops framing, with
+  `X-Frame-Options: DENY` for older browsers.)
+- **Report-only:** the full strict policy. `style-src` allows `'unsafe-inline'` because React, Motion and GSAP set
+  `style` attributes, which nonces can't cover. `img-src` is `'self' data: blob:`, so no remote images at all.
+- Reports go to `report-uri /api/csp-report`, which logs one `[csp]` line per violation (directive, blocked
+  origin, page path; no query strings or script samples). No `report-to`: when it's present Chrome ignores
+  `report-uri` and queues reports in the Reporting API, which never delivered in testing.
+- Every Playwright test fails on any CSP violation, report-only ones included (`e2e/support/fixtures.ts`), so the
+  report stays clean in normal use. **To enforce:** move the strict policy into `Content-Security-Policy` once
+  production logs show no `[csp]` lines from real use (signed-in chat included, which e2e can't reach yet).
+- Things the policy needed: Zod 4 compiles schemas with `new Function`, so `src/lib/zod-jitless.ts` turns that off
+  before any schema runs. The composer's image compression ran in a worker that loaded its library from
+  `cdn.jsdelivr.net`; it now runs on the page (`useWebWorker: false`).
+
 **Security headers.** `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `Referrer-Policy:
 strict-origin-when-cross-origin`, `Permissions-Policy` (microphone allowed for self only, camera and geolocation
-denied), and `Cross-Origin-Opener-Policy: same-origin`.
+denied), and `Cross-Origin-Opener-Policy: same-origin`. They live in `src/lib/security/headers.ts`: a request
+middleware in `src/start.ts` adds them to everything our server answers, and `vite.config.ts` writes the same
+values into Vercel's routing config for static files.
 
 **Rendering model output.** Treat every model reply as attacker-controlled (a web page or file the model read may
 have put words in its mouth).
@@ -35,6 +55,13 @@ have put words in its mouth).
 - Don't auto-load remote images from model output. Show a "load image from example.com" placeholder instead,
   because an image URL can carry chat data to an attacker in its query string.
 - Links open with `rel="noopener noreferrer"` and show the real domain on hover.
+- All model output renders through `SafeMarkdown` (`src/components/ai-elements/safe-markdown.tsx`): raw HTML is
+  sanitized with GitHub's schema, then links must start with `https://`, `http://` or `mailto:`, and an `https://`
+  image becomes an "Image from host (opens in a new tab)" link (`src/lib/security/markdown-urls.ts`). Never render
+  model output with plain `<Streamdown>`.
+- Huge or deeply nested replies can hang or overflow the parser (2,000 nested `>` overflows the stack; 40,000
+  unmatched `*_` take 4.5 s). Past the limits in `src/lib/security/markdown-limits.ts` a reply renders as plain
+  text, and an error boundary does the same for anything else that throws.
 - Artifacts and HTML previews render in an iframe on a **separate origin** (e.g. `sandbox.<domain>`) with
   `sandbox="allow-scripts"` and never `allow-same-origin`. That's how Claude, ChatGPT, and GitHub isolate user content.
 
@@ -48,6 +75,13 @@ have put words in its mouth).
 
 **Scrubbing.** One `redact()` utility used by `track()`, the Sentry `beforeSend`, and any logging. It drops anything
 key-shaped (`sk-…`, `sk-ant-…`, `AIza…`, `xai-…`, bearer headers), and analytics never receive prompt or reply text at all.
+It is `src/lib/redact.ts`; app code logs through `logError`/`logWarn` in `src/lib/log.ts`, which run it first.
+`convex/` has its own logging (names and config only) and doesn't import it yet.
+
+**Dependencies (1.0).** `bunfig.toml` sets `minimumReleaseAge` to 3 days, `trustedDependencies` is an empty list
+(this also turns off Bun's built-in trust list; esbuild works without its postinstall), and
+`.github/dependabot.yml` opens grouped weekly PRs with a matching cooldown, skipping `better-auth` 1.7+ and
+`@playwright/test` (bumped by hand with the CI image).
 
 ## API keys (roadmap 1.1)
 
@@ -163,5 +197,8 @@ take (fixed 2026-10-25; checked through the real HTTP router by `convex/auth.tes
 - Playwright tests that render malicious model output (script tags, `javascript:` links, reference-style links,
   remote images, huge payloads) and assert nothing executes or loads.
 - A CSP test asserting the header is present and enforced.
+- Both exist since 1.0: `e2e/xss.spec.ts` renders the payloads in `src/routes/e2e/-xss-payloads.ts` through
+  `/e2e/markdown`, and `e2e/csp.spec.ts` checks the headers, the nonce, and that violations are reported (or, for
+  the enforced subset, blocked). Add a payload there when a new bypass is published.
 - For Phase 4, an injection suite: pages and files with hidden instructions, asserting that no data-sending tool
   runs without approval. Tools like promptfoo can generate variants.

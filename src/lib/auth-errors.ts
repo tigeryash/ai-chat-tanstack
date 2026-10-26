@@ -1,3 +1,5 @@
+import { logError } from "@/lib/log";
+
 // What the auth forms read from a Better Auth client error.
 export interface AuthError {
 	status: number;
@@ -28,7 +30,7 @@ export async function requestAuth(
 		return error;
 	} catch (error) {
 		// Only the error's name: the message of a failed request can quote its URL.
-		console.error(
+		logError(
 			"Auth request failed:",
 			error instanceof Error ? error.name : "unknown",
 		);

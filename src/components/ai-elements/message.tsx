@@ -9,7 +9,10 @@ import {
 } from "lucide-react";
 import type { ComponentProps, HTMLAttributes, ReactElement } from "react";
 import { createContext, memo, useContext, useEffect, useState } from "react";
-import { Streamdown } from "streamdown";
+import {
+	SafeMarkdown,
+	type SafeMarkdownProps,
+} from "@/components/ai-elements/safe-markdown";
 import { Bubble, BubbleContent } from "@/components/ui/bubble";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup, ButtonGroupText } from "@/components/ui/button-group";
@@ -315,11 +318,12 @@ export const MessageBranchPage = ({
 	);
 };
 
-export type MessageResponseProps = ComponentProps<typeof Streamdown>;
+// Model output: hardened markdown only (safe-markdown.tsx).
+export type MessageResponseProps = SafeMarkdownProps;
 
 export const MessageResponse = memo(
 	({ className, ...props }: MessageResponseProps) => (
-		<Streamdown
+		<SafeMarkdown
 			className={cn(
 				"size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
 				className,
