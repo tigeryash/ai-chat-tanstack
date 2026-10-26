@@ -355,7 +355,7 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
 
 ## Phase 2: Models and providers
 
-- [ ] **2.1 Model catalog sync.** Convex `models` table + daily `crons.ts` action:
+- [x] **2.1 Model catalog sync.** Convex `models` table + daily `crons.ts` action:
   1. AI Gateway `GET https://ai-gateway.vercel.sh/v1/models` (public): developer, name, description, context,
      max output, pricing, release date, knowledge cutoff, modalities, tags, supported parameters, reasoning
      options, ZDR / no-training flags.
@@ -366,6 +366,7 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   5. Merge `src/models/curation.ts` (pins, hides, display and parameter overrides).
   A failed source never wipes data. Record `lastSyncedAt` per source and log a diff each run.
   *Done when:* a manual run populates the table, and a run with one source offline leaves it intact.
+  *Status (2026-10-26):* done in [PR #25](https://github.com/tigeryash/ai-chat-tanstack/pull/25). Dev holds 320 models; `models.list` / `models.get` are the public queries.
 - [ ] **2.1b Availability.** High Elo set, `removed` marking and banner, and per-user runnability (which of the
   user's connections can run each model; unrunnable models show "Connect <provider>").
 - [ ] **2.2 Model picker + model card.** Logos, capability badges, search, filters (developer, price, context,
