@@ -3,9 +3,9 @@ import { Form } from "@base-ui/react/form";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { type RefObject, useEffect, useRef, useState } from "react";
-import type { z } from "zod";
 import { fieldErrors } from "@/lib/auth-schemas";
 import { FULL_MOTION } from "@/lib/reduced-motion";
+import type { z } from "@/lib/zod";
 
 // Shared pieces of the email forms on the auth pages (login, sign-up, forgot and reset password).
 

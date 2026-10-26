@@ -1,5 +1,5 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.5.1/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.6.2/schema.json",
 	"vcs": {
 		"enabled": true,
 		"clientKind": "git",
@@ -30,9 +30,26 @@
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"preset": "recommended"
+			"preset": "recommended",
+			"style": {
+				"noRestrictedImports": {
+					"level": "error",
+					"options": {
+						"paths": {
+							"zod": "Import { z } from \"@/lib/zod\": it turns on jitless mode before any schema exists, which the CSP needs.",
+							"zod/v4": "Import { z } from \"@/lib/zod\": it turns on jitless mode before any schema exists, which the CSP needs."
+						}
+					}
+				}
+			}
 		}
 	},
+	"overrides": [
+		{
+			"includes": ["**/src/lib/zod.ts"],
+			"linter": { "rules": { "style": { "noRestrictedImports": "off" } } }
+		}
+	],
 	"javascript": {
 		"formatter": {
 			"quoteStyle": "double"

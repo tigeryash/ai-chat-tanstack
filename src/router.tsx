@@ -1,5 +1,3 @@
-// Must stay the first import: it switches Zod off eval before any schema runs.
-import "@/lib/zod-jitless";
 import { createRouter } from "@tanstack/react-router";
 import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
 import { createIsomorphicFn } from "@tanstack/react-start";
@@ -28,15 +26,9 @@ export const getRouter = () => {
 		scrollRestoration: true,
 		defaultErrorComponent: RouteError,
 		defaultNotFoundComponent: () => <p>not found</p>,
-		Wrap: (props: { children: React.ReactNode }) => {
-			return (
-				<TanstackQuery.Provider queryClient={rqContext.queryClient}>
-					{props.children}
-				</TanstackQuery.Provider>
-			);
-		},
 	});
 
+	// Also wraps the router in QueryClientProvider with this queryClient (its `wrapQueryClient` default).
 	setupRouterSsrQueryIntegration({
 		router,
 		queryClient: rqContext.queryClient,

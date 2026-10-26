@@ -36,21 +36,20 @@ describe("scripts/vercel-build.sh", () => {
 		expect(stdout).not.toContain(FAKE_PROD_KEY);
 	});
 
-	it.each([
-		"preview",
-		"development",
-		"",
-	])("runs only the Vite build when VERCEL_ENV is %j", (vercelEnv) => {
-		// Even with a key present, a non-production build must not deploy.
-		const { status, stdout } = dryRun({
-			VERCEL_ENV: vercelEnv,
-			CONVEX_DEPLOY_KEY: FAKE_PROD_KEY,
-		});
+	it.each(["preview", "development", ""])(
+		"runs only the Vite build when VERCEL_ENV is %j",
+		(vercelEnv) => {
+			// Even with a key present, a non-production build must not deploy.
+			const { status, stdout } = dryRun({
+				VERCEL_ENV: vercelEnv,
+				CONVEX_DEPLOY_KEY: FAKE_PROD_KEY,
+			});
 
-		expect(status).toBe(0);
-		expect(stdout).toContain(VITE_BUILD);
-		expect(stdout).not.toContain("convex deploy");
-	});
+			expect(status).toBe(0);
+			expect(stdout).toContain(VITE_BUILD);
+			expect(stdout).not.toContain("convex deploy");
+		},
+	);
 
 	it("fails a production build without a deploy key", () => {
 		const { status, stdout, stderr } = dryRun({ VERCEL_ENV: "production" });
@@ -60,18 +59,18 @@ describe("scripts/vercel-build.sh", () => {
 		expect(stdout).not.toContain(VITE_BUILD);
 	});
 
-	it.each([
-		"dev:my-dev-123|x",
-		"preview:team:project|x",
-	])("fails a production build with a non-production key", (key) => {
-		const { status, stdout, stderr } = dryRun({
-			VERCEL_ENV: "production",
-			CONVEX_DEPLOY_KEY: key,
-		});
+	it.each(["dev:my-dev-123|x", "preview:team:project|x"])(
+		"fails a production build with a non-production key",
+		(key) => {
+			const { status, stdout, stderr } = dryRun({
+				VERCEL_ENV: "production",
+				CONVEX_DEPLOY_KEY: key,
+			});
 
-		expect(status).toBe(1);
-		expect(stderr).toContain("dev or preview key");
-		expect(stderr).not.toContain(key);
-		expect(stdout).not.toContain("convex deploy");
-	});
+			expect(status).toBe(1);
+			expect(stderr).toContain("dev or preview key");
+			expect(stderr).not.toContain(key);
+			expect(stdout).not.toContain("convex deploy");
+		},
+	);
 });

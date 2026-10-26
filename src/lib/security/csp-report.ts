@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 // Parses what browsers POST to the CSP report endpoint into one short summary per violation. The
 // policy uses `report-uri` (`{ "csp-report": {...} }`, application/csp-report); Reporting API batches
