@@ -1,0 +1,399 @@
+{
+	"status": 200,
+	"prompt_options": {
+		"parallel_queries": 1,
+		"prompt_length": 1000
+	},
+	"data": [
+		{
+			"id": "2f3c4dc9-a450-4303-8697-0237257cf08f",
+			"name": "Claude Opus 5.5 (Max, Default Fallback)",
+			"slug": "claude-opus-5-5",
+			"release_date": "2026-09-22",
+			"model_creator": {
+				"id": "f0aa413f-e8ae-4fcd-9c48-0e049f4f3128",
+				"name": "Anthropic",
+				"slug": "anthropic"
+			},
+			"evaluations": {
+				"artificial_analysis_intelligence_index": 57.6,
+				"artificial_analysis_coding_index": null,
+				"artificial_analysis_math_index": null,
+				"mmlu_pro": null,
+				"gpqa": null,
+				"hle": 0.614,
+				"livecodebench": null,
+				"scicode": 0.669,
+				"math_500": null,
+				"aime": null,
+				"aime_25": null,
+				"ifbench": null,
+				"lcr": 0.846666666666667,
+				"terminalbench_hard": null,
+				"terminalbench_v2_1": null,
+				"terminalbench_v4_0": 0.595959595959596,
+				"tau2": null,
+				"tau_banking": null
+			},
+			"pricing": {
+				"price_1m_blended_3_to_1": 8,
+				"price_1m_input_tokens": 4,
+				"price_1m_output_tokens": 20
+			},
+			"median_output_tokens_per_second": 96.498,
+			"median_time_to_first_token_seconds": 508.053,
+			"median_time_to_first_answer_token": 508.053
+		},
+		{
+			"id": "df5bf99d-d228-4715-b41b-19ca86118777",
+			"name": "Claude Opus 5.5 (Xhigh, Default Fallback)",
+			"slug": "claude-opus-5-5-xhigh",
+			"release_date": "2026-09-22",
+			"model_creator": {
+				"id": "f0aa413f-e8ae-4fcd-9c48-0e049f4f3128",
+				"name": "Anthropic",
+				"slug": "anthropic"
+			},
+			"evaluations": {
+				"artificial_analysis_intelligence_index": 56,
+				"artificial_analysis_coding_index": null,
+				"artificial_analysis_math_index": null,
+				"mmlu_pro": null,
+				"gpqa": null,
+				"hle": 0.575,
+				"livecodebench": null,
+				"scicode": 0.65,
+				"math_500": null,
+				"aime": null,
+				"aime_25": null,
+				"ifbench": null,
+				"lcr": 0.846666666666667,
+				"terminalbench_hard": null,
+				"terminalbench_v2_1": null,
+				"terminalbench_v4_0": 0.595959595959596,
+				"tau2": null,
+				"tau_banking": null
+			},
+			"pricing": {
+				"price_1m_blended_3_to_1": 8,
+				"price_1m_input_tokens": 4,
+				"price_1m_output_tokens": 20
+			},
+			"median_output_tokens_per_second": 77.206,
+			"median_time_to_first_token_seconds": 59.812,
+			"median_time_to_first_answer_token": 59.812
+		},
+		{
+			"id": "665c67ca-09eb-48f0-a7a3-0096e1d5de51",
+			"name": "Kimi K3.1 Pro",
+			"slug": "kimi-k3-1-pro",
+			"release_date": "2026-10-23",
+			"model_creator": {
+				"id": "0a177021-87dd-4250-9a37-f01df196bfe0",
+				"name": "Kimi",
+				"slug": "kimi"
+			},
+			"evaluations": {
+				"artificial_analysis_intelligence_index": 55.1,
+				"artificial_analysis_coding_index": null,
+				"artificial_analysis_math_index": null,
+				"mmlu_pro": null,
+				"gpqa": null,
+				"hle": 0.525,
+				"livecodebench": null,
+				"scicode": 0.608,
+				"math_500": null,
+				"aime": null,
+				"aime_25": null,
+				"ifbench": null,
+				"lcr": 0.863333333333333,
+				"terminalbench_hard": null,
+				"terminalbench_v2_1": null,
+				"terminalbench_v4_0": 0.671717171717172,
+				"tau2": null,
+				"tau_banking": null
+			},
+			"pricing": {
+				"price_1m_blended_3_to_1": 4,
+				"price_1m_input_tokens": 2,
+				"price_1m_output_tokens": 10
+			},
+			"median_output_tokens_per_second": 45.975,
+			"median_time_to_first_token_seconds": 2.116,
+			"median_time_to_first_answer_token": 45.618
+		},
+		{
+			"id": "d366dfa1-d940-4788-aa73-d298c45699b3",
+			"name": "Gemini 4 Argon (High)",
+			"slug": "gemini-4-argon",
+			"release_date": "2026-09-30",
+			"model_creator": {
+				"id": "faddc6d9-2c14-445f-9b28-56726f59c793",
+				"name": "Google",
+				"slug": "google"
+			},
+			"evaluations": {
+				"artificial_analysis_intelligence_index": 52.6,
+				"artificial_analysis_coding_index": null,
+				"artificial_analysis_math_index": null,
+				"mmlu_pro": null,
+				"gpqa": null,
+				"hle": 0.571,
+				"livecodebench": null,
+				"scicode": 0.618,
+				"math_500": null,
+				"aime": null,
+				"aime_25": null,
+				"ifbench": null,
+				"lcr": 0.796666666666667,
+				"terminalbench_hard": null,
+				"terminalbench_v2_1": null,
+				"terminalbench_v4_0": 0.570707070707071,
+				"tau2": null,
+				"tau_banking": null
+			},
+			"pricing": {
+				"price_1m_blended_3_to_1": 4,
+				"price_1m_input_tokens": 2,
+				"price_1m_output_tokens": 10
+			},
+			"median_output_tokens_per_second": 77.045,
+			"median_time_to_first_token_seconds": 37.752,
+			"median_time_to_first_answer_token": 37.752
+		},
+		{
+			"id": "b25ac058-1e33-4c31-bbc9-a20c3ad0717a",
+			"name": "GPT-6.1 Sol (Max)",
+			"slug": "gpt-6-1-sol",
+			"release_date": "2026-09-29",
+			"model_creator": {
+				"id": "e67e56e3-15cd-43db-b679-da4660a69f41",
+				"name": "OpenAI",
+				"slug": "openai"
+			},
+			"evaluations": {
+				"artificial_analysis_intelligence_index": 51.8,
+				"artificial_analysis_coding_index": null,
+				"artificial_analysis_math_index": null,
+				"mmlu_pro": null,
+				"gpqa": null,
+				"hle": 0.529,
+				"livecodebench": null,
+				"scicode": 0.542,
+				"math_500": null,
+				"aime": null,
+				"aime_25": null,
+				"ifbench": null,
+				"lcr": 0.83,
+				"terminalbench_hard": null,
+				"terminalbench_v2_1": null,
+				"terminalbench_v4_0": 0.560606060606061,
+				"tau2": null,
+				"tau_banking": null
+			},
+			"pricing": {
+				"price_1m_blended_3_to_1": 4,
+				"price_1m_input_tokens": 2,
+				"price_1m_output_tokens": 10
+			},
+			"median_output_tokens_per_second": 59.224,
+			"median_time_to_first_token_seconds": 146.232,
+			"median_time_to_first_answer_token": 146.232
+		},
+		{
+			"id": "59627802-1546-422c-9a65-65b61c022d36",
+			"name": "Grok 4.7 (Xhigh)",
+			"slug": "grok-4-7",
+			"release_date": "2026-09-21",
+			"model_creator": {
+				"id": "a1e3ddcf-d3e4-44a5-9e8f-029a69850875",
+				"name": "SpaceXAI",
+				"slug": "xai"
+			},
+			"evaluations": {
+				"artificial_analysis_intelligence_index": 46.4,
+				"artificial_analysis_coding_index": null,
+				"artificial_analysis_math_index": null,
+				"mmlu_pro": null,
+				"gpqa": null,
+				"hle": 0.431,
+				"livecodebench": null,
+				"scicode": 0.574,
+				"math_500": null,
+				"aime": null,
+				"aime_25": null,
+				"ifbench": null,
+				"lcr": 0.766666666666667,
+				"terminalbench_hard": null,
+				"terminalbench_v2_1": null,
+				"terminalbench_v4_0": 0.257575757575758,
+				"tau2": null,
+				"tau_banking": null
+			},
+			"pricing": {
+				"price_1m_blended_3_to_1": 3,
+				"price_1m_input_tokens": 2,
+				"price_1m_output_tokens": 6
+			},
+			"median_output_tokens_per_second": 76.635,
+			"median_time_to_first_token_seconds": 11.26,
+			"median_time_to_first_answer_token": 11.26
+		},
+		{
+			"id": "7d064a11-6e78-4030-b535-cdf940615041",
+			"name": "Claude Haiku 5.5 (Max)",
+			"slug": "claude-haiku-5-5",
+			"release_date": "2026-10-07",
+			"model_creator": {
+				"id": "f0aa413f-e8ae-4fcd-9c48-0e049f4f3128",
+				"name": "Anthropic",
+				"slug": "anthropic"
+			},
+			"evaluations": {
+				"artificial_analysis_intelligence_index": 43.4,
+				"artificial_analysis_coding_index": null,
+				"artificial_analysis_math_index": null,
+				"mmlu_pro": null,
+				"gpqa": null,
+				"hle": 0.444,
+				"livecodebench": null,
+				"scicode": 0.55,
+				"math_500": null,
+				"aime": null,
+				"aime_25": null,
+				"ifbench": null,
+				"lcr": 0.826666666666667,
+				"terminalbench_hard": null,
+				"terminalbench_v2_1": null,
+				"terminalbench_v4_0": 0.328282828282828,
+				"tau2": null,
+				"tau_banking": null
+			},
+			"pricing": {
+				"price_1m_blended_3_to_1": 0.2,
+				"price_1m_input_tokens": 0.1,
+				"price_1m_output_tokens": 0.5
+			},
+			"median_output_tokens_per_second": 235.081,
+			"median_time_to_first_token_seconds": 218.109,
+			"median_time_to_first_answer_token": 218.109
+		},
+		{
+			"id": "90e078f2-051b-4c63-8919-76618971cb3f",
+			"name": "Claude 4.5 Sonnet (Reasoning)",
+			"slug": "claude-4-5-sonnet-thinking",
+			"release_date": "2025-09-29",
+			"model_creator": {
+				"id": "f0aa413f-e8ae-4fcd-9c48-0e049f4f3128",
+				"name": "Anthropic",
+				"slug": "anthropic"
+			},
+			"evaluations": {
+				"artificial_analysis_intelligence_index": 20.7,
+				"artificial_analysis_coding_index": 52.1,
+				"artificial_analysis_math_index": 88,
+				"mmlu_pro": 0.875,
+				"gpqa": 0.834,
+				"hle": 0.178,
+				"livecodebench": 0.714,
+				"scicode": 0.457,
+				"math_500": null,
+				"aime": null,
+				"aime_25": 0.88,
+				"ifbench": 0.572789115646258,
+				"lcr": 0.723333333333333,
+				"terminalbench_hard": 0.356060606060606,
+				"terminalbench_v2_1": 0.558052434456929,
+				"terminalbench_v4_0": 0,
+				"tau2": 0.780701754385965,
+				"tau_banking": 0.245360824742268
+			},
+			"pricing": {
+				"price_1m_blended_3_to_1": 6,
+				"price_1m_input_tokens": 3,
+				"price_1m_output_tokens": 15
+			},
+			"median_output_tokens_per_second": 0,
+			"median_time_to_first_token_seconds": 0,
+			"median_time_to_first_answer_token": 0
+		},
+		{
+			"id": "91cb6144-4937-4e4e-aeda-b4341d355c10",
+			"name": "Claude 4.5 Sonnet (Non-reasoning)",
+			"slug": "claude-4-5-sonnet",
+			"release_date": "2025-09-29",
+			"model_creator": {
+				"id": "f0aa413f-e8ae-4fcd-9c48-0e049f4f3128",
+				"name": "Anthropic",
+				"slug": "anthropic"
+			},
+			"evaluations": {
+				"artificial_analysis_intelligence_index": 19.3,
+				"artificial_analysis_coding_index": null,
+				"artificial_analysis_math_index": 37,
+				"mmlu_pro": 0.86,
+				"gpqa": 0.727,
+				"hle": 0.072,
+				"livecodebench": 0.59,
+				"scicode": null,
+				"math_500": null,
+				"aime": null,
+				"aime_25": 0.37,
+				"ifbench": 0.426530612244898,
+				"lcr": 0.54,
+				"terminalbench_hard": 0.287878787878788,
+				"terminalbench_v2_1": null,
+				"terminalbench_v4_0": null,
+				"tau2": 0.704678362573099,
+				"tau_banking": null
+			},
+			"pricing": {
+				"price_1m_blended_3_to_1": 6,
+				"price_1m_input_tokens": 3,
+				"price_1m_output_tokens": 15
+			},
+			"median_output_tokens_per_second": 0,
+			"median_time_to_first_token_seconds": 0,
+			"median_time_to_first_answer_token": 0
+		},
+		{
+			"id": "f0083258-8646-45b8-8082-7aaf6c2ea82a",
+			"name": "gpt-oss-120b (High)",
+			"slug": "gpt-oss-120b",
+			"release_date": "2025-08-05",
+			"model_creator": {
+				"id": "e67e56e3-15cd-43db-b679-da4660a69f41",
+				"name": "OpenAI",
+				"slug": "openai"
+			},
+			"evaluations": {
+				"artificial_analysis_intelligence_index": 11.6,
+				"artificial_analysis_coding_index": 30.4,
+				"artificial_analysis_math_index": 93.4,
+				"mmlu_pro": 0.808,
+				"gpqa": 0.782,
+				"hle": 0.196,
+				"livecodebench": 0.878,
+				"scicode": 0.34,
+				"math_500": null,
+				"aime": null,
+				"aime_25": 0.934416666666667,
+				"ifbench": 0.689795918367347,
+				"lcr": 0.52,
+				"terminalbench_hard": 0.234848484848485,
+				"terminalbench_v2_1": 0.262172284644195,
+				"terminalbench_v4_0": 0,
+				"tau2": 0.657894736842105,
+				"tau_banking": 0.127835051546392
+			},
+			"pricing": {
+				"price_1m_blended_3_to_1": 0.262,
+				"price_1m_input_tokens": 0.15,
+				"price_1m_output_tokens": 0.6
+			},
+			"median_output_tokens_per_second": 238.332,
+			"median_time_to_first_token_seconds": 0.483,
+			"median_time_to_first_answer_token": 8.875
+		}
+	]
+}

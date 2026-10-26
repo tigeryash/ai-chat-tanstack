@@ -42,7 +42,7 @@ Promises the design already makes. Changing one of these is a product decision, 
 | CSP violation reports: the policy directive, the blocked origin (or `inline`/`eval`), and the page path; the browser also sends the page URL, user agent and a script sample, which are dropped before logging | Vercel function logs (one `[csp]` line each, from `/api/csp-report`); nothing stored | Us | Vercel log retention | Since 1.0 (2026-10-25) |
 | Product analytics events (no content) | Analytics provider (TBD, cookieless) | Us | Provider retention (TBD) | Planned (1.8) |
 | Error reports (scrubbed of keys and content) | Sentry | Us | Sentry retention (TBD) | Planned (1.8) |
-| Model catalog | Convex `models` | Public | Ongoing | Planned (2.1); not user data |
+| Model catalog: public model data (names, prices, limits, providers, Artificial Analysis scores) and when each source last synced | Convex `models` and `modelCatalogSources`, refreshed daily by `convex/modelCatalogSync.ts` | Public (`models.list` / `models.get` need no session) | Rows are never deleted; models the Gateway drops are marked `removed` | Since 2.1 (2026-10-26); not user data |
 
 ## Third parties
 
@@ -54,7 +54,7 @@ Promises the design already makes. Changing one of these is a product decision, 
 | Brevo | Your email address and the message | Verification and password-reset emails | Today |
 | AI providers you connect (OpenAI, Anthropic, Google, OpenRouter, …) | Your prompts, files, and key, sent directly from your browser | Generating replies | Today via our server for LM Studio; browser-direct from Phase 1 |
 | Your local model server (LM Studio, Ollama) | Your prompts, from your browser to your own machine | Local generation | Planned (2.3) |
-| AI Gateway (public catalog), Artificial Analysis | Nothing about users; our server fetches public model data | Model catalog | Planned (2.1) |
+| AI Gateway (public catalog), Artificial Analysis, models.dev, OpenRouter (public model list) | Nothing about users: a daily Convex action fetches public model data. Artificial Analysis also gets our own API key (`ARTIFICIAL_ANALYSIS_API_KEY`, a Convex env var) | Model catalog | Since 2.1 (2026-10-26) |
 | Analytics provider, Sentry | Content-free events and scrubbed errors | Product analytics, debugging | Planned (1.8) |
 
 ## Open items for the policy
