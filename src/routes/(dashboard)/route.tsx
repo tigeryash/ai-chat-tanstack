@@ -1,5 +1,6 @@
 import {
 	createFileRoute,
+	Link,
 	Outlet,
 	redirect,
 	useRouter,
@@ -29,6 +30,13 @@ const DashboardLayout = () => {
 			<aside className="w-64 border-r bg-gray-50 p-4">
 				<h2 className="font-bold mb-4">Chat History</h2>
 				{/* Fetch and map chats from Convex here */}
+
+				<Link
+					to="/settings"
+					className="block px-4 py-2 text-sm rounded hover:bg-gray-100"
+				>
+					API keys
+				</Link>
 
 				<button
 					type="button"

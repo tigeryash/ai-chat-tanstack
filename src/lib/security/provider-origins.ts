@@ -17,6 +17,8 @@ export const PROVIDER_API_ORIGINS = [
 	// Chat completions and the OAuth PKCE key exchange (roadmap 1.1).
 	"https://openrouter.ai",
 	"https://router.huggingface.co",
+	// Hugging Face's key test (`/api/whoami-v2`): the router's model list doesn't need a key.
+	"https://huggingface.co",
 	"https://ai-gateway.vercel.sh",
 ] as const;
 
