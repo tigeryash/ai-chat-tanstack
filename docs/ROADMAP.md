@@ -333,7 +333,7 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   *Done when:* chats survive reload offline; a v0 fixture loads through migration; export → wipe → import
   restores everything.
   *Status (2026-10-26):* `src/lib/storage/` (Dexie store, format migrations, persistence, export/import),
-  `/e2e/storage`; unused Convex tables dropped, old test conversations left until 1.2 lands. PR: PR_LINK
+  `/e2e/storage`; unused Convex tables dropped, old test conversations left until 1.2 lands. PR: https://github.com/tigeryash/ai-chat-tanstack/pull/26
 - [ ] **1.4 Sidebar.** List, new, rename, delete, pin, search by title. Auto-title with the user's chosen
   "utility model" (settings), falling back to the first line of the message.
 - [ ] **1.5 No login wall** (decision 4). Chat works signed out. The auth pages become "Sign in to sync and share",
