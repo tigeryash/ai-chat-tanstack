@@ -155,5 +155,10 @@ The **pre-commit hook** (`.husky/pre-commit`) runs Biome on staged files and the
 - **New package versions wait 3 days** (`bunfig.toml` `minimumReleaseAge`). For an urgent fix, pass
   `--minimum-release-age=0` and say why in the PR. `trustedDependencies` is empty on purpose: no dependency
   lifecycle scripts run.
+- **Vercel installs from an empty `node_modules`** (`installCommand` in `vercel.json`). Its build cache once kept a
+  stale `node_modules` after a dependency bump: `@convex-dev/better-auth`'s nested `semver` 7 went missing, and
+  `convex deploy` failed with `Could not resolve "semver/functions/lt.js"`. Preview builds don't run
+  `convex deploy`, so only production saw it. `--frozen-lockfile` also makes Vercel fail instead of silently
+  re-resolving if its Bun (1.3.x, older than local 1.4) can't follow `bun.lock`.
 - `ai` 7 no longer re-exports `LanguageModelV*` types, so `reasoning-middleware.ts` derives its model type from
   `wrapLanguageModel`.
