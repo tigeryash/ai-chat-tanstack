@@ -14,6 +14,7 @@ import { SplitText } from "gsap/all";
 import { lazy, Suspense, useRef } from "react";
 import Models from "@/components/auth/models";
 import OAuthButtons from "@/components/auth/oauthbuttons";
+import { logError } from "@/lib/log";
 import { FULL_MOTION } from "@/lib/reduced-motion";
 
 gsap.registerPlugin(SplitText);
@@ -70,7 +71,7 @@ const AuthLayout = () => {
 				<CatchBoundary
 					getResetKey={() => "scene"}
 					errorComponent={() => null}
-					onCatch={(error) => console.error("Background scene failed", error)}
+					onCatch={(error) => logError("Background scene failed", error)}
 				>
 					<Suspense fallback={null}>
 						<Scene />

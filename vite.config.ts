@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import { devtools } from '@tanstack/devtools-vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import viteReact, { reactCompilerPreset } from '@vitejs/plugin-react'
@@ -7,7 +7,28 @@ import viteTsConfigPaths from 'vite-tsconfig-paths'
 import tailwindcss from '@tailwindcss/vite'
 import { nitro } from 'nitro/vite'
 import glslify from 'vite-plugin-glslify'
+import { CSP_REPORT_PATH } from './src/lib/security/csp'
+import { SECURITY_HEADERS } from './src/lib/security/headers'
 
+
+// Nitro's dev server (nitro/dist/_build/vite.dev.mjs) treats any request whose `Sec-Fetch-Dest` isn't
+// document/iframe/frame/empty as a static asset and hands it to Vite, which 404s. Browsers send CSP
+// reports with `Sec-Fetch-Dest: report`, so in dev they never reached /api/csp-report. Relabel them
+// before Nitro looks. Dev only; production builds route by path.
+function cspReportsInDev(): Plugin {
+  return {
+    name: 'csp-reports-in-dev',
+    apply: 'serve',
+    configureServer(server) {
+      server.middlewares.use((req, _res, next) => {
+        if (req.url?.startsWith(CSP_REPORT_PATH) && req.headers['sec-fetch-dest'] === 'report') {
+          req.headers['sec-fetch-dest'] = 'empty'
+        }
+        next()
+      })
+    },
+  }
+}
 
 const config = defineConfig({
    ssr: {
@@ -19,8 +40,20 @@ const config = defineConfig({
     // itself fires a package.json change, so dev loops and nitro full-reloads every tab ~10x/s.
     // Drop only that sub-plugin (the devtools "outdated packages" panel); the rest stays.
     devtools().filter((plugin) => plugin.name !== '@tanstack/devtools:event-client-setup'),
+    // Before nitro(), so its middleware runs first.
+    cspReportsInDev(),
     nitro({
-      preset: "vercel"
+      preset: "vercel",
+      // Static files never reach our server middleware (src/start.ts), so the same security headers
+      // go into Vercel's routing config (.vercel/output/config.json) for them. Not `routeRules`:
+      // Nitro writes header rules without `continue: true`, and a catch-all route that stops matching
+      // would keep requests from reaching the server function.
+      vercel: {
+        config: {
+          version: 3,
+          routes: [{ src: '/(.*)', headers: SECURITY_HEADERS, continue: true }],
+        },
+      },
     }),
     // this is the plugin that enables path aliases
     viteTsConfigPaths({

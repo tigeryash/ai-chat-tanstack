@@ -276,10 +276,29 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
 
 ## Phase 1: New chat core (BYOK, browser-direct, local-first)
 
-- [ ] **1.0 Security baseline** ([security.md](./security.md) "Baseline"): strict CSP with nonces and a
+- [x] **1.0 Security baseline** ([security.md](./security.md) "Baseline"): strict CSP with nonces and a
   `connect-src` allowlist, security headers, hardened markdown rendering, dependency hygiene, a log/analytics
   scrubber, and Playwright tests with XSS payloads in model output.
   *Done when:* the XSS tests pass and the CSP report shows no violations in normal use.
+  *Status (2026-10-25):* The strict CSP (per-request nonce, `'strict-dynamic'`, `connect-src` limited to us,
+  Convex, the 14 providers from decision 3 and `localhost`/`127.0.0.1`) ships as **report-only**, reporting to
+  `/api/csp-report`. `object-src`, `base-uri` and `frame-ancestors` are already enforced. HSTS, nosniff,
+  Referrer-Policy, Permissions-Policy, COOP and `X-Frame-Options` go on every response (`src/start.ts`, plus
+  Vercel's routing config for static files). Model output renders through `SafeMarkdown`: sanitized HTML,
+  `https`/`http`/`mailto` links only, remote images shown as links instead of loaded, and plain text for replies
+  too big or nested for the parser (found while testing: 2,000 nested `>` crashed it, 40,000 `*_` took 4.5 s).
+  `redact()` scrubs logs (`src/lib/log.ts`); `bunfig.toml` sets a 3-day minimum release age; `trustedDependencies`
+  is empty; Dependabot is configured. Details and file map in [security.md](./security.md) "Where it stands".
+  Fixes the policy needed: Zod's JIT (`new Function`) is off, and image compression no longer loads its worker
+  from jsDelivr. Dev also needed a Vite plugin, because Nitro's dev server 404'd browser CSP reports.
+  Checks: `bun run verify`; Playwright 70/70 on macOS (new `xss.spec.ts`, `csp.spec.ts`, and a guard that
+  fails every test on any CSP violation), with no screenshot changes; the XSS tests fail when the hardening is
+  removed. With a script that records `securitypolicyviolation` events, every signed-out page and the
+  `/e2e` pages showed no violations in `bun run dev` or in a production build under `bun run serve`, and an
+  injected handler's report reached the server log in both. Not covered: signed-in pages (e2e has no session),
+  and Vercel itself (routing config checked in `.vercel/output/config.json` only). Linux screenshots weren't
+  rerun locally; CI runs them.
+  *Next:* enforce once production logs stay free of `[csp]` lines; rate-limit `/api/csp-report` with 6.2.
 - [ ] **1.1 Keys and connections.** Settings panel: add a key per provider, choose session-only or remember,
   "test key" (lists models), and delete. "Connect OpenRouter" via OAuth PKCE. Show which providers are connected
   and never display a full key after saving.

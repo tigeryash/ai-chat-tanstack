@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import ChatHeader from "@/components/chat/chatstuff/chat-header";
 import MessagesList from "@/components/chat/chatstuff/messages-list";
 import { Input } from "@/components/chat/input";
+import { logError } from "@/lib/log";
 import { getClientChatConfig } from "@/utilities/chat-config";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
@@ -265,7 +266,7 @@ function RouteComponent() {
 						delete nextState[pendingAssistantTurn.assistantMessageId];
 						return nextState;
 					});
-					console.error("Failed to stream assistant response:", error);
+					logError("Failed to stream assistant response:", error);
 				})
 				.finally(() => {
 					if (frameId !== null) {
@@ -322,7 +323,7 @@ function RouteComponent() {
 				parts: [],
 			});
 		} catch (error) {
-			console.error("Failed to send message:", error);
+			logError("Failed to send message:", error);
 		} finally {
 			setIsSubmitting(false);
 		}

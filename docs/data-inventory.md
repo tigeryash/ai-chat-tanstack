@@ -39,6 +39,7 @@ Promises the design already makes. Changing one of these is a product decision, 
 | Settings and preferences (theme, default model, notification choices) | Your browser; Convex `users.preferences` if signed in | You | Until changed or account deletion | Partly today |
 | Synced chats | Convex | You (and group members) | Until you delete them or turn off sync | Planned (6.1) |
 | Shared chat snapshots | Convex | Anyone with the link | Until you unshare | Backend exists; UI planned (6.3) |
+| CSP violation reports: the policy directive, the blocked origin (or `inline`/`eval`), and the page path; the browser also sends the page URL, user agent and a script sample, which are dropped before logging | Vercel function logs (one `[csp]` line each, from `/api/csp-report`); nothing stored | Us | Vercel log retention | Since 1.0 (2026-10-25) |
 | Product analytics events (no content) | Analytics provider (TBD, cookieless) | Us | Provider retention (TBD) | Planned (1.8) |
 | Error reports (scrubbed of keys and content) | Sentry | Us | Sentry retention (TBD) | Planned (1.8) |
 | Model catalog | Convex `models` | Public | Ongoing | Planned (2.1); not user data |

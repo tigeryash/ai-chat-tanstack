@@ -20,8 +20,10 @@ import { Route as authSignupRouteImport } from './routes/(auth)/signup'
 import { Route as dashboardChatIdRouteImport } from './routes/(dashboard)/$chatId'
 import { Route as dashboardNewRouteImport } from './routes/(dashboard)/new'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as ApiCspReportRouteImport } from './routes/api/csp-report'
 import { Route as E2eComposerRouteImport } from './routes/e2e/composer'
 import { Route as E2eLoadingRouteImport } from './routes/e2e/loading'
+import { Route as E2eMarkdownRouteImport } from './routes/e2e/markdown'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const IndexRoute = IndexRouteImport.update({
@@ -77,6 +79,11 @@ const ApiChatRoute = ApiChatRouteImport.update({
   path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCspReportRoute = ApiCspReportRouteImport.update({
+  id: '/api/csp-report',
+  path: '/api/csp-report',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const E2eComposerRoute = E2eComposerRouteImport.update({
   id: '/composer',
   path: '/composer',
@@ -85,6 +92,11 @@ const E2eComposerRoute = E2eComposerRouteImport.update({
 const E2eLoadingRoute = E2eLoadingRouteImport.update({
   id: '/loading',
   path: '/loading',
+  getParentRoute: () => E2eRouteRoute,
+} as any)
+const E2eMarkdownRoute = E2eMarkdownRouteImport.update({
+  id: '/markdown',
+  path: '/markdown',
   getParentRoute: () => E2eRouteRoute,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
@@ -103,8 +115,10 @@ export interface FileRoutesByFullPath {
   '/$chatId': typeof dashboardChatIdRoute
   '/new': typeof dashboardNewRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/csp-report': typeof ApiCspReportRoute
   '/e2e/composer': typeof E2eComposerRoute
   '/e2e/loading': typeof E2eLoadingRoute
+  '/e2e/markdown': typeof E2eMarkdownRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
@@ -117,8 +131,10 @@ export interface FileRoutesByTo {
   '/$chatId': typeof dashboardChatIdRoute
   '/new': typeof dashboardNewRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/csp-report': typeof ApiCspReportRoute
   '/e2e/composer': typeof E2eComposerRoute
   '/e2e/loading': typeof E2eLoadingRoute
+  '/e2e/markdown': typeof E2eMarkdownRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
@@ -134,8 +150,10 @@ export interface FileRoutesById {
   '/(dashboard)/$chatId': typeof dashboardChatIdRoute
   '/(dashboard)/new': typeof dashboardNewRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/csp-report': typeof ApiCspReportRoute
   '/e2e/composer': typeof E2eComposerRoute
   '/e2e/loading': typeof E2eLoadingRoute
+  '/e2e/markdown': typeof E2eMarkdownRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
@@ -150,8 +168,10 @@ export interface FileRouteTypes {
     | '/$chatId'
     | '/new'
     | '/api/chat'
+    | '/api/csp-report'
     | '/e2e/composer'
     | '/e2e/loading'
+    | '/e2e/markdown'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -164,8 +184,10 @@ export interface FileRouteTypes {
     | '/$chatId'
     | '/new'
     | '/api/chat'
+    | '/api/csp-report'
     | '/e2e/composer'
     | '/e2e/loading'
+    | '/e2e/markdown'
     | '/api/auth/$'
   id:
     | '__root__'
@@ -180,8 +202,10 @@ export interface FileRouteTypes {
     | '/(dashboard)/$chatId'
     | '/(dashboard)/new'
     | '/api/chat'
+    | '/api/csp-report'
     | '/e2e/composer'
     | '/e2e/loading'
+    | '/e2e/markdown'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
@@ -191,6 +215,7 @@ export interface RootRouteChildren {
   dashboardRouteRoute: typeof dashboardRouteRouteWithChildren
   E2eRouteRoute: typeof E2eRouteRouteWithChildren
   ApiChatRoute: typeof ApiChatRoute
+  ApiCspReportRoute: typeof ApiCspReportRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
@@ -273,6 +298,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/csp-report': {
+      id: '/api/csp-report'
+      path: '/api/csp-report'
+      fullPath: '/api/csp-report'
+      preLoaderRoute: typeof ApiCspReportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/e2e/composer': {
       id: '/e2e/composer'
       path: '/composer'
@@ -285,6 +317,13 @@ declare module '@tanstack/react-router' {
       path: '/loading'
       fullPath: '/e2e/loading'
       preLoaderRoute: typeof E2eLoadingRouteImport
+      parentRoute: typeof E2eRouteRoute
+    }
+    '/e2e/markdown': {
+      id: '/e2e/markdown'
+      path: '/markdown'
+      fullPath: '/e2e/markdown'
+      preLoaderRoute: typeof E2eMarkdownRouteImport
       parentRoute: typeof E2eRouteRoute
     }
     '/api/auth/$': {
@@ -332,11 +371,13 @@ const dashboardRouteRouteWithChildren = dashboardRouteRoute._addFileChildren(
 interface E2eRouteRouteChildren {
   E2eComposerRoute: typeof E2eComposerRoute
   E2eLoadingRoute: typeof E2eLoadingRoute
+  E2eMarkdownRoute: typeof E2eMarkdownRoute
 }
 
 const E2eRouteRouteChildren: E2eRouteRouteChildren = {
   E2eComposerRoute: E2eComposerRoute,
   E2eLoadingRoute: E2eLoadingRoute,
+  E2eMarkdownRoute: E2eMarkdownRoute,
 }
 
 const E2eRouteRouteWithChildren = E2eRouteRoute._addFileChildren(
@@ -349,6 +390,7 @@ const rootRouteChildren: RootRouteChildren = {
   dashboardRouteRoute: dashboardRouteRouteWithChildren,
   E2eRouteRoute: E2eRouteRouteWithChildren,
   ApiChatRoute: ApiChatRoute,
+  ApiCspReportRoute: ApiCspReportRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
@@ -356,10 +398,11 @@ export const routeTree = rootRouteImport
   ._addFileTypes<FileRouteTypes>()
 
 import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
+import type { startInstance } from './start.ts'
 declare module '@tanstack/react-start' {
   interface Register {
     ssr: true
     router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
   }
 }

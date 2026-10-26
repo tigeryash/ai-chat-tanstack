@@ -63,6 +63,7 @@
     "react-dom": "^19.2.7",
     "react-dropzone": "^15.0.0",
     "react-fast-marquee": "^1.6.5",
+    "rehype-harden": "1.1.8",
     "shiki": "^4.3.0",
     "streamdown": "^2.5.0",
     "tailwind-merge": "^3.6.0",
@@ -96,5 +97,6 @@
     "vite": "^8.1.0",
     "vitest": "^4.1.9",
     "web-vitals": "^5.3.0"
-  }
+  },
+  "trustedDependencies": []
 }

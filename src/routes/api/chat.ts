@@ -2,6 +2,7 @@ import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { createFileRoute } from "@tanstack/react-router";
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
 import { getToken } from "@/lib/auth-server";
+import { logError } from "@/lib/log";
 import { createThinkTagModel } from "@/lib/reasoning-middleware";
 import { getServerChatConfig } from "@/utilities/chat-config";
 
@@ -35,7 +36,7 @@ export const Route = createFileRoute("/api/chat")({
 				} catch (error) {
 					// Name only: AI SDK errors can carry the request body (the user's messages), which
 					// never goes in logs (hard rule 4), and details stay out of the response.
-					console.error(
+					logError(
 						"Chat API error:",
 						error instanceof Error ? error.name : "unknown error",
 					);

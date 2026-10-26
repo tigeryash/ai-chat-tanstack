@@ -10,7 +10,7 @@ import {
 	useEffectEvent,
 	useState,
 } from "react";
-import { Streamdown } from "streamdown";
+import { SafeMarkdown } from "@/components/ai-elements/safe-markdown";
 import {
 	Trace,
 	TraceCollapsible,
@@ -181,7 +181,7 @@ export type ReasoningContentProps = ComponentProps<
 export const ReasoningContent = memo(
 	({ className, children, ...props }: ReasoningContentProps) => (
 		<TraceCollapsibleContent className={className} {...props}>
-			<Streamdown>{children}</Streamdown>
+			<SafeMarkdown>{children}</SafeMarkdown>
 		</TraceCollapsibleContent>
 	),
 );

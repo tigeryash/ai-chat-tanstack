@@ -14,6 +14,7 @@ import { MotionConfig } from "motion/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { authClient } from "@/lib/auth-client";
 import { getToken } from "@/lib/auth-server";
+import { cspHeaders } from "@/lib/security/csp";
 import TanStackQueryDevtools from "../integrations/tanstack-query/devtools";
 
 import appCss from "../styles.css?url";
@@ -21,6 +22,19 @@ import appCss from "../styles.css?url";
 const getAuth = createServerFn({ method: "GET" }).handler(async () => {
 	return getToken();
 });
+
+// The Convex URLs are the ones built into the client, since those are what the browser connects to.
+function pageCspHeaders(nonce: string | undefined): Record<string, string> {
+	if (!nonce) return {};
+	return cspHeaders({
+		nonce,
+		convexUrls: [
+			import.meta.env.VITE_CONVEX_URL,
+			import.meta.env.VITE_CONVEX_SITE_URL,
+		],
+		dev: import.meta.env.DEV,
+	});
+}
 
 interface MyRouterContext {
 	queryClient: QueryClient;
@@ -61,6 +75,10 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 			token,
 		};
 	},
+
+	// Every page carries the CSP for its nonce (src/lib/security/csp.ts). Keep this after `beforeLoad`:
+	// TypeScript infers the route context in key order, and placed earlier it loses `beforeLoad`'s.
+	headers: ({ ssr }) => pageCspHeaders(ssr?.nonce),
 
 	shellComponent: RootDocument,
 });

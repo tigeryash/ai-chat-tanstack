@@ -39,7 +39,11 @@ The **pre-commit hook** (`.husky/pre-commit`) runs Biome on staged files and the
   (`beforeLoad`) and wraps the app in `ConvexBetterAuthProvider`. `(dashboard)` routes require a session today;
   `(auth)` holds login, sign-up, forgot and reset password (its layout sends signed-in visitors to `/new`; the forms
   share `src/components/auth/auth-form.tsx`). Server routes sit in `src/routes/api/` (`/api/auth/$` proxies to
-  Convex, `/api/chat` streams a reply).
+  Convex, `/api/chat` streams a reply, `/api/csp-report` logs CSP violations).
+- **Security baseline** (roadmap 1.0, `src/lib/security/`): `getRouter` makes a CSP nonce per request, the root
+  route's `headers` sends the policy (strict one report-only for now), and `src/start.ts` adds the security headers
+  and Start's server-function CSRF check to every response. A new provider or third-party origin the browser
+  calls must go in `provider-origins.ts` / `csp.ts`, or the CSP reports it.
 - **Convex** (`convex/`) is the backend: `schema.ts` (message `parts` mirror AI SDK `UIMessage` parts),
   access checks in `authHelpers.ts`, `_generated/` is generated. Query keys go through `@convex-dev/react-query`.
 - **Better Auth 1.6.x** via `@convex-dev/better-auth` (server config `convex/auth.ts`, client
@@ -73,7 +77,8 @@ The **pre-commit hook** (`.husky/pre-commit`) runs Biome on staged files and the
    `usePrefersReducedMotion()` from `src/lib/reduced-motion.ts`, and cover it in `e2e/reduced-motion.spec.ts`.
 4. **Analytics never capture content** (decision 23). No prompts, replies, file contents, or keys in analytics,
    logs, or error reports. All events go through the one `track()` module and its allowlist (roadmap 1.8).
-5. **Treat model output as untrusted.** Never render it as raw HTML; see [security.md](docs/security.md).
+5. **Treat model output as untrusted.** Never render it as raw HTML, and never with plain `<Streamdown>`: use
+   `SafeMarkdown` (or `MessageResponse` / `ReasoningContent`, which wrap it). See [security.md](docs/security.md).
 6. **Tests never call a real model.** Chat tests use the AI SDK mock model (`MockLanguageModelV4` and
    `simulateReadableStream` from `ai/test`). The e2e fixture fails any request that leaves the machine.
 7. **Don't hand-edit `node_modules`.** Patches there vanish on reinstall and have broken dev before. If something
@@ -104,7 +109,9 @@ The **pre-commit hook** (`.husky/pre-commit`) runs Biome on staged files and the
   `bun run dev` and in `VITE_E2E` builds, and 404 in normal production builds. Add a page there when a test or a
   preview needs a component that normally sits behind sign-in.
 - Import `test` and `expect` from `e2e/support/fixtures.ts`, not `@playwright/test`. Its automatic guards fail a
-  test on any request that leaves the machine or any uncaught page error.
+  test on any request that leaves the machine, any uncaught page error, or any CSP violation (report-only ones
+  too). A test that provokes violations on purpose sets `test.use({ allowCspViolations: true })` and reads the
+  `cspViolations` fixture. XSS payloads for model output live in `src/routes/e2e/-xss-payloads.ts`.
 - **Screenshots**: baselines are per platform (`*-chromium-darwin.png` for local Macs, `*-chromium-linux.png` for
   CI). After an intentional visual change, refresh both: `bun run test:e2e --update-snapshots` and
   `bun run test:e2e:linux --update-snapshots`, then look at the new images before committing them.
@@ -127,5 +134,14 @@ The **pre-commit hook** (`.husky/pre-commit`) runs Biome on staged files and the
   `node_modules/.vite`.
 - `src/routes/__root.tsx` has a `@ts-expect-error` for an upstream `@convex-dev/better-auth` `AuthClient` type bug.
   tsc flags it as unused once upstream fixes it; then delete it.
+- **Keep `import "@/lib/zod-jitless"` first in `src/router.tsx`.** Zod 4 compiles schemas with `new Function`,
+  which the CSP forbids; jitless mode must be on before any schema parses.
+- **Nitro's dev server 404s requests with `Sec-Fetch-Dest: report`** (it treats them as static assets). The
+  `cspReportsInDev` plugin in `vite.config.ts` relabels CSP reports so they reach `/api/csp-report` in dev.
+- **In `__root.tsx`, keep `headers` after `beforeLoad`.** TypeScript infers the route context in key order;
+  placed earlier, `beforeLoad`'s return type is lost.
+- **New package versions wait 3 days** (`bunfig.toml` `minimumReleaseAge`). For an urgent fix, pass
+  `--minimum-release-age=0` and say why in the PR. `trustedDependencies` is empty on purpose: no dependency
+  lifecycle scripts run.
 - `ai` 7 no longer re-exports `LanguageModelV*` types, so `reasoning-middleware.ts` derives its model type from
   `wrapLanguageModel`.
