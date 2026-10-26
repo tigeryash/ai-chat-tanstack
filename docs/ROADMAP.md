@@ -60,6 +60,8 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   `www.highelollms.com`. Discord first failed with "invalid OAuth2 redirect_uri": prod's `DISCORD_CLIENT_ID`
   pointed at a different Discord app than the one with the callback URL. All deployments now use the `ai-chat-2`
   app (`1386085325612515519`). Linking a provider to an email account wasn't tried against the real providers.
+- [ ] After 1.1 is deployed: on `www.highelollms.com`, Settings → API keys → Connect OpenRouter with your account,
+  then "Test key" (e2e fakes OpenRouter, so the real consent page and code exchange are untried).
 - [ ] Vercel Hobby is fine while this is a portfolio piece; move to Pro before charging money. *Still on Hobby
   (2026-10-23).*
 
@@ -307,11 +309,14 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   and Vercel itself (routing config checked in `.vercel/output/config.json` only). Linux screenshots weren't
   rerun locally; CI runs them.
   *Next:* enforce once production logs stay free of `[csp]` lines; rate-limit `/api/csp-report` with 6.2.
-- [ ] **1.1 Keys and connections.** Settings panel: add a key per provider, choose session-only or remember,
+- [x] **1.1 Keys and connections.** Settings panel: add a key per provider, choose session-only or remember,
   "test key" (lists models), and delete. "Connect OpenRouter" via OAuth PKCE. Show which providers are connected
   and never display a full key after saving.
   *Done when:* keys work after reload in "remember" mode, vanish in "session" mode, and a network capture shows a
   key sent only to its provider.
+  *Status (2026-10-26):* vault in `src/lib/keys/` (1.2 imports `getProviderKey`/`ProviderId` from `@/lib/keys`),
+  settings at `/settings`; `e2e/keys.spec.ts` covers all three points with faked providers.
+  [PR #24](https://github.com/tigeryash/ai-chat-tanstack/pull/24).
 - [ ] **1.2 `useChat` with a browser transport** (decision 7). Render every part type (text, reasoning while
   streaming, file, source, tool). Stop and regenerate. Remove `/api/chat` and `streamAssistantTurn.ts`.
   *Done when:* the route component is under ~100 lines, reasoning streams live, Stop works, and a Playwright chat
