@@ -331,7 +331,7 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   *Done when:* the route component is under ~100 lines, reasoning streams live, Stop works, and a Playwright chat
   test streams a reply from `MockLanguageModelV4` (`ai/test`).
   *Status (2026-10-27):* chat runs in the browser (`src/lib/chat/`) and saves to the 1.3 store; `/api/chat` is gone.
-  The provider/model picker in the chat header is **temporary** until 2.2. PR: (link added after opening)
+  The provider/model picker in the chat header is **temporary** until 2.2. PR: https://github.com/tigeryash/ai-chat-tanstack/pull/27
 - [x] **1.3 `ChatStore` + IndexedDB** (decisions 8–10): Dexie store, format versioning with a migration test,
   persistent-storage request and status, export/import as versioned JSON.
   Drop the old Convex test conversations and the unused `artifacts` and `activeChatSessions` tables (pane layout
