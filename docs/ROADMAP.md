@@ -71,6 +71,8 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   `google/gemma-4-26b-a4b-it:free`, and send a message (a reply should stream; reload `/<chat id>` and it's still
   there). Locally (`bun run dev`), start LM Studio's server with "Enable CORS" on, pick "Local (LM Studio)" and a
   loaded model, and check a reasoning model's thinking shows. e2e fakes both.
+  *2026-10-27:* LM Studio with CORS works locally, the picker lists OpenRouter's models, and OpenRouter shows the
+  connected key. The OpenRouter chat itself is still untried: the free Gemma model was rate-limited (peak hour).
 - [ ] Vercel Hobby is fine while this is a portfolio piece; move to Pro before charging money. *Still on Hobby
   (2026-10-23).*
 
