@@ -348,7 +348,7 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
 - [x] **1.4 Sidebar.** List, new, rename, delete, pin, search by title. Auto-title with the user's chosen
   "utility model" (settings), falling back to the first line of the message.
   *Status (2026-10-27):* sidebar in `src/components/sidebar/` (live from the ChatStore, pinned first, sheet on
-  narrow screens); titles are the first line for now, the utility-model title is a follow-up. PR: PR_LINK
+  narrow screens); titles are the first line for now, the utility-model title is a follow-up. PR: https://github.com/tigeryash/ai-chat-tanstack/pull/29
 - [x] **1.5 No login wall** (decision 4). Chat works signed out. The auth pages become "Sign in to sync and share",
   with real sign-up and forgot-password flows (or magic link / email OTP).
   *Status (2026-10-25):* the sign-up, forgot-password and reset-password pages landed early; the login wall and the
@@ -372,7 +372,7 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   real unverified address, and a Brevo call slower than Better Auth's 500 ms floor shows in the response time.
   Not yet tried against a real deployment with Brevo.
   *Status (2026-10-27):* chat, settings and keys work signed out; `/` opens `/new`; the sidebar offers "Sign in to
-  sync and share" or Sign out. PR: PR_LINK
+  sync and share" or Sign out. PR: https://github.com/tigeryash/ai-chat-tanstack/pull/29
 - [ ] **1.6 Attachments that send.** Images/PDFs as `file` parts where supported; blobs in IndexedDB; unified
   drag-drop and paperclip validation; revoke object URLs.
 - [ ] **1.7 Edit and branch.** Edit a user message → new branch; switch between siblings.
