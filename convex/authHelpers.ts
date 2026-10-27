@@ -90,7 +90,7 @@ async function findAppUser(ctx: QueryCtx, authUser: AuthUser, identity: UserIden
 
 /**
  * The signed-in user's `users` row, or null. Read-only, so it's safe in queries. The row is created
- * by `users.getOrCreate` (see `upsertCurrentUser`), which the dashboard calls on load.
+ * by `users.getOrCreate` (see `upsertCurrentUser`), which the sidebar calls once someone is signed in.
  */
 export async function getCurrentUserOrNull(ctx: QueryCtx): Promise<AppUser | null> {
   const auth = await getAuthIdentity(ctx);

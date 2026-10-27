@@ -30,15 +30,14 @@ touching keys, rendering, tools, local endpoints, or Convex writes, and keep
 The **pre-commit hook** (`.husky/pre-commit`) runs Biome on staged files and the type check. Don't bypass it with
 `--no-verify`; fix the error instead. **CI** (`.github/workflows/ci.yml`) runs `verify` and Playwright on every PR.
 
-`.claude/launch.json` has `dev` (:3000) and `serve` (:4173) for the preview browser. Signed out, only the auth pages
-(`/login`, `/signup`, `/forgot-password`, `/reset-password`) and the `/e2e/*` test pages render (see Testing).
+`.claude/launch.json` has `dev` (:3000) and `serve` (:4173) for the preview browser. Everything renders signed out (no login wall).
 
 ## Architecture
 
 - **TanStack Start 1.169** (React 19, Vite 8 with Rolldown, Nitro). File routes live in `src/routes/`;
   `src/routeTree.gen.ts` is generated, so never edit it. `src/routes/__root.tsx` fetches the auth token during SSR
-  (`beforeLoad`) and wraps the app in `ConvexBetterAuthProvider`. `(dashboard)` routes require a session today;
-  `(auth)` holds login, sign-up, forgot and reset password (its layout sends signed-in visitors to `/new`; the forms
+  (`beforeLoad`) and wraps the app in `ConvexBetterAuthProvider`. `(dashboard)` (`ssr: false`) needs no session
+  (decision 4: no login wall) and holds the sidebar (`src/components/sidebar/`, roadmap 1.4); `(auth)` holds login, sign-up, forgot and reset password (its layout sends signed-in visitors to `/new`; the forms
   share `src/components/auth/auth-form.tsx`). Server routes sit in `src/routes/api/` (`/api/auth/$` proxies to
   Convex, `/api/csp-report` logs CSP violations). There is no chat route on our server.
 - **Security baseline** (roadmap 1.0, `src/lib/security/`): `getRouter` makes a CSP nonce per request, the root
@@ -57,7 +56,8 @@ The **pre-commit hook** (`.husky/pre-commit`) runs Biome on staged files and the
   streaming chat to `/$chatId`) and save to the ChatStore when a reply finishes. `BrowserChatTransport` runs
   `streamText` in the page against the provider in each request's `body` (`language-model.ts`; local models get
   the `<think>` middleware). The provider/model picker (`src/components/chat/model-picker.tsx`) is temporary until
-  roadmap 2.2. Tests use `mockChatModel` (`src/lib/chat/mock-model.ts`) and the `/e2e/chat` pages.
+  roadmap 2.2. Tests use `mockChatModel` (`src/lib/chat/mock-model.ts`) and the `/e2e/chat` pages; in `VITE_E2E`
+  builds the local model `e2e-mock-model` is the mock too (`e2e-model.ts`), so Playwright can drive `/new`.
 - **UI**: Tailwind 4, shadcn components on Base UI (`base-vega` style; add more with `bunx shadcn add <name>`,
   then change their `cn` import from `"cn"` to `@/lib/utils`), no Radix. `src/components/ai-elements/` keeps the
   AI SDK Elements export names but is built on shadcn's AI Elements patterns (Message, Trace, Message Scroller).
