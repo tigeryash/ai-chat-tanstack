@@ -93,12 +93,17 @@ test("a chat through OpenRouter sends the key only to OpenRouter", async ({
 	await row.getByRole("button", { name: "Save key" }).click();
 	await expect(row).toContainText("••••cafe");
 
+	// The model isn't in the catalog, so it goes in as a typed model id.
 	await page.goto("/e2e/chat-live");
-	await expect(page.getByLabel("Provider")).toHaveValue("openrouter");
+	await page.getByRole("button", { name: /^Model: / }).click();
+	const picker = page.getByRole("dialog", { name: "Choose a model" });
+	await picker.getByLabel("Search models").fill(MODEL);
+	await picker
+		.getByRole("button", { name: `Use “${MODEL}” via OpenRouter` })
+		.click();
 	await expect(
-		page.getByText("2 models. Pick one or type a name."),
+		page.getByRole("button", { name: `Model: ${MODEL}` }),
 	).toBeVisible();
-	await page.getByLabel("Model").fill(MODEL);
 
 	const box = page.getByPlaceholder("Ask anything");
 	await box.fill("Hi there");
@@ -124,11 +129,12 @@ test("with nothing connected, the picker links to Settings", async ({
 	page,
 }) => {
 	await page.goto("/e2e/chat-live");
-	await expect(page.getByLabel("Provider")).toHaveValue("local");
+	await expect(page.getByText("Pick a model to start.")).toBeVisible();
+	await page.getByRole("button", { name: "Model: Pick a model" }).click();
 	await expect(
-		page.getByRole("link", { name: "Add a key in Settings" }),
+		page
+			.getByRole("dialog", { name: "Choose a model" })
+			.getByRole("link", { name: "Connect Anthropic" })
+			.first(),
 	).toHaveAttribute("href", "/settings");
-	await expect(
-		page.getByText("Pick a provider and a model to start."),
-	).toBeVisible();
 });

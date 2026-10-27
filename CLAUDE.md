@@ -56,8 +56,12 @@ The **pre-commit hook** (`.husky/pre-commit`) runs Biome on staged files and the
   `ssr: false`) run `useChat` on `Chat` objects from `chat-sessions.ts`, which outlive a route (so `/new` hands a
   streaming chat to `/$chatId`) and save to the ChatStore when a reply finishes. `BrowserChatTransport` runs
   `streamText` in the page against the provider in each request's `body` (`language-model.ts`; local models get
-  the `<think>` middleware). The provider/model picker (`src/components/chat/model-picker.tsx`) is temporary until
-  roadmap 2.2. Tests use `mockChatModel` (`src/lib/chat/mock-model.ts`) and the `/e2e/chat` pages.
+  the `<think>` middleware). Tests use `mockChatModel` (`src/lib/chat/mock-model.ts`) and the `/e2e/chat` pages.
+- **Models** (roadmap 2.1–2.2): Convex `models` table synced daily (`convex/modelCatalogSync.ts`, curation in
+  `src/models/curation.ts`). The app reads `models.list` / `models.get` over HTTP (`src/lib/models/catalog.ts`), and
+  the e2e Convex stub serves the seeded catalog in `src/lib/models/test-catalog.ts`. Runnability per user is
+  `src/lib/models/runnability.ts`; the picker, model card and removed-model banner are in `src/components/models/`.
+  Each chat's model choice is kept by `src/lib/chat/chat-model-choice.ts`.
 - **UI**: Tailwind 4, shadcn components on Base UI (`base-vega` style; add more with `bunx shadcn add <name>`,
   then change their `cn` import from `"cn"` to `@/lib/utils`), no Radix. `src/components/ai-elements/` keeps the
   AI SDK Elements export names but is built on shadcn's AI Elements patterns (Message, Trace, Message Scroller).
@@ -71,8 +75,7 @@ The **pre-commit hook** (`.husky/pre-commit`) runs Biome on staged files and the
 
 1. **Keys never leave the browser except to their own provider** (decision 2). Never send a user's API key to our
    server, Convex, logs, analytics, error reports, URLs, exports, or sync payloads. Only the chat transport builds
-   provider headers (plus the settings key test in `src/lib/keys/test-key.ts`, whose requests the picker's model
-   list in `src/lib/chat/list-models.ts` reuses); read keys only through
+   provider headers (plus the settings key test in `src/lib/keys/test-key.ts`); read keys only through
    `getProviderKey` from `@/lib/keys`. The single exception is the opt-in durable agent run (decision 25,
    [security.md](docs/security.md)).
 2. **Stay on Better Auth 1.6.x** (decision 5). `@convex-dev/better-auth` 0.12 requires `better-auth <1.7.0`.

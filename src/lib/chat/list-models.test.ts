@@ -1,14 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
-import { listModels, modelIdsFrom } from "./list-models";
-
-const KEY = "sk-test-key-abcdefgh1234";
-
-vi.mock("@/lib/keys", async (importOriginal) => ({
-	...(await importOriginal<typeof import("@/lib/keys")>()),
-	getProviderKey: vi.fn(async (provider: string) =>
-		provider === "openai" ? KEY : null,
-	),
-}));
+import { describe, expect, it } from "vitest";
+import { listLocalModels, modelIdsFrom } from "./list-models";
 
 function recordingFetch(response: Response) {
 	const calls: { url: string; init?: RequestInit }[] = [];
@@ -43,50 +34,22 @@ describe("modelIdsFrom", () => {
 	});
 });
 
-describe("listModels", () => {
-	it("reuses the key test's request for a provider whose list needs the key", async () => {
+describe("listLocalModels", () => {
+	it("lists a local server's models without a key", async () => {
 		const { calls, fetchImpl } = recordingFetch(
-			Response.json({ data: [{ id: "gpt-b" }, { id: "gpt-a" }] }),
+			Response.json({ data: [{ id: "qwen" }, { id: "gemma" }] }),
 		);
-		expect(await listModels("openai", fetchImpl)).toEqual({
+		expect(await listLocalModels(fetchImpl)).toEqual({
 			ok: true,
-			models: ["gpt-a", "gpt-b"],
+			models: ["gemma", "qwen"],
 		});
-		expect(calls[0].url).toBe("https://api.openai.com/v1/models");
-		expect(JSON.stringify(calls[0].init?.headers)).toContain(KEY);
+		expect(calls[0].url).toBe("http://localhost:1234/v1/models");
+		expect(calls[0].init?.headers).toBeUndefined();
 		expect(calls[0].init?.credentials).toBe("omit");
 	});
 
-	it("reads OpenRouter's public list without a key", async () => {
-		const { calls, fetchImpl } = recordingFetch(Response.json({ data: [] }));
-		await listModels("openrouter", fetchImpl);
-		expect(calls[0].url).toBe("https://openrouter.ai/api/v1/models");
-		expect(calls[0].init?.headers).toBeUndefined();
-	});
-
-	it("needs a key for other providers, and reports failures", async () => {
-		const { calls, fetchImpl } = recordingFetch(
-			new Response("", { status: 401 }),
-		);
-		expect(await listModels("mistral", fetchImpl)).toEqual({
-			ok: false,
-			reason: "no-key",
-		});
-		expect(calls).toEqual([]);
-		expect(await listModels("openai", fetchImpl)).toEqual({
-			ok: false,
-			reason: "failed",
-		});
-	});
-
-	it("lists a local server's models", async () => {
-		const { calls, fetchImpl } = recordingFetch(
-			Response.json({ data: [{ id: "qwen" }] }),
-		);
-		expect(await listModels("local", fetchImpl)).toEqual({
-			ok: true,
-			models: ["qwen"],
-		});
-		expect(calls[0].url).toBe("http://localhost:1234/v1/models");
+	it("reports a failure without reading the body", async () => {
+		const { fetchImpl } = recordingFetch(new Response("", { status: 500 }));
+		expect(await listLocalModels(fetchImpl)).toEqual({ ok: false });
 	});
 });

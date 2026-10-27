@@ -115,8 +115,18 @@ describe("model catalog sync", () => {
     expect(sources).toHaveLength(5);
     expect(sources[0]).not.toHaveProperty("lastError");
 
+    // Slimmed for the picker: no supported-parameter lists or per-provider pricing.
+    expect(models[0]).not.toHaveProperty("supportedParameters");
+    const highElo = models.filter((model) => model.highElo).map((model) => model.gatewayId);
+    expect(highElo).toEqual(
+      models
+        .filter((model) => model.pinned || model.intelligenceIndex !== undefined)
+        .map((model) => model.gatewayId),
+    );
+    expect(highElo).toContain("anthropic/claude-haiku-5.5");
+
     const batch = await t.query(api.models.get, { gatewayId: "anthropic/claude-opus-5.5-batch" });
-    expect(batch?.hidden).toBe(true);
+    expect(batch?.gatewayId).toBe("anthropic/claude-opus-5.5-batch");
     expect(await t.query(api.models.get, { gatewayId: "nobody/nothing" })).toBeNull();
   });
 
@@ -193,7 +203,7 @@ describe("model catalog sync", () => {
 
     const removed = await t.query(api.models.get, { gatewayId: "spacexai/grok-4.7" });
     expect(removed).toMatchObject({ status: "removed", removedAt: Date.now(), name: before?.name });
-    expect(removed?.artificialAnalysis).toEqual(before?.artificialAnalysis);
+    expect(removed?.intelligenceIndex).toBe(before?.artificialAnalysis?.intelligenceIndex);
     const { models } = await t.query(api.models.list, {});
     expect(models.some((model) => model.gatewayId === "spacexai/grok-4.7")).toBe(false);
 

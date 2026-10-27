@@ -28,6 +28,7 @@ import { Route as E2eKeysRouteImport } from './routes/e2e/keys'
 import { Route as E2eLoadingRouteImport } from './routes/e2e/loading'
 import { Route as E2eMarkdownRouteImport } from './routes/e2e/markdown'
 import { Route as E2eMessagesRouteImport } from './routes/e2e/messages'
+import { Route as E2eModelPickerRouteImport } from './routes/e2e/model-picker'
 import { Route as E2eStorageRouteImport } from './routes/e2e/storage'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
@@ -124,6 +125,11 @@ const E2eMessagesRoute = E2eMessagesRouteImport.update({
   path: '/messages',
   getParentRoute: () => E2eRouteRoute,
 } as any)
+const E2eModelPickerRoute = E2eModelPickerRouteImport.update({
+  id: '/model-picker',
+  path: '/model-picker',
+  getParentRoute: () => E2eRouteRoute,
+} as any)
 const E2eStorageRoute = E2eStorageRouteImport.update({
   id: '/storage',
   path: '/storage',
@@ -153,6 +159,7 @@ export interface FileRoutesByFullPath {
   '/e2e/loading': typeof E2eLoadingRoute
   '/e2e/markdown': typeof E2eMarkdownRoute
   '/e2e/messages': typeof E2eMessagesRoute
+  '/e2e/model-picker': typeof E2eModelPickerRoute
   '/e2e/storage': typeof E2eStorageRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -174,6 +181,7 @@ export interface FileRoutesByTo {
   '/e2e/loading': typeof E2eLoadingRoute
   '/e2e/markdown': typeof E2eMarkdownRoute
   '/e2e/messages': typeof E2eMessagesRoute
+  '/e2e/model-picker': typeof E2eModelPickerRoute
   '/e2e/storage': typeof E2eStorageRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -198,6 +206,7 @@ export interface FileRoutesById {
   '/e2e/loading': typeof E2eLoadingRoute
   '/e2e/markdown': typeof E2eMarkdownRoute
   '/e2e/messages': typeof E2eMessagesRoute
+  '/e2e/model-picker': typeof E2eModelPickerRoute
   '/e2e/storage': typeof E2eStorageRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -221,6 +230,7 @@ export interface FileRouteTypes {
     | '/e2e/loading'
     | '/e2e/markdown'
     | '/e2e/messages'
+    | '/e2e/model-picker'
     | '/e2e/storage'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
@@ -242,6 +252,7 @@ export interface FileRouteTypes {
     | '/e2e/loading'
     | '/e2e/markdown'
     | '/e2e/messages'
+    | '/e2e/model-picker'
     | '/e2e/storage'
     | '/api/auth/$'
   id:
@@ -265,6 +276,7 @@ export interface FileRouteTypes {
     | '/e2e/loading'
     | '/e2e/markdown'
     | '/e2e/messages'
+    | '/e2e/model-picker'
     | '/e2e/storage'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
@@ -413,6 +425,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof E2eMessagesRouteImport
       parentRoute: typeof E2eRouteRoute
     }
+    '/e2e/model-picker': {
+      id: '/e2e/model-picker'
+      path: '/model-picker'
+      fullPath: '/e2e/model-picker'
+      preLoaderRoute: typeof E2eModelPickerRouteImport
+      parentRoute: typeof E2eRouteRoute
+    }
     '/e2e/storage': {
       id: '/e2e/storage'
       path: '/storage'
@@ -472,6 +491,7 @@ interface E2eRouteRouteChildren {
   E2eLoadingRoute: typeof E2eLoadingRoute
   E2eMarkdownRoute: typeof E2eMarkdownRoute
   E2eMessagesRoute: typeof E2eMessagesRoute
+  E2eModelPickerRoute: typeof E2eModelPickerRoute
   E2eStorageRoute: typeof E2eStorageRoute
 }
 
@@ -483,6 +503,7 @@ const E2eRouteRouteChildren: E2eRouteRouteChildren = {
   E2eLoadingRoute: E2eLoadingRoute,
   E2eMarkdownRoute: E2eMarkdownRoute,
   E2eMessagesRoute: E2eMessagesRoute,
+  E2eModelPickerRoute: E2eModelPickerRoute,
   E2eStorageRoute: E2eStorageRoute,
 }
 
