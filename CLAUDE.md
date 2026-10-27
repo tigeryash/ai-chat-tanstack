@@ -40,7 +40,7 @@ The **pre-commit hook** (`.husky/pre-commit`) runs Biome on staged files and the
   (`beforeLoad`) and wraps the app in `ConvexBetterAuthProvider`. `(dashboard)` routes require a session today;
   `(auth)` holds login, sign-up, forgot and reset password (its layout sends signed-in visitors to `/new`; the forms
   share `src/components/auth/auth-form.tsx`). Server routes sit in `src/routes/api/` (`/api/auth/$` proxies to
-  Convex, `/api/chat` streams a reply, `/api/csp-report` logs CSP violations).
+  Convex, `/api/csp-report` logs CSP violations). There is no chat route on our server.
 - **Security baseline** (roadmap 1.0, `src/lib/security/`): `getRouter` makes a CSP nonce per request, the root
   route's `headers` sends the policy (strict one report-only for now), and `src/start.ts` adds the security headers
   and Start's server-function CSRF check to every response. A new provider or third-party origin the browser
@@ -52,9 +52,12 @@ The **pre-commit hook** (`.husky/pre-commit`) runs Biome on staged files and the
   Export/import are versioned JSON in `export.ts`.
 - **Better Auth 1.6.x** via `@convex-dev/better-auth` (server config `convex/auth.ts`, client
   `src/lib/auth-client.ts`, SSR helpers `src/lib/auth-server.ts`). Email/password plus Google, GitHub, Discord.
-- **AI SDK 7.** Today `/api/chat` calls LM Studio from the server with the `<think>` middleware
-  (`src/lib/reasoning-middleware.ts`), and `src/utilities/streamAssistantTurn.ts` writes the stream to Convex.
-  Phase 1 replaces both with `useChat` and a browser-side transport (roadmap decision 7). Don't extend the old path.
+- **AI SDK 7, chat in the browser** (roadmap 1.2, `src/lib/chat/`). Chat routes (`/new`, `/$chatId`, both
+  `ssr: false`) run `useChat` on `Chat` objects from `chat-sessions.ts`, which outlive a route (so `/new` hands a
+  streaming chat to `/$chatId`) and save to the ChatStore when a reply finishes. `BrowserChatTransport` runs
+  `streamText` in the page against the provider in each request's `body` (`language-model.ts`; local models get
+  the `<think>` middleware). The provider/model picker (`src/components/chat/model-picker.tsx`) is temporary until
+  roadmap 2.2. Tests use `mockChatModel` (`src/lib/chat/mock-model.ts`) and the `/e2e/chat` pages.
 - **UI**: Tailwind 4, shadcn components on Base UI (`base-vega` style; add more with `bunx shadcn add <name>`,
   then change their `cn` import from `"cn"` to `@/lib/utils`), no Radix. `src/components/ai-elements/` keeps the
   AI SDK Elements export names but is built on shadcn's AI Elements patterns (Message, Trace, Message Scroller).
@@ -68,7 +71,8 @@ The **pre-commit hook** (`.husky/pre-commit`) runs Biome on staged files and the
 
 1. **Keys never leave the browser except to their own provider** (decision 2). Never send a user's API key to our
    server, Convex, logs, analytics, error reports, URLs, exports, or sync payloads. Only the chat transport builds
-   provider headers (plus the settings key test in `src/lib/keys/test-key.ts`); read keys only through
+   provider headers (plus the settings key test in `src/lib/keys/test-key.ts`, whose requests the picker's model
+   list in `src/lib/chat/list-models.ts` reuses); read keys only through
    `getProviderKey` from `@/lib/keys`. The single exception is the opt-in durable agent run (decision 25,
    [security.md](docs/security.md)).
 2. **Stay on Better Auth 1.6.x** (decision 5). `@convex-dev/better-auth` 0.12 requires `better-auth <1.7.0`.

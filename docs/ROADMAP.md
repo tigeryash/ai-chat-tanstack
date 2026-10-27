@@ -67,6 +67,10 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   keeps any rows but stops validating them, so the deploy is safe either way. Agents can't read prod. Clear them
   in the dashboard if they have rows. Once 1.2 has moved chat to the browser, decide whether to delete the old test
   conversations and messages on dev and prod (dev has a handful from LM Studio testing).
+- [ ] After 1.2 is deployed: on `www.highelollms.com`, open `/new`, pick OpenRouter and type
+  `google/gemma-4-26b-a4b-it:free`, and send a message (a reply should stream; reload `/<chat id>` and it's still
+  there). Locally (`bun run dev`), start LM Studio's server with "Enable CORS" on, pick "Local (LM Studio)" and a
+  loaded model, and check a reasoning model's thinking shows. e2e fakes both.
 - [ ] Vercel Hobby is fine while this is a portfolio piece; move to Pro before charging money. *Still on Hobby
   (2026-10-23).*
 
@@ -322,10 +326,12 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   *Status (2026-10-26):* vault in `src/lib/keys/` (1.2 imports `getProviderKey`/`ProviderId` from `@/lib/keys`),
   settings at `/settings`; `e2e/keys.spec.ts` covers all three points with faked providers.
   [PR #24](https://github.com/tigeryash/ai-chat-tanstack/pull/24).
-- [ ] **1.2 `useChat` with a browser transport** (decision 7). Render every part type (text, reasoning while
+- [x] **1.2 `useChat` with a browser transport** (decision 7). Render every part type (text, reasoning while
   streaming, file, source, tool). Stop and regenerate. Remove `/api/chat` and `streamAssistantTurn.ts`.
   *Done when:* the route component is under ~100 lines, reasoning streams live, Stop works, and a Playwright chat
   test streams a reply from `MockLanguageModelV4` (`ai/test`).
+  *Status (2026-10-27):* chat runs in the browser (`src/lib/chat/`) and saves to the 1.3 store; `/api/chat` is gone.
+  The provider/model picker in the chat header is **temporary** until 2.2. PR: https://github.com/tigeryash/ai-chat-tanstack/pull/27
 - [x] **1.3 `ChatStore` + IndexedDB** (decisions 8–10): Dexie store, format versioning with a migration test,
   persistent-storage request and status, export/import as versioned JSON.
   Drop the old Convex test conversations and the unused `artifacts` and `activeChatSessions` tables (pane layout
