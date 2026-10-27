@@ -1,107 +1,56 @@
-import {
-	Message,
-	MessageContent,
-	MessageResponse,
-} from "@/components/ai-elements/message";
+import { Message, MessageContent } from "@/components/ai-elements/message";
 import {
 	Reasoning,
 	ReasoningContent,
 	ReasoningTrigger,
 } from "@/components/ai-elements/reasoning";
 import type { MessageUIProps } from "@/types/types";
-import MessageActions from "./message-actions";
+import MessageActions, { type MessageActionsProps } from "./message-actions";
+import { MessagePart } from "./message-parts";
 
-const createPartKeyFactory = (messageId: string) => {
-	const counts = new Map<string, number>();
+type Props = MessageUIProps & Omit<MessageActionsProps, "message">;
 
-	return (part: { type: string; text?: string }) => {
-		const signature = `${part.type}:${part.text ?? ""}`;
-		const count = counts.get(signature) ?? 0;
-		counts.set(signature, count + 1);
+// Parts only ever get appended or updated in place while a reply streams, so a part's index is a
+// stable key; a key built from its text would remount it on every streamed token.
+const partKey = (messageId: string, index: number) => `${messageId}-${index}`;
 
-		return `${messageId}-${signature}-${count}`;
-	};
-};
+const MessageUI = ({ message, ...actions }: Props) => (
+	<Message from={message.role}>
+		<div>
+			<ReasoningUI message={message} />
+			<MessageContent>
+				{message.parts.map((part, index) => (
+					<MessagePart
+						key={partKey(message.id, index)}
+						part={part}
+						role={message.role}
+					/>
+				))}
+			</MessageContent>
+		</div>
 
-const MessageUI = ({ message }: MessageUIProps) => {
-	const getPartKey = createPartKeyFactory(message.id);
-
-	return (
-		<Message from={message.role} key={`${message.id}`}>
-			<div>
-				{/* {message.sources?.length && (
-											<Sources>
-												<SourcesTrigger count={message.sources.length} />
-												<SourcesContent>
-													{message.sources.map((source) => (
-														<Source
-															href={source.href}
-															key={source.href}
-															title={source.title}
-														/>
-													))}
-												</SourcesContent>
-											</Sources>
-										)} */}
-				<ReasoningUI message={message} />
-
-				<MessageContent>
-					{message.parts.map((part) => {
-						switch (part.type) {
-							case "text":
-								// The person's own text shows exactly as typed: line breaks and spacing kept, no
-								// markdown. Only model replies render as markdown.
-								return message.role === "user" ? (
-									<p key={getPartKey(part)} className="whitespace-pre-wrap">
-										{part.text}
-									</p>
-								) : (
-									<MessageResponse key={getPartKey(part)}>
-										{part.text}
-									</MessageResponse>
-								);
-							default:
-								return null;
-						}
-					})}
-				</MessageContent>
-			</div>
-
-			<MessageActions message={message} />
-		</Message>
-	);
-};
+		<MessageActions message={message} {...actions} />
+	</Message>
+);
 
 export default MessageUI;
 
 const ReasoningUI = ({ message }: MessageUIProps) => {
-	const getPartKey = createPartKeyFactory(message.id);
+	const reasoning = message.parts.flatMap((part, index) =>
+		part.type === "reasoning" ? [{ part, index }] : [],
+	);
+	if (message.role !== "assistant" || reasoning.length === 0) return null;
 
 	return (
-		message.parts[1] && (
-			<Reasoning
-				isStreaming={
-					message.role === "assistant" &&
-					message.parts[1].type === "reasoning" &&
-					message.parts[1].state !== "done"
-				}
-			>
-				{/* //duration={message.reasoning.duration} */}
-				<ReasoningTrigger />
-
-				{message.parts.map((part) => {
-					switch (part.type) {
-						case "reasoning":
-							return (
-								<ReasoningContent key={getPartKey(part)}>
-									{part.text}
-								</ReasoningContent>
-							);
-						default:
-							return null;
-					}
-				})}
-			</Reasoning>
-		)
+		<Reasoning
+			isStreaming={reasoning.some(({ part }) => part.state === "streaming")}
+		>
+			<ReasoningTrigger />
+			{reasoning.map(({ part, index }) => (
+				<ReasoningContent key={partKey(message.id, index)}>
+					{part.text}
+				</ReasoningContent>
+			))}
+		</Reasoning>
 	);
 };

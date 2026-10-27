@@ -1,3 +1,4 @@
+import { Square } from "lucide-react";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import { useState } from "react";
 import { AnimateIcon } from "../animate-ui/icons/icon";
@@ -22,9 +23,11 @@ export type FileObject = {
 type InputProps = {
 	onSubmit?: (input: string) => Promise<void>;
 	isLoading?: boolean;
+	/** While a reply streams: shows a Stop button in place of Send. */
+	onStop?: () => void;
 };
 
-export const Input = ({ onSubmit, isLoading }: InputProps) => {
+export const Input = ({ onSubmit, isLoading, onStop }: InputProps) => {
 	const [input, setInput] = useState("");
 	const [webSearchEnabled, setWebSearchEnabled] = useState(false);
 	const [files, setFiles] = useState<FileObject[] | null>(null);
@@ -87,6 +90,7 @@ export const Input = ({ onSubmit, isLoading }: InputProps) => {
 						setWebSearchEnabled={setWebSearchEnabled}
 						input={input}
 						handleKeyDown={handleKeyDown}
+						onStop={onStop}
 					/>
 				</motion.form>
 			</DragNDrop>
@@ -100,6 +104,7 @@ type InputButtonsProps = {
 	setWebSearchEnabled: React.Dispatch<React.SetStateAction<boolean>>;
 	input: string;
 	handleKeyDown: (e: React.KeyboardEvent) => void;
+	onStop?: () => void;
 };
 
 const InputButtons = ({
@@ -108,6 +113,7 @@ const InputButtons = ({
 	setWebSearchEnabled,
 	input,
 	handleKeyDown,
+	onStop,
 }: InputButtonsProps) => {
 	return (
 		<motion.div layout className="flex w-full px-7 justify-between ">
@@ -122,16 +128,27 @@ const InputButtons = ({
 			<div className="flex space-x-2">
 				<VoiceInput />
 				<VoiceChat />
-				<AnimateIcon animateOnHover>
+				{onStop ? (
 					<button
-						type="submit"
-						className="input-button self-end disabled:hidden"
-						disabled={!input.trim()}
-						onKeyDown={handleKeyDown}
+						type="button"
+						aria-label="Stop"
+						className="input-button self-end"
+						onClick={onStop}
 					>
-						<Send size={20} strokeWidth={1} />
+						<Square size={16} strokeWidth={1.5} />
 					</button>
-				</AnimateIcon>
+				) : (
+					<AnimateIcon animateOnHover>
+						<button
+							type="submit"
+							className="input-button self-end disabled:hidden"
+							disabled={!input.trim()}
+							onKeyDown={handleKeyDown}
+						>
+							<Send size={20} strokeWidth={1} />
+						</button>
+					</AnimateIcon>
+				)}
 			</div>
 		</motion.div>
 	);

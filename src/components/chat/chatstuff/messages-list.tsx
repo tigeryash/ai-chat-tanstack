@@ -10,15 +10,21 @@ import MessageUI from "./message-ui";
 
 type MessagesListProps = {
 	messages: UIMessage<unknown, UIDataTypes, UITools>[];
+	/** Regenerates the last reply. Leave unset while a reply is streaming. */
+	onRegenerate?: (messageId: string) => void;
 };
 
-const MessagesList = ({ messages }: MessagesListProps) => {
-	// console.log("Rendering MessagesList with messages:", messages);
+const MessagesList = ({ messages, onRegenerate }: MessagesListProps) => {
+	const last = messages.at(-1);
+	const regenerate =
+		onRegenerate && last?.role === "assistant"
+			? () => onRegenerate(last.id)
+			: undefined;
 	return (
 		<div className="flex-1 h-full  ">
 			<Conversation className=" relative size-full">
 				<ConversationContent className="w-[80%] mx-auto">
-					{messages.map(({ ...message }) => (
+					{messages.map((message) => (
 						// The person's message is the scroll anchor: a new question settles near the top and
 						// the reply streams in under it.
 						<MessageScrollerItem
@@ -26,7 +32,10 @@ const MessagesList = ({ messages }: MessagesListProps) => {
 							messageId={message.id}
 							scrollAnchor={message.role === "user"}
 						>
-							<MessageUI message={message} />
+							<MessageUI
+								message={message}
+								onRegenerate={message === last ? regenerate : undefined}
+							/>
 						</MessageScrollerItem>
 					))}
 				</ConversationContent>
