@@ -60,13 +60,15 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   `www.highelollms.com`. Discord first failed with "invalid OAuth2 redirect_uri": prod's `DISCORD_CLIENT_ID`
   pointed at a different Discord app than the one with the callback URL. All deployments now use the `ai-chat-2`
   app (`1386085325612515519`). Linking a provider to an email account wasn't tried against the real providers.
-- [ ] After 1.1 is deployed: on `www.highelollms.com`, Settings → API keys → Connect OpenRouter with your account,
+- [x] After 1.1 is deployed: on `www.highelollms.com`, Settings → API keys → Connect OpenRouter with your account,
   then "Test key" (e2e fakes OpenRouter, so the real consent page and code exchange are untried).
-- [ ] After 1.3: check that prod's `activeChatSessions` and `artifacts` tables are empty
+  *Done 2026-10-27:* OpenRouter connected on `www.highelollms.com` and the connection test succeeded.
+- [x] After 1.3: check that prod's `activeChatSessions` and `artifacts` tables are empty
   (`bunx convex data activeChatSessions --prod`, same for `artifacts`). 1.3 dropped them from the schema; Convex
   keeps any rows but stops validating them, so the deploy is safe either way. Agents can't read prod. Clear them
   in the dashboard if they have rows. Once 1.2 has moved chat to the browser, decide whether to delete the old test
   conversations and messages on dev and prod (dev has a handful from LM Studio testing).
+  *Done 2026-10-27:* both tables are empty on prod (`convex data … --prod` and the dashboard).
 - [ ] After 1.2 is deployed: on `www.highelollms.com`, open `/new`, pick OpenRouter and type
   `google/gemma-4-26b-a4b-it:free`, and send a message (a reply should stream; reload `/<chat id>` and it's still
   there). Locally (`bun run dev`), start LM Studio's server with "Enable CORS" on, pick "Local (LM Studio)" and a
