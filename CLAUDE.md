@@ -47,6 +47,9 @@ The **pre-commit hook** (`.husky/pre-commit`) runs Biome on staged files and the
   calls must go in `provider-origins.ts` / `csp.ts`, or the CSP reports it.
 - **Convex** (`convex/`) is the backend: `schema.ts` (message `parts` mirror AI SDK `UIMessage` parts),
   access checks in `authHelpers.ts`, `_generated/` is generated. Query keys go through `@convex-dev/react-query`.
+- **Local chats** (roadmap 1.3, `src/lib/storage/`): a `ChatStore` interface over Dexie (IndexedDB database
+  `highelo-chats`). Every stored chat has a `formatVersion`; `format.ts` lists the migrations and how to add one.
+  Export/import are versioned JSON in `export.ts`.
 - **Better Auth 1.6.x** via `@convex-dev/better-auth` (server config `convex/auth.ts`, client
   `src/lib/auth-client.ts`, SSR helpers `src/lib/auth-server.ts`). Email/password plus Google, GitHub, Discord.
 - **AI SDK 7.** Today `/api/chat` calls LM Studio from the server with the `<think>` middleware

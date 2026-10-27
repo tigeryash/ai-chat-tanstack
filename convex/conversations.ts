@@ -15,29 +15,6 @@ const conversationSettingsValidator = v.object({
   metadata: v.optional(v.any()),
 });
 
-async function removeConversationFromActiveSessions(ctx: any, conversationId: any) {
-  const sessions = await ctx.db.query("activeChatSessions").collect();
-
-  for (const session of sessions) {
-    if (!session.conversationIds.includes(conversationId)) {
-      continue;
-    }
-
-    const nextConversationIds = session.conversationIds.filter(
-      (id: any) => id !== conversationId,
-    );
-
-    await ctx.db.patch(session._id, {
-      conversationIds: nextConversationIds,
-      focusedConversationId:
-        session.focusedConversationId === conversationId
-          ? nextConversationIds[nextConversationIds.length - 1]
-          : session.focusedConversationId,
-      updatedAt: Date.now(),
-    });
-  }
-}
-
 // ============================================================================
 // QUERIES
 // ============================================================================
@@ -346,8 +323,6 @@ export const remove = mutation({
       status: "deleted",
       updatedAt: Date.now(),
     });
-
-    await removeConversationFromActiveSessions(ctx, args.id);
   },
 });
 
@@ -400,8 +375,6 @@ export const permanentDelete = mutation({
 
     // Delete conversation
     await ctx.db.delete(args.id);
-
-    await removeConversationFromActiveSessions(ctx, args.id);
   },
 });
 

@@ -8,7 +8,6 @@
  * @module
  */
 
-import type * as activeSessions from "../activeSessions.js";
 import type * as attachments from "../attachments.js";
 import type * as auth from "../auth.js";
 import type * as authHelpers from "../authHelpers.js";
@@ -53,7 +52,6 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  activeSessions: typeof activeSessions;
   attachments: typeof attachments;
   auth: typeof auth;
   authHelpers: typeof authHelpers;

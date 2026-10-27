@@ -1,0 +1,88 @@
+{
+	"id": "chat-v0",
+	"title": "hi",
+	"createdAt": 1792730874429,
+	"updatedAt": 1792730931000,
+	"messages": [
+		{
+			"id": "m1",
+			"role": "user",
+			"content": "hi",
+			"parts": [{ "type": "text", "text": "hi" }]
+		},
+		{
+			"id": "m2",
+			"role": "assistant",
+			"content": "Hello! How can I help?",
+			"parts": [
+				{ "type": "step-start", "stepNumber": 0 },
+				{
+					"type": "reasoning",
+					"text": "The user greets me.",
+					"state": "streaming"
+				},
+				{
+					"type": "text",
+					"text": "Hello! How can I help?",
+					"state": "streaming"
+				}
+			]
+		},
+		{
+			"id": "m3",
+			"role": "user",
+			"content": "what's the weather, and see this",
+			"parts": [
+				{ "type": "text", "text": "what's the weather, and see this" },
+				{
+					"type": "image",
+					"url": "data:image/png;base64,iVBORw0KGgo=",
+					"prompt": "a cat"
+				},
+				{
+					"type": "file",
+					"mediaType": "application/pdf",
+					"filename": "notes.pdf",
+					"storageId": "kg2abc"
+				}
+			]
+		},
+		{
+			"id": "m4",
+			"role": "assistant",
+			"parts": [
+				{
+					"type": "tool-invocation",
+					"toolCallId": "call-1",
+					"toolName": "weather",
+					"state": "output-available",
+					"input": { "city": "Toronto" },
+					"output": { "tempC": 4 }
+				},
+				{
+					"type": "tool-invocation",
+					"toolCallId": "call-2",
+					"toolName": "weather",
+					"state": "output-error",
+					"input": { "city": "Atlantis" }
+				},
+				{
+					"type": "source",
+					"sourceType": "url",
+					"id": "s1",
+					"url": "https://example.com/weather",
+					"title": "Weather"
+				},
+				{ "type": "source", "sourceType": "document" },
+				{ "type": "text", "text": "It's 4°C in Toronto." }
+			]
+		},
+		{
+			"id": "m5",
+			"role": "tool",
+			"parts": [{ "type": "text", "text": "{\"tempC\":4}" }]
+		},
+		{ "id": "m6", "role": "user", "content": "thanks", "parts": [] },
+		{ "id": "m7", "role": "user", "parts": [] }
+	]
+}
