@@ -1,0 +1,3124 @@
+{
+	"anthropic/claude-opus-5.5": {
+		"data": {
+			"id": "anthropic/claude-opus-5.5",
+			"name": "Claude Opus 5.5",
+			"created": 1755815280,
+			"released": 1790035200,
+			"description": "Claude Opus 5.5 is a step-change improvement over Opus 5 for agentic coding, long-running agentic tasks, knowledge work, communication, and vision. It is more token-efficient per completed task and reports progress, findings, and next steps in clear language.",
+			"knowledge": "2026-06",
+			"architecture": {
+				"tokenizer": null,
+				"instruct_type": null,
+				"modality": "text+image+file→text",
+				"input_modalities": [
+					"text",
+					"image",
+					"file"
+				],
+				"output_modalities": [
+					"text"
+				]
+			},
+			"reasoning": {
+				"supported_efforts": [
+					"low",
+					"medium",
+					"high",
+					"xhigh",
+					"max"
+				]
+			},
+			"endpoints": [
+				{
+					"name": "anthropic | anthropic/claude-opus-5.5",
+					"model_name": "Claude Opus 5.5",
+					"context_length": 1000000,
+					"pricing": {
+						"prompt": "0.000004",
+						"completion": "0.00002",
+						"request": "0",
+						"image": "0",
+						"image_output": "0",
+						"web_search": "0.01",
+						"internal_reasoning": "0",
+						"input_cache_read": "0.0000002",
+						"input_cache_write": "0.000005",
+						"discount": 0
+					},
+					"provider_name": "anthropic",
+					"has_zdr": true,
+					"has_no_training": true,
+					"tags": [
+						"explicit-caching",
+						"fast",
+						"file-input",
+						"reasoning",
+						"tool-use",
+						"vision",
+						"web-search",
+						"structured-output"
+					],
+					"inference_regions": [
+						{
+							"scope": "zone",
+							"geo_region": "us",
+							"pricing": {
+								"prompt": "0.0000044",
+								"completion": "0.000022",
+								"input_cache_read": "0.00000022",
+								"input_cache_write": "0.0000055"
+							}
+						}
+					],
+					"quantization": null,
+					"max_completion_tokens": 128000,
+					"max_prompt_tokens": null,
+					"supported_parameters": [
+						"max_tokens",
+						"stop",
+						"tools",
+						"tool_choice",
+						"reasoning",
+						"include_reasoning",
+						"response_format",
+						"structured_outputs"
+					],
+					"status": 0,
+					"uptime_last_15m": 99.9949,
+					"uptime_last_1h": 99.9986,
+					"uptime_last_1d": 99.9915,
+					"latency_last_1h": {
+						"p50": 1171.5,
+						"p95": 3513.45
+					},
+					"throughput_last_1h": {
+						"p50": 297,
+						"p95": 314
+					},
+					"supports_implicit_caching": false
+				},
+				{
+					"name": "bedrock | anthropic/claude-opus-5.5",
+					"model_name": "Claude Opus 5.5",
+					"context_length": 1000000,
+					"pricing": {
+						"prompt": "0.000004",
+						"completion": "0.00002",
+						"request": "0",
+						"image": "0",
+						"image_output": "0",
+						"web_search": "0.01",
+						"internal_reasoning": "0",
+						"input_cache_read": "0.0000002",
+						"input_cache_write": "0.000005",
+						"discount": 0
+					},
+					"provider_name": "bedrock",
+					"has_zdr": true,
+					"has_no_training": true,
+					"tags": [
+						"explicit-caching",
+						"file-input",
+						"reasoning",
+						"tool-use",
+						"vision",
+						"web-search",
+						"structured-output"
+					],
+					"inference_regions": [
+						{
+							"scope": "zone",
+							"geo_region": "us",
+							"pricing": {
+								"prompt": "0.0000044",
+								"completion": "0.000022",
+								"input_cache_read": "0.00000022",
+								"input_cache_write": "0.0000055"
+							}
+						},
+						{
+							"scope": "specific",
+							"geo_region": "eu",
+							"provider_region": "eu-central-1",
+							"pricing": {
+								"prompt": "0.0000044",
+								"completion": "0.000022",
+								"input_cache_read": "0.00000022",
+								"input_cache_write": "0.0000055"
+							}
+						},
+						{
+							"scope": "specific",
+							"geo_region": "au",
+							"provider_region": "ap-southeast-2",
+							"pricing": {
+								"prompt": "0.0000044",
+								"completion": "0.000022",
+								"input_cache_read": "0.00000022",
+								"input_cache_write": "0.0000055"
+							}
+						},
+						{
+							"scope": "specific",
+							"geo_region": "jp",
+							"provider_region": "ap-northeast-1",
+							"pricing": {
+								"prompt": "0.0000044",
+								"completion": "0.000022",
+								"input_cache_read": "0.00000022",
+								"input_cache_write": "0.0000055"
+							}
+						}
+					],
+					"quantization": null,
+					"max_completion_tokens": 128000,
+					"max_prompt_tokens": null,
+					"supported_parameters": [
+						"max_tokens",
+						"stop",
+						"tools",
+						"tool_choice",
+						"reasoning",
+						"include_reasoning",
+						"response_format",
+						"structured_outputs"
+					],
+					"status": 0,
+					"uptime_last_15m": 100,
+					"uptime_last_1h": 100,
+					"uptime_last_1d": 99.9732,
+					"latency_last_1h": {
+						"p50": 1598,
+						"p95": 2318.2000000000003
+					},
+					"throughput_last_1h": {
+						"p50": 85,
+						"p95": 135.79999999999998
+					},
+					"supports_implicit_caching": false
+				},
+				{
+					"name": "claudeaws | anthropic/claude-opus-5.5",
+					"model_name": "Claude Opus 5.5",
+					"context_length": 1000000,
+					"pricing": {
+						"prompt": "0.000004",
+						"completion": "0.00002",
+						"request": "0",
+						"image": "0",
+						"image_output": "0",
+						"web_search": "0.01",
+						"internal_reasoning": "0",
+						"input_cache_read": "0.0000002",
+						"input_cache_write": "0.000005",
+						"discount": 0
+					},
+					"provider_name": "claudeaws",
+					"has_zdr": true,
+					"has_no_training": true,
+					"tags": [
+						"explicit-caching",
+						"file-input",
+						"reasoning",
+						"tool-use",
+						"vision",
+						"web-search",
+						"structured-output"
+					],
+					"quantization": null,
+					"max_completion_tokens": 128000,
+					"max_prompt_tokens": null,
+					"supported_parameters": [
+						"max_tokens",
+						"stop",
+						"tools",
+						"tool_choice",
+						"reasoning",
+						"include_reasoning",
+						"response_format",
+						"structured_outputs"
+					],
+					"status": 0,
+					"uptime_last_15m": 100,
+					"uptime_last_1h": 100,
+					"uptime_last_1d": 100,
+					"latency_last_1h": {
+						"p50": 3024,
+						"p95": 6858.099999999988
+					},
+					"throughput_last_1h": {
+						"p50": 128,
+						"p95": 158
+					},
+					"supports_implicit_caching": false
+				},
+				{
+					"name": "vertexAnthropic | anthropic/claude-opus-5.5",
+					"model_name": "Claude Opus 5.5",
+					"context_length": 1000000,
+					"pricing": {
+						"prompt": "0.000004",
+						"completion": "0.00002",
+						"request": "0",
+						"image": "0",
+						"image_output": "0",
+						"web_search": "0.01",
+						"internal_reasoning": "0",
+						"input_cache_read": "0.0000002",
+						"input_cache_write": "0.000005",
+						"discount": 0
+					},
+					"provider_name": "vertexAnthropic",
+					"has_zdr": true,
+					"has_no_training": true,
+					"tags": [
+						"explicit-caching",
+						"file-input",
+						"reasoning",
+						"tool-use",
+						"vision",
+						"web-search",
+						"structured-output"
+					],
+					"inference_regions": [
+						{
+							"scope": "zone",
+							"geo_region": "us",
+							"pricing": {
+								"prompt": "0.0000044",
+								"completion": "0.000022",
+								"input_cache_read": "0.00000022",
+								"input_cache_write": "0.0000055"
+							}
+						},
+						{
+							"scope": "zone",
+							"geo_region": "eu",
+							"pricing": {
+								"prompt": "0.0000044",
+								"completion": "0.000022",
+								"input_cache_read": "0.00000022",
+								"input_cache_write": "0.0000055"
+							}
+						}
+					],
+					"quantization": null,
+					"max_completion_tokens": 128000,
+					"max_prompt_tokens": null,
+					"supported_parameters": [
+						"max_tokens",
+						"stop",
+						"tools",
+						"tool_choice",
+						"reasoning",
+						"include_reasoning",
+						"response_format",
+						"structured_outputs"
+					],
+					"status": 0,
+					"uptime_last_15m": 100,
+					"uptime_last_1h": 100,
+					"uptime_last_1d": 99.9993,
+					"latency_last_1h": {
+						"p50": 1651,
+						"p95": 5571.5999999999985
+					},
+					"throughput_last_1h": {
+						"p50": 118.5,
+						"p95": 122.85
+					},
+					"supports_implicit_caching": false
+				}
+			]
+		}
+	},
+	"anthropic/claude-sonnet-4.5": {
+		"data": {
+			"id": "anthropic/claude-sonnet-4.5",
+			"name": "Claude Sonnet 4.5",
+			"created": 1755815280,
+			"released": 1759104000,
+			"description": "Claude Sonnet 4.5 is the newest model in the Sonnet series, offering improvements and updates over Sonnet 4.",
+			"knowledge": "2025-07-31",
+			"architecture": {
+				"tokenizer": null,
+				"instruct_type": null,
+				"modality": "text+image+file→text",
+				"input_modalities": [
+					"text",
+					"image",
+					"file"
+				],
+				"output_modalities": [
+					"text"
+				]
+			},
+			"reasoning": {
+				"mandatory": false,
+				"supports_max_tokens": true
+			},
+			"endpoints": [
+				{
+					"name": "anthropic | anthropic/claude-sonnet-4.5",
+					"model_name": "Claude Sonnet 4.5",
+					"context_length": 1000000,
+					"pricing": {
+						"prompt": "0.000003",
+						"prompt_tiers": [
+							{
+								"cost": "0.000003",
+								"min": 0,
+								"max": 200001
+							},
+							{
+								"cost": "0.000006",
+								"min": 200001
+							}
+						],
+						"completion": "0.000015",
+						"completion_tiers": [
+							{
+								"cost": "0.000015",
+								"min": 0,
+								"max": 200001
+							},
+							{
+								"cost": "0.0000225",
+								"min": 200001
+							}
+						],
+						"request": "0",
+						"image": "0",
+						"image_output": "0",
+						"web_search": "0.01",
+						"internal_reasoning": "0",
+						"input_cache_read": "0.0000003",
+						"input_cache_read_tiers": [
+							{
+								"cost": "0.0000003",
+								"min": 0,
+								"max": 200001
+							},
+							{
+								"cost": "0.0000006",
+								"min": 200001
+							}
+						],
+						"input_cache_write": "0.00000375",
+						"input_cache_write_tiers": [
+							{
+								"cost": "0.00000375",
+								"min": 0,
+								"max": 200001
+							},
+							{
+								"cost": "0.0000075",
+								"min": 200001
+							}
+						],
+						"discount": 0
+					},
+					"provider_name": "anthropic",
+					"has_zdr": true,
+					"has_no_training": true,
+					"tags": [
+						"explicit-caching",
+						"file-input",
+						"reasoning",
+						"tool-use",
+						"vision",
+						"web-search",
+						"structured-output"
+					],
+					"quantization": null,
+					"max_completion_tokens": 64000,
+					"max_prompt_tokens": null,
+					"supported_parameters": [
+						"max_tokens",
+						"temperature",
+						"stop",
+						"tools",
+						"tool_choice",
+						"reasoning",
+						"include_reasoning",
+						"response_format",
+						"structured_outputs"
+					],
+					"status": 1,
+					"deprecated_at": 1795539600000,
+					"uptime_last_15m": 100,
+					"uptime_last_1h": 100,
+					"uptime_last_1d": 100,
+					"latency_last_1h": {
+						"p50": 1583.5,
+						"p95": 3953.649999999999
+					},
+					"throughput_last_1h": {
+						"p50": 48,
+						"p95": 54.25
+					},
+					"supports_implicit_caching": false
+				},
+				{
+					"name": "bedrock | anthropic/claude-sonnet-4.5",
+					"model_name": "Claude Sonnet 4.5",
+					"context_length": 1000000,
+					"pricing": {
+						"prompt": "0.000003",
+						"prompt_tiers": [
+							{
+								"cost": "0.000003",
+								"min": 0,
+								"max": 200001
+							},
+							{
+								"cost": "0.000006",
+								"min": 200001
+							}
+						],
+						"completion": "0.000015",
+						"completion_tiers": [
+							{
+								"cost": "0.000015",
+								"min": 0,
+								"max": 200001
+							},
+							{
+								"cost": "0.0000225",
+								"min": 200001
+							}
+						],
+						"request": "0",
+						"image": "0",
+						"image_output": "0",
+						"web_search": "0",
+						"internal_reasoning": "0",
+						"input_cache_read": "0.0000003",
+						"input_cache_read_tiers": [
+							{
+								"cost": "0.0000003",
+								"min": 0,
+								"max": 200001
+							},
+							{
+								"cost": "0.0000006",
+								"min": 200001
+							}
+						],
+						"input_cache_write": "0.00000375",
+						"input_cache_write_tiers": [
+							{
+								"cost": "0.00000375",
+								"min": 0,
+								"max": 200001
+							},
+							{
+								"cost": "0.0000075",
+								"min": 200001
+							}
+						],
+						"discount": 0
+					},
+					"provider_name": "bedrock",
+					"has_zdr": true,
+					"has_no_training": true,
+					"tags": [
+						"file-input",
+						"reasoning",
+						"tool-use",
+						"vision",
+						"explicit-caching",
+						"web-search",
+						"structured-output"
+					],
+					"inference_regions": [
+						{
+							"scope": "zone",
+							"geo_region": "us",
+							"pricing": {
+								"prompt": "0.0000033",
+								"prompt_tiers": [
+									{
+										"cost": "0.0000033",
+										"min": 0,
+										"max": 200001
+									},
+									{
+										"cost": "0.0000066",
+										"min": 200001
+									}
+								],
+								"completion": "0.0000165",
+								"completion_tiers": [
+									{
+										"cost": "0.0000165",
+										"min": 0,
+										"max": 200001
+									},
+									{
+										"cost": "0.00002475",
+										"min": 200001
+									}
+								],
+								"input_cache_read": "0.00000033",
+								"input_cache_read_tiers": [
+									{
+										"cost": "0.00000033",
+										"min": 0,
+										"max": 200001
+									},
+									{
+										"cost": "0.00000066",
+										"min": 200001
+									}
+								],
+								"input_cache_write": "0.000004125",
+								"input_cache_write_tiers": [
+									{
+										"cost": "0.000004125",
+										"min": 0,
+										"max": 200001
+									},
+									{
+										"cost": "0.00000825",
+										"min": 200001
+									}
+								]
+							}
+						},
+						{
+							"scope": "specific",
+							"geo_region": "eu",
+							"provider_region": "eu-central-1",
+							"pricing": {
+								"prompt": "0.0000033",
+								"prompt_tiers": [
+									{
+										"cost": "0.0000033",
+										"min": 0,
+										"max": 200001
+									},
+									{
+										"cost": "0.0000066",
+										"min": 200001
+									}
+								],
+								"completion": "0.0000165",
+								"completion_tiers": [
+									{
+										"cost": "0.0000165",
+										"min": 0,
+										"max": 200001
+									},
+									{
+										"cost": "0.00002475",
+										"min": 200001
+									}
+								],
+								"input_cache_read": "0.00000033",
+								"input_cache_read_tiers": [
+									{
+										"cost": "0.00000033",
+										"min": 0,
+										"max": 200001
+									},
+									{
+										"cost": "0.00000066",
+										"min": 200001
+									}
+								],
+								"input_cache_write": "0.000004125",
+								"input_cache_write_tiers": [
+									{
+										"cost": "0.000004125",
+										"min": 0,
+										"max": 200001
+									},
+									{
+										"cost": "0.00000825",
+										"min": 200001
+									}
+								]
+							}
+						}
+					],
+					"quantization": null,
+					"max_completion_tokens": 64000,
+					"max_prompt_tokens": null,
+					"supported_parameters": [
+						"max_tokens",
+						"temperature",
+						"stop",
+						"tools",
+						"tool_choice",
+						"reasoning",
+						"include_reasoning",
+						"response_format",
+						"structured_outputs"
+					],
+					"status": 0,
+					"uptime_last_15m": 100,
+					"uptime_last_1h": 100,
+					"uptime_last_1d": 100,
+					"latency_last_1h": {
+						"p50": 1605.5,
+						"p95": 2668.1999999999953
+					},
+					"throughput_last_1h": {
+						"p50": 54.5,
+						"p95": 57.550000000000004
+					},
+					"supports_implicit_caching": false
+				},
+				{
+					"name": "vertexAnthropic | anthropic/claude-sonnet-4.5",
+					"model_name": "Claude Sonnet 4.5",
+					"context_length": 1000000,
+					"pricing": {
+						"prompt": "0.000003",
+						"prompt_tiers": [
+							{
+								"cost": "0.000003",
+								"min": 0,
+								"max": 200001
+							},
+							{
+								"cost": "0.000006",
+								"min": 200001
+							}
+						],
+						"completion": "0.000015",
+						"completion_tiers": [
+							{
+								"cost": "0.000015",
+								"min": 0,
+								"max": 200001
+							},
+							{
+								"cost": "0.0000225",
+								"min": 200001
+							}
+						],
+						"request": "0",
+						"image": "0",
+						"image_output": "0",
+						"web_search": "0.01",
+						"internal_reasoning": "0",
+						"input_cache_read": "0.0000003",
+						"input_cache_read_tiers": [
+							{
+								"cost": "0.0000003",
+								"min": 0,
+								"max": 200001
+							},
+							{
+								"cost": "0.0000006",
+								"min": 200001
+							}
+						],
+						"input_cache_write": "0.00000375",
+						"input_cache_write_tiers": [
+							{
+								"cost": "0.00000375",
+								"min": 0,
+								"max": 200001
+							},
+							{
+								"cost": "0.0000075",
+								"min": 200001
+							}
+						],
+						"discount": 0
+					},
+					"provider_name": "vertexAnthropic",
+					"has_zdr": true,
+					"has_no_training": true,
+					"tags": [
+						"explicit-caching",
+						"file-input",
+						"reasoning",
+						"tool-use",
+						"vision",
+						"web-search",
+						"structured-output"
+					],
+					"inference_regions": [
+						{
+							"scope": "specific",
+							"geo_region": "us",
+							"provider_region": "us-east5",
+							"pricing": {
+								"prompt": "0.0000033",
+								"prompt_tiers": [
+									{
+										"cost": "0.0000033",
+										"min": 0,
+										"max": 200001
+									},
+									{
+										"cost": "0.0000066",
+										"min": 200001
+									}
+								],
+								"completion": "0.0000165",
+								"completion_tiers": [
+									{
+										"cost": "0.0000165",
+										"min": 0,
+										"max": 200001
+									},
+									{
+										"cost": "0.00002475",
+										"min": 200001
+									}
+								],
+								"input_cache_read": "0.00000033",
+								"input_cache_read_tiers": [
+									{
+										"cost": "0.00000033",
+										"min": 0,
+										"max": 200001
+									},
+									{
+										"cost": "0.00000066",
+										"min": 200001
+									}
+								],
+								"input_cache_write": "0.000004125",
+								"input_cache_write_tiers": [
+									{
+										"cost": "0.000004125",
+										"min": 0,
+										"max": 200001
+									},
+									{
+										"cost": "0.00000825",
+										"min": 200001
+									}
+								]
+							}
+						},
+						{
+							"scope": "specific",
+							"geo_region": "eu",
+							"provider_region": "europe-west1",
+							"pricing": {
+								"prompt": "0.0000033",
+								"prompt_tiers": [
+									{
+										"cost": "0.0000033",
+										"min": 0,
+										"max": 200001
+									},
+									{
+										"cost": "0.0000066",
+										"min": 200001
+									}
+								],
+								"completion": "0.0000165",
+								"completion_tiers": [
+									{
+										"cost": "0.0000165",
+										"min": 0,
+										"max": 200001
+									},
+									{
+										"cost": "0.00002475",
+										"min": 200001
+									}
+								],
+								"input_cache_read": "0.00000033",
+								"input_cache_read_tiers": [
+									{
+										"cost": "0.00000033",
+										"min": 0,
+										"max": 200001
+									},
+									{
+										"cost": "0.00000066",
+										"min": 200001
+									}
+								],
+								"input_cache_write": "0.000004125",
+								"input_cache_write_tiers": [
+									{
+										"cost": "0.000004125",
+										"min": 0,
+										"max": 200001
+									},
+									{
+										"cost": "0.00000825",
+										"min": 200001
+									}
+								]
+							}
+						}
+					],
+					"quantization": null,
+					"max_completion_tokens": 64000,
+					"max_prompt_tokens": null,
+					"supported_parameters": [
+						"max_tokens",
+						"temperature",
+						"stop",
+						"tools",
+						"tool_choice",
+						"reasoning",
+						"include_reasoning",
+						"response_format",
+						"structured_outputs"
+					],
+					"status": 0,
+					"uptime_last_15m": 100,
+					"uptime_last_1h": 100,
+					"uptime_last_1d": 100,
+					"latency_last_1h": {
+						"p50": 639,
+						"p95": 739.9
+					},
+					"throughput_last_1h": {
+						"p50": 49,
+						"p95": 49.85
+					},
+					"supports_implicit_caching": false
+				}
+			]
+		}
+	},
+	"anthropic/claude-haiku-5.5": {
+		"data": {
+			"id": "anthropic/claude-haiku-5.5",
+			"name": "Claude Haiku 5.5",
+			"created": 1755815280,
+			"released": 1791331200,
+			"description": "Claude Haiku 5.5 brings adaptive reasoning to Anthropic’s low-cost Haiku family for everyday tasks, tool use, and scaled sub-agent deployments. It is the first Haiku with adjustable effort levels, letting developers balance reasoning depth and token usage for each task, with the option to turn thinking off for simpler requests.",
+			"architecture": {
+				"tokenizer": null,
+				"instruct_type": null,
+				"modality": "text+image+file→text",
+				"input_modalities": [
+					"text",
+					"image",
+					"file"
+				],
+				"output_modalities": [
+					"text"
+				]
+			},
+			"reasoning": {
+				"mandatory": false,
+				"supported_efforts": [
+					"none",
+					"low",
+					"medium",
+					"high",
+					"xhigh",
+					"max"
+				]
+			},
+			"endpoints": [
+				{
+					"name": "anthropic | anthropic/claude-haiku-5.5",
+					"model_name": "Claude Haiku 5.5",
+					"context_length": 1000000,
+					"pricing": {
+						"prompt": "0.0000001",
+						"prompt_tiers": [
+							{
+								"cost": "0.0000001",
+								"min": 0,
+								"max": 100001
+							},
+							{
+								"cost": "0.0000005",
+								"min": 100001
+							}
+						],
+						"completion": "0.0000005",
+						"completion_tiers": [
+							{
+								"cost": "0.0000005",
+								"min": 0,
+								"max": 100001
+							},
+							{
+								"cost": "0.0000025",
+								"min": 100001
+							}
+						],
+						"request": "0",
+						"image": "0",
+						"image_output": "0",
+						"web_search": "0.01",
+						"internal_reasoning": "0",
+						"input_cache_read": "0.00000001",
+						"input_cache_read_tiers": [
+							{
+								"cost": "0.00000001",
+								"min": 0,
+								"max": 100001
+							},
+							{
+								"cost": "0.00000005",
+								"min": 100001
+							}
+						],
+						"input_cache_write": "0.000000125",
+						"input_cache_write_tiers": [
+							{
+								"cost": "0.000000125",
+								"min": 0,
+								"max": 100001
+							},
+							{
+								"cost": "0.000000625",
+								"min": 100001
+							}
+						],
+						"discount": 0
+					},
+					"provider_name": "anthropic",
+					"has_zdr": true,
+					"has_no_training": true,
+					"tags": [
+						"explicit-caching",
+						"file-input",
+						"reasoning",
+						"tool-use",
+						"vision",
+						"web-search",
+						"structured-output"
+					],
+					"inference_regions": [
+						{
+							"scope": "zone",
+							"geo_region": "us",
+							"pricing": {
+								"prompt": "0.00000011",
+								"prompt_tiers": [
+									{
+										"cost": "0.00000011",
+										"min": 0,
+										"max": 100001
+									},
+									{
+										"cost": "0.00000055",
+										"min": 100001
+									}
+								],
+								"completion": "0.00000055",
+								"completion_tiers": [
+									{
+										"cost": "0.00000055",
+										"min": 0,
+										"max": 100001
+									},
+									{
+										"cost": "0.00000275",
+										"min": 100001
+									}
+								],
+								"input_cache_read": "0.000000011",
+								"input_cache_read_tiers": [
+									{
+										"cost": "0.000000011",
+										"min": 0,
+										"max": 100001
+									},
+									{
+										"cost": "0.000000055",
+										"min": 100001
+									}
+								],
+								"input_cache_write": "0.0000001375",
+								"input_cache_write_tiers": [
+									{
+										"cost": "0.0000001375",
+										"min": 0,
+										"max": 100001
+									},
+									{
+										"cost": "0.0000006875",
+										"min": 100001
+									}
+								]
+							}
+						}
+					],
+					"quantization": null,
+					"max_completion_tokens": 128000,
+					"max_prompt_tokens": null,
+					"supported_parameters": [
+						"max_tokens",
+						"stop",
+						"tools",
+						"tool_choice",
+						"reasoning",
+						"include_reasoning",
+						"response_format",
+						"structured_outputs"
+					],
+					"status": 0,
+					"uptime_last_15m": 99.9959,
+					"uptime_last_1h": 99.9967,
+					"uptime_last_1d": 99.9982,
+					"latency_last_1h": {
+						"p50": 974.5,
+						"p95": 2961.3499999999995
+					},
+					"throughput_last_1h": {
+						"p50": 213,
+						"p95": 231.9
+					},
+					"supports_implicit_caching": false
+				},
+				{
+					"name": "bedrock | anthropic/claude-haiku-5.5",
+					"model_name": "Claude Haiku 5.5",
+					"context_length": 1000000,
+					"pricing": {
+						"prompt": "0.0000001",
+						"prompt_tiers": [
+							{
+								"cost": "0.0000001",
+								"min": 0,
+								"max": 100001
+							},
+							{
+								"cost": "0.0000005",
+								"min": 100001
+							}
+						],
+						"completion": "0.0000005",
+						"completion_tiers": [
+							{
+								"cost": "0.0000005",
+								"min": 0,
+								"max": 100001
+							},
+							{
+								"cost": "0.0000025",
+								"min": 100001
+							}
+						],
+						"request": "0",
+						"image": "0",
+						"image_output": "0",
+						"web_search": "0.01",
+						"internal_reasoning": "0",
+						"input_cache_read": "0.00000001",
+						"input_cache_read_tiers": [
+							{
+								"cost": "0.00000001",
+								"min": 0,
+								"max": 100001
+							},
+							{
+								"cost": "0.00000005",
+								"min": 100001
+							}
+						],
+						"input_cache_write": "0.000000125",
+						"input_cache_write_tiers": [
+							{
+								"cost": "0.000000125",
+								"min": 0,
+								"max": 100001
+							},
+							{
+								"cost": "0.000000625",
+								"min": 100001
+							}
+						],
+						"discount": 0
+					},
+					"provider_name": "bedrock",
+					"has_zdr": true,
+					"has_no_training": true,
+					"tags": [
+						"explicit-caching",
+						"file-input",
+						"reasoning",
+						"tool-use",
+						"vision",
+						"web-search",
+						"structured-output"
+					],
+					"inference_regions": [
+						{
+							"scope": "zone",
+							"geo_region": "us",
+							"pricing": {
+								"prompt": "0.00000011",
+								"prompt_tiers": [
+									{
+										"cost": "0.00000011",
+										"min": 0,
+										"max": 100001
+									},
+									{
+										"cost": "0.00000055",
+										"min": 100001
+									}
+								],
+								"completion": "0.00000055",
+								"completion_tiers": [
+									{
+										"cost": "0.00000055",
+										"min": 0,
+										"max": 100001
+									},
+									{
+										"cost": "0.00000275",
+										"min": 100001
+									}
+								],
+								"input_cache_read": "0.000000011",
+								"input_cache_read_tiers": [
+									{
+										"cost": "0.000000011",
+										"min": 0,
+										"max": 100001
+									},
+									{
+										"cost": "0.000000055",
+										"min": 100001
+									}
+								],
+								"input_cache_write": "0.0000001375",
+								"input_cache_write_tiers": [
+									{
+										"cost": "0.0000001375",
+										"min": 0,
+										"max": 100001
+									},
+									{
+										"cost": "0.0000006875",
+										"min": 100001
+									}
+								]
+							}
+						},
+						{
+							"scope": "specific",
+							"geo_region": "eu",
+							"provider_region": "eu-central-1",
+							"pricing": {
+								"prompt": "0.00000011",
+								"prompt_tiers": [
+									{
+										"cost": "0.00000011",
+										"min": 0,
+										"max": 100001
+									},
+									{
+										"cost": "0.00000055",
+										"min": 100001
+									}
+								],
+								"completion": "0.00000055",
+								"completion_tiers": [
+									{
+										"cost": "0.00000055",
+										"min": 0,
+										"max": 100001
+									},
+									{
+										"cost": "0.00000275",
+										"min": 100001
+									}
+								],
+								"input_cache_read": "0.000000011",
+								"input_cache_read_tiers": [
+									{
+										"cost": "0.000000011",
+										"min": 0,
+										"max": 100001
+									},
+									{
+										"cost": "0.000000055",
+										"min": 100001
+									}
+								],
+								"input_cache_write": "0.0000001375",
+								"input_cache_write_tiers": [
+									{
+										"cost": "0.0000001375",
+										"min": 0,
+										"max": 100001
+									},
+									{
+										"cost": "0.0000006875",
+										"min": 100001
+									}
+								]
+							}
+						},
+						{
+							"scope": "specific",
+							"geo_region": "au",
+							"provider_region": "ap-southeast-2",
+							"pricing": {
+								"prompt": "0.00000011",
+								"prompt_tiers": [
+									{
+										"cost": "0.00000011",
+										"min": 0,
+										"max": 100001
+									},
+									{
+										"cost": "0.00000055",
+										"min": 100001
+									}
+								],
+								"completion": "0.00000055",
+								"completion_tiers": [
+									{
+										"cost": "0.00000055",
+										"min": 0,
+										"max": 100001
+									},
+									{
+										"cost": "0.00000275",
+										"min": 100001
+									}
+								],
+								"input_cache_read": "0.000000011",
+								"input_cache_read_tiers": [
+									{
+										"cost": "0.000000011",
+										"min": 0,
+										"max": 100001
+									},
+									{
+										"cost": "0.000000055",
+										"min": 100001
+									}
+								],
+								"input_cache_write": "0.0000001375",
+								"input_cache_write_tiers": [
+									{
+										"cost": "0.0000001375",
+										"min": 0,
+										"max": 100001
+									},
+									{
+										"cost": "0.0000006875",
+										"min": 100001
+									}
+								]
+							}
+						},
+						{
+							"scope": "specific",
+							"geo_region": "jp",
+							"provider_region": "ap-northeast-1",
+							"pricing": {
+								"prompt": "0.00000011",
+								"prompt_tiers": [
+									{
+										"cost": "0.00000011",
+										"min": 0,
+										"max": 100001
+									},
+									{
+										"cost": "0.00000055",
+										"min": 100001
+									}
+								],
+								"completion": "0.00000055",
+								"completion_tiers": [
+									{
+										"cost": "0.00000055",
+										"min": 0,
+										"max": 100001
+									},
+									{
+										"cost": "0.00000275",
+										"min": 100001
+									}
+								],
+								"input_cache_read": "0.000000011",
+								"input_cache_read_tiers": [
+									{
+										"cost": "0.000000011",
+										"min": 0,
+										"max": 100001
+									},
+									{
+										"cost": "0.000000055",
+										"min": 100001
+									}
+								],
+								"input_cache_write": "0.0000001375",
+								"input_cache_write_tiers": [
+									{
+										"cost": "0.0000001375",
+										"min": 0,
+										"max": 100001
+									},
+									{
+										"cost": "0.0000006875",
+										"min": 100001
+									}
+								]
+							}
+						}
+					],
+					"quantization": null,
+					"max_completion_tokens": 64000,
+					"max_prompt_tokens": null,
+					"supported_parameters": [
+						"max_tokens",
+						"stop",
+						"tools",
+						"tool_choice",
+						"reasoning",
+						"include_reasoning",
+						"response_format",
+						"structured_outputs"
+					],
+					"status": 0,
+					"uptime_last_15m": 100,
+					"uptime_last_1h": 100,
+					"uptime_last_1d": 99.9994,
+					"latency_last_1h": {
+						"p50": 1049,
+						"p95": 7827.099999999993
+					},
+					"throughput_last_1h": {
+						"p50": 222,
+						"p95": 240
+					},
+					"supports_implicit_caching": false
+				},
+				{
+					"name": "claudeaws | anthropic/claude-haiku-5.5",
+					"model_name": "Claude Haiku 5.5",
+					"context_length": 1000000,
+					"pricing": {
+						"prompt": "0.0000001",
+						"prompt_tiers": [
+							{
+								"cost": "0.0000001",
+								"min": 0,
+								"max": 100001
+							},
+							{
+								"cost": "0.0000005",
+								"min": 100001
+							}
+						],
+						"completion": "0.0000005",
+						"completion_tiers": [
+							{
+								"cost": "0.0000005",
+								"min": 0,
+								"max": 100001
+							},
+							{
+								"cost": "0.0000025",
+								"min": 100001
+							}
+						],
+						"request": "0",
+						"image": "0",
+						"image_output": "0",
+						"web_search": "0.01",
+						"internal_reasoning": "0",
+						"input_cache_read": "0.00000001",
+						"input_cache_read_tiers": [
+							{
+								"cost": "0.00000001",
+								"min": 0,
+								"max": 100001
+							},
+							{
+								"cost": "0.00000005",
+								"min": 100001
+							}
+						],
+						"input_cache_write": "0.000000125",
+						"input_cache_write_tiers": [
+							{
+								"cost": "0.000000125",
+								"min": 0,
+								"max": 100001
+							},
+							{
+								"cost": "0.000000625",
+								"min": 100001
+							}
+						],
+						"discount": 0
+					},
+					"provider_name": "claudeaws",
+					"has_zdr": true,
+					"has_no_training": true,
+					"tags": [
+						"explicit-caching",
+						"file-input",
+						"reasoning",
+						"tool-use",
+						"vision",
+						"web-search",
+						"structured-output"
+					],
+					"quantization": null,
+					"max_completion_tokens": 128000,
+					"max_prompt_tokens": null,
+					"supported_parameters": [
+						"max_tokens",
+						"stop",
+						"tools",
+						"tool_choice",
+						"reasoning",
+						"include_reasoning",
+						"response_format",
+						"structured_outputs"
+					],
+					"status": 0,
+					"uptime_last_15m": null,
+					"uptime_last_1h": null,
+					"uptime_last_1d": 100,
+					"latency_last_1h": null,
+					"throughput_last_1h": null,
+					"supports_implicit_caching": false
+				},
+				{
+					"name": "vertexAnthropic | anthropic/claude-haiku-5.5",
+					"model_name": "Claude Haiku 5.5",
+					"context_length": 1000000,
+					"pricing": {
+						"prompt": "0.0000001",
+						"prompt_tiers": [
+							{
+								"cost": "0.0000001",
+								"min": 0,
+								"max": 100001
+							},
+							{
+								"cost": "0.0000005",
+								"min": 100001
+							}
+						],
+						"completion": "0.0000005",
+						"completion_tiers": [
+							{
+								"cost": "0.0000005",
+								"min": 0,
+								"max": 100001
+							},
+							{
+								"cost": "0.0000025",
+								"min": 100001
+							}
+						],
+						"request": "0",
+						"image": "0",
+						"image_output": "0",
+						"web_search": "0.01",
+						"internal_reasoning": "0",
+						"input_cache_read": "0.00000001",
+						"input_cache_read_tiers": [
+							{
+								"cost": "0.00000001",
+								"min": 0,
+								"max": 100001
+							},
+							{
+								"cost": "0.00000005",
+								"min": 100001
+							}
+						],
+						"input_cache_write": "0.000000125",
+						"input_cache_write_tiers": [
+							{
+								"cost": "0.000000125",
+								"min": 0,
+								"max": 100001
+							},
+							{
+								"cost": "0.000000625",
+								"min": 100001
+							}
+						],
+						"discount": 0
+					},
+					"provider_name": "vertexAnthropic",
+					"has_zdr": true,
+					"has_no_training": true,
+					"tags": [
+						"explicit-caching",
+						"file-input",
+						"reasoning",
+						"tool-use",
+						"vision",
+						"web-search",
+						"structured-output"
+					],
+					"inference_regions": [
+						{
+							"scope": "zone",
+							"geo_region": "us",
+							"pricing": {
+								"prompt": "0.00000011",
+								"prompt_tiers": [
+									{
+										"cost": "0.00000011",
+										"min": 0,
+										"max": 100001
+									},
+									{
+										"cost": "0.00000055",
+										"min": 100001
+									}
+								],
+								"completion": "0.00000055",
+								"completion_tiers": [
+									{
+										"cost": "0.00000055",
+										"min": 0,
+										"max": 100001
+									},
+									{
+										"cost": "0.00000275",
+										"min": 100001
+									}
+								],
+								"input_cache_read": "0.000000011",
+								"input_cache_read_tiers": [
+									{
+										"cost": "0.000000011",
+										"min": 0,
+										"max": 100001
+									},
+									{
+										"cost": "0.000000055",
+										"min": 100001
+									}
+								],
+								"input_cache_write": "0.0000001375",
+								"input_cache_write_tiers": [
+									{
+										"cost": "0.0000001375",
+										"min": 0,
+										"max": 100001
+									},
+									{
+										"cost": "0.0000006875",
+										"min": 100001
+									}
+								]
+							}
+						},
+						{
+							"scope": "zone",
+							"geo_region": "eu",
+							"pricing": {
+								"prompt": "0.00000011",
+								"prompt_tiers": [
+									{
+										"cost": "0.00000011",
+										"min": 0,
+										"max": 100001
+									},
+									{
+										"cost": "0.00000055",
+										"min": 100001
+									}
+								],
+								"completion": "0.00000055",
+								"completion_tiers": [
+									{
+										"cost": "0.00000055",
+										"min": 0,
+										"max": 100001
+									},
+									{
+										"cost": "0.00000275",
+										"min": 100001
+									}
+								],
+								"input_cache_read": "0.000000011",
+								"input_cache_read_tiers": [
+									{
+										"cost": "0.000000011",
+										"min": 0,
+										"max": 100001
+									},
+									{
+										"cost": "0.000000055",
+										"min": 100001
+									}
+								],
+								"input_cache_write": "0.0000001375",
+								"input_cache_write_tiers": [
+									{
+										"cost": "0.0000001375",
+										"min": 0,
+										"max": 100001
+									},
+									{
+										"cost": "0.0000006875",
+										"min": 100001
+									}
+								]
+							}
+						}
+					],
+					"quantization": null,
+					"max_completion_tokens": 128000,
+					"max_prompt_tokens": null,
+					"supported_parameters": [
+						"max_tokens",
+						"stop",
+						"tools",
+						"tool_choice",
+						"reasoning",
+						"include_reasoning",
+						"response_format",
+						"structured_outputs"
+					],
+					"status": 0,
+					"uptime_last_15m": 100,
+					"uptime_last_1h": 100,
+					"uptime_last_1d": 100,
+					"latency_last_1h": {
+						"p50": 1421,
+						"p95": 2176.1
+					},
+					"throughput_last_1h": {
+						"p50": 222,
+						"p95": 223.79999999999998
+					},
+					"supports_implicit_caching": false
+				}
+			]
+		}
+	},
+	"openai/gpt-6.1-sol": {
+		"data": {
+			"id": "openai/gpt-6.1-sol",
+			"name": "GPT-6.1 Sol",
+			"created": 1755815280,
+			"released": 1790640000,
+			"description": "GPT-6.1 Sol is OpenAI's reasoning model for complex coding, computer use, and professional work. It accepts text and images, generates text, and supports a 1,050,000-token context window with up to 128,000 output tokens. Configurable reasoning effort, structured outputs, prompt caching, and Responses API tools support multi-step workflows.",
+			"architecture": {
+				"tokenizer": null,
+				"instruct_type": null,
+				"modality": "text+image+file→text",
+				"input_modalities": [
+					"text",
+					"image",
+					"file"
+				],
+				"output_modalities": [
+					"text"
+				]
+			},
+			"reasoning": {
+				"supported_efforts": [
+					"low",
+					"medium",
+					"high",
+					"xhigh",
+					"max"
+				]
+			},
+			"endpoints": [
+				{
+					"name": "azure | openai/gpt-6.1-sol",
+					"model_name": "GPT-6.1 Sol",
+					"context_length": 1050000,
+					"pricing": {
+						"prompt": "0.000002",
+						"prompt_tiers": [
+							{
+								"cost": "0.000002",
+								"min": 0,
+								"max": 272001
+							},
+							{
+								"cost": "0.000004",
+								"min": 272001
+							}
+						],
+						"completion": "0.00001",
+						"completion_tiers": [
+							{
+								"cost": "0.00001",
+								"min": 0,
+								"max": 272001
+							},
+							{
+								"cost": "0.000015",
+								"min": 272001
+							}
+						],
+						"request": "0",
+						"image": "0",
+						"image_output": "0",
+						"web_search": "0.014",
+						"internal_reasoning": "0",
+						"input_cache_read": "0.0000001",
+						"input_cache_read_tiers": [
+							{
+								"cost": "0.0000001",
+								"min": 0,
+								"max": 272001
+							},
+							{
+								"cost": "0.0000002",
+								"min": 272001
+							}
+						],
+						"input_cache_write": "0.0000025",
+						"input_cache_write_tiers": [
+							{
+								"cost": "0.0000025",
+								"min": 0,
+								"max": 272001
+							},
+							{
+								"cost": "0.000005",
+								"min": 272001
+							}
+						],
+						"discount": 0
+					},
+					"provider_name": "azure",
+					"has_zdr": true,
+					"has_no_training": true,
+					"tags": [
+						"explicit-caching",
+						"file-input",
+						"implicit-caching",
+						"reasoning",
+						"structured-output",
+						"tool-use",
+						"vision",
+						"web-search"
+					],
+					"quantization": null,
+					"max_completion_tokens": 128000,
+					"max_prompt_tokens": null,
+					"supported_parameters": [
+						"max_tokens",
+						"temperature",
+						"stop",
+						"tools",
+						"tool_choice",
+						"reasoning",
+						"include_reasoning",
+						"response_format",
+						"structured_outputs"
+					],
+					"status": 0,
+					"uptime_last_15m": 100,
+					"uptime_last_1h": 100,
+					"uptime_last_1d": 99.902,
+					"latency_last_1h": {
+						"p50": 2231,
+						"p95": 9488.299999999988
+					},
+					"throughput_last_1h": {
+						"p50": 47.5,
+						"p95": 53
+					},
+					"supports_implicit_caching": true
+				},
+				{
+					"name": "bedrock | openai/gpt-6.1-sol",
+					"model_name": "GPT-6.1 Sol",
+					"context_length": 1050000,
+					"pricing": {
+						"prompt": "0.000002",
+						"prompt_tiers": [
+							{
+								"cost": "0.000002",
+								"max": 272001
+							},
+							{
+								"cost": "0.000004",
+								"min": 272001
+							}
+						],
+						"completion": "0.00001",
+						"completion_tiers": [
+							{
+								"cost": "0.00001",
+								"max": 272001
+							},
+							{
+								"cost": "0.000015",
+								"min": 272001
+							}
+						],
+						"request": "0",
+						"image": "0",
+						"image_output": "0",
+						"web_search": "0.01",
+						"internal_reasoning": "0",
+						"input_cache_read": "0.0000001",
+						"input_cache_read_tiers": [
+							{
+								"cost": "0.0000001",
+								"max": 272001
+							},
+							{
+								"cost": "0.0000002",
+								"min": 272001
+							}
+						],
+						"input_cache_write": "0.0000025",
+						"input_cache_write_tiers": [
+							{
+								"cost": "0.0000025",
+								"max": 272001
+							},
+							{
+								"cost": "0.000005",
+								"min": 272001
+							}
+						],
+						"discount": 0
+					},
+					"provider_name": "bedrock",
+					"has_zdr": false,
+					"has_no_training": true,
+					"tags": [
+						"explicit-caching",
+						"file-input",
+						"implicit-caching",
+						"reasoning",
+						"structured-output",
+						"tool-use",
+						"vision",
+						"web-search"
+					],
+					"inference_regions": [
+						{
+							"scope": "zone",
+							"geo_region": "us",
+							"pricing": {
+								"prompt": "0.0000022",
+								"prompt_tiers": [
+									{
+										"cost": "0.0000022",
+										"max": 272001
+									},
+									{
+										"cost": "0.0000044",
+										"min": 272001
+									}
+								],
+								"completion": "0.000011",
+								"completion_tiers": [
+									{
+										"cost": "0.000011",
+										"max": 272001
+									},
+									{
+										"cost": "0.0000165",
+										"min": 272001
+									}
+								],
+								"input_cache_read": "0.00000011",
+								"input_cache_read_tiers": [
+									{
+										"cost": "0.00000011",
+										"max": 272001
+									},
+									{
+										"cost": "0.00000022",
+										"min": 272001
+									}
+								],
+								"input_cache_write": "0.00000275",
+								"input_cache_write_tiers": [
+									{
+										"cost": "0.00000275",
+										"max": 272001
+									},
+									{
+										"cost": "0.0000055",
+										"min": 272001
+									}
+								]
+							}
+						}
+					],
+					"quantization": null,
+					"max_completion_tokens": 128000,
+					"max_prompt_tokens": null,
+					"supported_parameters": [
+						"max_tokens",
+						"temperature",
+						"stop",
+						"tools",
+						"tool_choice",
+						"reasoning",
+						"include_reasoning",
+						"response_format",
+						"structured_outputs"
+					],
+					"status": 0,
+					"uptime_last_15m": 100,
+					"uptime_last_1h": 100,
+					"uptime_last_1d": 99.7813,
+					"latency_last_1h": {
+						"p50": 6843,
+						"p95": 13196.599999999999
+					},
+					"throughput_last_1h": {
+						"p50": 80,
+						"p95": 269
+					},
+					"supports_implicit_caching": true
+				},
+				{
+					"name": "openai | openai/gpt-6.1-sol",
+					"model_name": "GPT-6.1 Sol",
+					"context_length": 1050000,
+					"pricing": {
+						"prompt": "0.000002",
+						"prompt_tiers": [
+							{
+								"cost": "0.000002",
+								"min": 0,
+								"max": 272001
+							},
+							{
+								"cost": "0.000004",
+								"min": 272001
+							}
+						],
+						"completion": "0.00001",
+						"completion_tiers": [
+							{
+								"cost": "0.00001",
+								"min": 0,
+								"max": 272001
+							},
+							{
+								"cost": "0.000015",
+								"min": 272001
+							}
+						],
+						"request": "0",
+						"image": "0",
+						"image_output": "0",
+						"web_search": "0.01",
+						"internal_reasoning": "0",
+						"input_cache_read": "0.0000001",
+						"input_cache_read_tiers": [
+							{
+								"cost": "0.0000001",
+								"min": 0,
+								"max": 272001
+							},
+							{
+								"cost": "0.0000002",
+								"min": 272001
+							}
+						],
+						"input_cache_write": "0.0000025",
+						"input_cache_write_tiers": [
+							{
+								"cost": "0.0000025",
+								"min": 0,
+								"max": 272001
+							},
+							{
+								"cost": "0.000005",
+								"min": 272001
+							}
+						],
+						"service_tiers": {
+							"flex": {
+								"prompt": "0.000001",
+								"completion": "0.000005",
+								"input_cache_read": "0.00000005",
+								"long_context": {
+									"threshold": 272001,
+									"prompt": "0.000002",
+									"completion": "0.0000075",
+									"input_cache_read": "0.0000001"
+								}
+							},
+							"priority": {
+								"prompt": "0.000004",
+								"completion": "0.00002",
+								"input_cache_read": "0.0000002",
+								"long_context": {
+									"threshold": 272001,
+									"prompt": "0.000008",
+									"completion": "0.00003",
+									"input_cache_read": "0.0000004"
+								}
+							},
+							"ultrafast": {
+								"prompt": "0.000012",
+								"completion": "0.00006",
+								"input_cache_read": "0.0000006",
+								"long_context": {
+									"threshold": 272001,
+									"prompt": "0.000024",
+									"completion": "0.00009",
+									"input_cache_read": "0.0000012"
+								}
+							}
+						},
+						"discount": 0
+					},
+					"provider_name": "openai",
+					"has_zdr": true,
+					"has_no_training": true,
+					"tags": [
+						"explicit-caching",
+						"fast",
+						"file-input",
+						"implicit-caching",
+						"reasoning",
+						"structured-output",
+						"tool-use",
+						"vision",
+						"web-search"
+					],
+					"inference_regions": [
+						{
+							"scope": "zone",
+							"geo_region": "us",
+							"pricing": {
+								"prompt": "0.0000022",
+								"prompt_tiers": [
+									{
+										"cost": "0.0000022",
+										"min": 0,
+										"max": 272001
+									},
+									{
+										"cost": "0.0000044",
+										"min": 272001
+									}
+								],
+								"completion": "0.000011",
+								"completion_tiers": [
+									{
+										"cost": "0.000011",
+										"min": 0,
+										"max": 272001
+									},
+									{
+										"cost": "0.0000165",
+										"min": 272001
+									}
+								],
+								"input_cache_read": "0.00000011",
+								"input_cache_read_tiers": [
+									{
+										"cost": "0.00000011",
+										"min": 0,
+										"max": 272001
+									},
+									{
+										"cost": "0.00000022",
+										"min": 272001
+									}
+								],
+								"input_cache_write": "0.00000275",
+								"input_cache_write_tiers": [
+									{
+										"cost": "0.00000275",
+										"min": 0,
+										"max": 272001
+									},
+									{
+										"cost": "0.0000055",
+										"min": 272001
+									}
+								]
+							}
+						},
+						{
+							"scope": "zone",
+							"geo_region": "eu",
+							"pricing": {
+								"prompt": "0.0000022",
+								"prompt_tiers": [
+									{
+										"cost": "0.0000022",
+										"min": 0,
+										"max": 272001
+									},
+									{
+										"cost": "0.0000044",
+										"min": 272001
+									}
+								],
+								"completion": "0.000011",
+								"completion_tiers": [
+									{
+										"cost": "0.000011",
+										"min": 0,
+										"max": 272001
+									},
+									{
+										"cost": "0.0000165",
+										"min": 272001
+									}
+								],
+								"input_cache_read": "0.00000011",
+								"input_cache_read_tiers": [
+									{
+										"cost": "0.00000011",
+										"min": 0,
+										"max": 272001
+									},
+									{
+										"cost": "0.00000022",
+										"min": 272001
+									}
+								],
+								"input_cache_write": "0.00000275",
+								"input_cache_write_tiers": [
+									{
+										"cost": "0.00000275",
+										"min": 0,
+										"max": 272001
+									},
+									{
+										"cost": "0.0000055",
+										"min": 272001
+									}
+								]
+							}
+						}
+					],
+					"quantization": null,
+					"max_completion_tokens": 128000,
+					"max_prompt_tokens": null,
+					"supported_parameters": [
+						"max_tokens",
+						"temperature",
+						"stop",
+						"tools",
+						"tool_choice",
+						"reasoning",
+						"include_reasoning",
+						"response_format",
+						"structured_outputs"
+					],
+					"status": 0,
+					"uptime_last_15m": 100,
+					"uptime_last_1h": 100,
+					"uptime_last_1d": 99.89,
+					"latency_last_1h": {
+						"p50": 1375,
+						"p95": 4520.6
+					},
+					"throughput_last_1h": {
+						"p50": 85,
+						"p95": 85
+					},
+					"supports_implicit_caching": true
+				}
+			]
+		}
+	},
+	"openai/gpt-oss-120b": {
+		"data": {
+			"id": "openai/gpt-oss-120b",
+			"name": "GPT OSS 120B",
+			"created": 1755815280,
+			"released": 1754352000,
+			"description": "Extremely capable general-purpose LLM with strong, controllable reasoning capabilities",
+			"knowledge": "2024-06-01",
+			"architecture": {
+				"tokenizer": null,
+				"instruct_type": null,
+				"modality": "text→text",
+				"input_modalities": [
+					"text"
+				],
+				"output_modalities": [
+					"text"
+				]
+			},
+			"reasoning": {
+				"supported_efforts": [
+					"low",
+					"medium",
+					"high"
+				]
+			},
+			"endpoints": [
+				{
+					"name": "baseten | openai/gpt-oss-120b",
+					"model_name": "GPT OSS 120B",
+					"context_length": 131072,
+					"pricing": {
+						"prompt": "0.0000001",
+						"completion": "0.0000005",
+						"request": "0",
+						"image": "0",
+						"image_output": "0",
+						"web_search": "0",
+						"internal_reasoning": "0",
+						"input_cache_read": "0.0000001",
+						"discount": 0
+					},
+					"provider_name": "baseten",
+					"has_zdr": true,
+					"has_no_training": true,
+					"tags": [
+						"reasoning",
+						"tool-use",
+						"structured-output",
+						"open-weights"
+					],
+					"inference_regions": [
+						{
+							"scope": "zone",
+							"geo_region": "us",
+							"pricing": {
+								"prompt": "0.0000001",
+								"completion": "0.0000005",
+								"input_cache_read": "0.0000001"
+							}
+						}
+					],
+					"quantization": "fp4",
+					"max_completion_tokens": 131072,
+					"max_prompt_tokens": null,
+					"supported_parameters": [
+						"max_tokens",
+						"temperature",
+						"stop",
+						"tools",
+						"tool_choice",
+						"reasoning",
+						"include_reasoning",
+						"response_format",
+						"structured_outputs"
+					],
+					"status": 0,
+					"uptime_last_15m": 100,
+					"uptime_last_1h": 99.9963,
+					"uptime_last_1d": 99.9974,
+					"latency_last_1h": {
+						"p50": 285,
+						"p95": 940.45
+					},
+					"throughput_last_1h": {
+						"p50": 125,
+						"p95": 164.85
+					},
+					"supports_implicit_caching": false
+				},
+				{
+					"name": "bedrock | openai/gpt-oss-120b",
+					"model_name": "GPT OSS 120B",
+					"context_length": 128000,
+					"pricing": {
+						"prompt": "0.00000015",
+						"completion": "0.0000006",
+						"request": "0",
+						"image": "0",
+						"image_output": "0",
+						"web_search": "0",
+						"internal_reasoning": "0",
+						"discount": 0
+					},
+					"provider_name": "bedrock",
+					"has_zdr": true,
+					"has_no_training": true,
+					"tags": [
+						"reasoning",
+						"tool-use",
+						"structured-output",
+						"open-weights"
+					],
+					"quantization": null,
+					"max_completion_tokens": 8192,
+					"max_prompt_tokens": null,
+					"supported_parameters": [
+						"max_tokens",
+						"temperature",
+						"stop",
+						"tools",
+						"tool_choice",
+						"reasoning",
+						"include_reasoning",
+						"response_format",
+						"structured_outputs"
+					],
+					"status": 0,
+					"uptime_last_15m": 100,
+					"uptime_last_1h": 100,
+					"uptime_last_1d": 100,
+					"latency_last_1h": {
+						"p50": 386,
+						"p95": 438.9
+					},
+					"throughput_last_1h": {
+						"p50": 153,
+						"p95": 174.7
+					},
+					"supports_implicit_caching": false
+				},
+				{
+					"name": "cerebras | openai/gpt-oss-120b",
+					"model_name": "GPT OSS 120B",
+					"context_length": 131072,
+					"pricing": {
+						"prompt": "0.00000035",
+						"completion": "0.00000075",
+						"request": "0",
+						"image": "0",
+						"image_output": "0",
+						"web_search": "0",
+						"internal_reasoning": "0",
+						"input_cache_read": "0.00000035",
+						"discount": 0
+					},
+					"provider_name": "cerebras",
+					"has_zdr": false,
+					"has_no_training": true,
+					"tags": [
+						"implicit-caching",
+						"reasoning",
+						"tool-use",
+						"structured-output",
+						"open-weights"
+					],
+					"quantization": null,
+					"max_completion_tokens": 131000,
+					"max_prompt_tokens": null,
+					"supported_parameters": [
+						"max_tokens",
+						"temperature",
+						"stop",
+						"tools",
+						"tool_choice",
+						"reasoning",
+						"include_reasoning",
+						"response_format",
+						"structured_outputs"
+					],
+					"status": 0,
+					"uptime_last_15m": 100,
+					"uptime_last_1h": 100,
+					"uptime_last_1d": 100,
+					"latency_last_1h": null,
+					"throughput_last_1h": null,
+					"supports_implicit_caching": true
+				},
+				{
+					"name": "fireworks | openai/gpt-oss-120b",
+					"model_name": "GPT OSS 120B",
+					"context_length": 128000,
+					"pricing": {
+						"prompt": "0.00000015",
+						"completion": "0.0000006",
+						"request": "0",
+						"image": "0",
+						"image_output": "0",
+						"web_search": "0",
+						"internal_reasoning": "0",
+						"input_cache_read": "0.000000015",
+						"discount": 0
+					},
+					"provider_name": "fireworks",
+					"has_zdr": true,
+					"has_no_training": true,
+					"tags": [
+						"implicit-caching",
+						"reasoning",
+						"tool-use",
+						"structured-output",
+						"open-weights"
+					],
+					"quantization": null,
+					"max_completion_tokens": 128000,
+					"max_prompt_tokens": null,
+					"supported_parameters": [
+						"max_tokens",
+						"temperature",
+						"stop",
+						"tools",
+						"tool_choice",
+						"reasoning",
+						"include_reasoning",
+						"response_format",
+						"structured_outputs"
+					],
+					"status": 1,
+					"deprecated_at": 1794027900000,
+					"uptime_last_15m": 100,
+					"uptime_last_1h": 100,
+					"uptime_last_1d": 100,
+					"latency_last_1h": {
+						"p50": 244.5,
+						"p95": 312.65
+					},
+					"throughput_last_1h": {
+						"p50": 252.5,
+						"p95": 277.25
+					},
+					"supports_implicit_caching": true
+				},
+				{
+					"name": "groq | openai/gpt-oss-120b",
+					"model_name": "GPT OSS 120B",
+					"context_length": 131072,
+					"pricing": {
+						"prompt": "0.00000015",
+						"completion": "0.0000006",
+						"request": "0",
+						"image": "0",
+						"image_output": "0",
+						"web_search": "0",
+						"internal_reasoning": "0",
+						"input_cache_read": "0.000000075",
+						"discount": 0
+					},
+					"provider_name": "groq",
+					"has_zdr": true,
+					"has_no_training": true,
+					"tags": [
+						"implicit-caching",
+						"reasoning",
+						"tool-use",
+						"structured-output",
+						"open-weights"
+					],
+					"quantization": null,
+					"max_completion_tokens": 32768,
+					"max_prompt_tokens": null,
+					"supported_parameters": [
+						"max_tokens",
+						"temperature",
+						"stop",
+						"tools",
+						"tool_choice",
+						"reasoning",
+						"include_reasoning",
+						"response_format",
+						"structured_outputs"
+					],
+					"status": 0,
+					"uptime_last_15m": 100,
+					"uptime_last_1h": 100,
+					"uptime_last_1d": 99.9939,
+					"latency_last_1h": {
+						"p50": 338,
+						"p95": 418.4
+					},
+					"throughput_last_1h": null,
+					"supports_implicit_caching": true
+				},
+				{
+					"name": "nebius | openai/gpt-oss-120b",
+					"model_name": "GPT OSS 120B",
+					"context_length": 131000,
+					"pricing": {
+						"prompt": "0.00000015",
+						"completion": "0.0000006",
+						"request": "0",
+						"image": "0",
+						"image_output": "0",
+						"web_search": "0",
+						"internal_reasoning": "0",
+						"input_cache_read": "0.0000001",
+						"discount": 0
+					},
+					"provider_name": "nebius",
+					"has_zdr": true,
+					"has_no_training": true,
+					"tags": [
+						"reasoning",
+						"tool-use",
+						"structured-output",
+						"open-weights"
+					],
+					"quantization": "fp4",
+					"max_completion_tokens": 131000,
+					"max_prompt_tokens": null,
+					"supported_parameters": [
+						"max_tokens",
+						"temperature",
+						"stop",
+						"tools",
+						"tool_choice",
+						"reasoning",
+						"include_reasoning",
+						"response_format",
+						"structured_outputs"
+					],
+					"status": 0,
+					"uptime_last_15m": 100,
+					"uptime_last_1h": 99.9721,
+					"uptime_last_1d": 99.9756,
+					"latency_last_1h": {
+						"p50": 419.5,
+						"p95": 1893.5499999999995
+					},
+					"throughput_last_1h": {
+						"p50": 325.5,
+						"p95": 353.35
+					},
+					"supports_implicit_caching": false
+				},
+				{
+					"name": "parasail | openai/gpt-oss-120b",
+					"model_name": "GPT OSS 120B",
+					"context_length": 131072,
+					"pricing": {
+						"prompt": "0.0000001",
+						"completion": "0.00000075",
+						"request": "0",
+						"image": "0",
+						"image_output": "0",
+						"web_search": "0",
+						"internal_reasoning": "0",
+						"input_cache_read": "0.000000055",
+						"discount": 0
+					},
+					"provider_name": "parasail",
+					"has_zdr": true,
+					"has_no_training": true,
+					"tags": [
+						"reasoning",
+						"tool-use",
+						"structured-output",
+						"open-weights"
+					],
+					"quantization": "fp4",
+					"max_completion_tokens": 131000,
+					"max_prompt_tokens": null,
+					"supported_parameters": [
+						"max_tokens",
+						"temperature",
+						"stop",
+						"tools",
+						"tool_choice",
+						"reasoning",
+						"include_reasoning",
+						"response_format",
+						"structured_outputs"
+					],
+					"status": 0,
+					"uptime_last_15m": 100,
+					"uptime_last_1h": 100,
+					"uptime_last_1d": 100,
+					"latency_last_1h": {
+						"p50": 339.5,
+						"p95": 1773.9999999999968
+					},
+					"throughput_last_1h": {
+						"p50": 303,
+						"p95": 388.4
+					},
+					"supports_implicit_caching": false
+				},
+				{
+					"name": "togetherai | openai/gpt-oss-120b",
+					"model_name": "GPT OSS 120B",
+					"context_length": 128000,
+					"pricing": {
+						"prompt": "0.00000015",
+						"completion": "0.0000006",
+						"request": "0",
+						"image": "0",
+						"image_output": "0",
+						"web_search": "0",
+						"internal_reasoning": "0",
+						"discount": 0
+					},
+					"provider_name": "togetherai",
+					"has_zdr": true,
+					"has_no_training": true,
+					"tags": [
+						"reasoning",
+						"tool-use",
+						"structured-output",
+						"open-weights"
+					],
+					"quantization": "fp4",
+					"max_completion_tokens": 128000,
+					"max_prompt_tokens": null,
+					"supported_parameters": [
+						"max_tokens",
+						"temperature",
+						"stop",
+						"tools",
+						"tool_choice",
+						"reasoning",
+						"include_reasoning",
+						"response_format",
+						"structured_outputs"
+					],
+					"status": 0,
+					"uptime_last_15m": 100,
+					"uptime_last_1h": 100,
+					"uptime_last_1d": 98.9151,
+					"latency_last_1h": {
+						"p50": 326.5,
+						"p95": 340.54999999999995
+					},
+					"throughput_last_1h": {
+						"p50": 119,
+						"p95": 131.6
+					},
+					"supports_implicit_caching": false
+				}
+			]
+		}
+	},
+	"google/gemini-4-argon": {
+		"data": {
+			"id": "google/gemini-4-argon",
+			"name": "Gemini 4 Argon",
+			"created": 1755815280,
+			"released": 1791849600,
+			"description": "Gemini 4 Argon is Google’s multimodal reasoning model, supporting text, image, and file inputs with configurable reasoning levels. It combines tool calling, structured outputs, and Google Search and Maps grounding to support document analysis and agent workflows. Long-form generation supports continuation across requests, allowing applications to resume output beyond a single request’s token limit.",
+			"architecture": {
+				"tokenizer": null,
+				"instruct_type": null,
+				"modality": "text+image+file+video→text",
+				"input_modalities": [
+					"text",
+					"image",
+					"file",
+					"video"
+				],
+				"output_modalities": [
+					"text"
+				]
+			},
+			"reasoning": {
+				"supported_efforts": [
+					"low",
+					"medium",
+					"high"
+				]
+			},
+			"endpoints": [
+				{
+					"name": "google | google/gemini-4-argon",
+					"model_name": "Gemini 4 Argon",
+					"context_length": 1000000,
+					"pricing": {
+						"prompt": "0.000002",
+						"completion": "0.00001",
+						"request": "0",
+						"image": "0",
+						"image_output": "0",
+						"web_search": "0.014",
+						"internal_reasoning": "0",
+						"input_cache_read": "0.0000001",
+						"service_tiers": {
+							"priority": {
+								"prompt": "0.0000036",
+								"completion": "0.000018",
+								"input_cache_read": "0.00000018"
+							},
+							"flex": {
+								"prompt": "0.000001",
+								"completion": "0.000005",
+								"input_cache_read": "0.00000005"
+							}
+						},
+						"discount": 0
+					},
+					"provider_name": "google",
+					"has_no_training": true,
+					"tags": [
+						"reasoning",
+						"file-input",
+						"vision",
+						"tool-use",
+						"web-search",
+						"implicit-caching",
+						"video-input",
+						"structured-output"
+					],
+					"quantization": null,
+					"max_completion_tokens": 1000000,
+					"max_prompt_tokens": null,
+					"supported_parameters": [
+						"max_tokens",
+						"temperature",
+						"stop",
+						"tools",
+						"tool_choice",
+						"reasoning",
+						"include_reasoning",
+						"response_format",
+						"structured_outputs"
+					],
+					"status": 0,
+					"uptime_last_15m": 99.7214,
+					"uptime_last_1h": 99.76,
+					"uptime_last_1d": 99.2989,
+					"latency_last_1h": {
+						"p50": 5759,
+						"p95": 28206.300000000032
+					},
+					"throughput_last_1h": {
+						"p50": 87,
+						"p95": 119.44999999999999
+					},
+					"supports_implicit_caching": true
+				},
+				{
+					"name": "vertex | google/gemini-4-argon",
+					"model_name": "Gemini 4 Argon",
+					"context_length": 1000000,
+					"pricing": {
+						"prompt": "0.000002",
+						"completion": "0.00001",
+						"request": "0",
+						"image": "0",
+						"image_output": "0",
+						"web_search": "0.014",
+						"internal_reasoning": "0",
+						"input_cache_read": "0.0000001",
+						"service_tiers": {
+							"priority": {
+								"prompt": "0.0000036",
+								"completion": "0.000018",
+								"input_cache_read": "0.00000018"
+							},
+							"flex": {
+								"prompt": "0.000001",
+								"completion": "0.000005",
+								"input_cache_read": "0.00000005"
+							}
+						},
+						"discount": 0
+					},
+					"provider_name": "vertex",
+					"has_zdr": true,
+					"has_no_training": true,
+					"tags": [
+						"reasoning",
+						"file-input",
+						"vision",
+						"tool-use",
+						"web-search",
+						"implicit-caching",
+						"video-input",
+						"structured-output"
+					],
+					"inference_regions": [
+						{
+							"scope": "zone",
+							"geo_region": "eu",
+							"pricing": {
+								"prompt": "0.0000022",
+								"completion": "0.000011",
+								"input_cache_read": "0.00000011"
+							}
+						},
+						{
+							"scope": "zone",
+							"geo_region": "us",
+							"pricing": {
+								"prompt": "0.0000022",
+								"completion": "0.000011",
+								"input_cache_read": "0.00000011"
+							}
+						}
+					],
+					"quantization": null,
+					"max_completion_tokens": 1000000,
+					"max_prompt_tokens": null,
+					"supported_parameters": [
+						"max_tokens",
+						"temperature",
+						"stop",
+						"tools",
+						"tool_choice",
+						"reasoning",
+						"include_reasoning",
+						"response_format",
+						"structured_outputs"
+					],
+					"status": 0,
+					"uptime_last_15m": 100,
+					"uptime_last_1h": 100,
+					"uptime_last_1d": 99.9864,
+					"latency_last_1h": {
+						"p50": 6355.5,
+						"p95": 42807.24999999997
+					},
+					"throughput_last_1h": {
+						"p50": 60,
+						"p95": 73.9
+					},
+					"supports_implicit_caching": true
+				}
+			]
+		}
+	},
+	"spacexai/grok-4.7": {
+		"data": {
+			"id": "spacexai/grok-4.7",
+			"name": "Grok 4.7",
+			"created": 1755815280,
+			"released": 1789948800,
+			"description": "Grok 4.7 is SpaceXAI’s advanced AI model for coding and professional knowledge work, built to tackle complex, multi-hour tasks with improved self-verification and long-context handling. It strengthens software engineering, document creation, and presentation workflows while maintaining Grok 4.6’s speed and pricing.",
+			"knowledge": "2026-05",
+			"architecture": {
+				"tokenizer": null,
+				"instruct_type": null,
+				"modality": "text+image→text",
+				"input_modalities": [
+					"text",
+					"image"
+				],
+				"output_modalities": [
+					"text"
+				]
+			},
+			"reasoning": {
+				"supported_efforts": [
+					"low",
+					"medium",
+					"high",
+					"xhigh"
+				]
+			},
+			"endpoints": [
+				{
+					"name": "xai | spacexai/grok-4.7",
+					"model_name": "Grok 4.7",
+					"context_length": 500000,
+					"pricing": {
+						"prompt": "0.000002",
+						"prompt_tiers": [
+							{
+								"cost": "0.000002",
+								"min": 0,
+								"max": 200001
+							},
+							{
+								"cost": "0.000004",
+								"min": 200001
+							}
+						],
+						"completion": "0.000006",
+						"completion_tiers": [
+							{
+								"cost": "0.000006",
+								"min": 0,
+								"max": 200001
+							},
+							{
+								"cost": "0.000012",
+								"min": 200001
+							}
+						],
+						"request": "0",
+						"image": "0",
+						"image_output": "0",
+						"web_search": "0.005",
+						"x_search_post": "0.005",
+						"x_search_user": "0.01",
+						"internal_reasoning": "0",
+						"input_cache_read": "0.0000005",
+						"input_cache_read_tiers": [
+							{
+								"cost": "0.0000005",
+								"min": 0,
+								"max": 200001
+							},
+							{
+								"cost": "0.000001",
+								"min": 200001
+							}
+						],
+						"service_tiers": {
+							"priority": {
+								"prompt": "0.000004",
+								"completion": "0.000012",
+								"input_cache_read": "0.000001",
+								"long_context": {
+									"threshold": 200001,
+									"prompt": "0.000008",
+									"completion": "0.000024",
+									"input_cache_read": "0.000002"
+								}
+							}
+						},
+						"discount": 0
+					},
+					"provider_name": "xai",
+					"has_zdr": true,
+					"has_no_training": true,
+					"tags": [
+						"reasoning",
+						"tool-use",
+						"implicit-caching",
+						"vision",
+						"structured-output"
+					],
+					"inference_regions": [
+						{
+							"scope": "zone",
+							"geo_region": "us",
+							"pricing": {
+								"prompt": "0.0000022",
+								"prompt_tiers": [
+									{
+										"cost": "0.0000022",
+										"min": 0,
+										"max": 200001
+									},
+									{
+										"cost": "0.0000044",
+										"min": 200001
+									}
+								],
+								"completion": "0.0000066",
+								"completion_tiers": [
+									{
+										"cost": "0.0000066",
+										"min": 0,
+										"max": 200001
+									},
+									{
+										"cost": "0.0000132",
+										"min": 200001
+									}
+								],
+								"input_cache_read": "0.00000055",
+								"input_cache_read_tiers": [
+									{
+										"cost": "0.00000055",
+										"min": 0,
+										"max": 200001
+									},
+									{
+										"cost": "0.0000011",
+										"min": 200001
+									}
+								]
+							}
+						}
+					],
+					"quantization": null,
+					"max_completion_tokens": 500000,
+					"max_prompt_tokens": null,
+					"supported_parameters": [
+						"max_tokens",
+						"temperature",
+						"stop",
+						"tools",
+						"tool_choice",
+						"reasoning",
+						"include_reasoning",
+						"response_format",
+						"structured_outputs"
+					],
+					"status": 0,
+					"uptime_last_15m": null,
+					"uptime_last_1h": null,
+					"uptime_last_1d": null,
+					"latency_last_1h": null,
+					"throughput_last_1h": null,
+					"supports_implicit_caching": true
+				}
+			]
+		}
+	},
+	"moonshotai/kimi-k3.1-pro": {
+		"data": {
+			"id": "moonshotai/kimi-k3.1-pro",
+			"name": "Kimi K3.1 Pro",
+			"created": 1755815280,
+			"released": 1792713600,
+			"description": "Kimi K3.1 Pro is a frontier model from Moonshot AI for complex reasoning, coding, and agentic workflows, with support for vision, tool use, structured outputs, and long-context tasks.",
+			"architecture": {
+				"tokenizer": null,
+				"instruct_type": null,
+				"modality": "text+image→text",
+				"input_modalities": [
+					"text",
+					"image"
+				],
+				"output_modalities": [
+					"text"
+				]
+			},
+			"reasoning": {
+				"supported_efforts": [
+					"low",
+					"high",
+					"max"
+				]
+			},
+			"endpoints": [
+				{
+					"name": "moonshotai | moonshotai/kimi-k3.1-pro",
+					"model_name": "Kimi K3.1 Pro",
+					"context_length": 1048576,
+					"pricing": {
+						"prompt": "0.000002",
+						"completion": "0.00001",
+						"request": "0",
+						"image": "0",
+						"image_output": "0",
+						"web_search": "0",
+						"internal_reasoning": "0",
+						"input_cache_read": "0.0000002",
+						"input_cache_write": "0.000002",
+						"discount": 0
+					},
+					"provider_name": "moonshotai",
+					"has_zdr": true,
+					"has_no_training": true,
+					"tags": [
+						"implicit-caching",
+						"reasoning",
+						"structured-output",
+						"tool-use",
+						"vision",
+						"open-weights"
+					],
+					"quantization": null,
+					"max_completion_tokens": 1048576,
+					"max_prompt_tokens": null,
+					"supported_parameters": [
+						"max_tokens",
+						"temperature",
+						"stop",
+						"tools",
+						"tool_choice",
+						"reasoning",
+						"include_reasoning",
+						"response_format",
+						"structured_outputs"
+					],
+					"status": 0,
+					"uptime_last_15m": 100,
+					"uptime_last_1h": 99.9859,
+					"uptime_last_1d": 99.7873,
+					"latency_last_1h": {
+						"p50": 5234,
+						"p95": 10000.3
+					},
+					"throughput_last_1h": {
+						"p50": 42,
+						"p95": 54
+					},
+					"supports_implicit_caching": true
+				}
+			]
+		}
+	}
+}

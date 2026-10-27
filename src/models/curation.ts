@@ -1,0 +1,44 @@
+import type { NativeIdProvider } from "./providers";
+
+// Hand-kept overrides merged into the synced model catalog (roadmap 2.1, decisions 13–14). The daily
+// sync (convex/modelCatalogSync.ts) applies this on every run, so an edit here reaches the `models`
+// table on the next run after deploy. Keys are AI Gateway model ids ("creator/model").
+//
+// Imported by Convex, so keep this file free of `@/` imports.
+
+export type ModelCuration = {
+	/** Always in the High Elo view, whatever its score, and always gets provider/uptime data. */
+	pinned?: boolean;
+	/** Left out of the picker. The row stays readable by id, so old chats keep working. */
+	hidden?: boolean;
+	displayName?: string;
+	description?: string;
+	/**
+	 * Artificial Analysis model slug (or id) when the automatic match misses or picks the wrong
+	 * entry. `null` means "never attach a score".
+	 */
+	artificialAnalysisSlug?: string | null;
+	/** OpenRouter model id when the automatic match misses. `null` means "not on OpenRouter". */
+	openRouterId?: string | null;
+	/** Native model ids for direct-key calls, over the models.dev match. `null` removes one. */
+	nativeIds?: Partial<Record<NativeIdProvider, string | null>>;
+	/** Supported-parameter corrections, e.g. from the 2.4a probe script. */
+	parameters?: { add?: readonly string[]; remove?: readonly string[] };
+};
+
+/**
+ * Hidden by id pattern. Batch variants answer within hours through a separate API, so they can't
+ * back a chat pane.
+ */
+export const HIDDEN_MODEL_PATTERNS: readonly RegExp[] = [/-batch$/];
+
+export const MODEL_CURATION: Readonly<Record<string, ModelCuration>> = {
+	// Pins: fast, cheap, or open-weight picks that a top-by-intelligence list would leave out.
+	"anthropic/claude-haiku-5.5": { pinned: true },
+	"google/gemini-3.8-flash": { pinned: true },
+	"openai/gpt-oss-120b": { pinned: true },
+	"deepseek/deepseek-v4.1-flash": { pinned: true },
+
+	// Artificial Analysis matches the automatic rules miss. ("muse-wonder-full" is a bigger variant.)
+	"meta/muse-wonder-1.0": { artificialAnalysisSlug: "muse-wonder" },
+};

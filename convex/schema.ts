@@ -1,5 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { catalogSourceValidator, modelFields } from "./lib/modelCatalog/validators";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -421,4 +422,24 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_user_date", ["userId", "createdAt"])
     .index("by_conversation", ["conversationId"]),
+
+  // ==========================================================================
+  // MODEL CATALOG (roadmap 2.1): public data synced daily by convex/modelCatalogSync.ts
+  // ==========================================================================
+
+  models: defineTable(modelFields)
+    .index("by_gateway_id", ["gatewayId"])
+    .index("by_status", ["status"]),
+
+  modelCatalogSources: defineTable({
+    source: catalogSourceValidator,
+    lastAttemptAt: v.number(),
+    /** Last run where this source answered. Its data in `models` is as of this time. */
+    lastSyncedAt: v.optional(v.number()),
+    /** Set while the latest attempt failed. */
+    lastError: v.optional(v.string()),
+    /** Set when the latest attempt answered only partly. */
+    lastWarning: v.optional(v.string()),
+    itemCount: v.optional(v.number()),
+  }).index("by_source", ["source"]),
 });
