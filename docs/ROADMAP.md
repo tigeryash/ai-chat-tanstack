@@ -393,10 +393,12 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   *Status (2026-10-26):* done in [PR #25](https://github.com/tigeryash/ai-chat-tanstack/pull/25). Dev holds 320 models; `models.list` / `models.get` are the public queries.
 - [x] **2.1b Availability.** High Elo set, `removed` marking and banner, and per-user runnability (which of the
   user's connections can run each model; unrunnable models show "Connect <provider>").
+  *Status (2026-10-27):* done with 2.2 in [PR #30](https://github.com/tigeryash/ai-chat-tanstack/pull/30) (`HIGH_ELO_COUNT` in `curation.ts`).
 - [x] **2.2 Model picker + model card.** Logos, capability badges, search, filters (developer, price, context,
   capabilities), sort (Intelligence Index, price, newest), the High Elo / All toggle. Empty pane shows the model card:
   developer, description, context, prices, providers, knowledge cutoff, release date, Intelligence Index (credited),
   and data-policy badges. Local models show only what the local server reports.
+  *Status (2026-10-27):* `src/components/models/`, `e2e/model-picker.spec.ts` on a seeded catalog. [PR #30](https://github.com/tigeryash/ai-chat-tanstack/pull/30).
 - [ ] **2.3 Local models.** Endpoint settings for LM Studio / Ollama: test connection, list models, and keep the
   `<think>` middleware. Handle Chrome's Local Network Access prompt: explain it before it appears, and if the user
   denies it, show how to re-allow it in site settings (Chrome won't ask twice). CORS warning per [security.md](./security.md):
