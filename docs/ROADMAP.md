@@ -418,7 +418,7 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   and "via <host> · $cost" on each reply. Live data from OpenRouter's and AI Gateway's public endpoint APIs.
   *Done when:* e2e on fixture data covers Auto, pinning an upstream, a direct key, Hide unavailable, the no-training
   filter, "via <host>" on a reply, and a choice made before keys load landing on a connected host.
-  *Status (2026-10-28):* PR_LINK
+  *Status (2026-10-28):* done in [PR #33](https://github.com/tigeryash/ai-chat-tanstack/pull/33). Hosts in `src/lib/hosts/`, UI in `src/components/models/run-with.tsx`.
   - [ ] Host preferences and a blocklist in Settings.
   - [ ] A price cap for Auto.
   - [ ] Exclude quantized hosts (OpenRouter `quantizations`, Gateway `!quantization:`).
