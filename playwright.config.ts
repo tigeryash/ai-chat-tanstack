@@ -10,6 +10,8 @@ export default defineConfig({
 	fullyParallel: true,
 	forbidOnly: isCI,
 	retries: isCI ? 1 : 0,
+	// Playwright's default is half the CPUs, which leaves two of the CI runner's four idle.
+	workers: isCI ? 4 : undefined,
 	reporter: isCI ? [["github"], ["html", { open: "never" }]] : "list",
 	use: {
 		baseURL: `http://localhost:${APP_PORT}`,
