@@ -1,63 +1,31 @@
+import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import {
-	createFileRoute,
-	Link,
-	Outlet,
-	redirect,
-	useRouter,
-} from "@tanstack/react-router";
-import { useMutation } from "convex/react";
-import { useEffect } from "react";
-import { authClient } from "@/lib/auth-client";
-import { logError } from "@/lib/log";
-import { api } from "../../../convex/_generated/api";
+	SidebarInset,
+	SidebarProvider,
+	SidebarTrigger,
+} from "@/components/ui/sidebar";
 
-const DashboardLayout = () => {
-	const router = useRouter();
-	const getOrCreateUser = useMutation(api.users.getOrCreate);
-
-	useEffect(() => {
-		getOrCreateUser().catch((error) =>
-			logError("Failed to create the user record:", error),
-		);
-	}, [getOrCreateUser]);
-
-	const handleSignOut = async () => {
-		await authClient.signOut();
-		await router.navigate({ to: "/login" });
-	};
-	return (
-		<div className="flex h-screen">
-			<aside className="w-64 border-r bg-gray-50 p-4">
-				<h2 className="font-bold mb-4">Chat History</h2>
-				{/* Fetch and map chats from Convex here */}
-
-				<Link
-					to="/settings"
-					className="block px-4 py-2 text-sm rounded hover:bg-gray-100"
-				>
-					API keys
-				</Link>
-
-				<button
-					type="button"
-					onClick={handleSignOut}
-					className="mt-auto px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded"
-				>
-					Sign Out
-				</button>
-			</aside>
-			<main className="flex-1 overflow-hidden">
-				<Outlet />
-			</main>
-		</div>
-	);
-};
-
+// The app around the chat and settings pages. No login wall (decision 4): keys and chats live in this
+// browser, so everything here works signed out. Rendered in the browser only (decision 12), like the
+// pages inside it, since the sidebar reads chats from IndexedDB.
 export const Route = createFileRoute("/(dashboard)")({
-	beforeLoad: ({ context }) => {
-		if (!context.isAuthenticated) {
-			throw redirect({ to: "/login" });
-		}
-	},
+	ssr: false,
 	component: DashboardLayout,
 });
+
+function DashboardLayout() {
+	return (
+		<SidebarProvider>
+			<AppSidebar />
+			<SidebarInset className="h-svh overflow-hidden">
+				<header className="flex h-12 shrink-0 items-center px-2">
+					<SidebarTrigger aria-label="Toggle sidebar" />
+				</header>
+				<div className="min-h-0 flex-1">
+					<Outlet />
+				</div>
+			</SidebarInset>
+		</SidebarProvider>
+	);
+}

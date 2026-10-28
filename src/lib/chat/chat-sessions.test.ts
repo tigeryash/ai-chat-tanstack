@@ -3,6 +3,7 @@ import { createDexieChatStore } from "@/lib/storage/dexie-chat-store";
 import { openTestDatabase } from "@/lib/storage/test-support";
 import { BrowserChatTransport } from "./browser-transport";
 import {
+	deleteChat,
 	isChatOpen,
 	openChat,
 	openNewChat,
@@ -53,5 +54,44 @@ describe("chat sessions", () => {
 		expect(openChat("saved-1").messages).toHaveLength(1);
 		expect(await openSavedChat("nope", store)).toBe(false);
 		expect(isChatOpen("nope")).toBe(false);
+	});
+
+	it("names a new chat after its first message", async () => {
+		const store = createDexieChatStore({ db: openTestDatabase() });
+		const transport = new BrowserChatTransport(async () =>
+			mockChatModel({ text: ["ok"] }),
+		);
+		const chat = openNewChat({ transport, store });
+
+		await chat.sendMessage(
+			{ text: "Plan a trip\nto Lisbon" },
+			{ body: SELECTION },
+		);
+
+		await vi.waitFor(async () =>
+			expect(await store.getChat(chat.id)).toMatchObject({
+				title: "Plan a trip",
+			}),
+		);
+	});
+
+	it("deletes a chat mid-reply without the stopped reply saving it again", async () => {
+		const store = createDexieChatStore({ db: openTestDatabase() });
+		await store.saveMessages("busy", [
+			{ id: "m1", role: "user", parts: [{ type: "text", text: "hi" }] },
+		]);
+		const transport = new BrowserChatTransport(async () =>
+			mockChatModel({ text: ["a", "b", "c"], chunkDelayInMs: 50 }),
+		);
+		const chat = openChat("busy", { transport, store });
+		const reply = chat.sendMessage({ text: "more" }, { body: SELECTION });
+		await vi.waitFor(() => expect(chat.status).toBe("streaming"));
+
+		await deleteChat("busy", store);
+		await reply;
+		await new Promise((resolve) => setTimeout(resolve, 50));
+
+		expect(isChatOpen("busy")).toBe(false);
+		expect(await store.getChat("busy")).toBeUndefined();
 	});
 });

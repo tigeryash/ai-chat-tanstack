@@ -11,7 +11,7 @@ import { v0ToV1 } from "./migrations/v0-to-v1";
 // When an AI SDK upgrade changes the message shape: append one migration, add a fixture of the old
 // format to format.test.ts, and never edit a migration that has shipped.
 //
-// The store's `chats` rows (id, title, createdAt, updatedAt, messageCount) are read without migrating,
+// The store's `chats` rows (id, title, createdAt, updatedAt, messageCount, pinned) are read without migrating,
 // for the sidebar. A migration that changes one of those also needs a Dexie `version().upgrade()` in db.ts.
 const MIGRATIONS: readonly ((chat: unknown) => unknown)[] = [v0ToV1];
 
@@ -36,6 +36,8 @@ const currentChat = z.object({
 	title: z.string().transform(normalizeTitle),
 	createdAt: timestamp,
 	updatedAt: timestamp,
+	// Optional, so chats saved before pinning existed still read as format 1.
+	pinned: z.boolean().optional(),
 	messages: z.array(z.unknown()),
 });
 

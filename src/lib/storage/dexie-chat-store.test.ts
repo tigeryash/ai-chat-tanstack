@@ -1,4 +1,6 @@
-import { describe, expect, it } from "vitest";
+import Dexie from "dexie";
+import { IDBFactory } from "fake-indexeddb";
+import { describe, expect, it, vi } from "vitest";
 import { createDexieChatStore } from "./dexie-chat-store";
 import { ChatStoreError } from "./errors";
 import v0Chat from "./fixtures/chat-v0.json";
@@ -54,6 +56,7 @@ describe("DexieChatStore", () => {
 				createdAt: 1001,
 				updatedAt: 1001,
 				messageCount: 1,
+				pinned: false,
 			},
 			{
 				id: "old",
@@ -61,6 +64,7 @@ describe("DexieChatStore", () => {
 				createdAt: 1000,
 				updatedAt: 1000,
 				messageCount: 2,
+				pinned: false,
 			},
 		]);
 	});
@@ -74,6 +78,51 @@ describe("DexieChatStore", () => {
 			title: "Greetings",
 			updatedAt: 1000,
 		});
+	});
+
+	it("pins without reordering, and keeps the pin when the chat saves again", async () => {
+		const { store } = setup();
+		await store.saveMessages("c1", hello);
+		await store.setPinned("c1", true);
+
+		expect(await store.listChats()).toEqual([
+			expect.objectContaining({ id: "c1", pinned: true, updatedAt: 1000 }),
+		]);
+		await store.saveMessages("c1", hello);
+		expect(await store.getChat("c1")).toMatchObject({ pinned: true });
+
+		await store.setPinned("c1", false);
+		expect(await store.listChats()).toEqual([
+			expect.objectContaining({ id: "c1", pinned: false }),
+		]);
+		await expect(store.setPinned("nope", true)).rejects.toMatchObject({
+			code: "not-found",
+		});
+	});
+
+	it("tells watchers about every change until they stop watching", async () => {
+		// liveQuery stays idle without a global IndexedDB, which Node doesn't have.
+		Dexie.dependencies.indexedDB ??= new IDBFactory();
+		const { store } = setup();
+		const seen: string[][] = [];
+		const stop = store.watchChats(
+			(chats) => seen.push(chats.map((chat) => `${chat.id}:${chat.title}`)),
+			(error) => {
+				throw error;
+			},
+		);
+		await vi.waitFor(() => expect(seen).toEqual([[]]));
+
+		await store.saveMessages("c1", hello);
+		await vi.waitFor(() => expect(seen.at(-1)).toEqual(["c1:"]));
+		await store.renameChat("c1", "Hi");
+		await vi.waitFor(() => expect(seen.at(-1)).toEqual(["c1:Hi"]));
+
+		stop();
+		const count = seen.length;
+		await store.deleteChat("c1");
+		await new Promise((resolve) => setTimeout(resolve, 50));
+		expect(seen).toHaveLength(count);
 	});
 
 	it("refuses to rename a chat that doesn't exist", async () => {
