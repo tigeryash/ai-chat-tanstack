@@ -50,7 +50,9 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
 - [x] A test key for manual and probe testing. `OPENROUTER_API_KEY` in `.env.local` (2026-10-26). It's Yash's
   own key: use it only for local manual tests and scripts like 2.4a, never with a `VITE_` prefix (that would ship
   it in the client bundle), and in the app enter it through the 1.1 key settings like any user. Test model:
-  `google/gemma-4-26b-a4b-it:free` (free endpoints are rate-limited and may log prompts, so test with harmless text).
+  `deepseek/deepseek-v4.1-flash-1017` (about $0.15 / $0.60 per million input / output tokens; the account has
+  $5 of credit). *2026-10-28:* switched from `google/gemma-4-26b-a4b-it:free`, which returned nothing even in
+  OpenRouter's own chat.
 - [x] After roadmap 0.3 is deployed: clear the OAuth tokens already stored on Better Auth `account` rows, once per
   deployment, with `bunx convex run authMaintenance:clearStoredOAuthTokens` (dev) and the same command with `--prod`.
   It pages through the rows and schedules itself until done; re-running is harmless. Then sign in with Google,
