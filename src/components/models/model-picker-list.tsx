@@ -65,11 +65,15 @@ function CatalogRow({
 	entry,
 	selected,
 	onPick,
+	onPreview,
 }: {
 	entry: CatalogEntry;
 	selected: boolean;
 	onPick: (choice: ModelChoice) => void;
+	/** Shows the row's model in the preview card (hover or keyboard focus). */
+	onPreview: (gatewayId: string) => void;
 }) {
+	const preview = () => onPreview(entry.model.gatewayId);
 	const { model, route } = entry;
 	const body = (
 		<>
@@ -93,7 +97,12 @@ function CatalogRow({
 	if (!route) {
 		const provider = PROVIDERS[providerToConnect(model)].name;
 		return (
-			<li data-model={model.gatewayId} className={cn(ROW_CLASS, "opacity-80")}>
+			<li
+				data-model={model.gatewayId}
+				className={cn(ROW_CLASS, "opacity-80")}
+				onPointerEnter={preview}
+				onFocus={preview}
+			>
 				{body}
 				<Link
 					to="/settings"
@@ -105,7 +114,7 @@ function CatalogRow({
 		);
 	}
 	return (
-		<li data-model={model.gatewayId}>
+		<li data-model={model.gatewayId} onPointerEnter={preview} onFocus={preview}>
 			<button
 				type="button"
 				aria-label={model.name}
@@ -127,10 +136,12 @@ export function CatalogSection({
 	entries,
 	choice,
 	onPick,
+	onPreview,
 }: {
 	entries: readonly CatalogEntry[];
 	choice: ModelChoice | null;
 	onPick: (choice: ModelChoice) => void;
+	onPreview: (gatewayId: string) => void;
 }) {
 	return (
 		<Section title="Models">
@@ -140,6 +151,7 @@ export function CatalogSection({
 					entry={entry}
 					selected={choice?.gatewayId === entry.model.gatewayId}
 					onPick={onPick}
+					onPreview={onPreview}
 				/>
 			))}
 		</Section>

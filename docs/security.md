@@ -133,6 +133,18 @@ key (`listProviderKeys`, summaries only). The only other request is the local se
 time the picker opens (never on page load, so Chrome's local network prompt can't appear unasked), with no key and
 `credentials: "omit"`. Catalog text (names, descriptions) renders as plain React text, never HTML.
 
+*Host choice (2.2b, 2026-10-28).* When the picker opens, the page GETs the public endpoint lists for the previewed
+model from `openrouter.ai/api/v1/models/{id}/endpoints` and `ai-gateway.vercel.sh/v1/models/{id}/endpoints`
+(`src/lib/hosts/use-endpoints.ts`): no key, `credentials: "omit"`, `referrerPolicy: "no-referrer"`, only the public
+model id in the path. Both origins were already in `connect-src`. The answers are third-party data, so every field
+is validated (`endpoint-stats.ts`) and provider names render as plain text. Router options (OpenRouter's
+`provider.order` / `sort` / `data_collection`, the Gateway's `order` / `sort` / `disallowPromptTraining`) go in the
+provider's own request body, built in `routing-options.ts`. "Only hosts that don't train on my data" is enforced by
+the router where it can be (`data_collection: "deny"`, `disallowPromptTraining`); for direct keys it relies on the
+Gateway's published flags, and hosts with no published policy are excluded. This browser's failures per host
+(`highelo-host-failures`) store a host id, HTTP status and time, nothing else. Key changes are announced to other tabs
+on a BroadcastChannel whose only message is "changed".
+
 ## Server-held keys for durable agent runs (opt-in, roadmap decision 25)
 
 The only case where a key reaches our backend. Rules:

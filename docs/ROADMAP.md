@@ -410,6 +410,19 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   developer, description, context, prices, providers, knowledge cutoff, release date, Intelligence Index (credited),
   and data-policy badges. Local models show only what the local server reports.
   *Status (2026-10-27):* `src/components/models/`, `e2e/model-picker.spec.ts` on a seeded catalog. [PR #30](https://github.com/tigeryash/ai-chat-tanstack/pull/30).
+- [x] **2.2b Host choice.** The picker's preview card gets "Run with": every host that can run the model as an
+  accordion with a status light (pairs with a text label), Auto (cheapest / fastest / most reliable, kept per
+  browser), Hide unavailable, and "only hosts that don't train on my data". Expanding OpenRouter (or AI Gateway)
+  lists its upstreams; picking one pins it through the router's provider routing. Per-host feature support, this
+  browser's recent failures as orange or red, "via <host>" in the chat header (a switcher with 2+ connected hosts),
+  and "via <host> · $cost" on each reply. Live data from OpenRouter's and AI Gateway's public endpoint APIs.
+  *Done when:* e2e on fixture data covers Auto, pinning an upstream, a direct key, Hide unavailable, the no-training
+  filter, "via <host>" on a reply, and a choice made before keys load landing on a connected host.
+  *Status (2026-10-28):* PR_LINK
+  - [ ] Host preferences and a blocklist in Settings.
+  - [ ] A price cap for Auto.
+  - [ ] Exclude quantized hosts (OpenRouter `quantizations`, Gateway `!quantization:`).
+  - [ ] Context-length warnings per host (a chat longer than a host's context).
 - [ ] **2.3 Local models.** Endpoint settings for LM Studio / Ollama: test connection, list models, and keep the
   `<think>` middleware. Handle Chrome's Local Network Access prompt: explain it before it appears, and if the user
   denies it, show how to re-allow it in site settings (Chrome won't ask twice). CORS warning per [security.md](./security.md):

@@ -1,6 +1,7 @@
 import { logWarn } from "@/lib/log";
 import { forgetSecret, registerSecret } from "@/lib/redact";
 import { createDeviceKey, decryptSecret, encryptSecret } from "./crypto";
+import { notifyKeysChanged } from "./key-events";
 import {
 	createIndexedDbKeyStore,
 	type KeySource,
@@ -164,7 +165,22 @@ const vault = createKeyVault(() => {
 	return indexedDbStore;
 });
 
-export const saveProviderKey = vault.save.bind(vault);
+export async function saveProviderKey(
+	...args: Parameters<KeyVault["save"]>
+): Promise<KeySummary> {
+	try {
+		return await vault.save(...args);
+	} finally {
+		// Also after a failure: save deletes the old key first.
+		notifyKeysChanged();
+	}
+}
 export const getProviderKey = vault.get.bind(vault);
-export const deleteProviderKey = vault.delete.bind(vault);
+export async function deleteProviderKey(providerId: ProviderId): Promise<void> {
+	try {
+		await vault.delete(providerId);
+	} finally {
+		notifyKeysChanged();
+	}
+}
 export const listProviderKeys = vault.list.bind(vault);

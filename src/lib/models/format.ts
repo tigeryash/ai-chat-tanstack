@@ -38,3 +38,33 @@ export function formatCutoff(cutoff: string | undefined): string | undefined {
 	if (!match) return cutoff;
 	return MONTH_YEAR.format(Date.UTC(Number(match[1]), Number(match[2]) - 1));
 }
+
+/** USD for one reply, which is often a tiny fraction of a cent: "$0.000021", "$0.0012", "$0.42". */
+export function formatCost(usd: number | undefined): string | undefined {
+	if (usd === undefined) return undefined;
+	if (usd === 0) return "$0";
+	if (usd < 0.000001) return "<$0.000001";
+	if (usd < 0.01)
+		return `$${Number(usd.toPrecision(2)).toFixed(Math.min(8, 1 - Math.floor(Math.log10(usd))))}`;
+	return `$${usd.toFixed(2)}`;
+}
+
+/** Tokens per second: "240 tok/s". */
+export function formatSpeed(tokensPerSecond: number | undefined) {
+	return tokensPerSecond === undefined
+		? undefined
+		: `${Math.round(tokensPerSecond)} tok/s`;
+}
+
+/** Time to first token: "700 ms", "2.6 s". */
+export function formatLatency(ms: number | undefined) {
+	if (ms === undefined) return undefined;
+	return ms < 1000
+		? `${Math.round(ms)} ms`
+		: `${Number((ms / 1000).toFixed(1))} s`;
+}
+
+/** Uptime percent: "99.9%". */
+export function formatUptime(percent: number | undefined) {
+	return percent === undefined ? undefined : `${Number(percent.toFixed(1))}%`;
+}
