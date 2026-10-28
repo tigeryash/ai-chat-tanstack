@@ -19,6 +19,7 @@ export function providerName(provider: ChatProviderId): string {
 }
 
 const MODEL_ID_MAX = 200;
+const UPSTREAM_MAX = 100;
 
 /**
  * What the picker holds. `model` is the provider's own id for the model, empty until one is picked.
@@ -29,12 +30,38 @@ export const modelChoiceSchema = z.object({
 	provider: z.enum(CHAT_PROVIDER_IDS),
 	model: z.string().trim().max(MODEL_ID_MAX),
 	gatewayId: z.string().max(MODEL_ID_MAX).optional(),
+	/**
+	 * The upstream the user pinned on a router (roadmap 2.2b): an OpenRouter endpoint tag
+	 * ("deepinfra/fp8") or an AI Gateway provider slug ("baseten"). Absent: the router picks.
+	 */
+	upstream: z.string().max(UPSTREAM_MAX).optional(),
+	/**
+	 * Let Auto pick the host for a catalog model, re-checked whenever connections or host status
+	 * change. Choices saved before 2.2b have no flag and are treated as Auto too.
+	 */
+	autoHost: z.boolean().optional(),
 });
 export type ModelChoice = z.infer<typeof modelChoiceSchema>;
+
+/** What Auto optimizes for. "reliable" leaves the router's own load balancing (uptime first). */
+export const AUTO_SORTS = ["reliable", "cheapest", "fastest"] as const;
+export type AutoSort = (typeof AUTO_SORTS)[number];
+
+/** USD per million tokens. */
+const pricingSchema = z.object({
+	input: z.number().nonnegative().optional(),
+	output: z.number().nonnegative().optional(),
+});
 
 /** What a request needs: a choice with a model. The transport checks every request against it. */
 export const modelSelectionSchema = modelChoiceSchema.extend({
 	model: z.string().trim().min(1).max(MODEL_ID_MAX),
+	/** How a router (OpenRouter, AI Gateway) should pick when no upstream is pinned. */
+	sort: z.enum(AUTO_SORTS).optional(),
+	/** Only route to upstreams that don't train on prompts. */
+	noTraining: z.boolean().optional(),
+	/** The host's prices, for the reply's cost estimate. */
+	pricing: pricingSchema.optional(),
 });
 export type ModelSelection = z.infer<typeof modelSelectionSchema>;
 
@@ -63,7 +90,9 @@ export function useModelChoice() {
 /** The choice as request options for `useChat`, or undefined while no model is picked. */
 export function toSelection(
 	choice: ModelChoice | null,
+	extras?: Pick<ModelSelection, "sort" | "noTraining" | "pricing">,
 ): ModelSelection | undefined {
-	const parsed = modelSelectionSchema.safeParse(choice);
+	if (!choice) return undefined;
+	const parsed = modelSelectionSchema.safeParse({ ...choice, ...extras });
 	return parsed.success ? parsed.data : undefined;
 }

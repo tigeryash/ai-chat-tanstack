@@ -8,6 +8,7 @@ import { Action, Actions } from "@/components/ai-elements/actions";
 import type { ReplyMetadata } from "@/lib/chat/browser-transport";
 import { LOCAL_PROVIDER, providerName } from "@/lib/chat/model-selection";
 import { logWarn } from "@/lib/log";
+import { formatCost } from "@/lib/models/format";
 import type { MessageUIProps } from "@/types/types";
 
 export type MessageActionsProps = MessageUIProps & {
@@ -21,12 +22,22 @@ function textOf(message: MessageUIProps["message"]): string {
 		.join("\n\n");
 }
 
+/** "model · OpenRouter · via DeepInfra · $0.0012" (roadmap 2.2b); older replies show less. */
 function modelLabel(metadata: unknown): string | null {
 	const reply = metadata as Partial<ReplyMetadata> | undefined;
 	if (!reply?.provider || !reply.model) return null;
 	const provider =
 		reply.provider === LOCAL_PROVIDER ? "Local" : providerName(reply.provider);
-	return `${reply.model} · ${provider}`;
+	const cost =
+		typeof reply.cost === "number" ? formatCost(reply.cost) : undefined;
+	return [
+		reply.model,
+		provider,
+		typeof reply.host === "string" && `via ${reply.host}`,
+		cost && (reply.costEstimated ? `~${cost}` : cost),
+	]
+		.filter(Boolean)
+		.join(" · ");
 }
 
 const MessageActions = ({ message, onRegenerate }: MessageActionsProps) => {

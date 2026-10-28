@@ -133,9 +133,13 @@ function SavedKeyStatus({ saved }: { saved: KeySummary }) {
 		<>
 			<span className="font-mono">••••{saved.last4}</span>
 			{" · "}
-			{saved.mode === "remember"
-				? "Remembered on this device"
-				: "This session only"}
+			{saved.mode === "remember" ? (
+				"Remembered on this device"
+			) : (
+				<span className="font-medium text-amber-700 dark:text-amber-400">
+					This session only: gone when you reload or close this tab
+				</span>
+			)}
 			{saved.source === "openrouter-oauth" && " · Connected with OpenRouter"}
 		</>
 	);

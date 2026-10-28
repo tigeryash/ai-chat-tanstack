@@ -6,6 +6,7 @@ import { DEFAULT_LMSTUDIO_BASE_URL, env } from "@/env";
 import type { ProviderId } from "@/lib/keys";
 import { createThinkTagModel } from "@/lib/reasoning-middleware";
 import { LOCAL_PROVIDER, type ModelSelection } from "./model-selection";
+import { openRouterMetadataExtractor } from "./reply-host";
 
 // Builds the AI SDK model a chat streams from, in the browser (roadmap decision 3). Every base URL here
 // is one of the CSP's provider origins (src/lib/security/provider-origins.ts), and the key goes only
@@ -68,6 +69,16 @@ export function createLanguageModel(
 			return createGoogleGenerativeAI({ apiKey, fetch: fetchImpl })(model);
 		case "vercel":
 			return createGateway({ apiKey, fetch: fetchImpl })(model);
+		case "openrouter":
+			return createOpenAICompatible({
+				name: provider,
+				baseURL: OPENAI_COMPATIBLE_BASE_URLS.openrouter,
+				apiKey,
+				fetch: fetchImpl,
+				includeUsage: true,
+				// Records which upstream answered and the real cost (roadmap 2.2b).
+				metadataExtractor: openRouterMetadataExtractor,
+			})(model);
 		default:
 			return createOpenAICompatible({
 				name: provider,

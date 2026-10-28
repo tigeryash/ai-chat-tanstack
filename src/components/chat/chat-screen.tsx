@@ -1,12 +1,13 @@
 import { type Chat, useChat } from "@ai-sdk/react";
 import type { UIMessage } from "ai";
 import { ChatView } from "@/components/chat/chat-view";
+import { HostSwitcher } from "@/components/models/host-switcher";
 import { LocalModelCard, ModelCard } from "@/components/models/model-card";
 import { ModelPicker } from "@/components/models/model-picker";
 import { RemovedModelBanner } from "@/components/models/removed-model-banner";
 import { useChatModel } from "@/components/models/use-chat-model";
 import { storeChatModelChoice } from "@/lib/chat/chat-model-choice";
-import { LOCAL_PROVIDER, toSelection } from "@/lib/chat/model-selection";
+import { LOCAL_PROVIDER } from "@/lib/chat/model-selection";
 
 /** A chat with its model picker above it, and the model's card while the chat is empty. */
 export function ChatScreen({
@@ -18,11 +19,12 @@ export function ChatScreen({
 }) {
 	const { messages } = useChat({ chat });
 	const model = useChatModel(chat.id, messages);
-	const { choice, chosenModel } = model;
+	const { choice, wanted, chosenModel } = model;
 
 	const handleSend = () => {
-		// Pin the chat to the model it was sent with, even if the default changes later.
-		if (choice) storeChatModelChoice(chat.id, choice);
+		// Pin the chat to the model it was sent with, even if the default changes later. Its host
+		// settings (Auto or a pinned host) are kept as picked, so Auto keeps re-checking hosts.
+		if (wanted) storeChatModelChoice(chat.id, wanted);
 		onSend?.();
 	};
 
@@ -43,19 +45,28 @@ export function ChatScreen({
 	return (
 		<ChatView
 			chat={chat}
-			selection={toSelection(choice)}
+			selection={model.selection}
 			onSend={handleSend}
 			empty={empty}
 			header={
 				<>
-					<div className="flex w-full items-center px-2 py-1">
+					<div className="flex w-full items-center gap-1 px-2 py-1">
 						<ModelPicker
 							choice={choice}
+							wanted={wanted}
+							needs={model.needs}
 							chosenModel={chosenModel}
 							onChange={model.setChoice}
 							catalog={model.catalog}
 							connected={model.connected}
 						/>
+						{choice && chosenModel && model.runnable && (
+							<HostSwitcher
+								choice={choice}
+								hosts={model.hosts}
+								onChange={model.setChoice}
+							/>
+						)}
 					</div>
 					{chosenModel?.status === "removed" && (
 						<RemovedModelBanner

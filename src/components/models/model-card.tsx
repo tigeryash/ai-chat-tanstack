@@ -69,6 +69,12 @@ export function ModelCard({
 					</Link>
 				)}
 			</header>
+			{!via && (
+				<p className="text-muted-foreground text-xs">
+					None of your keys in this browser can run it. A key saved for this
+					session only is gone after a reload.
+				</p>
+			)}
 			{model.description && (
 				<p className="text-muted-foreground text-sm">{model.description}</p>
 			)}

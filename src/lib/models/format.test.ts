@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { formatCutoff, formatMonth, formatPrice, formatTokens } from "./format";
+import {
+	formatCost,
+	formatCutoff,
+	formatMonth,
+	formatPrice,
+	formatTokens,
+} from "./format";
 
 describe("model formats", () => {
 	it("shortens token counts", () => {
@@ -22,5 +28,24 @@ describe("model formats", () => {
 		expect(formatCutoff("2025-04")).toBe("Apr 2025");
 		expect(formatCutoff("2025-07-31")).toBe("Jul 2025");
 		expect(formatCutoff("early 2025")).toBe("early 2025");
+	});
+});
+
+describe("formatCost", () => {
+	it("keeps two significant digits below a cent", () => {
+		expect(
+			[0.000021, 0.00000344, 0.0012, 0.0099, 0.42, 3.5, 0.0000001, 0].map(
+				formatCost,
+			),
+		).toEqual([
+			"$0.000021",
+			"$0.0000034",
+			"$0.0012",
+			"$0.0099",
+			"$0.42",
+			"$3.50",
+			"<$0.000001",
+			"$0",
+		]);
 	});
 });

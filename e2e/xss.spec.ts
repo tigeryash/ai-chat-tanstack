@@ -35,11 +35,20 @@ test.describe("model output with XSS payloads", () => {
 	});
 
 	test("no payload runs script", async ({ page }) => {
-		// Hover and click everything the payloads produced, in case a handler survived.
-		const rendered = page.locator(`${RENDERED} :is(p, span, details, summary)`);
-		for (const element of await rendered.all()) {
-			await element.hover({ force: true }).catch(() => {});
-		}
+		// Fire hover and focus events at everything the payloads produced, in case a handler
+		// survived. Dispatched in the page in one pass: hovering each element through Playwright took over
+		// 30 seconds on CI and timed the test out.
+		const fired = await page.evaluate((selector) => {
+			const events = ["pointerover", "mouseover", "mouseenter", "focus"];
+			const elements = [...document.querySelectorAll(selector)];
+			for (const element of elements) {
+				for (const type of events) {
+					element.dispatchEvent(new MouseEvent(type, { bubbles: true }));
+				}
+			}
+			return elements.length;
+		}, `${RENDERED} *`);
+		expect(fired).toBeGreaterThan(0);
 		expect(await page.evaluate(() => window.__xss)).toBeUndefined();
 	});
 

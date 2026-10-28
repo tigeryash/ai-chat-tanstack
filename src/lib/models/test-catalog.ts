@@ -125,7 +125,13 @@ export const TEST_MODELS: readonly CatalogModel[] = [
 		pricing: { input: 0.1, output: 0.4 },
 		releasedAt: at("2026-04-15"),
 		tags: ["open-weights"],
-		nativeIds: [{ provider: "deepseek", modelId: "deepseek-chat" }],
+		nativeIds: [
+			{ provider: "deepseek", modelId: "deepseek-chat" },
+			{
+				provider: "fireworks",
+				modelId: "accounts/fireworks/models/deepseek-v4p1-flash",
+			},
+		],
 		openRouterId: "deepseek/deepseek-v4.1-flash",
 	}),
 ];
