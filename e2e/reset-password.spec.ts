@@ -34,7 +34,7 @@ test("a password shorter than the server's minimum is rejected before the reset"
 	});
 	await page.goto(RESET_URL);
 	// Wait for hydration; before it, the browser submits the form itself (see the test below).
-	await page.waitForLoadState("networkidle");
+	await expect(page.locator("main[data-hydrated='true']")).toBeAttached();
 
 	await page.getByLabel("New password").fill("1234567");
 	await page.getByRole("button", { name: "Reset password" }).click();
@@ -55,7 +55,7 @@ test("the token from the link goes in the request body, then the page confirms",
 		await route.fulfill({ json: { status: true } });
 	});
 	await page.goto(RESET_URL);
-	await page.waitForLoadState("networkidle");
+	await expect(page.locator("main[data-hydrated='true']")).toBeAttached();
 
 	await page.getByLabel("New password").fill(PASSWORD);
 	await page.getByRole("button", { name: "Reset password" }).click();
@@ -75,7 +75,7 @@ test("a link that was already used offers a new one", async ({ page }) => {
 		}),
 	);
 	await page.goto(RESET_URL);
-	await page.waitForLoadState("networkidle");
+	await expect(page.locator("main[data-hydrated='true']")).toBeAttached();
 
 	await page.getByLabel("New password").fill(PASSWORD);
 	await page.getByRole("button", { name: "Reset password" }).click();

@@ -33,7 +33,7 @@ test("a password shorter than the server's minimum is rejected before sign-in", 
 	});
 	await page.goto("/login");
 	// Wait for hydration; before it, the browser submits the form itself (see the test below).
-	await page.waitForLoadState("networkidle");
+	await expect(page.locator("main[data-hydrated='true']")).toBeAttached();
 
 	await page.getByLabel("Email").fill(EMAIL);
 	await page.getByLabel("Password").fill("1234567");
@@ -48,7 +48,7 @@ test("a password shorter than the server's minimum is rejected before sign-in", 
 
 test("links to sign-up and to password reset", async ({ page }) => {
 	await page.goto("/login");
-	await page.waitForLoadState("networkidle");
+	await expect(page.locator("main[data-hydrated='true']")).toBeAttached();
 
 	await page.getByRole("link", { name: "Create an account" }).click();
 	await expect(page).toHaveURL(/\/signup$/);
@@ -70,7 +70,7 @@ test("a sign-in the server refuses says why", async ({ page }) => {
 		}),
 	);
 	await page.goto("/login");
-	await page.waitForLoadState("networkidle");
+	await expect(page.locator("main[data-hydrated='true']")).toBeAttached();
 
 	await page.getByLabel("Email").fill(EMAIL);
 	await page.getByLabel("Password").fill("a long enough password");
@@ -91,7 +91,7 @@ async function signInUnverified(page: Page) {
 		}),
 	);
 	await page.goto("/login");
-	await page.waitForLoadState("networkidle");
+	await expect(page.locator("main[data-hydrated='true']")).toBeAttached();
 
 	await page.getByLabel("Email").fill(EMAIL);
 	await page.getByLabel("Password").fill(PASSWORD);
@@ -217,7 +217,7 @@ for (const [error, message] of [
 		page,
 	}) => {
 		await page.goto(`/login?error=${error}`);
-		await page.waitForLoadState("networkidle");
+		await expect(page.locator("main[data-hydrated='true']")).toBeAttached();
 
 		await expect(page.getByRole("alert")).toContainText(message);
 		await expect(page.getByLabel("Email")).toBeVisible();
@@ -228,7 +228,7 @@ test("an unknown ?error= shows nothing from the URL", async ({ page }) => {
 	await page.goto(
 		`/login?error=${encodeURIComponent("<b>Call 555-0100 to restore your account</b>")}`,
 	);
-	await page.waitForLoadState("networkidle");
+	await expect(page.locator("main[data-hydrated='true']")).toBeAttached();
 
 	await expect(page.getByLabel("Email")).toBeVisible();
 	await expect(page.getByRole("alert")).toHaveCount(0);

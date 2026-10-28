@@ -32,7 +32,7 @@ test("a malformed email is rejected before any request", async ({ page }) => {
 		}
 	});
 	await page.goto("/forgot-password");
-	await page.waitForLoadState("networkidle");
+	await expect(page.locator("main[data-hydrated='true']")).toBeAttached();
 
 	await page.getByLabel("Email").fill("not-an-email");
 	await page.getByRole("button", { name: "Send reset link" }).click();
@@ -53,7 +53,7 @@ test("every address gets the same answer, which doesn't say whether it has an ac
 		await route.fulfill({ json: RESET_REQUESTED });
 	});
 	await page.goto("/forgot-password");
-	await page.waitForLoadState("networkidle");
+	await expect(page.locator("main[data-hydrated='true']")).toBeAttached();
 
 	await page.getByLabel("Email").fill(EMAIL);
 	await page.getByRole("button", { name: "Send reset link" }).click();
@@ -79,7 +79,7 @@ test("explains when this deployment can't send email", async ({ page }) => {
 		}),
 	);
 	await page.goto("/forgot-password");
-	await page.waitForLoadState("networkidle");
+	await expect(page.locator("main[data-hydrated='true']")).toBeAttached();
 
 	await page.getByLabel("Email").fill(EMAIL);
 	await page.getByRole("button", { name: "Send reset link" }).click();
