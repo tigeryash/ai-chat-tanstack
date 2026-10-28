@@ -1,0 +1,97 @@
+/*
+  Direction A: minimal dark, close to the Vercel AI SDK playground. Neutral grays, no hue at all, white
+  as the only "accent", hairline dividers instead of cards, model ids in mono. Dark is the default.
+*/
+
+[data-design="minimal"] {
+	--design-font-sans:
+		"Geist", "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+	--design-font-display: var(--design-font-sans);
+	--design-composer-shadow: 0 1px 2px rgb(0 0 0 / 0.06);
+
+	--radius: 0.5rem;
+	--background: oklch(1 0 0);
+	--foreground: oklch(0.205 0 0);
+	--card: oklch(1 0 0);
+	--card-foreground: oklch(0.205 0 0);
+	--popover: oklch(1 0 0);
+	--popover-foreground: oklch(0.205 0 0);
+	--primary: oklch(0.205 0 0);
+	--primary-foreground: oklch(0.985 0 0);
+	--secondary: oklch(0.97 0 0);
+	--secondary-foreground: oklch(0.205 0 0);
+	--muted: oklch(0.97 0 0);
+	--muted-foreground: oklch(0.556 0 0);
+	--accent: oklch(0.96 0 0);
+	--accent-foreground: oklch(0.205 0 0);
+	--border: oklch(0.922 0 0);
+	--input: oklch(0.922 0 0);
+	--ring: oklch(0.708 0 0);
+	--sidebar: oklch(0.985 0 0);
+	--sidebar-foreground: oklch(0.205 0 0);
+	--sidebar-primary: oklch(0.205 0 0);
+	--sidebar-primary-foreground: oklch(0.985 0 0);
+	--sidebar-accent: oklch(0.95 0 0);
+	--sidebar-accent-foreground: oklch(0.205 0 0);
+	--sidebar-border: oklch(0.922 0 0);
+	--sidebar-ring: oklch(0.708 0 0);
+}
+
+[data-design="minimal"].dark {
+	--design-composer-shadow: none;
+
+	--background: oklch(0 0 0);
+	--foreground: oklch(0.94 0 0);
+	--card: oklch(0.145 0 0);
+	--card-foreground: oklch(0.94 0 0);
+	--popover: oklch(0.145 0 0);
+	--popover-foreground: oklch(0.94 0 0);
+	--primary: oklch(0.94 0 0);
+	--primary-foreground: oklch(0.145 0 0);
+	--secondary: oklch(0.205 0 0);
+	--secondary-foreground: oklch(0.94 0 0);
+	--muted: oklch(0.205 0 0);
+	--muted-foreground: oklch(0.68 0 0);
+	--accent: oklch(0.22 0 0);
+	--accent-foreground: oklch(0.94 0 0);
+	--border: oklch(0.26 0 0);
+	--input: oklch(0.26 0 0);
+	--ring: oklch(0.45 0 0);
+	--sidebar: oklch(0.1 0 0);
+	--sidebar-foreground: oklch(0.94 0 0);
+	--sidebar-primary: oklch(0.94 0 0);
+	--sidebar-primary-foreground: oklch(0.145 0 0);
+	--sidebar-accent: oklch(0.2 0 0);
+	--sidebar-accent-foreground: oklch(0.94 0 0);
+	--sidebar-border: oklch(0.22 0 0);
+	--sidebar-ring: oklch(0.45 0 0);
+	--design-composer-bg: oklch(0.1 0 0);
+}
+
+[data-design="minimal"] .design-topbar,
+[data-design="minimal"] .design-pane-header {
+	border-bottom: 1px solid var(--border);
+}
+
+[data-design="minimal"] .design-pane + .design-pane {
+	border-left: 1px solid var(--border);
+}
+
+[data-design="minimal"] .design-model-trigger {
+	border: 1px solid var(--border);
+	font-size: 0.8125rem;
+}
+
+[data-design="minimal"] .design-via {
+	font-family: var(--design-font-mono);
+	font-size: 0.6875rem;
+}
+
+[data-design="minimal"] .design-switcher-item[aria-current="page"] {
+	background: var(--accent);
+	color: var(--foreground);
+}
+
+[data-design="minimal"] .design-composer form {
+	border-color: var(--border);
+}

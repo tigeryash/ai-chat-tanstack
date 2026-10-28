@@ -428,6 +428,10 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
 
 ## Phase 3: Multi-pane playground (the signature feature)
 
+- [ ] **3.0 Design direction.** Pick a look for the app before the panes are built: three throwaway prototypes
+  under `/e2e/design/` (A minimal dark, B brand, C editorial), compared in
+  [design-directions.md](design-directions.md). Done when Yash picks one (or a mix); a follow-up slice applies it
+  to the real tokens and components.
 - [ ] **3.1 Pane layout.** 1–4 resizable panes (`react-resizable-panels`), add/remove/reorder with `LayoutGroup`.
 - [ ] **3.2 Synced composers + Stop** (decisions 16 and 18). Per-pane composer with a "Synced" toggle and mirrored
   input, the "diverged" badge, and the Stop behavior.
