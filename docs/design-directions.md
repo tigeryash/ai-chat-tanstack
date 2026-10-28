@@ -27,7 +27,8 @@ this).
 
 | | Light | Dark (default) |
 |---|---|---|
-| Background | white `oklch(1 0 0)` | black `oklch(0 0 0)` |
+| Background | `oklch(0.985 0 0)` | black `oklch(0 0 0)` |
+| Panes | white cards, 1px line, radius 1rem | `oklch(0.1 0 0)` cards, 1px line, radius 1rem |
 | Sidebar | `oklch(0.985 0 0)` | `oklch(0.1 0 0)` |
 | Text / muted | `oklch(0.205 0 0)` / `oklch(0.556 0 0)` | `oklch(0.94 0 0)` / `oklch(0.68 0 0)` |
 | Lines | `oklch(0.922 0 0)` | `oklch(0.26 0 0)` |
@@ -36,7 +37,10 @@ this).
 Type: Geist if installed, else Inter / the system sans; model ids and "via OpenRouter" in the system mono.
 Radius 0.5rem.
 
-Feels like a tool. Zero hue, hairline dividers instead of cards, bordered model triggers and mono labels, so
+*Updated after the pick:* the panes are now rounded cards (B's shape, without its glass blur or glow) on a
+background a step darker than the cards. The screenshots show this version.
+
+Feels like a tool. Zero hue, flat surfaces, bordered model triggers and mono labels, so
 the models' answers are the only thing with weight on the screen. It's the closest to the Vercel AI SDK
 playground and will scale cleanly to four narrow panes. The cost is identity: nothing here says "High Elo LLMs",
 and next to the landing page's magenta shader it reads like a different product.
@@ -84,7 +88,13 @@ side. It's the most distinctive of the three and the calmest. It's also the furt
 and the usual "AI tool" look, the serif gets cramped at four narrow panes, and it has no motion personality of
 its own beyond the composer.
 
-## Recommendation
+## Decision (2026-10-28)
+
+**Yash picked A, with B's rounded pane cards.** Minimal and neutral, dark by default. The look should be
+built entirely on tokens (colors, fonts, text sizes, radii), because appearance settings (roadmap 3.11) will
+let people change fonts, text size and the colors of everything.
+
+## Recommendation (before the pick)
 
 **A's structure with B's brand on top.** Build the panes the way A does (hairline dividers, flat surfaces, no
 glass), dark by default, and take from B: magenta as the one accent (primary buttons, the active chat, focus

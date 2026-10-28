@@ -428,10 +428,13 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
 
 ## Phase 3: Multi-pane playground (the signature feature)
 
-- [ ] **3.0 Design direction.** Pick a look for the app before the panes are built: three throwaway prototypes
+- [x] **3.0 Design direction.** Pick a look for the app before the panes are built: three throwaway prototypes
   under `/e2e/design/` (A minimal dark, B brand, C editorial), compared in
   [design-directions.md](design-directions.md). Done when Yash picks one (or a mix); a follow-up slice applies it
   to the real tokens and components.
+  *Status:* Picked A (minimal, neutral, dark default) with B's rounded pane cards
+  ([#32](https://github.com/tigeryash/ai-chat-tanstack/pull/32)). Build it on tokens so 3.11 can make all of it
+  user-adjustable.
 - [ ] **3.1 Pane layout.** 1–4 resizable panes (`react-resizable-panels`), add/remove/reorder with `LayoutGroup`.
 - [ ] **3.2 Synced composers + Stop** (decisions 16 and 18). Per-pane composer with a "Synced" toggle and mirrored
   input, the "diverged" badge, and the Stop behavior.
@@ -449,6 +452,10 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   "✓ Done") while the tab is in the background. Browser notifications when a reply or agent run finishes or needs
   approval and the tab is hidden. Ask for notification permission only when the user first starts something long,
   never on page load. On/off per event type in settings.
+- [ ] **3.11 Appearance settings.** Make the look as personal as possible: fonts (UI, reading, code), text size
+  and density, light/dark/system, and the colors of everything, starting from the 3.0 look as the default theme.
+  Every color, font and radius comes from a token, so a setting only overrides tokens (no per-component styling).
+  Saved on the device like other settings; presets, plus import/export of a theme.
 
 ## Phase 4: Agent harness
 
