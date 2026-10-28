@@ -42,3 +42,10 @@ export const MODEL_CURATION: Readonly<Record<string, ModelCuration>> = {
 	// Artificial Analysis matches the automatic rules miss. ("muse-wonder-full" is a bigger variant.)
 	"meta/muse-wonder-1.0": { artificialAnalysisSlug: "muse-wonder" },
 };
+
+/**
+ * How many models the High Elo view shows by Artificial Analysis Intelligence Index, before pins
+ * (decision 14). Keep it at or under the sync's ENDPOINT_TARGET_LIMIT (convex/lib/modelCatalog/sync.ts)
+ * so every High Elo model also has provider and data-policy details for its model card.
+ */
+export const HIGH_ELO_COUNT = 20;

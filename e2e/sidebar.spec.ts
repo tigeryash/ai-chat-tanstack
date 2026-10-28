@@ -52,7 +52,10 @@ test("a signed-out visitor chats, then renames, pins, searches and deletes in th
 
 	await page.getByRole("link", { name: "New chat" }).click();
 	await expect(page).toHaveURL(/\/new$/);
-	await expect(page.getByText("Send a message to start.")).toBeVisible();
+	// An empty chat shows its model's card (roadmap 2.2).
+	await expect(
+		page.getByRole("article", { name: `About ${E2E_MOCK_MODEL}` }),
+	).toBeVisible();
 	await chat(page, "Tax questions");
 	// Newest first.
 	await expect(group(page, "Recent").getByRole("link")).toHaveText([

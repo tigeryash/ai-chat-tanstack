@@ -30,6 +30,8 @@ import {
 export interface ReplyMetadata {
 	provider: ModelSelection["provider"];
 	model: string;
+	/** The catalog model, when it was picked from the catalog. */
+	gatewayId?: string;
 }
 
 export type ResolveModel = (
@@ -96,7 +98,11 @@ export class BrowserChatTransport implements ChatTransport<UIMessage> {
 				onError,
 				messageMetadata: ({ part }): ReplyMetadata | undefined =>
 					part.type === "start"
-						? { provider: selection.provider, model: selection.model }
+						? {
+								provider: selection.provider,
+								model: selection.model,
+								gatewayId: selection.gatewayId,
+							}
 						: undefined,
 			});
 		} catch (error) {

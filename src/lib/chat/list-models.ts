@@ -1,21 +1,10 @@
-import { getProviderKey, type ProviderId } from "@/lib/keys";
-import { TEST_REQUESTS } from "@/lib/keys/test-key";
 import { LOCAL_BASE_URL } from "./language-model";
-import { type ChatProviderId, LOCAL_PROVIDER } from "./model-selection";
 
-// Model names for the temporary picker (until roadmap 2.2 reads the synced catalog). Providers whose key
-// test is a model list reuse that request, key and all. OpenRouter's, Hugging Face's and AI Gateway's
-// model lists are public, so those go without the key.
+// What a local model server (LM Studio) reports at its OpenAI-style `/models`, for the picker's
+// "Local" group. Catalog models come from the synced catalog instead (roadmap 2.2). Slice 2.3 adds
+// endpoint settings and Ollama.
 
-const PUBLIC_MODEL_LISTS: Partial<Record<ProviderId, string>> = {
-	openrouter: "https://openrouter.ai/api/v1/models",
-	huggingface: "https://router.huggingface.co/v1/models",
-	vercel: "https://ai-gateway.vercel.sh/v1/models",
-};
-
-export type ModelList =
-	| { ok: true; models: string[] }
-	| { ok: false; reason: "no-key" | "failed" };
+export type ModelList = { ok: true; models: string[] } | { ok: false };
 
 interface GoogleModel {
 	name?: unknown;
@@ -44,36 +33,20 @@ export function modelIdsFrom(body: unknown): string[] {
 		.filter((id): id is string => typeof id === "string");
 }
 
-async function request(
-	providerId: ChatProviderId,
-): Promise<{ url: string; headers?: Record<string, string> } | null> {
-	if (providerId === LOCAL_PROVIDER) return { url: `${LOCAL_BASE_URL}/models` };
-	const publicList = PUBLIC_MODEL_LISTS[providerId];
-	if (publicList) return { url: publicList };
-	const key = await getProviderKey(providerId);
-	if (!key) return null;
-	const test = TEST_REQUESTS[providerId];
-	return { url: test.url, headers: test.headers(key) };
-}
-
-/** The provider's model ids, sorted. Failure bodies are never read (they can quote the key). */
-export async function listModels(
-	providerId: ChatProviderId,
+/** The local server's model ids, sorted. Sends no key: local servers get none. */
+export async function listLocalModels(
 	fetchImpl: typeof fetch = fetch,
 ): Promise<ModelList> {
-	const target = await request(providerId);
-	if (!target) return { ok: false, reason: "no-key" };
 	try {
-		const response = await fetchImpl(target.url, {
-			headers: target.headers,
-			// No cookies, and no Referer path: the provider only learns our origin.
+		const response = await fetchImpl(`${LOCAL_BASE_URL}/models`, {
+			// No cookies, and no Referer path: the server only learns our origin.
 			credentials: "omit",
 			referrerPolicy: "origin",
 		});
-		if (!response.ok) return { ok: false, reason: "failed" };
+		if (!response.ok) return { ok: false };
 		const ids = modelIdsFrom(await response.json());
 		return { ok: true, models: [...new Set(ids)].sort() };
 	} catch {
-		return { ok: false, reason: "failed" };
+		return { ok: false };
 	}
 }

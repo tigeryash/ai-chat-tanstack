@@ -71,16 +71,19 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   in the dashboard if they have rows. Once 1.2 has moved chat to the browser, decide whether to delete the old test
   conversations and messages on dev and prod (dev has a handful from LM Studio testing).
   *Done 2026-10-27:* both tables are empty on prod (`convex data … --prod` and the dashboard).
-- [ ] After 1.2 is deployed: on `www.highelollms.com`, open `/new`, pick OpenRouter and
-  `deepseek/deepseek-v4.1-flash-1017` (with 2.2's picker, switch to "All models" if it isn't in the High Elo
-  view), and send a message (a reply should stream; reload `/<chat id>` and it's still
-  there). Locally (`bun run dev`), start LM Studio's server with "Enable CORS" on, pick "Local (LM Studio)" and a
+- [ ] After 1.2 is deployed: on `www.highelollms.com`, open `/new`, open the model picker, search
+  `google/gemma-4-26b-a4b-it:free` and choose "Use … via OpenRouter" (since 2.2), and send a message (a reply
+  should stream; reload `/<chat id>` and it's still there). Locally (`bun run dev`), start LM Studio's server with "Enable CORS" on, pick "Local (LM Studio)" and a
   loaded model, and check a reasoning model's thinking shows. e2e fakes both.
   *2026-10-27:* LM Studio with CORS works locally, the picker lists OpenRouter's models, and OpenRouter shows the
   connected key. The OpenRouter chat itself is still untried: the free Gemma model was rate-limited (peak hour).
 - [ ] After 1.4/1.5 are deployed: on `www.highelollms.com`, sign in with email and with one OAuth provider; the
   sidebar should show "Sign out" (and your Convex user row still gets created), and signing out should leave you on
   the chat with "Sign in to sync and share". e2e only covers signed-out visitors (its Convex stub has no sessions).
+- [ ] After 2.2 is deployed (production builds run `convex deploy`; preview builds use the old `models.list`, so
+  their High Elo view is empty): on `www.highelollms.com`, open the model picker with OpenRouter connected. Check
+  the High Elo list looks right with real scores, a model card's facts and logos, and that a model only a direct
+  key serves (one OpenRouter doesn't list) says "Connect …". e2e uses a seeded catalog.
 - [ ] Vercel Hobby is fine while this is a portfolio piece; move to Pro before charging money. *Still on Hobby
   (2026-10-23).*
 
@@ -341,7 +344,7 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   *Done when:* the route component is under ~100 lines, reasoning streams live, Stop works, and a Playwright chat
   test streams a reply from `MockLanguageModelV4` (`ai/test`).
   *Status (2026-10-27):* chat runs in the browser (`src/lib/chat/`) and saves to the 1.3 store; `/api/chat` is gone.
-  The provider/model picker in the chat header is **temporary** until 2.2. PR: https://github.com/tigeryash/ai-chat-tanstack/pull/27
+  PR: https://github.com/tigeryash/ai-chat-tanstack/pull/27
 - [x] **1.3 `ChatStore` + IndexedDB** (decisions 8–10): Dexie store, format versioning with a migration test,
   persistent-storage request and status, export/import as versioned JSON.
   Drop the old Convex test conversations and the unused `artifacts` and `activeChatSessions` tables (pane layout
@@ -399,12 +402,14 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   A failed source never wipes data. Record `lastSyncedAt` per source and log a diff each run.
   *Done when:* a manual run populates the table, and a run with one source offline leaves it intact.
   *Status (2026-10-26):* done in [PR #25](https://github.com/tigeryash/ai-chat-tanstack/pull/25). Dev holds 320 models; `models.list` / `models.get` are the public queries.
-- [ ] **2.1b Availability.** High Elo set, `removed` marking and banner, and per-user runnability (which of the
+- [x] **2.1b Availability.** High Elo set, `removed` marking and banner, and per-user runnability (which of the
   user's connections can run each model; unrunnable models show "Connect <provider>").
-- [ ] **2.2 Model picker + model card.** Logos, capability badges, search, filters (developer, price, context,
+  *Status (2026-10-27):* done with 2.2 in [PR #30](https://github.com/tigeryash/ai-chat-tanstack/pull/30) (`HIGH_ELO_COUNT` in `curation.ts`).
+- [x] **2.2 Model picker + model card.** Logos, capability badges, search, filters (developer, price, context,
   capabilities), sort (Intelligence Index, price, newest), the High Elo / All toggle. Empty pane shows the model card:
   developer, description, context, prices, providers, knowledge cutoff, release date, Intelligence Index (credited),
   and data-policy badges. Local models show only what the local server reports.
+  *Status (2026-10-27):* `src/components/models/`, `e2e/model-picker.spec.ts` on a seeded catalog. [PR #30](https://github.com/tigeryash/ai-chat-tanstack/pull/30).
 - [ ] **2.3 Local models.** Endpoint settings for LM Studio / Ollama: test connection, list models, and keep the
   `<think>` middleware. Handle Chrome's Local Network Access prompt: explain it before it appears, and if the user
   denies it, show how to re-allow it in site settings (Chrome won't ask twice). CORS warning per [security.md](./security.md):
