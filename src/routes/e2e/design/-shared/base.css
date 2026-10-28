@@ -1,0 +1,146 @@
+/*
+  Structure shared by every design-direction prototype (roadmap 3.0). Everything is scoped to
+  [data-design], so nothing here reaches a production page. Each direction's own stylesheet sets the
+  shadcn tokens (--background, --primary, ...) and the --design-* knobs below.
+
+  The composer (src/components/chat/input*) hard-codes black text and a black/10 border for the old light
+  look. These rules restyle it from outside so it reads in dark mode too, without touching the component.
+*/
+
+[data-design] {
+	--design-font-sans:
+		ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+	--design-font-display: var(--design-font-sans);
+	--design-font-reading: var(--design-font-sans);
+	--design-font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+	--design-main-bg: var(--background);
+	--design-composer-bg: var(--background);
+	--design-composer-shadow: 0 10px 30px -12px rgb(0 0 0 / 0.25);
+	--design-pane-gap: 0px;
+
+	background: var(--background);
+	color: var(--foreground);
+	font-family: var(--design-font-sans);
+	color-scheme: light;
+}
+
+[data-design].dark {
+	color-scheme: dark;
+}
+
+[data-design] .design-main {
+	background: var(--design-main-bg);
+}
+
+[data-design] .design-wordmark {
+	font-family: var(--design-font-display);
+	font-weight: 600;
+}
+
+[data-design] .design-title {
+	font-family: var(--design-font-display);
+	font-size: 0.875rem;
+	font-weight: 500;
+}
+
+[data-design] .design-switcher-item,
+[data-design] .design-icon-button {
+	display: inline-grid;
+	place-items: center;
+	width: 2rem;
+	height: 2rem;
+	border-radius: var(--radius-md, 0.5rem);
+	color: var(--muted-foreground);
+	font-size: 0.75rem;
+	font-weight: 600;
+	transition:
+		background-color 150ms,
+		color 150ms;
+}
+
+[data-design] .design-icon-button svg {
+	width: 1rem;
+	height: 1rem;
+}
+
+[data-design] .design-switcher-item:hover,
+[data-design] .design-icon-button:hover {
+	background: var(--accent);
+	color: var(--accent-foreground);
+}
+
+[data-design] .design-switcher-item[aria-current="page"] {
+	background: var(--primary);
+	color: var(--primary-foreground);
+}
+
+[data-design] .design-add-pane {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.375rem;
+	height: 2rem;
+	padding: 0 0.75rem;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-md, 0.5rem);
+	font-size: 0.8125rem;
+	font-weight: 500;
+}
+
+[data-design] .design-add-pane svg {
+	width: 0.875rem;
+	height: 0.875rem;
+}
+
+[data-design] .design-panes {
+	gap: var(--design-pane-gap);
+}
+
+[data-design] .design-model-trigger {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	height: 2rem;
+	padding: 0 0.625rem;
+	border-radius: var(--radius-md, 0.5rem);
+	font-size: 0.875rem;
+	font-weight: 500;
+	transition: background-color 150ms;
+}
+
+[data-design] .design-model-trigger:hover {
+	background: var(--accent);
+}
+
+[data-design] .design-via {
+	font-size: 0.75rem;
+	color: var(--muted-foreground);
+}
+
+[data-design] .design-pane-body {
+	font-family: var(--design-font-reading);
+}
+
+/* The composer, restyled from outside. */
+[data-design] .design-composer form {
+	background: var(--design-composer-bg);
+	border: 1px solid var(--border);
+	box-shadow: var(--design-composer-shadow);
+	color: var(--foreground);
+}
+
+[data-design] .design-composer textarea {
+	color: var(--foreground);
+}
+
+[data-design] .design-composer textarea::placeholder {
+	color: var(--muted-foreground);
+}
+
+[data-design] .design-composer .input-button {
+	color: var(--foreground);
+}
+
+[data-design] .design-composer .input-button:hover {
+	background: color-mix(in oklch, var(--foreground) 10%, transparent);
+	--tw-ring-color: color-mix(in oklch, var(--foreground) 20%, transparent);
+}

@@ -1,0 +1,153 @@
+/*
+  Direction C: light and editorial. Warm paper, ink-black text, an oxblood accent, replies set in a
+  serif like a magazine column, and panes divided by column rules instead of boxes. UI labels are small
+  tracked caps in the system sans. Light is the default; dark is warm charcoal with terracotta.
+*/
+
+[data-design="editorial"] {
+	--design-font-display:
+		"Iowan Old Style", "Charter", "Source Serif Pro", Georgia, serif;
+	--design-font-reading:
+		"Iowan Old Style", "Charter", "Source Serif Pro", Georgia, serif;
+	--design-composer-shadow: 0 1px 0 oklch(0.2 0.01 60 / 0.04);
+	--design-composer-bg: oklch(0.99 0.004 85);
+
+	--radius: 0.25rem;
+	--background: oklch(0.975 0.008 85);
+	--foreground: oklch(0.22 0.012 60);
+	--card: oklch(0.99 0.004 85);
+	--card-foreground: oklch(0.22 0.012 60);
+	--popover: oklch(0.99 0.004 85);
+	--popover-foreground: oklch(0.22 0.012 60);
+	--primary: oklch(0.45 0.14 25);
+	--primary-foreground: oklch(0.98 0.008 85);
+	--secondary: oklch(0.94 0.012 80);
+	--secondary-foreground: oklch(0.22 0.012 60);
+	--muted: oklch(0.94 0.012 80);
+	--muted-foreground: oklch(0.5 0.018 60);
+	--accent: oklch(0.93 0.016 80);
+	--accent-foreground: oklch(0.22 0.012 60);
+	--border: oklch(0.86 0.016 80);
+	--input: oklch(0.86 0.016 80);
+	--ring: oklch(0.45 0.14 25);
+	--sidebar: oklch(0.955 0.011 82);
+	--sidebar-foreground: oklch(0.22 0.012 60);
+	--sidebar-primary: oklch(0.45 0.14 25);
+	--sidebar-primary-foreground: oklch(0.98 0.008 85);
+	--sidebar-accent: oklch(0.91 0.018 78);
+	--sidebar-accent-foreground: oklch(0.22 0.012 60);
+	--sidebar-border: oklch(0.86 0.016 80);
+	--sidebar-ring: oklch(0.45 0.14 25);
+}
+
+[data-design="editorial"].dark {
+	--design-composer-bg: oklch(0.225 0.01 60);
+
+	--background: oklch(0.19 0.009 60);
+	--foreground: oklch(0.92 0.012 85);
+	--card: oklch(0.225 0.01 60);
+	--card-foreground: oklch(0.92 0.012 85);
+	--popover: oklch(0.225 0.01 60);
+	--popover-foreground: oklch(0.92 0.012 85);
+	--primary: oklch(0.72 0.12 42);
+	--primary-foreground: oklch(0.19 0.009 60);
+	--secondary: oklch(0.26 0.01 60);
+	--secondary-foreground: oklch(0.92 0.012 85);
+	--muted: oklch(0.26 0.01 60);
+	--muted-foreground: oklch(0.68 0.02 75);
+	--accent: oklch(0.27 0.012 60);
+	--accent-foreground: oklch(0.92 0.012 85);
+	--border: oklch(0.32 0.012 60);
+	--input: oklch(0.32 0.012 60);
+	--ring: oklch(0.72 0.12 42);
+	--sidebar: oklch(0.165 0.008 60);
+	--sidebar-foreground: oklch(0.92 0.012 85);
+	--sidebar-primary: oklch(0.72 0.12 42);
+	--sidebar-primary-foreground: oklch(0.19 0.009 60);
+	--sidebar-accent: oklch(0.26 0.012 60);
+	--sidebar-accent-foreground: oklch(0.92 0.012 85);
+	--sidebar-border: oklch(0.3 0.012 60);
+	--sidebar-ring: oklch(0.72 0.12 42);
+}
+
+[data-design="editorial"] .design-wordmark {
+	font-size: 1.25rem;
+	font-weight: 700;
+	font-style: italic;
+	letter-spacing: -0.01em;
+}
+
+[data-design="editorial"] .design-title {
+	font-size: 1.125rem;
+	font-weight: 600;
+}
+
+[data-design="editorial"] .design-group-label,
+[data-design="editorial"] .design-via {
+	font-family: var(--design-font-sans);
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	font-size: 0.625rem;
+	font-weight: 600;
+}
+
+[data-design="editorial"] .design-topbar {
+	height: 3.5rem;
+	border-bottom: 1px solid var(--foreground);
+}
+
+[data-design="editorial"] .design-pane + .design-pane {
+	border-left: 1px solid var(--border);
+}
+
+[data-design="editorial"] .design-pane-header {
+	padding-top: 0.75rem;
+	margin: 0 1.25rem;
+	padding-inline: 0;
+	border-bottom: 1px solid var(--border);
+}
+
+[data-design="editorial"] .design-model-trigger {
+	padding: 0;
+	font-family: var(--design-font-display);
+	font-size: 1.0625rem;
+	font-style: italic;
+	font-weight: 600;
+}
+
+[data-design="editorial"] .design-model-trigger:hover {
+	background: transparent;
+	text-decoration: underline;
+	text-underline-offset: 4px;
+}
+
+[data-design="editorial"] .design-pane-body code,
+[data-design="editorial"] .design-pane-body pre {
+	font-family: var(--design-font-mono);
+	font-size: 0.8125rem;
+}
+
+[data-design="editorial"] .design-switcher-item[aria-current="page"] {
+	background: var(--foreground);
+	color: var(--background);
+}
+
+[data-design="editorial"] .design-add-pane {
+	border-color: var(--foreground);
+	border-radius: 9999px;
+	font-family: var(--design-font-sans);
+}
+
+/* The question reads like a pull quote: no bubble, a rule in the accent color. */
+[data-design="editorial"] .design-pane-body [data-slot="bubble-content"] {
+	background: transparent;
+	border: 0;
+	border-left: 2px solid var(--primary);
+	border-radius: 0;
+	font-style: italic;
+}
+
+[data-design="editorial"] .design-pane-body [data-slot="message-content"] {
+	font-size: 1rem;
+	line-height: 1.7;
+}
