@@ -31,6 +31,10 @@ import { Route as E2eMessagesRouteImport } from './routes/e2e/messages'
 import { Route as E2eModelPickerRouteImport } from './routes/e2e/model-picker'
 import { Route as E2eStorageRouteImport } from './routes/e2e/storage'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as E2eDesignIndexRouteImport } from './routes/e2e/design/index'
+import { Route as E2eDesignBrandRouteImport } from './routes/e2e/design/brand'
+import { Route as E2eDesignEditorialRouteImport } from './routes/e2e/design/editorial'
+import { Route as E2eDesignMinimalRouteImport } from './routes/e2e/design/minimal'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -140,6 +144,26 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const E2eDesignIndexRoute = E2eDesignIndexRouteImport.update({
+  id: '/design/',
+  path: '/design/',
+  getParentRoute: () => E2eRouteRoute,
+} as any)
+const E2eDesignBrandRoute = E2eDesignBrandRouteImport.update({
+  id: '/design/brand',
+  path: '/design/brand',
+  getParentRoute: () => E2eRouteRoute,
+} as any)
+const E2eDesignEditorialRoute = E2eDesignEditorialRouteImport.update({
+  id: '/design/editorial',
+  path: '/design/editorial',
+  getParentRoute: () => E2eRouteRoute,
+} as any)
+const E2eDesignMinimalRoute = E2eDesignMinimalRouteImport.update({
+  id: '/design/minimal',
+  path: '/design/minimal',
+  getParentRoute: () => E2eRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -162,6 +186,10 @@ export interface FileRoutesByFullPath {
   '/e2e/model-picker': typeof E2eModelPickerRoute
   '/e2e/storage': typeof E2eStorageRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/e2e/design/brand': typeof E2eDesignBrandRoute
+  '/e2e/design/editorial': typeof E2eDesignEditorialRoute
+  '/e2e/design/minimal': typeof E2eDesignMinimalRoute
+  '/e2e/design/': typeof E2eDesignIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -184,6 +212,10 @@ export interface FileRoutesByTo {
   '/e2e/model-picker': typeof E2eModelPickerRoute
   '/e2e/storage': typeof E2eStorageRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/e2e/design/brand': typeof E2eDesignBrandRoute
+  '/e2e/design/editorial': typeof E2eDesignEditorialRoute
+  '/e2e/design/minimal': typeof E2eDesignMinimalRoute
+  '/e2e/design': typeof E2eDesignIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -209,6 +241,10 @@ export interface FileRoutesById {
   '/e2e/model-picker': typeof E2eModelPickerRoute
   '/e2e/storage': typeof E2eStorageRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/e2e/design/brand': typeof E2eDesignBrandRoute
+  '/e2e/design/editorial': typeof E2eDesignEditorialRoute
+  '/e2e/design/minimal': typeof E2eDesignMinimalRoute
+  '/e2e/design/': typeof E2eDesignIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -233,6 +269,10 @@ export interface FileRouteTypes {
     | '/e2e/model-picker'
     | '/e2e/storage'
     | '/api/auth/$'
+    | '/e2e/design/brand'
+    | '/e2e/design/editorial'
+    | '/e2e/design/minimal'
+    | '/e2e/design/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -255,6 +295,10 @@ export interface FileRouteTypes {
     | '/e2e/model-picker'
     | '/e2e/storage'
     | '/api/auth/$'
+    | '/e2e/design/brand'
+    | '/e2e/design/editorial'
+    | '/e2e/design/minimal'
+    | '/e2e/design'
   id:
     | '__root__'
     | '/'
@@ -279,6 +323,10 @@ export interface FileRouteTypes {
     | '/e2e/model-picker'
     | '/e2e/storage'
     | '/api/auth/$'
+    | '/e2e/design/brand'
+    | '/e2e/design/editorial'
+    | '/e2e/design/minimal'
+    | '/e2e/design/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -446,6 +494,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/e2e/design/': {
+      id: '/e2e/design/'
+      path: '/design'
+      fullPath: '/e2e/design/'
+      preLoaderRoute: typeof E2eDesignIndexRouteImport
+      parentRoute: typeof E2eRouteRoute
+    }
+    '/e2e/design/brand': {
+      id: '/e2e/design/brand'
+      path: '/design/brand'
+      fullPath: '/e2e/design/brand'
+      preLoaderRoute: typeof E2eDesignBrandRouteImport
+      parentRoute: typeof E2eRouteRoute
+    }
+    '/e2e/design/editorial': {
+      id: '/e2e/design/editorial'
+      path: '/design/editorial'
+      fullPath: '/e2e/design/editorial'
+      preLoaderRoute: typeof E2eDesignEditorialRouteImport
+      parentRoute: typeof E2eRouteRoute
+    }
+    '/e2e/design/minimal': {
+      id: '/e2e/design/minimal'
+      path: '/design/minimal'
+      fullPath: '/e2e/design/minimal'
+      preLoaderRoute: typeof E2eDesignMinimalRouteImport
+      parentRoute: typeof E2eRouteRoute
+    }
   }
 }
 
@@ -493,6 +569,10 @@ interface E2eRouteRouteChildren {
   E2eMessagesRoute: typeof E2eMessagesRoute
   E2eModelPickerRoute: typeof E2eModelPickerRoute
   E2eStorageRoute: typeof E2eStorageRoute
+  E2eDesignBrandRoute: typeof E2eDesignBrandRoute
+  E2eDesignEditorialRoute: typeof E2eDesignEditorialRoute
+  E2eDesignMinimalRoute: typeof E2eDesignMinimalRoute
+  E2eDesignIndexRoute: typeof E2eDesignIndexRoute
 }
 
 const E2eRouteRouteChildren: E2eRouteRouteChildren = {
@@ -505,6 +585,10 @@ const E2eRouteRouteChildren: E2eRouteRouteChildren = {
   E2eMessagesRoute: E2eMessagesRoute,
   E2eModelPickerRoute: E2eModelPickerRoute,
   E2eStorageRoute: E2eStorageRoute,
+  E2eDesignBrandRoute: E2eDesignBrandRoute,
+  E2eDesignEditorialRoute: E2eDesignEditorialRoute,
+  E2eDesignMinimalRoute: E2eDesignMinimalRoute,
+  E2eDesignIndexRoute: E2eDesignIndexRoute,
 }
 
 const E2eRouteRouteWithChildren = E2eRouteRoute._addFileChildren(
