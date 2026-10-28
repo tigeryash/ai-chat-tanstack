@@ -1,11 +1,11 @@
-import { useSyncExternalStore } from "react";
 import { PROVIDER_IDS, type ProviderId } from "@/lib/keys";
 import { PROVIDERS } from "@/lib/keys/providers";
-import { logWarn } from "@/lib/log";
+import { createLocalStore } from "@/lib/local-store";
 import { z } from "@/lib/zod";
 
-// Which provider and model a chat sends to. The picker (temporary until roadmap 2.2) remembers the
-// last choice in this browser's localStorage. It holds no key and no chat content.
+// Which provider and model a chat sends to. Each chat keeps its own choice (chat-model-choice.ts), and
+// the last one picked, kept in this browser's localStorage, is the default for new chats. A choice
+// holds no key and no chat content.
 
 export const LOCAL_PROVIDER = "local";
 export type ChatProviderId = ProviderId | typeof LOCAL_PROVIDER;
@@ -20,10 +20,15 @@ export function providerName(provider: ChatProviderId): string {
 
 const MODEL_ID_MAX = 200;
 
-/** What the picker holds. `model` is empty until the person picks or types one. */
+/**
+ * What the picker holds. `model` is the provider's own id for the model, empty until one is picked.
+ * `gatewayId` is the catalog model it came from (absent for local and custom models), so the chat can
+ * show its model card, or the removed-model banner once the catalog drops it.
+ */
 export const modelChoiceSchema = z.object({
 	provider: z.enum(CHAT_PROVIDER_IDS),
 	model: z.string().trim().max(MODEL_ID_MAX),
+	gatewayId: z.string().max(MODEL_ID_MAX).optional(),
 });
 export type ModelChoice = z.infer<typeof modelChoiceSchema>;
 
@@ -35,66 +40,24 @@ export type ModelSelection = z.infer<typeof modelSelectionSchema>;
 
 export const MODEL_CHOICE_STORAGE_KEY = "highelo-model-choice";
 
-const listeners = new Set<() => void>();
-let loaded = false;
-let current: ModelChoice | null = null;
+const lastChoice = createLocalStore<ModelChoice | null>(
+	MODEL_CHOICE_STORAGE_KEY,
+	modelChoiceSchema.nullable(),
+	null,
+);
 
-function load(): ModelChoice | null {
-	try {
-		const raw = localStorage.getItem(MODEL_CHOICE_STORAGE_KEY);
-		if (!raw) return null;
-		const parsed = modelChoiceSchema.safeParse(JSON.parse(raw));
-		return parsed.success ? parsed.data : null;
-	} catch {
-		// Blocked storage or bad JSON: start with no choice.
-		return null;
-	}
-}
-
-function notify() {
-	for (const listener of listeners) listener();
-}
-
-/** The remembered choice, or null. Bad or old data reads as null. */
+/** The last choice in this browser, the default for new chats. Bad or old data reads as null. */
 export function readModelChoice(): ModelChoice | null {
-	if (!loaded) {
-		current = load();
-		loaded = true;
-	}
-	return current;
+	return lastChoice.read();
 }
 
 export function storeModelChoice(choice: ModelChoice): void {
-	current = modelChoiceSchema.parse(choice);
-	loaded = true;
-	try {
-		localStorage.setItem(MODEL_CHOICE_STORAGE_KEY, JSON.stringify(current));
-	} catch (error) {
-		// Private windows can refuse storage; the choice still holds for this page.
-		logWarn("Couldn't remember the model choice:", error);
-	}
-	notify();
+	lastChoice.write(choice);
 }
 
-function subscribe(listener: () => void) {
-	listeners.add(listener);
-	// Another tab changed it.
-	const onStorage = (event: StorageEvent) => {
-		if (event.key !== MODEL_CHOICE_STORAGE_KEY) return;
-		current = load();
-		notify();
-	};
-	window.addEventListener("storage", onStorage);
-	return () => {
-		listeners.delete(listener);
-		window.removeEventListener("storage", onStorage);
-	};
-}
-
-/** The remembered choice, shared by every component that reads it, and a setter. */
+/** The last choice, shared by every component that reads it, and a setter. */
 export function useModelChoice() {
-	const choice = useSyncExternalStore(subscribe, readModelChoice, () => null);
-	return [choice, storeModelChoice] as const;
+	return [lastChoice.use(), storeModelChoice] as const;
 }
 
 /** The choice as request options for `useChat`, or undefined while no model is picked. */

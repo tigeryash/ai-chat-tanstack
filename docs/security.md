@@ -101,8 +101,7 @@ It is `src/lib/redact.ts`; app code logs through `logError`/`logWarn` in `src/li
   provider id as additional data, so a record moved to another provider won't decrypt) under one non-extractable
   device key, both in their own IndexedDB database `highelo-keys`. No cache: every read decrypts, so a key deleted in
   one tab is gone in the others.
-- **Who sends keys.** Besides the chat transport, only the key test (`test-key.ts`, also reused for the chat picker's
-  model list) puts a key in a request: one GET
+- **Who sends keys.** Besides the chat transport, only the key test (`test-key.ts`) puts a key in a request: one GET
   to the provider's own API, key in a header (Google's too, never `?key=`), `credentials: "omit"`,
   `referrerPolicy: "origin"`. Error bodies are never read, since some quote the key. OpenRouter's, Hugging Face's and
   AI Gateway's model lists are public, so their tests call `/api/v1/key`, `huggingface.co/api/whoami-v2` and
@@ -124,10 +123,15 @@ and hands it to that provider's AI SDK client (`language-model.ts`), whose base 
 origins. Anthropic gets `anthropic-dangerous-direct-browser-access: true`; Google gets the key in
 `x-goog-api-key`. Provider error messages and bodies are never shown or logged (they can quote the prompt or the
 key): `chat-errors.ts` turns the HTTP status into a fixed sentence, and logs carry only the error name and status.
-The picker's model list (`list-models.ts`) reuses the key test's request; OpenRouter's, Hugging Face's and AI
-Gateway's lists are public and go without the key. Tested: `language-model.test.ts` sends one request per provider
+Tested: `language-model.test.ts` sends one request per provider
 and checks each key reaches only its own origin, in a header; `e2e/chat-keys.spec.ts` chats through a faked
 OpenRouter and checks the key went nowhere else (our server and Convex included).
+
+*Model picker (2.2, 2026-10-27).* The picker sends no key anywhere. The catalog is a public Convex query, read with
+a plain HTTP POST (`src/lib/models/catalog.ts`); runnability is worked out in the page from which providers have a
+key (`listProviderKeys`, summaries only). The only other request is the local server's `/models`, made the first
+time the picker opens (never on page load, so Chrome's local network prompt can't appear unasked), with no key and
+`credentials: "omit"`. Catalog text (names, descriptions) renders as plain React text, never HTML.
 
 ## Server-held keys for durable agent runs (opt-in, roadmap decision 25)
 

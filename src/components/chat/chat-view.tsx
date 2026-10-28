@@ -12,6 +12,8 @@ export interface ChatViewProps {
 	/** Where requests go. Sending is off until there is one. */
 	selection: ModelSelection | undefined;
 	header?: ReactNode;
+	/** What an empty chat shows (the model card). */
+	empty?: ReactNode;
 	/** Called right after a message is sent (`/new` moves to the chat's own URL). */
 	onSend?: () => void;
 }
@@ -20,7 +22,13 @@ const logFailure = (error: unknown) =>
 	logError("Chat request failed:", error instanceof Error ? error.name : error);
 
 /** One chat: its messages, streaming live, and the composer with Stop. */
-export function ChatView({ chat, selection, header, onSend }: ChatViewProps) {
+export function ChatView({
+	chat,
+	selection,
+	header,
+	empty,
+	onSend,
+}: ChatViewProps) {
 	const { messages, sendMessage, regenerate, stop, status, error } = useChat({
 		chat,
 	});
@@ -45,10 +53,11 @@ export function ChatView({ chat, selection, header, onSend }: ChatViewProps) {
 			{header}
 			<div className="w-full flex-1 overflow-auto">
 				{messages.length === 0 ? (
-					<div className="flex h-full items-center justify-center text-muted-foreground">
-						{selection
-							? "Send a message to start."
-							: "Pick a provider and a model to start."}
+					<div className="flex h-full items-center justify-center p-4 text-muted-foreground">
+						{empty ??
+							(selection
+								? "Send a message to start."
+								: "Pick a provider and a model to start.")}
 					</div>
 				) : (
 					<MessagesList
