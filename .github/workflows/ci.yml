@@ -70,7 +70,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3]
+        shard: [1, 2, 3, 4]
     # Same image as `bun run test:e2e:linux`, so the Linux screenshot baselines match. Keep the tag in
     # step with @playwright/test in package.json.
     container:
