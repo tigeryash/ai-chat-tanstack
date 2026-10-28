@@ -11,6 +11,8 @@ export interface ChatRow {
 	createdAt: number;
 	updatedAt: number;
 	messageCount: number;
+	/** Added after format 1 shipped, so older rows don't have it. Not indexed: sorting is in memory. */
+	pinned?: boolean;
 	/** The chat's format (format.ts), not Dexie's schema version below. */
 	formatVersion: number;
 }

@@ -60,19 +60,24 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   `www.highelollms.com`. Discord first failed with "invalid OAuth2 redirect_uri": prod's `DISCORD_CLIENT_ID`
   pointed at a different Discord app than the one with the callback URL. All deployments now use the `ai-chat-2`
   app (`1386085325612515519`). Linking a provider to an email account wasn't tried against the real providers.
-- [ ] After 1.1 is deployed: on `www.highelollms.com`, Settings → API keys → Connect OpenRouter with your account,
+- [x] After 1.1 is deployed: on `www.highelollms.com`, Settings → API keys → Connect OpenRouter with your account,
   then "Test key" (e2e fakes OpenRouter, so the real consent page and code exchange are untried).
-- [ ] After 1.3: check that prod's `activeChatSessions` and `artifacts` tables are empty
+  *Done 2026-10-27:* OpenRouter connected on `www.highelollms.com` and the connection test succeeded.
+- [x] After 1.3: check that prod's `activeChatSessions` and `artifacts` tables are empty
   (`bunx convex data activeChatSessions --prod`, same for `artifacts`). 1.3 dropped them from the schema; Convex
   keeps any rows but stops validating them, so the deploy is safe either way. Agents can't read prod. Clear them
   in the dashboard if they have rows. Once 1.2 has moved chat to the browser, decide whether to delete the old test
   conversations and messages on dev and prod (dev has a handful from LM Studio testing).
+  *Done 2026-10-27:* both tables are empty on prod (`convex data … --prod` and the dashboard).
 - [ ] After 1.2 is deployed: on `www.highelollms.com`, open `/new`, pick OpenRouter and type
   `google/gemma-4-26b-a4b-it:free`, and send a message (a reply should stream; reload `/<chat id>` and it's still
   there). Locally (`bun run dev`), start LM Studio's server with "Enable CORS" on, pick "Local (LM Studio)" and a
   loaded model, and check a reasoning model's thinking shows. e2e fakes both.
   *2026-10-27:* LM Studio with CORS works locally, the picker lists OpenRouter's models, and OpenRouter shows the
   connected key. The OpenRouter chat itself is still untried: the free Gemma model was rate-limited (peak hour).
+- [ ] After 1.4/1.5 are deployed: on `www.highelollms.com`, sign in with email and with one OAuth provider; the
+  sidebar should show "Sign out" (and your Convex user row still gets created), and signing out should leave you on
+  the chat with "Sign in to sync and share". e2e only covers signed-out visitors (its Convex stub has no sessions).
 - [ ] Vercel Hobby is fine while this is a portfolio piece; move to Pro before charging money. *Still on Hobby
   (2026-10-23).*
 
@@ -342,9 +347,11 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   restores everything.
   *Status (2026-10-26):* `src/lib/storage/` (Dexie store, format migrations, persistence, export/import),
   `/e2e/storage`; unused Convex tables dropped, old test conversations left until 1.2 lands. PR: https://github.com/tigeryash/ai-chat-tanstack/pull/26
-- [ ] **1.4 Sidebar.** List, new, rename, delete, pin, search by title. Auto-title with the user's chosen
+- [x] **1.4 Sidebar.** List, new, rename, delete, pin, search by title. Auto-title with the user's chosen
   "utility model" (settings), falling back to the first line of the message.
-- [ ] **1.5 No login wall** (decision 4). Chat works signed out. The auth pages become "Sign in to sync and share",
+  *Status (2026-10-27):* sidebar in `src/components/sidebar/` (live from the ChatStore, pinned first, sheet on
+  narrow screens); titles are the first line for now, the utility-model title is a follow-up. PR: https://github.com/tigeryash/ai-chat-tanstack/pull/29
+- [x] **1.5 No login wall** (decision 4). Chat works signed out. The auth pages become "Sign in to sync and share",
   with real sign-up and forgot-password flows (or magic link / email OTP).
   *Status (2026-10-25):* the sign-up, forgot-password and reset-password pages landed early; the login wall and the
   "Sign in to sync and share" wording are still to do. They use Better Auth's email/password endpoints and share the
@@ -366,6 +373,8 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   faked Better Auth answers. Known gap, server side: a Brevo rejection on resend comes back as an error only for a
   real unverified address, and a Brevo call slower than Better Auth's 500 ms floor shows in the response time.
   Not yet tried against a real deployment with Brevo.
+  *Status (2026-10-27):* chat, settings and keys work signed out; `/` opens `/new`; the sidebar offers "Sign in to
+  sync and share" or Sign out. PR: https://github.com/tigeryash/ai-chat-tanstack/pull/29
 - [ ] **1.6 Attachments that send.** Images/PDFs as `file` parts where supported; blobs in IndexedDB; unified
   drag-drop and paperclip validation; revoke object URLs.
 - [ ] **1.7 Edit and branch.** Edit a user message → new branch; switch between siblings.

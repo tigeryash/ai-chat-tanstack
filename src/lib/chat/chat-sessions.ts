@@ -5,6 +5,8 @@ import type { ChatStore } from "@/lib/storage/chat-store";
 import { createDexieChatStore } from "@/lib/storage/dexie-chat-store";
 import { requestPersistentStorage } from "@/lib/storage/persistence";
 import { BrowserChatTransport } from "./browser-transport";
+import { titleFromMessages } from "./chat-title";
+import { resolveAppModel } from "./e2e-model";
 
 // Open chats in this tab, by chat id. A chat keeps streaming while the person moves between routes
 // (`/new` hands its chat to `/$chatId` mid-reply), so the `Chat` objects live here, not in a component.
@@ -18,7 +20,7 @@ export function chatStore(): ChatStore {
 }
 
 const openChats = new Map<string, Chat<UIMessage>>();
-const defaultTransport = new BrowserChatTransport();
+const defaultTransport = new BrowserChatTransport(resolveAppModel);
 
 export interface OpenChatOptions {
 	messages?: UIMessage[];
@@ -26,7 +28,10 @@ export interface OpenChatOptions {
 	store?: ChatStore;
 }
 
-/** Saves the whole chat. The first save asks the browser to keep our storage (decision 9). */
+/**
+ * Saves the whole chat. The first save names the chat after its first message (roadmap 1.4) and asks
+ * the browser to keep our storage (decision 9).
+ */
 export async function saveChat(
 	store: ChatStore,
 	chatId: string,
@@ -35,7 +40,10 @@ export async function saveChat(
 	if (messages.length === 0) return;
 	try {
 		const { created } = await store.saveMessages(chatId, messages);
-		if (created) await requestPersistentStorage();
+		if (!created) return;
+		const title = titleFromMessages(messages);
+		if (title) await store.renameChat(chatId, title);
+		await requestPersistentStorage();
 	} catch (error) {
 		logError("Couldn't save the chat in this browser:", error);
 	}
@@ -50,11 +58,21 @@ export function openChat(id: string, options: OpenChatOptions = {}) {
 		id,
 		messages: options.messages,
 		transport: options.transport ?? defaultTransport,
-		// Stopped and failed replies are saved too, so nothing the person typed is lost.
-		onFinish: ({ messages }) => saveChat(store, id, messages),
+		// Stopped and failed replies are saved too, so nothing the person typed is lost. A closed
+		// (deleted) chat isn't, or stopping its reply would bring it back.
+		onFinish: ({ messages }) =>
+			openChats.get(id) === chat ? saveChat(store, id, messages) : undefined,
 	});
 	openChats.set(id, chat);
 	return chat;
+}
+
+/** Stops the chat's reply, if any, and forgets it in this tab (after the chat is deleted). */
+export function closeChat(id: string): void {
+	const chat = openChats.get(id);
+	if (!chat) return;
+	openChats.delete(id);
+	chat.stop().catch((error) => logError("Couldn't stop the reply:", error));
 }
 
 export function isChatOpen(id: string): boolean {
@@ -76,4 +94,13 @@ export async function openSavedChat(
 /** A new chat with a fresh id. Nothing is stored until its first reply finishes. */
 export function openNewChat(options: Omit<OpenChatOptions, "messages"> = {}) {
 	return openChat(crypto.randomUUID(), options);
+}
+
+/** Deletes a chat from this browser, stopping its reply first so the reply can't save it again. */
+export async function deleteChat(
+	id: string,
+	store: ChatStore = chatStore(),
+): Promise<void> {
+	closeChat(id);
+	await store.deleteChat(id);
 }

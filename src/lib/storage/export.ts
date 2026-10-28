@@ -39,6 +39,7 @@ function toStoredChat(chat: Chat): StoredChat {
 		title: chat.title,
 		createdAt: chat.createdAt,
 		updatedAt: chat.updatedAt,
+		...(chat.pinned && { pinned: true }),
 		messages: chat.messages,
 	};
 }

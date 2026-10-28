@@ -66,7 +66,14 @@ describe("export and import", () => {
 		const leaky: ChatStore = {
 			...freshStore(),
 			listChats: async () => [
-				{ id: "c1", title: "", createdAt: 1, updatedAt: 1, messageCount: 0 },
+				{
+					id: "c1",
+					title: "",
+					createdAt: 1,
+					updatedAt: 1,
+					messageCount: 0,
+					pinned: false,
+				},
 			],
 			getChat: async () =>
 				({

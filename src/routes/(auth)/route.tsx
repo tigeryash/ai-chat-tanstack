@@ -5,6 +5,7 @@ import {
 	CatchBoundary,
 	ClientOnly,
 	createFileRoute,
+	Link,
 	Outlet,
 	redirect,
 	useLocation,
@@ -12,6 +13,7 @@ import {
 import { gsap } from "gsap";
 import { SplitText } from "gsap/all";
 import { lazy, Suspense, useRef } from "react";
+import { LINK_CLASS } from "@/components/auth/auth-form";
 import Models from "@/components/auth/models";
 import OAuthButtons from "@/components/auth/oauthbuttons";
 import { logError } from "@/lib/log";
@@ -95,7 +97,7 @@ const AuthLayout = () => {
 };
 
 const PAGE_TITLES: Record<string, string> = {
-	"/login": "Login",
+	"/login": "Sign in",
 	"/signup": "Sign up",
 	"/forgot-password": "Forgot password",
 	"/reset-password": "Reset password",
@@ -117,6 +119,14 @@ const FormContainer = ({
     items-center space-y-5 xl:space-y-10 rounded-2xl backdrop-blur-md border-[2px] lg:pt-6  lg:space-y-6 lg:h-full border-white/20"
 		>
 			<h2 className="text-[2.5rem] font-semibold">{pageTitle(pathname)}</h2>
+			{/* No login wall (decision 4): an account is only for the cloud features. */}
+			<p className="px-8 text-center text-white/80">
+				Sign in to sync and share. Chatting doesn't need an account: your keys
+				and chats stay in this browser.{" "}
+				<Link to="/new" className={LINK_CLASS}>
+					Continue without an account
+				</Link>
+			</p>
 			{children}
 			<OAuthButtons />
 		</div>

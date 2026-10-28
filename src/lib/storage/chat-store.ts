@@ -9,6 +9,8 @@ export interface Chat {
 	/** Milliseconds since the epoch. */
 	createdAt: number;
 	updatedAt: number;
+	/** Pinned chats sit at the top of the sidebar. Absent means not pinned. */
+	pinned?: boolean;
 	messages: UIMessage[];
 }
 
@@ -19,6 +21,7 @@ export interface ChatSummary {
 	createdAt: number;
 	updatedAt: number;
 	messageCount: number;
+	pinned: boolean;
 }
 
 // Where chats live on this device (roadmap decision 8). The browser saves once when a reply finishes
@@ -38,6 +41,16 @@ export interface ChatStore {
 	): Promise<{ created: boolean }>;
 	/** Doesn't change `updatedAt`, so a rename doesn't reorder the sidebar. */
 	renameChat(chatId: string, title: string): Promise<void>;
+	/** Like a rename, doesn't change `updatedAt`. */
+	setPinned(chatId: string, pinned: boolean): Promise<void>;
+	/**
+	 * Calls `onChange` with `listChats()` now and after every change, from any tab, until the returned
+	 * function is called.
+	 */
+	watchChats(
+		onChange: (chats: ChatSummary[]) => void,
+		onError: (error: unknown) => void,
+	): () => void;
 	/** Deleting a chat that doesn't exist does nothing. */
 	deleteChat(chatId: string): Promise<void>;
 	/** Writes whole chats, keeping their timestamps (import today, sync in Phase 6). */

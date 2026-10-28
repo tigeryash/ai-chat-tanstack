@@ -1,4 +1,5 @@
 import type { UIMessage } from "ai";
+import { liveQuery } from "dexie";
 import type { Chat, ChatStore, ChatSummary } from "./chat-store";
 import {
 	type ChatDatabase,
@@ -33,6 +34,7 @@ function toSummary(row: ChatRow): ChatSummary {
 		createdAt: row.createdAt,
 		updatedAt: row.updatedAt,
 		messageCount: row.messageCount,
+		pinned: row.pinned ?? false,
 	};
 }
 
@@ -52,16 +54,40 @@ async function writeChat(
 	await db.chats.put(row);
 }
 
+async function updateRow(
+	db: ChatDatabase,
+	chatId: string,
+	changes: Partial<Pick<ChatRow, "title" | "pinned">>,
+): Promise<void> {
+	const updated = await db.chats.update(chatId, changes);
+	if (updated === 0) {
+		throw new ChatStoreError("not-found", "That chat no longer exists.", {
+			chatId,
+		});
+	}
+}
+
 // Validation is async (AI SDK), and a Dexie transaction commits as soon as it awaits anything that
 // isn't Dexie, so every method validates first and then writes in one transaction.
 export function createDexieChatStore({
 	db = openChatDatabase(),
 	now = Date.now,
 }: DexieChatStoreOptions = {}): ChatStore {
+	const listChats = async () => {
+		const rows = await db.chats.orderBy("updatedAt").reverse().toArray();
+		return rows.map(toSummary);
+	};
+
 	return {
-		async listChats() {
-			const rows = await db.chats.orderBy("updatedAt").reverse().toArray();
-			return rows.map(toSummary);
+		listChats,
+
+		watchChats(onChange, onError) {
+			// liveQuery re-runs the read whenever the chats table changes, in this tab or another.
+			const subscription = liveQuery(listChats).subscribe({
+				next: onChange,
+				error: onError,
+			});
+			return () => subscription.unsubscribe();
 		},
 
 		async getChat(id) {
@@ -93,6 +119,7 @@ export function createDexieChatStore({
 					{
 						id: chatId,
 						title: existing?.title ?? "",
+						...(existing?.pinned && { pinned: true }),
 						createdAt: existing?.createdAt ?? timestamp,
 						updatedAt: timestamp,
 						messageCount: valid.length,
@@ -105,14 +132,11 @@ export function createDexieChatStore({
 		},
 
 		async renameChat(chatId, title) {
-			const updated = await db.chats.update(chatId, {
-				title: normalizeTitle(title),
-			});
-			if (updated === 0) {
-				throw new ChatStoreError("not-found", "That chat no longer exists.", {
-					chatId,
-				});
-			}
+			await updateRow(db, chatId, { title: normalizeTitle(title) });
+		},
+
+		async setPinned(chatId, pinned) {
+			await updateRow(db, chatId, { pinned });
 		},
 
 		async deleteChat(chatId) {
@@ -139,6 +163,7 @@ export function createDexieChatStore({
 							createdAt: chat.createdAt,
 							updatedAt: chat.updatedAt,
 							messageCount: chat.messages.length,
+							...(chat.pinned && { pinned: true }),
 							formatVersion: CHAT_FORMAT_VERSION,
 						},
 						chat.messages,
