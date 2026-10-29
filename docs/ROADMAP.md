@@ -100,6 +100,11 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   notification" (Chrome and Helium) and confirm one appears; if not, follow the help it shows. Then, in a fresh
   browser profile (or after clearing site data), save the first OpenRouter key (paste or Connect OpenRouter), go
   back to a chat without reloading, and check the picker's "Run with" light turns green.
+- [ ] After 1.9 is deployed: on `www.highelollms.com`, with two real accounts (say email and GitHub). Signed out,
+  make a chat. Sign in as the first: the "chats from before you signed in" question appears; choose Keep, make a
+  chat, sign out (it disappears, the signed-out one stays). Sign in as the second: answer the question, and check
+  the first account's chat isn't listed and its URL shows "not found". Sign back in as the first: its chat is
+  back. Then try "Sign out and remove my chats from this device". e2e uses stubbed sessions, not real sign-ins.
 - [ ] Vercel Hobby is fine while this is a portfolio piece; move to Pro before charging money. *Still on Hobby
   (2026-10-23).*
 
@@ -403,6 +408,16 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
 - [ ] **1.8 Analytics foundation** (decision 23). A `track()` wrapper with an allowlist of event names and
   properties; cookieless page analytics and Web Vitals (`web-vitals` is already installed); Sentry with scrubbing.
   From here on, each slice lists the events it adds.
+- [ ] **1.9 Chat ownership on this device.** Each stored chat records its owner (a Better Auth user ID, or none
+  when made signed out), through a format migration that makes existing chats no-account chats. Signed out, the
+  sidebar shows only no-account chats; signed in, the account's own plus the no-account ones (marked "Not saved to
+  an account"), never another account's, whose URL looks missing. After sign-in, a one-time question per account
+  per browser: add the no-account chats to the account (local only until sync, 6.1), keep them separate, or delete
+  them. "Sign out" hides the account's chats; "Sign out and remove my chats from this device" deletes them. Export
+  and import carry owners; an import never gives chats to the signed-in account. Hiding isn't security (chats stay
+  readable in the browser profile until removed); per-account encryption is a possible later step.
+  *Done when:* Vitest covers the migration and the filter; e2e covers signed out vs signed in, the prompt's three
+  choices, both sign-out paths, and another account not seeing chats.
 
 ## Phase 2: Models and providers
 

@@ -13,6 +13,11 @@ export interface ChatRow {
 	messageCount: number;
 	/** Added after format 1 shipped, so older rows don't have it. Not indexed: sorting is in memory. */
 	pinned?: boolean;
+	/**
+	 * Format 2 (roadmap 1.9). Rows are upgraded when the database opens, but a row written in an older
+	 * format (a test seed) can lack it, which reads as null. Not indexed: IndexedDB can't index null.
+	 */
+	ownerId?: string | null;
 	/** The chat's format (format.ts), not Dexie's schema version below. */
 	formatVersion: number;
 }
@@ -40,6 +45,19 @@ export function openChatDatabase(
 		chats: "id, updatedAt",
 		messages: "[chatId+position]",
 	});
+	// Format 2 adds `ownerId` to the rows the sidebar reads. Its migration (v1ToV2) leaves messages
+	// alone, so format 1 rows can move to format 2 here without loading them.
+	db.version(2)
+		.stores({ chats: "id, updatedAt", messages: "[chatId+position]" })
+		.upgrade((tx) =>
+			tx
+				.table<ChatRow, string>("chats")
+				.toCollection()
+				.modify((row, ref) => {
+					if (row.formatVersion !== 1) return;
+					ref.value = { ...row, formatVersion: 2, ownerId: null };
+				}),
+		);
 	return db;
 }
 

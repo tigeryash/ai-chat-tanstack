@@ -2,7 +2,11 @@ import { describe, expect, it } from "vitest";
 import type { ChatSummary } from "@/lib/storage/chat-store";
 import { arrangeChats } from "./chat-list";
 
-function chat(id: string, updatedAt: number, extra: Partial<ChatSummary> = {}) {
+function chat(
+	id: string,
+	updatedAt: number,
+	extra: Partial<ChatSummary> = {},
+): ChatSummary {
 	return {
 		id,
 		title: id,
@@ -10,6 +14,7 @@ function chat(id: string, updatedAt: number, extra: Partial<ChatSummary> = {}) {
 		updatedAt,
 		messageCount: 2,
 		pinned: false,
+		ownerId: null,
 		...extra,
 	};
 }

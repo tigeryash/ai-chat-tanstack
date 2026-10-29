@@ -1,6 +1,7 @@
 import Dexie from "dexie";
-import { IDBFactory } from "fake-indexeddb";
+import { IDBFactory, IDBKeyRange } from "fake-indexeddb";
 import { describe, expect, it, vi } from "vitest";
+import { openChatDatabase } from "./db";
 import { createDexieChatStore } from "./dexie-chat-store";
 import { ChatStoreError } from "./errors";
 import v0Chat from "./fixtures/chat-v0.json";
@@ -21,22 +22,27 @@ describe("DexieChatStore", () => {
 	it("creates a chat on first save and reads it back", async () => {
 		const { store } = setup();
 
-		expect(await store.saveMessages("c1", hello)).toEqual({ created: true });
+		expect(await store.saveMessages("c1", hello, null)).toEqual({
+			created: true,
+		});
 		expect(await store.getChat("c1")).toEqual({
 			id: "c1",
 			title: "",
 			createdAt: 1000,
 			updatedAt: 1000,
+			ownerId: null,
 			messages: hello,
 		});
 	});
 
 	it("replaces the messages on later saves and keeps createdAt", async () => {
 		const { store } = setup();
-		await store.saveMessages("c1", hello);
+		await store.saveMessages("c1", hello, null);
 		const shorter = [textMessage("m1", "user", "edited")];
 
-		expect(await store.saveMessages("c1", shorter)).toEqual({ created: false });
+		expect(await store.saveMessages("c1", shorter, null)).toEqual({
+			created: false,
+		});
 		expect(await store.getChat("c1")).toMatchObject({
 			createdAt: 1000,
 			updatedAt: 1001,
@@ -46,8 +52,8 @@ describe("DexieChatStore", () => {
 
 	it("lists chats newest first, without loading messages", async () => {
 		const { store } = setup();
-		await store.saveMessages("old", hello);
-		await store.saveMessages("new", hello.slice(0, 1));
+		await store.saveMessages("old", hello, null);
+		await store.saveMessages("new", hello.slice(0, 1), null);
 
 		expect(await store.listChats()).toEqual([
 			{
@@ -57,6 +63,7 @@ describe("DexieChatStore", () => {
 				updatedAt: 1001,
 				messageCount: 1,
 				pinned: false,
+				ownerId: null,
 			},
 			{
 				id: "old",
@@ -65,13 +72,14 @@ describe("DexieChatStore", () => {
 				updatedAt: 1000,
 				messageCount: 2,
 				pinned: false,
+				ownerId: null,
 			},
 		]);
 	});
 
 	it("renames without reordering", async () => {
 		const { store } = setup();
-		await store.saveMessages("c1", hello);
+		await store.saveMessages("c1", hello, null);
 		await store.renameChat("c1", "  Greetings  ");
 
 		expect(await store.getChat("c1")).toMatchObject({
@@ -82,13 +90,13 @@ describe("DexieChatStore", () => {
 
 	it("pins without reordering, and keeps the pin when the chat saves again", async () => {
 		const { store } = setup();
-		await store.saveMessages("c1", hello);
+		await store.saveMessages("c1", hello, null);
 		await store.setPinned("c1", true);
 
 		expect(await store.listChats()).toEqual([
 			expect.objectContaining({ id: "c1", pinned: true, updatedAt: 1000 }),
 		]);
-		await store.saveMessages("c1", hello);
+		await store.saveMessages("c1", hello, null);
 		expect(await store.getChat("c1")).toMatchObject({ pinned: true });
 
 		await store.setPinned("c1", false);
@@ -113,7 +121,7 @@ describe("DexieChatStore", () => {
 		);
 		await vi.waitFor(() => expect(seen).toEqual([[]]));
 
-		await store.saveMessages("c1", hello);
+		await store.saveMessages("c1", hello, null);
 		await vi.waitFor(() => expect(seen.at(-1)).toEqual(["c1:"]));
 		await store.renameChat("c1", "Hi");
 		await vi.waitFor(() => expect(seen.at(-1)).toEqual(["c1:Hi"]));
@@ -134,8 +142,8 @@ describe("DexieChatStore", () => {
 
 	it("deletes a chat and its messages", async () => {
 		const { db, store } = setup();
-		await store.saveMessages("c1", hello);
-		await store.saveMessages("c2", hello);
+		await store.saveMessages("c1", hello, null);
+		await store.saveMessages("c2", hello, null);
 		await store.deleteChat("c1");
 		await store.deleteChat("never-existed");
 
@@ -148,10 +156,10 @@ describe("DexieChatStore", () => {
 		const { store } = setup();
 		const bad = [{ id: "m1", role: "robot", parts: [] }] as never;
 
-		await expect(store.saveMessages("c1", bad)).rejects.toBeInstanceOf(
+		await expect(store.saveMessages("c1", bad, null)).rejects.toBeInstanceOf(
 			ChatStoreError,
 		);
-		await expect(store.saveMessages("", hello)).rejects.toMatchObject({
+		await expect(store.saveMessages("", hello, null)).rejects.toMatchObject({
 			code: "invalid-chat",
 		});
 		expect(await store.listChats()).toEqual([]);
@@ -181,7 +189,7 @@ describe("DexieChatStore", () => {
 		});
 
 		// Saving writes the current format.
-		await store.saveMessages("chat-v0", chat?.messages ?? []);
+		await store.saveMessages("chat-v0", chat?.messages ?? [], null);
 		expect((await db.chats.get("chat-v0"))?.formatVersion).toBe(
 			CHAT_FORMAT_VERSION,
 		);
@@ -201,7 +209,9 @@ describe("DexieChatStore", () => {
 		await expect(store.getChat("future")).rejects.toMatchObject({
 			code: "too-new",
 		});
-		await expect(store.saveMessages("future", hello)).rejects.toMatchObject({
+		await expect(
+			store.saveMessages("future", hello, null),
+		).rejects.toMatchObject({
 			code: "too-new",
 		});
 	});
@@ -213,17 +223,93 @@ describe("DexieChatStore", () => {
 			title: "T",
 			createdAt: 5,
 			updatedAt: 9,
+			ownerId: "user-a",
 			messages: hello,
 		};
-		await store.saveMessages("c1", hello.slice(0, 1));
+		await store.saveMessages("c1", hello.slice(0, 1), null);
 		await store.putChats([chat]);
 
 		expect(await store.getChat("c1")).toEqual(chat);
 	});
 
+	it("gives a new chat its owner, and keeps the owner on later saves", async () => {
+		const { store } = setup();
+		await store.saveMessages("mine", hello, "user-a");
+		await store.saveMessages("mine", hello.slice(0, 1), "user-b");
+		await store.saveMessages("anyone", hello, null);
+
+		expect(await store.getChat("mine")).toMatchObject({ ownerId: "user-a" });
+		expect(
+			(await store.listChats()).map(({ id, ownerId }) => ({ id, ownerId })),
+		).toEqual([
+			{ id: "anyone", ownerId: null },
+			{ id: "mine", ownerId: "user-a" },
+		]);
+	});
+
+	it("moves chats to another owner without reordering, skipping missing ones", async () => {
+		const { store } = setup();
+		await store.saveMessages("c1", hello, null);
+		await store.saveMessages("c2", hello, null);
+		await store.setOwner(["c1", "never-existed"], "user-a");
+
+		expect(await store.listChats()).toEqual([
+			expect.objectContaining({ id: "c2", ownerId: null }),
+			expect.objectContaining({ id: "c1", ownerId: "user-a", updatedAt: 1000 }),
+		]);
+		expect(await store.getChat("c1")).toMatchObject({ ownerId: "user-a" });
+
+		await store.setOwner(["c1"], null);
+		expect(await store.getChat("c1")).toMatchObject({ ownerId: null });
+		await expect(store.setOwner(["c1"], "")).rejects.toMatchObject({
+			code: "invalid-chat",
+		});
+		await expect(store.saveMessages("c3", hello, "")).rejects.toMatchObject({
+			code: "invalid-chat",
+		});
+	});
+
+	it("upgrades format 1 rows to no-account chats when the database opens", async () => {
+		// The database as roadmap 1.3 left it: Dexie version 1, format 1 rows without an owner.
+		const indexedDB = new IDBFactory();
+		const old = new Dexie("upgrade-test", { indexedDB, IDBKeyRange });
+		old.version(1).stores({
+			chats: "id, updatedAt",
+			messages: "[chatId+position]",
+		});
+		await old.table("chats").put({
+			id: "c1",
+			title: "Old",
+			createdAt: 1,
+			updatedAt: 2,
+			messageCount: 1,
+			pinned: true,
+			formatVersion: 1,
+		});
+		await old
+			.table("messages")
+			.put({ chatId: "c1", position: 0, message: hello[0] });
+		old.close();
+
+		const db = openChatDatabase("upgrade-test", { indexedDB, IDBKeyRange });
+		const store = createDexieChatStore({ db });
+		expect(await db.chats.get("c1")).toMatchObject({
+			formatVersion: CHAT_FORMAT_VERSION,
+			ownerId: null,
+		});
+		expect(await store.listChats()).toEqual([
+			expect.objectContaining({ id: "c1", ownerId: null, pinned: true }),
+		]);
+		expect(await store.getChat("c1")).toMatchObject({
+			title: "Old",
+			ownerId: null,
+			messages: [hello[0]],
+		});
+	});
+
 	it("keeps data across database connections", async () => {
 		const { db, store } = setup();
-		await store.saveMessages("c1", hello);
+		await store.saveMessages("c1", hello, null);
 		db.close();
 		await db.open();
 

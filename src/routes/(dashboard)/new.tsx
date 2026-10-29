@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { ChatScreen } from "@/components/chat/chat-screen";
+import { useViewer } from "@/lib/account";
 import { openNewChat } from "@/lib/chat/chat-sessions";
 
 // A new local chat. Nothing is stored (and nothing touches Convex) until its first reply finishes.
@@ -12,8 +13,15 @@ export const Route = createFileRoute("/(dashboard)/new")({
 });
 
 function RouteComponent() {
+	const viewer = useViewer();
+	if (viewer === undefined) return null;
+	// The chat belongs to whoever is signed in (roadmap 1.9), so signing in or out here starts a new one.
+	return <NewChat key={viewer ?? ""} ownerId={viewer} />;
+}
+
+function NewChat({ ownerId }: { ownerId: string | null }) {
 	const navigate = useNavigate();
-	const [chat] = useState(() => openNewChat());
+	const [chat] = useState(() => openNewChat({ ownerId }));
 	return (
 		<ChatScreen
 			chat={chat}

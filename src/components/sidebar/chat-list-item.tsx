@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import {
+	HardDriveIcon,
 	MoreHorizontalIcon,
 	PencilIcon,
 	PinIcon,
@@ -35,20 +36,30 @@ import { displayTitle } from "@/lib/chat/chat-list";
 import type { ChatSummary } from "@/lib/storage/chat-store";
 import { MAX_TITLE_LENGTH } from "@/lib/storage/format";
 
+const NO_ACCOUNT_LABEL = "Not saved to an account";
+
 export interface ChatListItemActions {
 	onRename: (title: string) => void;
 	onTogglePin: () => void;
 	onDelete: () => void;
 }
 
-/** One chat in the sidebar: a link, plus rename, pin and delete (with a confirm) in its menu. */
+/**
+ * One chat in the sidebar: a link, plus rename, pin and delete (with a confirm) in its menu.
+ * `noAccount` marks a chat made signed out while someone is signed in (roadmap 1.9).
+ */
 export function ChatListItem({
 	chat,
 	active,
+	noAccount = false,
 	onRename,
 	onTogglePin,
 	onDelete,
-}: { chat: ChatSummary; active: boolean } & ChatListItemActions) {
+}: {
+	chat: ChatSummary;
+	active: boolean;
+	noAccount?: boolean;
+} & ChatListItemActions) {
 	const { setOpenMobile } = useSidebar();
 	const [renaming, setRenaming] = useState(false);
 	const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -79,6 +90,15 @@ export function ChatListItem({
 						<PinIcon aria-label="Pinned" className="text-muted-foreground" />
 					)}
 					<span className="truncate">{title}</span>
+					{noAccount && (
+						<span title={NO_ACCOUNT_LABEL} className="ml-auto flex">
+							<HardDriveIcon
+								role="img"
+								aria-label={NO_ACCOUNT_LABEL}
+								className="text-muted-foreground/70"
+							/>
+						</span>
+					)}
 				</SidebarMenuButton>
 			)}
 			<DropdownMenu>

@@ -11,7 +11,7 @@ export const Route = createFileRoute("/e2e/chat-live")({
 });
 
 function LiveChatHarness() {
-	const [chat] = useState(() => openNewChat());
+	const [chat] = useState(() => openNewChat({ ownerId: null }));
 	return (
 		<main className="h-screen" data-chat-id={chat.id}>
 			<ChatScreen chat={chat} />
