@@ -465,10 +465,11 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   Votes stay local and feed a personal leaderboard. Runs on the user's keys.
 - [ ] **3.8 Mobile.** Panes become swipeable tabs below `md`.
 - [ ] **3.9 Insights.** Local dashboard: spend per provider, latency per model, blind-mode win rates, most-used prompts.
-- [ ] **3.10 Status in the tab and notifications.** The tab title and favicon reflect status (e.g. "● 2 replying",
+- [x] **3.10 Status in the tab and notifications.** The tab title and favicon reflect status (e.g. "● 2 replying",
   "✓ Done") while the tab is in the background. Browser notifications when a reply or agent run finishes or needs
   approval and the tab is hidden. Ask for notification permission only when the user first starts something long,
   never on page load. On/off per event type in settings.
+  *Status:* replies done in PR #36 (2026-10-29); agent runs and approvals hook into `background-status/activity.ts` in Phase 4.
 - [ ] **3.11 Appearance settings.** Make the look as personal as possible: fonts (UI, reading, code), text size
   and density, light/dark/system, and the colors of everything, starting from the 3.0 look as the default theme.
   Every color, font and radius comes from a token, so a setting only overrides tokens (no per-component styling).

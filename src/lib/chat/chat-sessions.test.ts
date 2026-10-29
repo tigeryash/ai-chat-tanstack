@@ -1,4 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
+import {
+	type ReplyEnded,
+	replyingCount,
+	subscribeReplyEnded,
+} from "@/lib/background-status/activity";
 import { createDexieChatStore } from "@/lib/storage/dexie-chat-store";
 import { openTestDatabase } from "@/lib/storage/test-support";
 import { BrowserChatTransport } from "./browser-transport";
@@ -93,5 +98,34 @@ describe("chat sessions", () => {
 
 		expect(isChatOpen("busy")).toBe(false);
 		expect(await store.getChat("busy")).toBeUndefined();
+	});
+
+	it("reports replies running and ending to the tab status", async () => {
+		const store = createDexieChatStore({ db: openTestDatabase() });
+		const ended: ReplyEnded[] = [];
+		const stop = subscribeReplyEnded((event) => ended.push(event));
+		const transport = new BrowserChatTransport(async () =>
+			mockChatModel({ text: ["a", "b"], chunkDelayInMs: 20 }),
+		);
+		const chat = openNewChat({ transport, store });
+
+		const reply = chat.sendMessage({ text: "hi" }, { body: SELECTION });
+		await vi.waitFor(() => expect(replyingCount()).toBe(1));
+		await reply;
+		expect(replyingCount()).toBe(0);
+		await vi.waitFor(() =>
+			expect(ended).toEqual([{ chatId: chat.id, outcome: "finished" }]),
+		);
+
+		const failing = openNewChat({
+			store,
+			transport: new BrowserChatTransport(async () => {
+				throw new Error("no model");
+			}),
+		});
+		await failing.sendMessage({ text: "hi" }, { body: SELECTION });
+		expect(ended).toContainEqual({ chatId: failing.id, outcome: "failed" });
+		expect(replyingCount()).toBe(0);
+		stop();
 	});
 });
