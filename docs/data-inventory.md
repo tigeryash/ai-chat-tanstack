@@ -53,6 +53,7 @@ Promises the design already makes. Changing one of these is a product decision, 
 | Product analytics events (no content) | Analytics provider (TBD, cookieless) | Us | Provider retention (TBD) | Planned (1.8) |
 | Error reports (scrubbed of keys and content) | Sentry | Us | Sentry retention (TBD) | Planned (1.8) |
 | Model catalog: public model data (names, prices, limits, providers, Artificial Analysis scores) and when each source last synced | Convex `models` and `modelCatalogSources`, refreshed daily by `convex/modelCatalogSync.ts` | Public (`models.list` / `models.get` need no session) | Rows are never deleted; models the Gateway drops are marked `removed` | Since 2.1 (2026-10-26); not user data |
+| Parameter probe results: which generation settings each model accepted on OpenRouter, with the hosts' error messages | `src/models/parameter-probe.generated.ts` in the repo, written by `scripts/probe-params.ts` with the developer's own OpenRouter key (never stored) | Public (ships in the app bundle) | Until the next probe run replaces it | Since 2.4a (2026-10-29); not user data |
 
 ## Third parties
 

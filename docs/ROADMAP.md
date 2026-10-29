@@ -84,6 +84,9 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   their High Elo view is empty): on `www.highelollms.com`, open the model picker with OpenRouter connected. Check
   the High Elo list looks right with real scores, a model card's facts and logos, and that a model only a direct
   key serves (one OpenRouter doesn't list) says "Connect …". e2e uses a seeded catalog.
+- [ ] Run the 2.4a parameter probe once (about $0.10 of OpenRouter credit, capped at $0.50): from the main checkout,
+  `bun scripts/probe-params.ts` (dry run, check the plan), then `bun scripts/probe-params.ts --yes`, and commit
+  `src/models/parameter-probe.generated.ts`. 2.4b's settings panel reads it.
 - [ ] Vercel Hobby is fine while this is a portfolio piece; move to Pro before charging money. *Still on Hobby
   (2026-10-23).*
 
@@ -429,8 +432,9 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   warn only when the server allows every origin (`*`), with Ollama `OLLAMA_ORIGINS` instructions and a "don't show
   again" per endpoint.
   *Done when:* the deployed app chats with LM Studio on your laptop.
-- [ ] **2.4a Parameter probe script.** Sends one tiny request per parameter per model with the developer's own keys
+- [x] **2.4a Parameter probe script.** Sends one tiny request per parameter per model with the developer's own keys
   (cents per run), records accept / reject / ignored, and writes results into `curation.ts`.
+  *Status (2026-10-29):* script and tests in PR_LINK; the first real run is an owner to-do.
 - [ ] **2.4b Parameter registry + settings panel** (decision 15), including provider-specific options and local
   sampling settings.
   *Done when:* switching models shows/hides the right controls and no supported model errors across any control's range.
