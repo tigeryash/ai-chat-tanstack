@@ -59,6 +59,10 @@ Playwright runs in 4 shards with 2 workers each (4 workers per runner made timin
   `streamText` in the page against the provider in each request's `body` (`language-model.ts`; local models get
   the `<think>` middleware). Tests use `mockChatModel` (`src/lib/chat/mock-model.ts`) and the `/e2e/chat` pages; in `VITE_E2E`
   builds the local model `e2e-mock-model` is the mock too (`e2e-model.ts`), so Playwright can drive `/new`.
+- **Local models** (roadmap 2.3, `src/lib/local-endpoints/`): endpoints saved in Settings (localStorage, localhost
+  and 127.0.0.1 only, to match `connect-src`); a local `ModelChoice` names its `endpoint` id. Nothing calls one
+  before it's saved and the Local Network Access explainer was clicked through. e2e stubs a server with
+  `context.route` (`e2e/local-models.spec.ts`); note `route.fulfill` adds a matching CORS header when you set none.
 - **Background status** (roadmap 3.10, `src/lib/background-status/`): `chat-sessions.ts` reports every chat's
   replying/finished/failed into `activity.ts`, so the hidden-tab title, favicon and notifications cover all open
   chats (and panes). Mounted once as `<BackgroundStatus />` in the `(dashboard)` layout.

@@ -101,9 +101,18 @@ describe("resolveProviderModel", () => {
 		);
 	});
 
-	it("needs no key for a local server", async () => {
+	it("asks for a local server in Settings when none is saved", async () => {
 		await expect(
 			resolveProviderModel({ provider: "local", model: "qwen" }),
-		).resolves.toBeDefined();
+		).rejects.toThrow(
+			"Add a local server (LM Studio or Ollama) in Settings first.",
+		);
+		await expect(
+			resolveProviderModel({
+				provider: "local",
+				model: "qwen",
+				endpoint: "ep-gone",
+			}),
+		).rejects.toThrow("This chat's local server was removed in Settings.");
 	});
 });

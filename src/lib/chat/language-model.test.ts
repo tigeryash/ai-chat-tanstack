@@ -10,7 +10,11 @@ const KEY = "sk-test-key-abcdefgh1234";
 type StreamingModel = Extract<LanguageModel, { doStream: unknown }>;
 
 /** Runs one request through `selection`'s model and returns what it sent, and where. */
-async function captureRequest(selection: ModelSelection, key: string | null) {
+async function captureRequest(
+	selection: ModelSelection,
+	key: string | null,
+	localBaseUrl?: string,
+) {
 	const sent: { url: string; headers: Headers; body: string }[] = [];
 	const fetchImpl = (async (input: RequestInfo | URL, init?: RequestInit) => {
 		sent.push({
@@ -24,6 +28,7 @@ async function captureRequest(selection: ModelSelection, key: string | null) {
 		selection,
 		key,
 		fetchImpl,
+		localBaseUrl,
 	) as StreamingModel;
 	try {
 		await model.doStream({
@@ -61,12 +66,13 @@ describe("createLanguageModel", () => {
 		).toBe("true");
 	});
 
-	it("calls the local server with no key", async () => {
+	it("calls the saved local endpoint with no key", async () => {
 		const [request] = await captureRequest(
-			{ provider: "local", model: "qwen" },
+			{ provider: "local", model: "qwen", endpoint: "ep-1" },
 			null,
+			"http://127.0.0.1:11434/v1",
 		);
-		expect(new URL(request.url).origin).toBe("http://localhost:1234");
+		expect(request.url).toBe("http://127.0.0.1:11434/v1/chat/completions");
 		expect(request.headers.has("authorization")).toBe(false);
 	});
 });

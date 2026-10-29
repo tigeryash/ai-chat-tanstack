@@ -8,6 +8,7 @@ import {
 } from "ai";
 import { hostKey, recordHostResult } from "@/lib/hosts/host-failures";
 import { getProviderKey } from "@/lib/keys";
+import { localEndpointFor } from "@/lib/local-endpoints/endpoints";
 import { logError } from "@/lib/log";
 import {
 	ChatSetupError,
@@ -49,7 +50,15 @@ export type ResolveModel = (
 /** The real provider for `selection`, with the key from the vault. */
 export const resolveProviderModel: ResolveModel = async (selection) => {
 	if (selection.provider === LOCAL_PROVIDER) {
-		return createLanguageModel(selection, null);
+		const endpoint = localEndpointFor(selection.endpoint);
+		if (!endpoint) {
+			throw new ChatSetupError(
+				selection.endpoint
+					? "This chat's local server was removed in Settings. Pick another model."
+					: "Add a local server (LM Studio or Ollama) in Settings first.",
+			);
+		}
+		return createLanguageModel(selection, null, undefined, endpoint.baseUrl);
 	}
 	const key = await getProviderKey(selection.provider);
 	if (!key) {
