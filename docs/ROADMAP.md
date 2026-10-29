@@ -408,7 +408,7 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
 - [ ] **1.8 Analytics foundation** (decision 23). A `track()` wrapper with an allowlist of event names and
   properties; cookieless page analytics and Web Vitals (`web-vitals` is already installed); Sentry with scrubbing.
   From here on, each slice lists the events it adds.
-- [ ] **1.9 Chat ownership on this device.** Each stored chat records its owner (a Better Auth user ID, or none
+- [x] **1.9 Chat ownership on this device.** Each stored chat records its owner (a Better Auth user ID, or none
   when made signed out), through a format migration that makes existing chats no-account chats. Signed out, the
   sidebar shows only no-account chats; signed in, the account's own plus the no-account ones (marked "Not saved to
   an account"), never another account's, whose URL looks missing. After sign-in, a one-time question per account
@@ -418,6 +418,8 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   readable in the browser profile until removed); per-account encryption is a possible later step.
   *Done when:* Vitest covers the migration and the filter; e2e covers signed out vs signed in, the prompt's three
   choices, both sign-out paths, and another account not seeing chats.
+  *Status (2026-10-29):* done; e2e signs in through a stubbed Better Auth session, so real accounts are an owner
+  to-do. PR: https://github.com/tigeryash/ai-chat-tanstack/pull/41
 
 ## Phase 2: Models and providers
 
