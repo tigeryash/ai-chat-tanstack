@@ -49,7 +49,7 @@ function MarkdownHarness() {
 							<MessageResponse>{payload.markdown}</MessageResponse>
 						</MessageContent>
 					</Message>
-					<Reasoning defaultOpen data-testid="reasoning">
+					<Reasoning open data-testid="reasoning">
 						<ReasoningTrigger />
 						<ReasoningContent>{payload.markdown}</ReasoningContent>
 					</Reasoning>

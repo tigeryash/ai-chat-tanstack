@@ -4,9 +4,11 @@ import { onKeysChanged } from "./key-events";
 import type { ProviderId } from "./providers";
 import { listProviderKeys } from "./vault";
 
-// Which providers have a key in this browser, shared by every component that asks. Loaded once, then
-// reloaded whenever a key is saved or deleted (here or in another tab) and when the tab comes back
-// into view, so a choice made while keys were loading, or before one was added, gets re-checked.
+// Which providers have a key in this browser, shared by every component that asks. Loaded when the
+// first component subscribes, then reloaded whenever a key is saved or deleted (here or in another
+// tab) and when the tab comes back into view, so a choice made while keys were loading, or before one
+// was added, gets re-checked. Nothing listens while no component is mounted (Settings has no picker),
+// so the first subscriber always reads again rather than trusting what was cached before.
 
 type Connected = ReadonlySet<ProviderId> | null;
 
@@ -55,12 +57,14 @@ const onVisible = () => {
 let stopKeyEvents: (() => void) | undefined;
 
 function subscribe(listener: () => void) {
-	if (listeners.size === 0) {
+	const first = listeners.size === 0;
+	if (first) {
 		document.addEventListener("visibilitychange", onVisible);
 		stopKeyEvents = onKeysChanged(() => void reloadConnectedProviders());
 	}
 	listeners.add(listener);
-	if (current === null) void reloadConnectedProviders();
+	// A key saved or deleted while nobody listened isn't in `current`.
+	if (first || current === null) void reloadConnectedProviders();
 	return () => {
 		listeners.delete(listener);
 		if (listeners.size === 0) {

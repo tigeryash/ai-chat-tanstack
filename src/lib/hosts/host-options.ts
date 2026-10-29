@@ -251,7 +251,10 @@ function priceOf(pricing: { input?: number; output?: number }): number {
 	return (pricing.input ?? 0) + (pricing.output ?? 0);
 }
 
-const SORTERS: Record<AutoSort, (a: HostOption, b: HostOption) => number> = {
+/** What Auto's sort compares; hosts and a router's upstreams both have it. */
+type Ranked = Pick<HostOption, "pricing" | "health" | "uptime" | "throughput">;
+
+const SORTERS: Record<AutoSort, (a: Ranked, b: Ranked) => number> = {
 	reliable: (a, b) =>
 		HEALTH_RANK[a.health] - HEALTH_RANK[b.health] ||
 		(b.uptime ?? 0) - (a.uptime ?? 0),
@@ -276,6 +279,32 @@ export function autoHost(
 	const up = fits.filter((option) => option.health !== "down");
 	const pool = up.length > 0 ? up : fits.length > 0 ? fits : connected;
 	return [...pool].sort(SORTERS[sort])[0];
+}
+
+/** Usable upstreams first, then ones that are down, then ones the chat can't use. */
+const usability = (upstream: Upstream) =>
+	upstream.excluded ? 2 : upstream.health === "down" ? 1 : 0;
+
+/**
+ * A router's upstreams in the order Auto's sort ranks them (OpenRouter's `provider.sort`; "reliable"
+ * stands for its default load balancing, which prefers stable providers). Ties keep the data's order.
+ */
+export function sortUpstreams(
+	upstreams: readonly Upstream[],
+	sort: AutoSort,
+): Upstream[] {
+	return [...upstreams].sort(
+		(a, b) => usability(a) - usability(b) || SORTERS[sort](a, b),
+	);
+}
+
+/** The upstream Auto is expected to land on: the best usable one by `sort`. The router decides. */
+export function expectedUpstream(
+	upstreams: readonly Upstream[] | undefined,
+	sort: AutoSort,
+): Upstream | undefined {
+	const [first] = sortUpstreams(upstreams ?? [], sort);
+	return first && usability(first) === 0 ? first : undefined;
 }
 
 /** What "Hide unavailable" leaves: connected hosts that aren't down. */

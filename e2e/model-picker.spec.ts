@@ -132,7 +132,11 @@ test("picking a runnable model streams a reply, and becomes the default", async 
 	await expect(
 		page.getByText("Mock reply from openai/gpt-5.5 via openrouter."),
 	).toBeVisible();
-	await expect(page.getByText("openai/gpt-5.5 · OpenRouter")).toBeVisible();
+	await expect(
+		page.getByRole("button", {
+			name: /^via OpenRouter · <\$0\.0001\. openai\/gpt-5\.5 · OpenRouter · ~\$/,
+		}),
+	).toBeVisible();
 
 	// A new chat starts on the last choice.
 	await page.goto("/e2e/model-picker");

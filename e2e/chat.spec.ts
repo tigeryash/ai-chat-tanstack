@@ -88,3 +88,52 @@ test("Regenerate replaces the last reply", async ({ page }) => {
 	await expect(reply(page)).toHaveCount(1);
 	await expect(reply(page)).toContainText(replyText);
 });
+
+test("finished reasoning reopens collapsed after a reload, without opening first", async ({
+	page,
+}) => {
+	// Records, from the first paint, whether a reasoning panel was ever open on this page load.
+	await page.addInitScript(() => {
+		const seen = { opened: false };
+		Object.assign(window, { __reasoning: seen });
+		new MutationObserver(() => {
+			if (
+				document.querySelector(
+					"[data-slot='trace-collapsible-content'], [data-slot='trace-collapsible-trigger'][aria-expanded='true']",
+				)
+			) {
+				seen.opened = true;
+			}
+		}).observe(document, {
+			subtree: true,
+			childList: true,
+			attributes: true,
+			attributeFilter: ["aria-expanded"],
+		});
+	});
+	await open(page);
+	await send(page, "Hello mock");
+	// A live reply opens its reasoning.
+	await expect(page.getByText(reasoningText)).toBeVisible();
+	await expect(status(page)).toHaveAttribute("data-chat-status", "ready");
+
+	const chatId = await page.locator("main").getAttribute("data-chat-id");
+	await open(page, `?chat=${chatId}`);
+	await expect(reply(page)).toContainText(replyText);
+	const trigger = page.getByRole("button", { name: /Thought for/ });
+	await expect(trigger).toHaveAttribute("aria-expanded", "false");
+	// Past the old auto-close delay: it never opened, so it never had to close.
+	await page.waitForTimeout(1500);
+	expect(
+		await page.evaluate(
+			() =>
+				(window as unknown as { __reasoning: { opened: boolean } }).__reasoning
+					.opened,
+		),
+	).toBe(false);
+	await expect(page.getByText(reasoningText)).toHaveCount(0);
+
+	// Still opens on request.
+	await trigger.click();
+	await expect(page.getByText(reasoningText)).toBeVisible();
+});

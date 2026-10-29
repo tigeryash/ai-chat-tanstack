@@ -96,6 +96,10 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
 - [ ] After the probe-results PR merges: `bunx convex dev --once`, `bunx convex run modelCatalogSync:sync`, then
   `bun scripts/probe-params.ts --yes --skip-high-elo --model alibaba/qwen3.8-max --model meta/muse-wonder-1.0
   --model mistral/mistral-large-4` (about a cent) and commit the updated results.
+- [ ] After the production-test fixes deploy: on your Mac, Settings → Background status → "Send test
+  notification" (Chrome and Helium) and confirm one appears; if not, follow the help it shows. Then, in a fresh
+  browser profile (or after clearing site data), save the first OpenRouter key (paste or Connect OpenRouter), go
+  back to a chat without reloading, and check the picker's "Run with" light turns green.
 - [ ] Vercel Hobby is fine while this is a portfolio piece; move to Pro before charging money. *Still on Hobby
   (2026-10-23).*
 

@@ -12,7 +12,8 @@ import type {
 } from "@/lib/models/picker-filter";
 import { cn } from "@/lib/utils";
 
-// The picker's search, High Elo / All toggle, filters and sort (roadmap 2.2).
+// The picker's search, High Elo / All / Local toggle, filters and sort (roadmap 2.2). The catalog
+// filters don't apply to local models, so the Local view shows only the search.
 
 const SELECT_CLASS =
 	"h-7 rounded-md border border-input bg-transparent px-1.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30";
@@ -35,6 +36,7 @@ const SORT_LABELS: Record<PickerSort, string> = {
 const VIEW_LABELS: Record<PickerView, string> = {
 	"high-elo": "High Elo",
 	all: "All models",
+	local: "Local",
 };
 
 const optionalNumber = (value: string) =>
@@ -88,6 +90,31 @@ export function ModelPickerFilters({
 					))}
 				</fieldset>
 			</div>
+			{filters.view !== "local" && (
+				<CatalogFilters
+					filters={filters}
+					developers={developers}
+					set={set}
+					toggleCapability={toggleCapability}
+				/>
+			)}
+		</div>
+	);
+}
+
+function CatalogFilters({
+	filters,
+	developers,
+	set,
+	toggleCapability,
+}: {
+	filters: PickerFilters;
+	developers: readonly string[];
+	set: (patch: Partial<PickerFilters>) => void;
+	toggleCapability: (capability: Capability) => void;
+}) {
+	return (
+		<>
 			<div className="flex flex-wrap items-center gap-1.5">
 				<select
 					aria-label="Developer"
@@ -159,6 +186,6 @@ export function ModelPickerFilters({
 					</button>
 				))}
 			</fieldset>
-		</div>
+		</>
 	);
 }

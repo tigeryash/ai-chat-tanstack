@@ -5,15 +5,25 @@ import {
 	ThumbsUpIcon,
 } from "lucide-react";
 import { Action, Actions } from "@/components/ai-elements/actions";
-import type { ReplyMetadata } from "@/lib/chat/browser-transport";
-import { LOCAL_PROVIDER, providerName } from "@/lib/chat/model-selection";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+	type CurrentModel,
+	type ReplySummary,
+	replySummary,
+} from "@/lib/chat/reply-summary";
 import { logWarn } from "@/lib/log";
-import { formatCost } from "@/lib/models/format";
+import { useCatalogModel } from "@/lib/models/catalog";
 import type { MessageUIProps } from "@/types/types";
 
 export type MessageActionsProps = MessageUIProps & {
 	/** Set on the reply that can be regenerated (the last one, once it has finished). */
 	onRegenerate?: () => void;
+	/** The chat's model now; a reply from another model names its own. */
+	currentModel?: CurrentModel;
 };
 
 function textOf(message: MessageUIProps["message"]): string {
@@ -22,25 +32,38 @@ function textOf(message: MessageUIProps["message"]): string {
 		.join("\n\n");
 }
 
-/** "model · OpenRouter · via DeepInfra · $0.0012" (roadmap 2.2b); older replies show less. */
-function modelLabel(metadata: unknown): string | null {
-	const reply = metadata as Partial<ReplyMetadata> | undefined;
-	if (!reply?.provider || !reply.model) return null;
-	const provider =
-		reply.provider === LOCAL_PROVIDER ? "Local" : providerName(reply.provider);
-	const cost =
-		typeof reply.cost === "number" ? formatCost(reply.cost) : undefined;
-	return [
-		reply.model,
-		provider,
-		typeof reply.host === "string" && `via ${reply.host}`,
-		cost && (reply.costEstimated ? `~${cost}` : cost),
-	]
-		.filter(Boolean)
-		.join(" · ");
+/** "via OpenRouter → DeepInfra · $0.0002" (roadmap 2.2b), with every detail in the tooltip. */
+function ReplyLine({ summary }: { summary: ReplySummary }) {
+	const { data } = useCatalogModel(
+		summary.model ? summary.gatewayId : undefined,
+	);
+	const name = summary.model && (data?.name ?? summary.model);
+	const text = [name, summary.route, summary.cost].filter(Boolean).join(" · ");
+	return (
+		<Tooltip>
+			<TooltipTrigger
+				render={
+					<button
+						type="button"
+						aria-label={`${text}. ${summary.details}`}
+						className="ml-2 rounded text-muted-foreground text-xs outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+					/>
+				}
+			>
+				{text}
+			</TooltipTrigger>
+			<TooltipContent>
+				<p>{summary.details}</p>
+			</TooltipContent>
+		</Tooltip>
+	);
 }
 
-const MessageActions = ({ message, onRegenerate }: MessageActionsProps) => {
+const MessageActions = ({
+	message,
+	onRegenerate,
+	currentModel,
+}: MessageActionsProps) => {
 	const handleCopy = () => {
 		navigator.clipboard
 			.writeText(textOf(message))
@@ -48,7 +71,7 @@ const MessageActions = ({ message, onRegenerate }: MessageActionsProps) => {
 	};
 	const handleThumbsUp = () => {};
 	const handleThumbsDown = () => {};
-	const model = modelLabel(message.metadata);
+	const summary = replySummary(message.metadata, currentModel);
 	return (
 		message.role === "assistant" && (
 			<Actions>
@@ -66,9 +89,7 @@ const MessageActions = ({ message, onRegenerate }: MessageActionsProps) => {
 				<Action onClick={handleThumbsDown} tooltip="Bad response">
 					<ThumbsDownIcon className="size-4" />
 				</Action>
-				{model && (
-					<span className="ml-2 text-xs text-muted-foreground">{model}</span>
-				)}
+				{summary && <ReplyLine summary={summary} />}
 			</Actions>
 		)
 	);

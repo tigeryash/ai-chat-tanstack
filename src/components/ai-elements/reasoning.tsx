@@ -68,7 +68,11 @@ export const Reasoning = memo(
 		children,
 		...props
 	}: ReasoningProps) => {
-		const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen);
+		// Only a reasoning that is still streaming when it first renders opens itself. One that's already
+		// finished (a saved chat, after a reload) starts closed, so it never flashes open and shut.
+		const [uncontrolledOpen, setUncontrolledOpen] = useState(
+			defaultOpen && isStreaming,
+		);
 		const isOpen = open ?? uncontrolledOpen;
 		const setIsOpen = (next: boolean) => {
 			if (open === undefined) setUncontrolledOpen(next);
@@ -79,7 +83,7 @@ export const Reasoning = memo(
 		const duration = durationProp ?? measuredDuration;
 		const [startTime, setStartTime] = useState<number | null>(null);
 		// Set once it has closed itself or the person opened or closed it; after that their choice wins.
-		const [settled, setSettled] = useState(false);
+		const [settled, setSettled] = useState(!isStreaming);
 
 		// Track duration when streaming starts and ends
 		useEffect(() => {

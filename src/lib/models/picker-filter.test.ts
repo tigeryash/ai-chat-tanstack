@@ -23,6 +23,11 @@ describe("filterModels", () => {
 		]);
 	});
 
+	it("lists no catalog model under Local", () => {
+		expect(names({ view: "local" })).toEqual([]);
+		expect(names({ view: "local", search: "claude" })).toEqual([]);
+	});
+
 	it("lists every model under All, unscored ones last", () => {
 		const all = names({ view: "all" });
 		expect(all).toHaveLength(TEST_MODELS.length);

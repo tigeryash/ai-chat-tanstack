@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test";
+import { TEST_NOTIFICATION_TITLE } from "../src/lib/background-status/notifications";
 import { BACKGROUND_STATUS_KEY } from "../src/lib/background-status/settings";
 import { E2E_MOCK_MODEL, E2E_MOCK_REPLY } from "../src/lib/chat/e2e-model";
 import { MODEL_CHOICE_STORAGE_KEY } from "../src/lib/chat/model-selection";
@@ -257,4 +258,49 @@ test("settings switch tab status and each notification on and off", async ({
 		`● Replying — ${BASE_TITLE}`,
 	);
 	await expect(page).toHaveTitle(BASE_TITLE);
+});
+
+test("Settings sends a test notification, asking first, with no chat content", async ({
+	page,
+}) => {
+	await page.goto("/settings");
+	const section = page.getByRole("region", { name: "Background status" });
+	await expect(page.getByText("Loading saved keys…")).toHaveCount(0);
+	await section.getByRole("button", { name: "Send test notification" }).click();
+	await expect(section.getByRole("status")).toContainText("Sent.");
+	expect(await notificationLog(page)).toEqual({
+		permissionRequests: 1,
+		shown: [{ title: TEST_NOTIFICATION_TITLE, tag: "highelo-test" }],
+	});
+	// Where to look when the system hides it.
+	const help = section.getByRole("note", {
+		name: "If notifications don't appear",
+	});
+	await expect(help).toContainText("System Settings → Notifications");
+	await expect(help).toContainText("Focus or Do Not Disturb");
+	await expect(help).toContainText("site's notification permission");
+
+	// Already allowed: no second prompt.
+	await section.getByRole("button", { name: "Send test notification" }).click();
+	await expect
+		.poll(async () => (await notificationLog(page)).shown.length)
+		.toBe(2);
+	expect((await notificationLog(page)).permissionRequests).toBe(1);
+});
+
+test("a blocked test notification explains what to check", async ({ page }) => {
+	await page.addInitScript(() => {
+		window.__grantNotifications = "denied";
+	});
+	await page.goto("/settings");
+	const section = page.getByRole("region", { name: "Background status" });
+	await expect(page.getByText("Loading saved keys…")).toHaveCount(0);
+	await section.getByRole("button", { name: "Send test notification" }).click();
+	await expect(section.getByRole("status")).toContainText(
+		"Notifications are blocked",
+	);
+	await expect(
+		section.getByRole("note", { name: "If notifications don't appear" }),
+	).toContainText("System Settings → Notifications");
+	expect((await notificationLog(page)).shown).toEqual([]);
 });

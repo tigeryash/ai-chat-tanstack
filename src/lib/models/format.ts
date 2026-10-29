@@ -39,8 +39,17 @@ export function formatCutoff(cutoff: string | undefined): string | undefined {
 	return MONTH_YEAR.format(Date.UTC(Number(match[1]), Number(match[2]) - 1));
 }
 
-/** USD for one reply, which is often a tiny fraction of a cent: "$0.000021", "$0.0012", "$0.42". */
+/** USD for one reply, rounded for a glance: "$0.0002", "<$0.0001", "$0.0012", "$0.42". */
 export function formatCost(usd: number | undefined): string | undefined {
+	if (usd === undefined) return undefined;
+	if (usd === 0) return "$0";
+	if (usd < 0.0001) return "<$0.0001";
+	if (usd < 0.01) return `$${Number(usd.toFixed(4))}`;
+	return `$${usd.toFixed(2)}`;
+}
+
+/** USD for one reply to two significant digits, for details: "$0.000021", "$0.0012", "$0.42". */
+export function formatCostExact(usd: number | undefined): string | undefined {
 	if (usd === undefined) return undefined;
 	if (usd === 0) return "$0";
 	if (usd < 0.000001) return "<$0.000001";

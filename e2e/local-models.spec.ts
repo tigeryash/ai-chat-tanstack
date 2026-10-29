@@ -200,3 +200,56 @@ test("no local server is called on page load, and a LAN address can't be saved",
 	await expect(section).toContainText("Only localhost and 127.0.0.1 work.");
 	await expect(section.getByRole("region")).toHaveCount(1);
 });
+
+test("the picker's Local view lists only local models, by keyboard, and is remembered", async ({
+	page,
+	context,
+	baseURL,
+}) => {
+	await stubLocalServer(context, new URL(baseURL ?? "").origin, "this-site");
+	await networkAccessIs(page, "granted");
+	await addStubEndpoint(page);
+
+	await page.goto("/new");
+	await page.getByRole("button", { name: /^Model: / }).click();
+	const dialog = page.getByRole("dialog", { name: "Choose a model" });
+	const views = dialog.getByRole("group", { name: "Which models" });
+	await expect(views.getByRole("button")).toHaveText([
+		"High Elo",
+		"All models",
+		"Local",
+	]);
+	await views.getByRole("button", { name: "All models" }).focus();
+	await page.keyboard.press("Tab");
+	await expect(views.getByRole("button", { name: "Local" })).toBeFocused();
+	await page.keyboard.press("Enter");
+	await expect(views.getByRole("button", { name: "Local" })).toHaveAttribute(
+		"aria-pressed",
+		"true",
+	);
+	await expect(dialog.getByRole("region", { name: "Models" })).toHaveCount(0);
+	await expect(
+		dialog.getByRole("region", { name: "Use a model id" }),
+	).toHaveCount(0);
+	await expect(dialog.getByLabel("Developer")).toHaveCount(0);
+	const local = dialog.getByRole("region", { name: "Local" });
+	await local.getByRole("button", { name: "Continue" }).click();
+	await expect(local.getByRole("button")).toHaveText([
+		new RegExp(`${E2E_MOCK_MODEL}${STUB_NAME}$`),
+		new RegExp(`qwen3-8b${STUB_NAME}$`),
+	]);
+	// Search still narrows the list.
+	await dialog.getByLabel("Search models").fill("qwen");
+	await expect(local.getByRole("button")).toHaveText([
+		new RegExp(`qwen3-8b${STUB_NAME}$`),
+	]);
+
+	// Kept in this browser.
+	await page.reload();
+	await page.getByRole("button", { name: /^Model: / }).click();
+	await expect(views.getByRole("button", { name: "Local" })).toHaveAttribute(
+		"aria-pressed",
+		"true",
+	);
+	await expect(dialog.getByRole("region", { name: "Local" })).toBeVisible();
+});
