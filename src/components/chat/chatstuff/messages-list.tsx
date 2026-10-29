@@ -6,15 +6,22 @@ import {
 	ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
 import { MessageScrollerItem } from "@/components/ui/message-scroller";
+import type { CurrentModel } from "@/lib/chat/reply-summary";
 import MessageUI from "./message-ui";
 
 type MessagesListProps = {
 	messages: UIMessage<unknown, UIDataTypes, UITools>[];
 	/** Regenerates the last reply. Leave unset while a reply is streaming. */
 	onRegenerate?: (messageId: string) => void;
+	/** The chat's model now, so replies from another model can say which. */
+	currentModel?: CurrentModel;
 };
 
-const MessagesList = ({ messages, onRegenerate }: MessagesListProps) => {
+const MessagesList = ({
+	messages,
+	onRegenerate,
+	currentModel,
+}: MessagesListProps) => {
 	const last = messages.at(-1);
 	const regenerate =
 		onRegenerate && last?.role === "assistant"
@@ -35,6 +42,7 @@ const MessagesList = ({ messages, onRegenerate }: MessagesListProps) => {
 							<MessageUI
 								message={message}
 								onRegenerate={message === last ? regenerate : undefined}
+								currentModel={currentModel}
 							/>
 						</MessageScrollerItem>
 					))}

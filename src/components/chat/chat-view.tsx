@@ -62,6 +62,12 @@ export function ChatView({
 				) : (
 					<MessagesList
 						messages={messages}
+						currentModel={
+							selection && {
+								model: selection.model,
+								gatewayId: selection.gatewayId,
+							}
+						}
 						onRegenerate={
 							busy || !options
 								? undefined

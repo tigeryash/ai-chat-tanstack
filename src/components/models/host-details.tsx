@@ -1,9 +1,14 @@
 import { CheckIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { providerName } from "@/lib/chat/model-selection";
+import { type AutoSort, providerName } from "@/lib/chat/model-selection";
 import type { HostFeatures } from "@/lib/hosts/endpoint-stats";
-import type { HostOption, Upstream } from "@/lib/hosts/host-options";
+import {
+	expectedUpstream,
+	type HostOption,
+	sortUpstreams,
+	type Upstream,
+} from "@/lib/hosts/host-options";
 import {
 	formatLatency,
 	formatPrice,
@@ -15,7 +20,8 @@ import { cn } from "@/lib/utils";
 import { HostLight } from "./host-light";
 
 // What an expanded "Run with" row shows (roadmap 2.2b): a direct host's details, or a router's
-// upstream providers with Auto first.
+// upstream providers with Auto first. OpenRouter's upstreams are ranked by what Auto optimizes for
+// (its `provider.sort`), and the one Auto should land on is marked.
 
 function Fact({ term, children }: { term: string; children: ReactNode }) {
 	return (
@@ -125,10 +131,13 @@ export function DirectHostDetails({
 function UpstreamRow({
 	upstream,
 	selected,
+	autoExpected,
 	onPick,
 }: {
 	upstream: Upstream;
 	selected: boolean;
+	/** Auto is on and expected to route here. */
+	autoExpected: boolean;
 	onPick?: () => void;
 }) {
 	const facts = [
@@ -155,6 +164,11 @@ function UpstreamRow({
 				<span className="flex min-w-0 items-center gap-1.5">
 					<span className="truncate font-medium">{upstream.name}</span>
 					{selected && <CheckIcon aria-hidden="true" className="size-3" />}
+					{autoExpected && (
+						<span className="shrink-0 rounded bg-muted px-1 text-[0.65rem]">
+							Auto's likely pick
+						</span>
+					)}
 					<span className="ml-auto shrink-0 text-muted-foreground tabular-nums">
 						{facts.join(" · ")}
 					</span>
@@ -174,6 +188,8 @@ export function RouterUpstreams({
 	onPick,
 	hideDown,
 	loading,
+	sort,
+	auto,
 }: {
 	option: HostOption;
 	/** The pinned upstream; null when Auto is selected, undefined when this router isn't in use. */
@@ -181,12 +197,19 @@ export function RouterUpstreams({
 	onPick?: (upstream: string | undefined) => void;
 	hideDown: boolean;
 	loading: boolean;
+	/** What Auto optimizes for, when it applies to this router (OpenRouter); else the data's order. */
+	sort?: AutoSort;
+	/** The router's upstream is left to Auto (nothing pinned). */
+	auto: boolean;
 }) {
 	const name = providerName(option.provider);
-	const upstreams = (option.upstreams ?? []).filter(
+	const all = option.upstreams ?? [];
+	const ranked = sort ? sortUpstreams(all, sort) : all;
+	const upstreams = ranked.filter(
 		(upstream) =>
 			!hideDown || (upstream.health !== "down" && !upstream.excluded),
 	);
+	const expected = sort && auto ? expectedUpstream(all, sort) : undefined;
 	return (
 		<div className="grid gap-1">
 			<ul
@@ -219,6 +242,7 @@ export function RouterUpstreams({
 						key={upstream.slug}
 						upstream={upstream}
 						selected={selectedUpstream === upstream.slug}
+						autoExpected={expected?.slug === upstream.slug}
 						onPick={
 							onPick && !upstream.excluded
 								? () => onPick(upstream.slug)

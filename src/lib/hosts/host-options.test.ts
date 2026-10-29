@@ -6,7 +6,13 @@ import {
 	parseOpenRouterEndpoints,
 	withPolicies,
 } from "./endpoint-stats";
-import { autoHost, type ChatNeeds, hostOptionsFor } from "./host-options";
+import {
+	autoHost,
+	type ChatNeeds,
+	expectedUpstream,
+	hostOptionsFor,
+	sortUpstreams,
+} from "./host-options";
 import { DEFAULT_HOST_PREFS, type HostPrefs } from "./host-prefs";
 import { resolveHost, selectionExtras } from "./resolve-host";
 import {
@@ -225,5 +231,50 @@ describe("resolveHost", () => {
 			noTraining: true,
 			pricing: { input: 0.12, output: 0.5 },
 		});
+	});
+});
+
+describe("sortUpstreams", () => {
+	const [openRouter] = options(["openrouter"]);
+	const upstreams = openRouter?.upstreams ?? [];
+	const order = (sort: "reliable" | "cheapest" | "fastest") =>
+		sortUpstreams(upstreams, sort).map((upstream) => upstream.slug);
+
+	it("ranks OpenRouter's upstreams by Auto's sort, down ones last", () => {
+		expect(order("reliable")).toEqual([
+			"deepinfra/fp8",
+			"fireworks",
+			"baseten",
+			"reka",
+		]);
+		expect(order("cheapest")).toEqual([
+			"deepinfra/fp8",
+			"fireworks",
+			"baseten",
+			"reka",
+		]);
+		expect(order("fastest")).toEqual([
+			"baseten",
+			"fireworks",
+			"deepinfra/fp8",
+			"reka",
+		]);
+	});
+
+	it("expects Auto to use the first usable upstream", () => {
+		expect(expectedUpstream(upstreams, "fastest")?.slug).toBe("baseten");
+		expect(expectedUpstream(upstreams, "cheapest")?.slug).toBe("deepinfra/fp8");
+		expect(expectedUpstream(undefined, "cheapest")).toBeUndefined();
+	});
+
+	it("skips upstreams the chat can't use", () => {
+		const [filtered] = options(["openrouter"], {
+			prefs: { ...DEFAULT_HOST_PREFS, noTrainingOnly: true },
+		});
+		const sorted = sortUpstreams(filtered?.upstreams ?? [], "cheapest");
+		expect(sorted.at(-1)?.excluded).toBeDefined();
+		expect(
+			expectedUpstream(filtered?.upstreams, "cheapest")?.excluded,
+		).toBeUndefined();
 	});
 });

@@ -43,10 +43,11 @@ export interface RunWithProps {
 	loading: boolean;
 }
 
+/** Read as "Auto picks the cheapest OpenRouter host": the sort only steers OpenRouter's routing. */
 const SORT_LABELS: Record<AutoSort, string> = {
-	reliable: "Most reliable",
-	cheapest: "Cheapest",
-	fastest: "Fastest",
+	cheapest: "cheapest",
+	fastest: "fastest",
+	reliable: "most reliable",
 };
 
 function summaryOf(option: HostOption) {
@@ -154,10 +155,11 @@ export function RunWith({
 			<div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
 				<span className="flex items-center gap-1.5">
 					<label htmlFor={sortId} className="text-muted-foreground">
-						Auto picks
+						Auto picks the
 					</label>
 					<select
 						id={sortId}
+						aria-describedby={`${sortId}-after`}
 						value={prefs.autoSort}
 						onChange={(event) =>
 							onPrefs({ autoSort: event.target.value as AutoSort })
@@ -170,6 +172,9 @@ export function RunWith({
 							</option>
 						))}
 					</select>
+					<span id={`${sortId}-after`} className="text-muted-foreground">
+						OpenRouter host
+					</span>
 				</span>
 				<SwitchRow
 					label="Only hosts that don't train on my data"
@@ -192,6 +197,7 @@ export function RunWith({
 						key={option.provider}
 						option={option}
 						isAutoPick={auto && autoPick?.provider === option.provider}
+						autoSort={prefs.autoSort}
 						current={current}
 						hideDown={prefs.hideUnavailable}
 						loading={loading}
@@ -206,6 +212,7 @@ export function RunWith({
 function HostRow({
 	option,
 	isAutoPick,
+	autoSort,
 	current,
 	hideDown,
 	loading,
@@ -213,6 +220,7 @@ function HostRow({
 }: {
 	option: HostOption;
 	isAutoPick: boolean;
+	autoSort: AutoSort;
 	current: CurrentHost | undefined;
 	hideDown: boolean;
 	loading: boolean;
@@ -277,6 +285,8 @@ function HostRow({
 						onPick={usable ? onPin : undefined}
 						hideDown={hideDown}
 						loading={loading}
+						sort={option.provider === "openrouter" ? autoSort : undefined}
+						auto={inUse ? !current.upstream : true}
 					/>
 				) : (
 					<DirectHostDetails

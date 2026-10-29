@@ -90,7 +90,7 @@ async function fakeProviders(page: Page) {
 			const order = (body.provider as { order?: string[] } | undefined)?.order;
 			const upstream =
 				order?.[0] === "deepinfra/fp8" ? "DeepInfra" : "Fireworks";
-			return sse(upstream, `Hello via ${upstream}.`, 0.000021);
+			return sse(upstream, `Hello via ${upstream}.`, 0.00021);
 		}),
 	);
 	await page.route(
@@ -173,8 +173,14 @@ test("Auto picks a connected host, and the reply says which host answered", asyn
 
 	await send(page, "Hi there");
 	await expect(page.getByText("Hello via Fireworks.")).toBeVisible();
+	// The footer: route and a rounded cost; the model is the header's, so only the tooltip names it.
+	const footer = page.getByRole("button", {
+		name: /^via OpenRouter → Fireworks · \$0\.0002\. /,
+	});
+	await expect(footer).toHaveText("via OpenRouter → Fireworks · $0.0002");
+	await footer.hover();
 	await expect(
-		page.getByText(`${MODEL} · OpenRouter · via Fireworks · $0.000021`),
+		page.getByText(`${MODEL} · OpenRouter · via Fireworks · $0.00021`),
 	).toBeVisible();
 
 	// Auto leaves the upstream to OpenRouter (its default, most reliable, routing).
@@ -252,7 +258,9 @@ test("switching to a direct key sends the request to that origin only", async ({
 	await expect(page.getByText("Hello from Fireworks direct.")).toBeVisible();
 	// No bill from Fireworks: the cost is estimated from its live prices.
 	await expect(
-		page.getByText(`${FIREWORKS_MODEL} · Fireworks · ~$0.0000034`),
+		page.getByRole("button", {
+			name: `via Fireworks · <$0.0001. ${FIREWORKS_MODEL} · Fireworks · ~$0.0000034 (estimated from list prices)`,
+		}),
 	).toBeVisible();
 	expect(providers.completions.map((completion) => completion.origin)).toEqual([
 		"https://api.fireworks.ai",
@@ -391,4 +399,94 @@ test("a key added in another tab connects the chat without a reload", async ({
 	await expect(
 		page.getByRole("link", { name: "Connect DeepSeek" }),
 	).toHaveCount(0);
+});
+
+test("the first key ever saved turns the light green without a reload", async ({
+	page,
+}) => {
+	await fakeProviders(page);
+	// Empty browser storage: no key has been saved here yet.
+	await page.goto("/e2e/chat-live");
+	const models = picker(page);
+	await models.open();
+	await models.dialog.getByRole("button", { name: "All models" }).click();
+	await models.dialog.getByLabel("Search models").fill("DeepSeek");
+	await models.dialog.locator(`li[data-model="${MODEL}"]`).hover();
+	const light = models.host("OpenRouter").locator("[data-light]").first();
+	await expect(light).toHaveAttribute("data-light", "not-connected");
+
+	// In-app navigation to Settings and back, as the picker's Connect link does.
+	await models
+		.host("OpenRouter")
+		.getByRole("link", { name: "Connect" })
+		.click();
+	await expect(page).toHaveURL(/\/settings$/);
+	const row = page.getByRole("region", { name: "OpenRouter", exact: true });
+	await row.getByRole("button", { name: "Add key" }).click();
+	await row.getByLabel("OpenRouter API key").fill(KEYS.openrouter);
+	await row.getByRole("radio", { name: "Remember on this device" }).check();
+	await row.getByRole("button", { name: "Save key" }).click();
+	await expect(row).toContainText(`••••${KEYS.openrouter.slice(-4)}`);
+	await page.goBack();
+	await expect(page).toHaveURL(/\/e2e\/chat-live$/);
+
+	await models.open();
+	await models.dialog.getByRole("button", { name: "All models" }).click();
+	await models.dialog.getByLabel("Search models").fill("DeepSeek");
+	await models.dialog.locator(`li[data-model="${MODEL}"]`).hover();
+	await expect(light).not.toHaveAttribute("data-light", "not-connected");
+});
+
+test("Auto's sort ranks OpenRouter's upstreams and marks its likely pick", async ({
+	page,
+}) => {
+	await fakeProviders(page);
+	await connect(page, "OpenRouter");
+	await page.goto("/e2e/chat-live");
+	const models = picker(page);
+	await models.open();
+	await models.pickModel();
+	await models.open();
+
+	const sort = models.runWith.getByLabel("Auto picks the");
+	await expect(sort).toHaveAccessibleDescription("OpenRouter host");
+	await expect(sort.locator("option")).toHaveText([
+		"cheapest",
+		"fastest",
+		"most reliable",
+	]);
+	await models.expand("OpenRouter");
+	const upstreams = models.runWith.locator("button[data-upstream]");
+	const order = () =>
+		upstreams.evaluateAll((buttons) =>
+			buttons.map((button) => button.getAttribute("data-upstream")),
+		);
+	const likely = models.runWith
+		.locator("button[data-upstream]")
+		.filter({ hasText: "Auto's likely pick" });
+
+	// Most reliable by default: DeepInfra has the best uptime; Reka is down, so last.
+	expect(await order()).toEqual([
+		"deepinfra/fp8",
+		"fireworks",
+		"baseten",
+		"reka",
+	]);
+	await expect(likely).toHaveAttribute("data-upstream", "deepinfra/fp8");
+
+	await sort.selectOption("fastest");
+	await expect
+		.poll(order)
+		.toEqual(["baseten", "fireworks", "deepinfra/fp8", "reka"]);
+	await expect(likely).toHaveAttribute("data-upstream", "baseten");
+
+	// A pinned upstream is the chat's choice; nothing is marked as Auto's.
+	await models.upstream("fireworks").click();
+	await models.open();
+	await models.expand("OpenRouter");
+	await expect(models.upstream("fireworks")).toHaveAttribute(
+		"aria-pressed",
+		"true",
+	);
+	await expect(likely).toHaveCount(0);
 });

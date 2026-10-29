@@ -110,8 +110,15 @@ test("a chat through OpenRouter sends the key only to OpenRouter", async ({
 	await box.press("Enter");
 
 	await expect(page.getByText("Hello from OpenRouter!")).toBeVisible();
-	await expect(page.getByText("Considering a greeting.")).toBeAttached();
-	await expect(page.getByText(`${MODEL} · OpenRouter`)).toBeVisible();
+	// Finished reasoning sits collapsed; it opens on request.
+	const thought = page.getByRole("button", { name: /^Thought for/ });
+	await expect(thought).toHaveAttribute("aria-expanded", "false");
+	await thought.click();
+	await expect(page.getByText("Considering a greeting.")).toBeVisible();
+	// The footer names the route; the model is the header's, so it's only in the details.
+	await expect(
+		page.getByRole("button", { name: `via OpenRouter. ${MODEL} · OpenRouter` }),
+	).toBeVisible();
 
 	expect(openRouter.completions).toEqual([
 		expect.objectContaining({

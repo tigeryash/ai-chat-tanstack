@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
 	formatCost,
+	formatCostExact,
 	formatCutoff,
 	formatMonth,
 	formatPrice,
@@ -32,10 +33,28 @@ describe("model formats", () => {
 });
 
 describe("formatCost", () => {
-	it("keeps two significant digits below a cent", () => {
+	it("rounds to a tenth of a cent's tenth, with a floor", () => {
+		expect(
+			[0.00021, 0.000021, 0.00016, 0.0012, 0.0099, 0.00999, 0.42, 3.5, 0].map(
+				formatCost,
+			),
+		).toEqual([
+			"$0.0002",
+			"<$0.0001",
+			"$0.0002",
+			"$0.0012",
+			"$0.0099",
+			"$0.01",
+			"$0.42",
+			"$3.50",
+			"$0",
+		]);
+	});
+
+	it("keeps two significant digits below a cent in the exact form", () => {
 		expect(
 			[0.000021, 0.00000344, 0.0012, 0.0099, 0.42, 3.5, 0.0000001, 0].map(
-				formatCost,
+				formatCostExact,
 			),
 		).toEqual([
 			"$0.000021",

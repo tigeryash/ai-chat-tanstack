@@ -21,6 +21,7 @@ import {
 	filterModels,
 	type PickerFilters,
 } from "@/lib/models/picker-filter";
+import { usePickerView } from "@/lib/models/picker-view";
 import { routesFor } from "@/lib/models/runnability";
 import { ModelLogo } from "./model-logo";
 import { ModelPickerFilters } from "./model-picker-filters";
@@ -89,7 +90,15 @@ export function ModelPicker({
 	connected,
 }: ModelPickerProps) {
 	const [open, setOpen] = useState(false);
-	const [filters, setFilters] = useState<PickerFilters>(DEFAULT_FILTERS);
+	const [view, setView] = usePickerView();
+	const [otherFilters, setOtherFilters] =
+		useState<PickerFilters>(DEFAULT_FILTERS);
+	const filters = { ...otherFilters, view };
+	const setFilters = (next: PickerFilters) => {
+		setOtherFilters(next);
+		if (next.view !== view) setView(next.view);
+	};
+	const localOnly = view === "local";
 	const [previewId, setPreviewId] = useState<string | undefined>();
 	const local = useLocalModels(open);
 	const connectedSet = connected ?? new Set<ProviderId>();
@@ -174,12 +183,12 @@ export function ModelPicker({
 				/>
 				<div className="grid sm:grid-cols-[minmax(0,1fr)_minmax(0,25rem)]">
 					<div className="max-h-[min(28rem,45vh)] overflow-y-auto p-1 sm:max-h-[min(34rem,70vh)]">
-						{!catalog.models && !catalog.failed && (
+						{!catalog.models && !catalog.failed && !localOnly && (
 							<p className="p-3 text-muted-foreground text-sm">
 								Loading models…
 							</p>
 						)}
-						{catalog.failed && (
+						{catalog.failed && !localOnly && (
 							<p className="flex items-center gap-2 p-3 text-sm" role="alert">
 								Couldn't load the model catalog.
 								<Button size="sm" variant="outline" onClick={catalog.retry}>
@@ -187,7 +196,7 @@ export function ModelPicker({
 								</Button>
 							</p>
 						)}
-						{catalog.models && entries.length === 0 && (
+						{catalog.models && entries.length === 0 && !localOnly && (
 							<p className="p-3 text-muted-foreground text-sm">
 								No models match.{" "}
 								{filters.view === "high-elo" && "Try All models, or "}
@@ -218,11 +227,13 @@ export function ModelPicker({
 							onPick={pick}
 							onExplained={markNetworkAccessExplained}
 						/>
-						<CustomSection
-							search={filters.search}
-							targets={customTargets}
-							onPick={pick}
-						/>
+						{!localOnly && (
+							<CustomSection
+								search={filters.search}
+								targets={customTargets}
+								onPick={pick}
+							/>
+						)}
 					</div>
 					{previewed && (
 						<div className="max-h-[min(24rem,40vh)] overflow-y-auto border-t sm:max-h-[min(34rem,70vh)] sm:border-t-0 sm:border-l">

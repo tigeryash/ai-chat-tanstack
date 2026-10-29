@@ -1,10 +1,12 @@
 import { type Capability, capabilitiesOf } from "./capabilities";
 import type { CatalogModel } from "./catalog";
 
-// What the model picker shows (roadmap 2.2): the High Elo / All view, search, filters and sort.
-// Pure, so the picker component only holds the state.
+// What the model picker shows (roadmap 2.2): the High Elo / All / Local view, search, filters and
+// sort. Pure, so the picker component only holds the state.
 
-export type PickerView = "high-elo" | "all";
+export const PICKER_VIEWS = ["high-elo", "all", "local"] as const;
+/** "local" lists only the saved local servers' models, none from the catalog. */
+export type PickerView = (typeof PICKER_VIEWS)[number];
 export type PickerSort = "intelligence" | "price" | "newest";
 
 export interface PickerFilters {
@@ -45,6 +47,7 @@ function matchesSearch(model: CatalogModel, search: string): boolean {
 }
 
 function matches(model: CatalogModel, filters: PickerFilters): boolean {
+	if (filters.view === "local") return false;
 	if (filters.view === "high-elo" && !model.highElo) return false;
 	if (filters.developer && model.developer !== filters.developer) return false;
 	if (filters.maxPrice !== undefined) {

@@ -74,3 +74,40 @@ export function showReplyNotification(
 		logWarn("Couldn't show a notification:", error);
 	}
 }
+
+export type TestNotificationResult =
+	| "sent"
+	| "blocked"
+	| "unsupported"
+	| "failed";
+
+/** The test notification's fixed text: it names no chat and nothing from one. */
+export const TEST_NOTIFICATION_TITLE = "Test notification from High Elo LLMs";
+
+/**
+ * Settings' "Send test notification": asks for permission if it hasn't been asked, then shows a fixed
+ * test notification. "sent" means the browser took it; the system can still hide it (macOS settings,
+ * Focus), which the page can't see.
+ */
+export async function showTestNotification(): Promise<TestNotificationResult> {
+	if (notificationAccess() === "unsupported") return "unsupported";
+	const access =
+		notificationAccess() === "default"
+			? await requestNotificationAccess()
+			: notificationAccess();
+	if (access !== "granted") return "blocked";
+	try {
+		const notification = new Notification(TEST_NOTIFICATION_TITLE, {
+			body: "Notifications work. Replies will say “Reply ready in” and the chat's name.",
+			tag: "highelo-test",
+		});
+		notification.onclick = () => {
+			window.focus();
+			notification.close();
+		};
+		return "sent";
+	} catch (error) {
+		logWarn("Couldn't show a test notification:", error);
+		return "failed";
+	}
+}
