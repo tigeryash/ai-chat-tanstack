@@ -434,7 +434,7 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   *Done when:* the deployed app chats with LM Studio on your laptop.
 - [x] **2.4a Parameter probe script.** Sends one tiny request per parameter per model with the developer's own keys
   (cents per run), records accept / reject / ignored, and writes results into `curation.ts`.
-  *Status (2026-10-29):* script and tests in PR_LINK; the first real run is an owner to-do.
+  *Status (2026-10-29):* script and tests in [#35](https://github.com/tigeryash/ai-chat-tanstack/pull/35); the first real run is an owner to-do.
 - [ ] **2.4b Parameter registry + settings panel** (decision 15), including provider-specific options and local
   sampling settings.
   *Done when:* switching models shows/hides the right controls and no supported model errors across any control's range.
