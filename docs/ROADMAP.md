@@ -435,7 +435,7 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   warn only when the server allows every origin (`*`), with Ollama `OLLAMA_ORIGINS` instructions and a "don't show
   again" per endpoint.
   *Done when:* the deployed app chats with LM Studio on your laptop.
-  *Status:* Built and e2e-tested against a stubbed server (PR_LINK). Tick it after the owner to-do below: a
+  *Status:* Built and e2e-tested against a stubbed server ([#37](https://github.com/tigeryash/ai-chat-tanstack/pull/37)). Tick it after the owner to-do below: a
   real LM Studio chat on www.highelollms.com.
 - [ ] **2.4a Parameter probe script.** Sends one tiny request per parameter per model with the developer's own keys
   (cents per run), records accept / reject / ignored, and writes results into `curation.ts`.
