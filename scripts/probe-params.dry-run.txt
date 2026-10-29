@@ -1,0 +1,33 @@
+Parameter probe plan (OpenRouter route)
+
+Parameters: max_tokens, temperature, top_p, top_k, min_p, presence_penalty, frequency_penalty, repetition_penalty, seed, stop, reasoning, response_format, structured_outputs, tools, tool_choice, verbosity
+
+  anthropic/claude-fable-5.1            16 requests  ≤ $0.026
+  anthropic/claude-haiku-5.5            16 requests  ≤ $0.0003
+  anthropic/claude-opus-5.5             16 requests  ≤ $0.011
+  anthropic/claude-sonnet-5.5           16 requests  ≤ $0.0053
+  deepseek/deepseek-v4.1-flash          15 requests  ≤ $0.0002  (skips verbosity)
+  deepseek/deepseek-v4.1-flash-1017     15 requests  ≤ $0.0003  (skips verbosity)
+  google/gemini-3.8-flash               15 requests  ≤ $0.0021  (skips verbosity)
+  google/gemini-4-argon                 15 requests  ≤ $0.0050  (skips verbosity)
+  meta/muse-spark-1.3                   15 requests  ≤ $0.0024  (skips verbosity)
+  meta/muse-spark-open                  15 requests  ≤ $0.0024  (skips verbosity)
+  minimax/minimax-m3.1-flash            15 requests  ≤ $0.0003  (skips verbosity)
+  moonshotai/kimi-k3.1-pro              15 requests  ≤ $0.0050  (skips verbosity)
+  openai/gpt-6-astra                    16 requests  ≤ $0.026
+  openai/gpt-6-luna                     16 requests  ≤ $0.0003
+  openai/gpt-6.1-sol                    16 requests  ≤ $0.0053
+  openai/gpt-6.1-terra                  16 requests  ≤ $0.0026
+  openai/gpt-oss-120b                   16 requests  ≤ $0.0003
+  spacexai/grok-4.7                     15 requests  ≤ $0.0036  (skips verbosity)
+  xiaomi/mimo-v2.6-flash                15 requests  ≤ $0.0002  (skips verbosity)
+  xiaomi/mimo-v2.6-pro                  15 requests  ≤ $0.0006  (skips verbosity)
+  skip alibaba/qwen3.8-max: not on OpenRouter
+  skip meta/muse-wonder-1.0: not on OpenRouter
+  skip mistral/mistral-large-4: not on OpenRouter
+  skip zai/glm-5.3-fast: not on OpenRouter
+
+20 models, 309 requests, worst case $0.100 (cap --max-usd 0.5).
+Models that refuse max_tokens 16 get one retry at 256, which can add a little.
+
+Dry run: nothing was sent to a model. Add --yes to spend.

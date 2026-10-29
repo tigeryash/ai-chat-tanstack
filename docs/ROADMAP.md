@@ -90,6 +90,9 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   warning (LM Studio's CORS allows any origin; if you see a green check instead, the CORS check is wrong, so tell
   an agent). Then pick a model under "Local" in the picker and chat; a reasoning model's thinking should show.
   e2e only has a stubbed server, and Chrome's prompt never appears on localhost.
+- [ ] Run the 2.4a parameter probe once (about $0.10 of OpenRouter credit, capped at $0.50): from the main checkout,
+  `bun scripts/probe-params.ts` (dry run, check the plan), then `bun scripts/probe-params.ts --yes`, and commit
+  `src/models/parameter-probe.generated.ts`. 2.4b's settings panel reads it.
 - [ ] Vercel Hobby is fine while this is a portfolio piece; move to Pro before charging money. *Still on Hobby
   (2026-10-23).*
 
@@ -437,8 +440,9 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   *Done when:* the deployed app chats with LM Studio on your laptop.
   *Status:* Built and e2e-tested against a stubbed server ([#37](https://github.com/tigeryash/ai-chat-tanstack/pull/37)). Tick it after the owner to-do below: a
   real LM Studio chat on www.highelollms.com.
-- [ ] **2.4a Parameter probe script.** Sends one tiny request per parameter per model with the developer's own keys
+- [x] **2.4a Parameter probe script.** Sends one tiny request per parameter per model with the developer's own keys
   (cents per run), records accept / reject / ignored, and writes results into `curation.ts`.
+  *Status (2026-10-29):* script and tests in [#35](https://github.com/tigeryash/ai-chat-tanstack/pull/35); the first real run is an owner to-do.
 - [ ] **2.4b Parameter registry + settings panel** (decision 15), including provider-specific options and local
   sampling settings.
   *Done when:* switching models shows/hides the right controls and no supported model errors across any control's range.
@@ -469,10 +473,11 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   Votes stay local and feed a personal leaderboard. Runs on the user's keys.
 - [ ] **3.8 Mobile.** Panes become swipeable tabs below `md`.
 - [ ] **3.9 Insights.** Local dashboard: spend per provider, latency per model, blind-mode win rates, most-used prompts.
-- [ ] **3.10 Status in the tab and notifications.** The tab title and favicon reflect status (e.g. "● 2 replying",
+- [x] **3.10 Status in the tab and notifications.** The tab title and favicon reflect status (e.g. "● 2 replying",
   "✓ Done") while the tab is in the background. Browser notifications when a reply or agent run finishes or needs
   approval and the tab is hidden. Ask for notification permission only when the user first starts something long,
   never on page load. On/off per event type in settings.
+  *Status:* replies done in PR #36 (2026-10-29); agent runs and approvals hook into `background-status/activity.ts` in Phase 4.
 - [ ] **3.11 Appearance settings.** Make the look as personal as possible: fonts (UI, reading, code), text size
   and density, light/dark/system, and the colors of everything, starting from the 3.0 look as the default theme.
   Every color, font and radius comes from a token, so a setting only overrides tokens (no per-component styling).

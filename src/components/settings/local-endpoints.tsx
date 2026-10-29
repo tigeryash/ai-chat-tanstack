@@ -17,7 +17,7 @@ export function LocalEndpoints() {
 	const [adding, setAdding] = useState(false);
 
 	return (
-		<section aria-labelledby="local-endpoints" className="grid gap-2">
+		<section aria-labelledby="local-endpoints" className="mt-10 grid gap-2">
 			<div className="flex items-center gap-3">
 				<h2 id="local-endpoints" className="mr-auto font-semibold">
 					Local models

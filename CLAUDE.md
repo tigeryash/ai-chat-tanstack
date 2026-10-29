@@ -63,6 +63,9 @@ Playwright runs in 4 shards with 2 workers each (4 workers per runner made timin
   and 127.0.0.1 only, to match `connect-src`); a local `ModelChoice` names its `endpoint` id. Nothing calls one
   before it's saved and the Local Network Access explainer was clicked through. e2e stubs a server with
   `context.route` (`e2e/local-models.spec.ts`); note `route.fulfill` adds a matching CORS header when you set none.
+- **Background status** (roadmap 3.10, `src/lib/background-status/`): `chat-sessions.ts` reports every chat's
+  replying/finished/failed into `activity.ts`, so the hidden-tab title, favicon and notifications cover all open
+  chats (and panes). Mounted once as `<BackgroundStatus />` in the `(dashboard)` layout.
 - **Models** (roadmap 2.1–2.2): Convex `models` table synced daily (`convex/modelCatalogSync.ts`, curation in
   `src/models/curation.ts`). The app reads `models.list` / `models.get` over HTTP (`src/lib/models/catalog.ts`), and
   the e2e Convex stub serves the seeded catalog in `src/lib/models/test-catalog.ts`. Runnability per user is
