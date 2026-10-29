@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { BackgroundStatusSettings } from "@/components/settings/background-status-settings";
 import { ProviderKeys } from "@/components/settings/provider-keys";
 
 // Settings → API keys. Client-only (decision 12): keys live in this browser, and with no server
@@ -13,6 +14,7 @@ function SettingsPage() {
 		<div className="h-full overflow-y-auto">
 			<div className="mx-auto max-w-3xl px-6 py-10">
 				<ProviderKeys />
+				<BackgroundStatusSettings />
 			</div>
 		</div>
 	);

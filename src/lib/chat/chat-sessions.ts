@@ -1,5 +1,9 @@
 import { Chat } from "@ai-sdk/react";
 import type { ChatTransport, UIMessage } from "ai";
+import {
+	reportReplyEnded,
+	setReplying,
+} from "@/lib/background-status/activity";
 import { logError } from "@/lib/log";
 import type { ChatStore } from "@/lib/storage/chat-store";
 import { createDexieChatStore } from "@/lib/storage/dexie-chat-store";
@@ -60,9 +64,29 @@ export function openChat(id: string, options: OpenChatOptions = {}) {
 		transport: options.transport ?? defaultTransport,
 		// Stopped and failed replies are saved too, so nothing the person typed is lost. A closed
 		// (deleted) chat isn't, or stopping its reply would bring it back.
-		onFinish: ({ messages }) =>
-			openChats.get(id) === chat ? saveChat(store, id, messages) : undefined,
+		onFinish: ({ messages, isAbort, isError }) => {
+			if (openChats.get(id) !== chat) return;
+			const saved = saveChat(store, id, messages);
+			// Reported once saved, so a notification can name the chat by its new title (roadmap 3.10).
+			// Failures are reported by `onError`, which also covers requests that never got a response.
+			if (!isAbort && !isError) {
+				void saved.then(() =>
+					reportReplyEnded({ chatId: id, outcome: "finished" }),
+				);
+			}
+			return saved;
+		},
+		onError: () => {
+			if (openChats.get(id) === chat) {
+				reportReplyEnded({ chatId: id, outcome: "failed" });
+			}
+		},
 	});
+	// Tab status (roadmap 3.10) counts replies across every open chat. `~registerStatusCallback` is how
+	// `useChat` itself watches a `Chat`; there's no other public way to observe it outside React.
+	chat["~registerStatusCallback"](() =>
+		setReplying(id, chat.status === "submitted" || chat.status === "streaming"),
+	);
 	openChats.set(id, chat);
 	return chat;
 }
@@ -72,6 +96,7 @@ export function closeChat(id: string): void {
 	const chat = openChats.get(id);
 	if (!chat) return;
 	openChats.delete(id);
+	setReplying(id, false);
 	chat.stop().catch((error) => logError("Couldn't stop the reply:", error));
 }
 

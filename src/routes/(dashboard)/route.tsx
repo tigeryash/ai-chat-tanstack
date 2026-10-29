@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { BackgroundStatus } from "@/components/background-status/background-status";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import {
 	SidebarInset,
@@ -26,6 +27,7 @@ function DashboardLayout() {
 					<Outlet />
 				</div>
 			</SidebarInset>
+			<BackgroundStatus />
 		</SidebarProvider>
 	);
 }
