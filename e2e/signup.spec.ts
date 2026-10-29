@@ -33,7 +33,7 @@ test("a password shorter than the server's minimum is rejected before sign-up", 
 	});
 	await page.goto("/signup");
 	// Wait for hydration; before it, the browser submits the form itself (see the test below).
-	await page.waitForLoadState("networkidle");
+	await expect(page.locator("main[data-hydrated='true']")).toBeAttached();
 
 	await page.getByLabel("Name").fill(NAME);
 	await page.getByLabel("Email").fill(EMAIL);
@@ -60,7 +60,7 @@ test("after signing up, the page asks for email verification instead of signing 
 		});
 	});
 	await page.goto("/signup");
-	await page.waitForLoadState("networkidle");
+	await expect(page.locator("main[data-hydrated='true']")).toBeAttached();
 
 	await page.getByLabel("Name").fill(NAME);
 	await page.getByLabel("Email").fill(EMAIL);
@@ -93,7 +93,7 @@ test("explains when this deployment can't send email", async ({ page }) => {
 		}),
 	);
 	await page.goto("/signup");
-	await page.waitForLoadState("networkidle");
+	await expect(page.locator("main[data-hydrated='true']")).toBeAttached();
 
 	await page.getByLabel("Name").fill(NAME);
 	await page.getByLabel("Email").fill(EMAIL);

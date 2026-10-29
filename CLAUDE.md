@@ -29,6 +29,8 @@ touching keys, rendering, tools, local endpoints, or Convex writes, and keep
 
 The **pre-commit hook** (`.husky/pre-commit`) runs Biome on staged files and the type check. Don't bypass it with
 `--no-verify`; fix the error instead. **CI** (`.github/workflows/ci.yml`) runs `verify` and Playwright on every PR.
+Playwright runs in 4 shards with 2 workers each (4 workers per runner made timing-sensitive tests flaky); the
+`Playwright` check sums them up and passes without running e2e when a PR only touches `docs/` or `*.md`.
 
 `.claude/launch.json` has `dev` (:3000) and `serve` (:4173) for the preview browser. Everything renders signed out (no login wall).
 

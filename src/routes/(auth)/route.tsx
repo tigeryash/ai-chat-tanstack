@@ -12,7 +12,7 @@ import {
 } from "@tanstack/react-router";
 import { gsap } from "gsap";
 import { SplitText } from "gsap/all";
-import { lazy, Suspense, useRef } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { LINK_CLASS } from "@/components/auth/auth-form";
 import Models from "@/components/auth/models";
 import OAuthButtons from "@/components/auth/oauthbuttons";
@@ -29,6 +29,10 @@ const AuthLayout = () => {
 	const location = useLocation();
 	const pathname = location.pathname;
 	const containerRef = useRef<HTMLDivElement>(null);
+	// `data-hydrated` tells e2e tests when the forms handle submits themselves. A parent's effect runs
+	// after its children's, so the form below is hydrated by then too.
+	const [hydrated, setHydrated] = useState(false);
+	useEffect(() => setHydrated(true), []);
 	useGSAP(
 		() => {
 			if (!containerRef.current) return;
@@ -66,6 +70,7 @@ const AuthLayout = () => {
 	return (
 		<main
 			ref={containerRef}
+			data-hydrated={hydrated}
 			className="flex relative flex-col-reverse items-center xl:flex-row min-h-screen xl:h-screen  overflow-hidden p-6 md:p-3 bg-slate-900"
 		>
 			<ClientOnly>
