@@ -32,6 +32,7 @@ import type * as lib_modelCatalog_sources_openRouter from "../lib/modelCatalog/s
 import type * as lib_modelCatalog_sources_parse from "../lib/modelCatalog/sources/parse.js";
 import type * as lib_modelCatalog_sync from "../lib/modelCatalog/sync.js";
 import type * as lib_modelCatalog_validators from "../lib/modelCatalog/validators.js";
+import type * as lib_modelCatalog_view from "../lib/modelCatalog/view.js";
 import type * as lib_oauthTokens from "../lib/oauthTokens.js";
 import type * as lib_passwordPolicy from "../lib/passwordPolicy.js";
 import type * as lib_shareId from "../lib/shareId.js";
@@ -76,6 +77,7 @@ declare const fullApi: ApiFromModules<{
   "lib/modelCatalog/sources/parse": typeof lib_modelCatalog_sources_parse;
   "lib/modelCatalog/sync": typeof lib_modelCatalog_sync;
   "lib/modelCatalog/validators": typeof lib_modelCatalog_validators;
+  "lib/modelCatalog/view": typeof lib_modelCatalog_view;
   "lib/oauthTokens": typeof lib_oauthTokens;
   "lib/passwordPolicy": typeof lib_passwordPolicy;
   "lib/shareId": typeof lib_shareId;

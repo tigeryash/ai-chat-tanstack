@@ -90,9 +90,10 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   warning (LM Studio's CORS allows any origin; if you see a green check instead, the CORS check is wrong, so tell
   an agent). Then pick a model under "Local" in the picker and chat; a reasoning model's thinking should show.
   e2e only has a stubbed server, and Chrome's prompt never appears on localhost.
-- [ ] Run the 2.4a parameter probe once (about $0.10 of OpenRouter credit, capped at $0.50): from the main checkout,
+- [x] Run the 2.4a parameter probe once (about $0.10 of OpenRouter credit, capped at $0.50): from the main checkout,
   `bun scripts/probe-params.ts` (dry run, check the plan), then `bun scripts/probe-params.ts --yes`, and commit
   `src/models/parameter-probe.generated.ts`. 2.4b's settings panel reads it.
+  *Done 2026-10-29:* 20 models, 309 settings: 207 accepted, 100 rejected, 2 ignored; 4 models skipped.
 - [ ] Vercel Hobby is fine while this is a portfolio piece; move to Pro before charging money. *Still on Hobby
   (2026-10-23).*
 
