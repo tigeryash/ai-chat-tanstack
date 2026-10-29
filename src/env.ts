@@ -14,9 +14,6 @@ export const env = createEnv({
 
 	client: {
 		VITE_APP_TITLE: z.string().min(1).optional(),
-		// The local model server the chat picker's "Local" option calls (roadmap 1.2). The CSP allows
-		// localhost and 127.0.0.1 only.
-		VITE_LMSTUDIO_BASE_URL: z.string().url().optional(),
 		// Build-time switch for the /e2e test pages (on in dev regardless). Set only by playwright.config.ts.
 		VITE_E2E: z.enum(["true", "false"]).optional(),
 	},
@@ -42,5 +39,3 @@ export const env = createEnv({
 	 */
 	emptyStringAsUndefined: true,
 });
-
-export const DEFAULT_LMSTUDIO_BASE_URL = "http://localhost:1234/v1";

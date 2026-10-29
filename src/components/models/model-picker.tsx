@@ -7,12 +7,13 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 import {
-	type ChatProviderId,
 	LOCAL_PROVIDER,
 	type ModelChoice,
+	providerName,
 } from "@/lib/chat/model-selection";
 import type { ChatNeeds } from "@/lib/hosts/host-options";
 import type { ProviderId } from "@/lib/keys/providers";
+import { markNetworkAccessExplained } from "@/lib/local-endpoints/network-access";
 import type { CatalogModel } from "@/lib/models/catalog";
 import {
 	DEFAULT_FILTERS,
@@ -27,6 +28,7 @@ import {
 	type CatalogEntry,
 	CatalogSection,
 	CustomSection,
+	type CustomTarget,
 	LocalSection,
 } from "./model-picker-list";
 import { ModelPreview } from "./model-preview";
@@ -96,7 +98,24 @@ export function ModelPicker({
 	const entries = filterModels(models, filters).map((model) =>
 		entryFor(model, connectedSet, choice),
 	);
-	const customProviders: ChatProviderId[] = [...connectedSet, LOCAL_PROVIDER];
+	const customTargets: CustomTarget[] = [
+		...[...connectedSet].map(
+			(provider): CustomTarget => ({
+				key: provider,
+				label: providerName(provider),
+				logo: provider,
+				choice: { provider },
+			}),
+		),
+		...local.endpoints.map(
+			({ endpoint }): CustomTarget => ({
+				key: endpoint.id,
+				label: endpoint.name,
+				logo: LOCAL_PROVIDER,
+				choice: { provider: LOCAL_PROVIDER, endpoint: endpoint.id },
+			}),
+		),
+	];
 
 	const choose = (next: ModelChoice, close: boolean) => {
 		onChange(next);
@@ -193,14 +212,15 @@ export function ModelPicker({
 							/>
 						)}
 						<LocalSection
-							list={local}
+							local={local}
 							search={filters.search}
 							choice={choice}
 							onPick={pick}
+							onExplained={markNetworkAccessExplained}
 						/>
 						<CustomSection
 							search={filters.search}
-							providers={customProviders}
+							targets={customTargets}
 							onPick={pick}
 						/>
 					</div>

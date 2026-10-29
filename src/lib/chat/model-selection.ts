@@ -20,6 +20,7 @@ export function providerName(provider: ChatProviderId): string {
 
 const MODEL_ID_MAX = 200;
 const UPSTREAM_MAX = 100;
+const ENDPOINT_ID_MAX = 64;
 
 /**
  * What the picker holds. `model` is the provider's own id for the model, empty until one is picked.
@@ -40,6 +41,11 @@ export const modelChoiceSchema = z.object({
 	 * change. Choices saved before 2.2b have no flag and are treated as Auto too.
 	 */
 	autoHost: z.boolean().optional(),
+	/**
+	 * The saved local endpoint a local model runs on (roadmap 2.3), by id. Choices saved before 2.3
+	 * have none and use the first saved endpoint.
+	 */
+	endpoint: z.string().max(ENDPOINT_ID_MAX).optional(),
 });
 export type ModelChoice = z.infer<typeof modelChoiceSchema>;
 

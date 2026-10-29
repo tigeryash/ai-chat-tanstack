@@ -194,6 +194,24 @@ enforcement layers (CSP, sandbox origin, SSRF checks) are never part of what YOL
   sticky. Show our own explainer first, trigger the request from a user click, and handle denial with instructions.
 - Never call local endpoints in the background on page load. Only after the user has added one.
 
+*Where it stands (2.3, 2026-10-29).* Endpoints live in `src/lib/local-endpoints/`, the Settings UI in
+`src/components/settings/local-endpoint*.tsx`.
+- **The header isn't readable.** Browsers hide `Access-Control-Allow-Origin` from scripts unless the server lists
+  it in `Access-Control-Expose-Headers`, and LM Studio and Ollama don't. So "Test connection" uses the header when
+  it can, and otherwise asks again from a worker started from a `data:` URL (`cors-check.ts`). That worker's
+  origin is opaque, so it sends `Origin: null` like a sandboxed page on another site would. Allowed: every origin
+  can use the server (warning). Refused: only listed origins can (green check). A `no-cors` request first checks
+  the worker reaches the server at all; if it doesn't, we say we couldn't tell instead of showing the check.
+  This needed `worker-src data:`; starting a worker already takes running script, and it inherits `connect-src`.
+- **Only localhost and 127.0.0.1.** Saving refuses any other host, LAN addresses included. `connect-src` allows
+  only those two (any port), and widening it to private ranges would let an injected script reach every device on
+  the user's network. For a model on another machine, forward a local port (`ssh -L`). `[::1]` isn't allowed
+  either; add it to `LOCAL_MODEL_ORIGINS` first if someone needs it.
+- **Local Network Access.** Our explainer shows before the first request (once per browser), and "Continue" sends
+  it. After a failed request we ask the Permissions API (`loopback-network`, `local-network-access`, then
+  `local-network`, since Chrome renamed it) and show re-allow steps when it's `denied`. The picker asks saved
+  endpoints for their models only when it opens.
+
 ## Agents and tools (Phase 4)
 
 The industry consensus: **you cannot filter your way out of prompt injection; you limit what an injected model can do.**

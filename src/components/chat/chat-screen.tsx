@@ -8,6 +8,7 @@ import { RemovedModelBanner } from "@/components/models/removed-model-banner";
 import { useChatModel } from "@/components/models/use-chat-model";
 import { storeChatModelChoice } from "@/lib/chat/chat-model-choice";
 import { LOCAL_PROVIDER } from "@/lib/chat/model-selection";
+import { useLocalEndpointFor } from "@/lib/local-endpoints/endpoints";
 
 /** A chat with its model picker above it, and the model's card while the chat is empty. */
 export function ChatScreen({
@@ -20,6 +21,10 @@ export function ChatScreen({
 	const { messages } = useChat({ chat });
 	const model = useChatModel(chat.id, messages);
 	const { choice, wanted, chosenModel } = model;
+	const isLocal = choice?.provider === LOCAL_PROVIDER && choice.model !== "";
+	const localEndpoint = useLocalEndpointFor(
+		isLocal ? choice.endpoint : undefined,
+	);
 
 	const handleSend = () => {
 		// Pin the chat to the model it was sent with, even if the default changes later. Its host
@@ -36,8 +41,8 @@ export function ChatScreen({
 				via={model.runnable ? choice?.provider : undefined}
 			/>
 		);
-	} else if (choice?.provider === LOCAL_PROVIDER && choice.model) {
-		empty = <LocalModelCard model={choice.model} />;
+	} else if (isLocal) {
+		empty = <LocalModelCard model={choice.model} endpoint={localEndpoint} />;
 	} else if (choice?.model) {
 		empty = "Send a message to start.";
 	}
@@ -66,6 +71,13 @@ export function ChatScreen({
 								hosts={model.hosts}
 								onChange={model.setChoice}
 							/>
+						)}
+						{isLocal && (
+							<span className="text-muted-foreground text-xs">
+								via{" "}
+								{localEndpoint?.name ??
+									(choice.endpoint ? "a removed local server" : "Local")}
+							</span>
 						)}
 					</div>
 					{chosenModel?.status === "removed" && (

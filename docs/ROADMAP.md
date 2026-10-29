@@ -84,6 +84,12 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   their High Elo view is empty): on `www.highelollms.com`, open the model picker with OpenRouter connected. Check
   the High Elo list looks right with real scores, a model card's facts and logos, and that a model only a direct
   key serves (one OpenRouter doesn't list) says "Connect …". e2e uses a seeded catalog.
+- [ ] After 2.3 is deployed: in Settings → Local models, add LM Studio (CORS on) and click "Test connection",
+  first on `bun run dev` (localhost:3000), then on `www.highelollms.com`. On the live site Chrome should show its
+  local network prompt after our explainer; allow it. Both should list your models and show the "Every website"
+  warning (LM Studio's CORS allows any origin; if you see a green check instead, the CORS check is wrong, so tell
+  an agent). Then pick a model under "Local" in the picker and chat; a reasoning model's thinking should show.
+  e2e only has a stubbed server, and Chrome's prompt never appears on localhost.
 - [ ] Vercel Hobby is fine while this is a portfolio piece; move to Pro before charging money. *Still on Hobby
   (2026-10-23).*
 
@@ -429,6 +435,8 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   warn only when the server allows every origin (`*`), with Ollama `OLLAMA_ORIGINS` instructions and a "don't show
   again" per endpoint.
   *Done when:* the deployed app chats with LM Studio on your laptop.
+  *Status:* Built and e2e-tested against a stubbed server (PR_LINK). Tick it after the owner to-do below: a
+  real LM Studio chat on www.highelollms.com.
 - [ ] **2.4a Parameter probe script.** Sends one tiny request per parameter per model with the developer's own keys
   (cents per run), records accept / reject / ignored, and writes results into `curation.ts`.
 - [ ] **2.4b Parameter registry + settings panel** (decision 15), including provider-specific options and local

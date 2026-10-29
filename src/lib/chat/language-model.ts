@@ -2,7 +2,6 @@ import { createAnthropic } from "@ai-sdk/anthropic";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { createGateway, type LanguageModel } from "ai";
-import { DEFAULT_LMSTUDIO_BASE_URL, env } from "@/env";
 import type { ProviderId } from "@/lib/keys";
 import { createThinkTagModel } from "@/lib/reasoning-middleware";
 import { LOCAL_PROVIDER, type ModelSelection } from "./model-selection";
@@ -11,10 +10,6 @@ import { openRouterMetadataExtractor } from "./reply-host";
 // Builds the AI SDK model a chat streams from, in the browser (roadmap decision 3). Every base URL here
 // is one of the CSP's provider origins (src/lib/security/provider-origins.ts), and the key goes only
 // into that provider's own client, so it's only ever sent to that origin.
-
-/** LM Studio's default; 2.3 adds a setting. `connect-src` allows localhost and 127.0.0.1 only. */
-export const LOCAL_BASE_URL =
-	env.VITE_LMSTUDIO_BASE_URL ?? DEFAULT_LMSTUDIO_BASE_URL;
 
 type OpenAiCompatibleId = Exclude<
 	ProviderId,
@@ -38,21 +33,25 @@ export const OPENAI_COMPATIBLE_BASE_URLS: Record<OpenAiCompatibleId, string> = {
 
 /**
  * The model for `selection`. `key` is the provider's key from the vault (`getProviderKey`), or null
- * for a local server. `fetchImpl` is for tests.
+ * for a local server, which is called at `localBaseUrl` (a saved endpoint's URL, which
+ * `checkBaseUrl` keeps to the CSP's localhost origins). `fetchImpl` is for tests.
  */
 export function createLanguageModel(
 	{ provider, model }: ModelSelection,
 	key: string | null,
 	fetchImpl?: typeof fetch,
+	localBaseUrl?: string,
 ): LanguageModel {
 	const apiKey = key ?? undefined;
 	switch (provider) {
 		case LOCAL_PROVIDER:
+			if (!localBaseUrl)
+				throw new Error("A local model needs its endpoint's URL.");
 			// Local reasoning models (DeepSeek R1 distills, Qwen, GLM) put their thinking in <think> tags.
 			return createThinkTagModel(
 				createOpenAICompatible({
 					name: "local",
-					baseURL: LOCAL_BASE_URL,
+					baseURL: localBaseUrl,
 					fetch: fetchImpl,
 				})(model),
 			);

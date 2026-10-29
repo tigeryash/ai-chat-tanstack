@@ -39,9 +39,6 @@ export default defineConfig({
 				VITE_E2E: "true",
 				VITE_CONVEX_URL: convexStubUrl,
 				VITE_CONVEX_SITE_URL: convexStubUrl,
-				// Nothing in e2e may reach a real model, including an LM Studio running on this machine: the
-				// chat's "Local" provider points at a dead port.
-				VITE_LMSTUDIO_BASE_URL: "http://127.0.0.1:9/v1",
 			},
 			timeout: 180_000,
 			reuseExistingServer: !isCI,

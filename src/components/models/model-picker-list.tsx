@@ -1,8 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { CheckIcon } from "lucide-react";
 import type { ReactNode } from "react";
-import { LOCAL_BASE_URL } from "@/lib/chat/language-model";
-import type { ModelList } from "@/lib/chat/list-models";
+import { NetworkAccessExplainer } from "@/components/local-endpoints/network-access-help";
 import {
 	type ChatProviderId,
 	LOCAL_PROVIDER,
@@ -10,6 +9,11 @@ import {
 	providerName,
 } from "@/lib/chat/model-selection";
 import { PROVIDERS } from "@/lib/keys/providers";
+import {
+	endpointHost,
+	type LocalEndpoint,
+} from "@/lib/local-endpoints/endpoints";
+import type { ModelList } from "@/lib/local-endpoints/list-models";
 import type { CatalogModel } from "@/lib/models/catalog";
 import { developerName } from "@/lib/models/developers";
 import { formatPrice, formatTokens } from "@/lib/models/format";
@@ -17,9 +21,10 @@ import { type ModelRoute, providerToConnect } from "@/lib/models/runnability";
 import { cn } from "@/lib/utils";
 import { CapabilityBadges, HighEloBadge } from "./model-badges";
 import { ModelLogo } from "./model-logo";
+import type { useLocalModels } from "./use-local-models";
 
 // The picker's rows (roadmap 2.2): catalog models (runnable ones pick, the rest link to Settings),
-// the local server's models, and a typed model id for anything the catalog doesn't list.
+// each saved local server's models, and a typed model id for anything the catalog doesn't list.
 
 const ROW_CLASS =
 	"flex w-full items-start gap-2.5 rounded-md px-2 py-1.5 text-left outline-none";
@@ -192,74 +197,133 @@ function SimpleRow({
 	);
 }
 
-/** Only what the local server reports: its model ids. */
+function LocalNote({ children }: { children: ReactNode }) {
+	return (
+		<li className="px-2 py-1 text-muted-foreground text-xs">{children}</li>
+	);
+}
+
+/** Why an endpoint listed nothing. */
+function failureText(endpoint: LocalEndpoint, list: ModelList): string | null {
+	if (list.ok)
+		return list.models.length === 0
+			? `${endpoint.name} reports no models.`
+			: null;
+	if (list.reason === "denied") {
+		return "Your browser is blocking this site from reaching your computer. Allow local network access in this site's settings, then reload.";
+	}
+	return `Couldn't reach ${endpoint.name} at ${endpointHost(endpoint)}. Test it in Settings.`;
+}
+
+/** Only what each saved local endpoint reports: its model ids. */
 export function LocalSection({
-	list,
+	local,
 	search,
 	choice,
 	onPick,
+	onExplained,
 }: {
-	list: ModelList | null;
+	local: ReturnType<typeof useLocalModels>;
 	search: string;
 	choice: ModelChoice | null;
 	onPick: (choice: ModelChoice) => void;
+	/** The user read the Local Network Access explainer and clicked Continue. */
+	onExplained: () => void;
 }) {
-	const host = new URL(LOCAL_BASE_URL).host;
 	const needle = search.trim().toLowerCase();
-	const models = list?.ok
-		? list.models.filter((model) => model.toLowerCase().includes(needle))
-		: [];
+	if (local.endpoints.length === 0) {
+		return (
+			<Section title="Local">
+				<LocalNote>
+					Run models on this computer with LM Studio or Ollama:{" "}
+					<Link to="/settings" className="underline">
+						add a local server in Settings
+					</Link>
+					.
+				</LocalNote>
+			</Section>
+		);
+	}
+	if (!local.explained) {
+		return (
+			<Section title="Local">
+				<li className="p-1">
+					<NetworkAccessExplainer onContinue={onExplained} />
+				</li>
+			</Section>
+		);
+	}
 	return (
 		<Section title="Local">
-			{!list && (
-				<li className="px-2 py-1 text-muted-foreground text-xs">
-					Looking for LM Studio at {host}…
-				</li>
-			)}
-			{list && !list.ok && (
-				<li className="px-2 py-1 text-muted-foreground text-xs">
-					Couldn't reach LM Studio at {host}. Start its server with CORS
-					enabled.
-				</li>
-			)}
-			{models.map((model) => (
-				<SimpleRow
-					key={model}
-					logo={LOCAL_PROVIDER}
-					label={model}
-					detail={host}
-					selected={
-						choice?.provider === LOCAL_PROVIDER && choice.model === model
-					}
-					onClick={() => onPick({ provider: LOCAL_PROVIDER, model })}
-				/>
-			))}
+			{local.endpoints.map(({ endpoint, list }) => {
+				if (!list) {
+					return (
+						<LocalNote key={endpoint.id}>
+							Asking {endpoint.name} at {endpointHost(endpoint)}…
+						</LocalNote>
+					);
+				}
+				const failure = failureText(endpoint, list);
+				if (failure) return <LocalNote key={endpoint.id}>{failure}</LocalNote>;
+				const models = list.ok
+					? list.models.filter((model) => model.toLowerCase().includes(needle))
+					: [];
+				return models.map((model) => (
+					<SimpleRow
+						key={`${endpoint.id}:${model}`}
+						logo={LOCAL_PROVIDER}
+						label={model}
+						detail={endpoint.name}
+						selected={
+							choice?.provider === LOCAL_PROVIDER &&
+							choice.model === model &&
+							(choice.endpoint ?? local.endpoints[0]?.endpoint.id) ===
+								endpoint.id
+						}
+						onClick={() =>
+							onPick({
+								provider: LOCAL_PROVIDER,
+								model,
+								endpoint: endpoint.id,
+							})
+						}
+					/>
+				));
+			})}
 		</Section>
 	);
 }
 
-/** Sends the typed text as a model id to a provider, for models the catalog doesn't list. */
+/** Somewhere a typed model id can go: a connected provider, or a saved local endpoint. */
+export interface CustomTarget {
+	key: string;
+	label: string;
+	logo: string;
+	choice: Omit<ModelChoice, "model">;
+}
+
+/** Sends the typed text as a model id, for models the catalog (or a local server) doesn't list. */
 export function CustomSection({
 	search,
-	providers,
+	targets,
 	onPick,
 }: {
 	search: string;
-	providers: readonly ChatProviderId[];
+	targets: readonly CustomTarget[];
 	onPick: (choice: ModelChoice) => void;
 }) {
 	const model = search.trim();
 	if (!model) return null;
 	return (
 		<Section title="Use a model id">
-			{providers.map((provider) => (
+			{targets.map((target) => (
 				<SimpleRow
-					key={provider}
-					logo={provider}
-					label={`Use “${model}” via ${viaLabel(provider)}`}
+					key={target.key}
+					logo={target.logo}
+					label={`Use “${model}” via ${target.label}`}
 					detail=""
 					selected={false}
-					onClick={() => onPick({ provider, model })}
+					onClick={() => onPick({ ...target.choice, model })}
 				/>
 			))}
 		</Section>

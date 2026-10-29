@@ -175,7 +175,7 @@ test("with nothing connected, every model offers its provider's connect link", a
 	).toHaveAttribute("href", "/settings");
 	await expect(
 		models.dialog.getByRole("region", { name: "Local" }),
-	).toContainText("Couldn't reach LM Studio");
+	).toContainText("add a local server in Settings");
 });
 
 test("a chat whose model was removed shows a banner with the family's newest model", async ({

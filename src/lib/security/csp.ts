@@ -49,7 +49,10 @@ export function buildStrictCsp({
 			...(dev ? ["ws://localhost:*", "ws://127.0.0.1:*"] : []),
 		],
 		"media-src": ["'self'", "blob:"],
-		"worker-src": ["'self'", "blob:"],
+		// data: is the local-server CORS check (src/lib/local-endpoints/cors-check.ts): a data: worker has
+		// an opaque origin, so its request asks the server as another website would. Starting a worker
+		// takes script that's already running, and the worker inherits this policy's connect-src.
+		"worker-src": ["'self'", "blob:", "data:"],
 		"manifest-src": ["'self'"],
 		// Nothing is framed yet. The artifacts sandbox origin goes here when it exists.
 		"frame-src": ["'none'"],

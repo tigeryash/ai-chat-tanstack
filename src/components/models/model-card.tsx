@@ -1,8 +1,11 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { LOCAL_BASE_URL } from "@/lib/chat/language-model";
 import { type ChatProviderId, providerName } from "@/lib/chat/model-selection";
 import { PROVIDERS } from "@/lib/keys/providers";
+import {
+	endpointHost,
+	type LocalEndpoint,
+} from "@/lib/local-endpoints/endpoints";
 import type { CatalogModel } from "@/lib/models/catalog";
 import { developerName } from "@/lib/models/developers";
 import {
@@ -111,7 +114,14 @@ export function ModelCard({
 }
 
 /** A local model: only what the local server reports, which is its id. */
-export function LocalModelCard({ model }: { model: string }) {
+export function LocalModelCard({
+	model,
+	endpoint,
+}: {
+	model: string;
+	/** Undefined when Settings has no endpoint for it (removed, or never added). */
+	endpoint: LocalEndpoint | undefined;
+}) {
 	return (
 		<article
 			aria-label={`About ${model}`}
@@ -122,7 +132,9 @@ export function LocalModelCard({ model }: { model: string }) {
 				{model}
 			</h2>
 			<p className="text-muted-foreground text-sm">
-				Local · served by {new URL(LOCAL_BASE_URL).host}
+				{endpoint
+					? `Local · served by ${endpoint.name} at ${endpointHost(endpoint)}`
+					: "Local · no saved server for it in Settings"}
 			</p>
 		</article>
 	);
