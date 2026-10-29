@@ -18,6 +18,7 @@
 			"**/vite.config.js",
 			"!!**/.claude",
 			"!**/src/routeTree.gen.ts",
+			"!**/src/models/parameter-probe.generated.ts",
 			"!**/src/styles.css",
 			"!**/src/shadcn-tailwind.css"
 		]
