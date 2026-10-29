@@ -45,7 +45,15 @@ export const MODEL_CURATION: Readonly<Record<string, ModelCuration>> = {
 	"deepseek/deepseek-v4.1-flash": { pinned: true },
 
 	// Artificial Analysis matches the automatic rules miss. ("muse-wonder-full" is a bigger variant.)
-	"meta/muse-wonder-1.0": { artificialAnalysisSlug: "muse-wonder" },
+	"meta/muse-wonder-1.0": {
+		artificialAnalysisSlug: "muse-wonder",
+		openRouterId: "meta/muse-wonder",
+	},
+
+	// OpenRouter matches the automatic rules miss (same price, context window, and release). Found by the
+	// 2.4a probe skipping them. "zai/glm-5.3-fast" has no OpenRouter twin: Prime and FlashX are other models.
+	"alibaba/qwen3.8-max": { openRouterId: "qwen/qwen3.8-max-0902" },
+	"mistral/mistral-large-4": { openRouterId: "mistralai/mistral-large-4-0" },
 };
 
 /**

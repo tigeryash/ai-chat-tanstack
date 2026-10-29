@@ -92,8 +92,10 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   e2e only has a stubbed server, and Chrome's prompt never appears on localhost.
 - [x] Run the 2.4a parameter probe once (about $0.10 of OpenRouter credit, capped at $0.50): from the main checkout,
   `bun scripts/probe-params.ts` (dry run, check the plan), then `bun scripts/probe-params.ts --yes`, and commit
-  `src/models/parameter-probe.generated.ts`. 2.4b's settings panel reads it.
-  *Done 2026-10-29:* 20 models, 309 settings: 207 accepted, 100 rejected, 2 ignored; 4 models skipped.
+  `src/models/parameter-probe.generated.ts`. 2.4b's settings panel reads it. *Ran 2026-10-29:* 20 models.
+- [ ] After the probe-results PR merges: `bunx convex dev --once`, `bunx convex run modelCatalogSync:sync`, then
+  `bun scripts/probe-params.ts --yes --skip-high-elo --model alibaba/qwen3.8-max --model meta/muse-wonder-1.0
+  --model mistral/mistral-large-4` (about a cent) and commit the updated results.
 - [ ] Vercel Hobby is fine while this is a portfolio piece; move to Pro before charging money. *Still on Hobby
   (2026-10-23).*
 
