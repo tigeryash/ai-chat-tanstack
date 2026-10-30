@@ -113,6 +113,12 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   the privacy policy says Convex covers EU/UK transfers in it. (Vercel's DPA covers only Pro, but Vercel is
   certified under the EU-U.S. Data Privacy Framework, which the policy cites instead.) A lawyer's review is worth it before charging
   money. Add `https://www.highelollms.com/privacy` and `/terms` to Google's OAuth consent screen.
+- [ ] After the old Convex chat backend is deleted (quality audit D1): its tables are still in `convex/schema.ts`
+  but nothing reads or writes them. Check prod's row counts for `conversations`, `conversationParticipants`,
+  `messages`, `attachments`, `messagePins` and `usageEvents` (`bunx convex data <table> --prod`, or the dashboard),
+  and Convex file storage (dashboard → Files; old attachment uploads live there). Then say whether to drop the
+  tables (and `users.preferences`) and delete any stored files. *Dev, 2026-10-30:* all six tables and file
+  storage are empty.
 - [ ] Vercel Hobby is fine while this is a portfolio piece; move to Pro before charging money. *Still on Hobby
   (2026-10-23).*
 
@@ -554,12 +560,18 @@ This is effectively a small agent harness. Slices below are a draft; 4.0 settles
 ## Phase 6: Accounts and cloud
 
 - [ ] **6.1 Convex `ChatStore` + sync** (decision 11). On sign-in, offer to upload local chats. Keys never sync.
+  The old Convex chat backend (`convex/messages.ts`, `conversations.ts`, `attachments.ts`, `branching.ts`,
+  `usage.ts`, `messagePins.ts` and their access helpers) was unused after 1.2/1.3 and was deleted (quality audit
+  D1). Restore pieces from git at `58853e2` if useful; its tables wait on the owner to-do above.
 - [ ] **6.2 Abuse protection on Convex writes.** Rate limits (`@convex-dev/rate-limiter`) on sync, share
   creation, and invites; captcha on sign-up (Better Auth captcha plugin with Turnstile).
 - [ ] **6.3 Sharing.** Read-only links for chats and workspaces via a server-rendered `/share/$id`, "Fork" into
-  your own chats, and a report-abuse link.
-- [ ] **6.3b Group chats.** Invites on single chats only; add the missing inverse check in
-  `requireMultiChatConversation`. Each sender's message runs on their own key.
+  your own chats, and a report-abuse link. The old `convex/sharing.ts` and `convex/lib/shareId.ts` (22-character
+  random IDs, projected `getShared`) were deleted with the old backend; restore them from git at `58853e2`.
+- [ ] **6.3b Group chats.** Invites on single chats only. Each sender's message runs on their own key. The old
+  `convex/groupChats.ts` and `requireMultiChatConversation` (in `authHelpers.ts`) were deleted with the old backend
+  (git `58853e2`); if they come back, add the inverse check they lacked (a chat in a multi-chat session can't
+  become a group chat).
 - [ ] **6.4 Better Auth extras.** Passkeys, magic link / email OTP, session list with revoke, account linking, 2FA.
 - [ ] **6.5 (Deferred) Pro tier.** Revisit with blind mode. Idea so far: charge for software, not tokens (sync,
   sharing, team workspaces, prompt-library sync) via the Better Auth Stripe or Polar plugin.

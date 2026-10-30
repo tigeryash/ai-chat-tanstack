@@ -47,8 +47,10 @@ Playwright runs in 4 shards with 2 workers each (4 workers per runner made timin
   route's `headers` sends the policy (strict one report-only for now), and `src/start.ts` adds the security headers
   and Start's server-function CSRF check to every response. A new provider or third-party origin the browser
   calls must go in `provider-origins.ts` / `csp.ts`, or the CSP reports it.
-- **Convex** (`convex/`) is the backend: `schema.ts` (message `parts` mirror AI SDK `UIMessage` parts),
-  access checks in `authHelpers.ts`, `_generated/` is generated. Query keys go through `@convex-dev/react-query`.
+- **Convex** (`convex/`) is the backend: `schema.ts` (the old chat tables are unused, kept until prod rows are
+  checked), `users` row upsert in `authHelpers.ts`, `_generated/` is generated. Query keys go through
+  `@convex-dev/react-query`. `convex/publicFunctions.test.ts` fails on any public function the app never calls as
+  `api.<module>.<name>`; delete it or allowlist it there with a reason.
 - **Local chats** (roadmap 1.3, `src/lib/storage/`): a `ChatStore` interface over Dexie (IndexedDB database
   `highelo-chats`). Every stored chat has a `formatVersion`; `format.ts` lists the migrations and how to add one.
   Export/import are versioned JSON in `export.ts`. Each chat has an `ownerId` (roadmap 1.9): the Better Auth user ID
