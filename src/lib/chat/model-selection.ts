@@ -18,7 +18,8 @@ export function providerName(provider: ChatProviderId): string {
 		: PROVIDERS[provider].name;
 }
 
-const MODEL_ID_MAX = 200;
+/** The longest model id a choice can hold. Local servers' longer ids are dropped from their list. */
+export const MODEL_ID_MAX = 200;
 const UPSTREAM_MAX = 100;
 const ENDPOINT_ID_MAX = 64;
 

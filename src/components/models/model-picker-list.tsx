@@ -212,6 +212,9 @@ function failureText(endpoint: LocalEndpoint, list: ModelList): string | null {
 	if (list.reason === "denied") {
 		return "Your browser is blocking this site from reaching your computer. Allow local network access in this site's settings, then reload.";
 	}
+	if (list.reason === "timed-out") {
+		return `${endpoint.name} at ${endpointHost(endpoint)} timed out. Test it in Settings.`;
+	}
 	return `Couldn't reach ${endpoint.name} at ${endpointHost(endpoint)}. Test it in Settings.`;
 }
 
