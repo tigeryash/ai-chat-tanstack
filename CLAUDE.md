@@ -131,9 +131,9 @@ Playwright runs in 4 shards with 2 workers each (4 workers per runner made timin
   app code.
 - Convex functions may `console.*` names, ids and config only, never prompts, replies, emails or keys
   ([security.md](docs/security.md)).
-- **knip** (`bunx knip@6.44.0`, `knip.json`, a blocking CI job) fails on unused files, dependencies and exports.
-  Delete them; keep an export that an open PR needs with a `/** @public */` tag naming the PR. It can't see unused
-  Convex functions; `convex/publicFunctions.test.ts` does.
+- **knip** (`bunx knip@6.44.0`, `knip.json`, a step in CI's required verify job) fails on unused files,
+  dependencies and exports. Delete them; keep an export that an open PR needs with a `/** @public */` tag naming
+  the PR. It can't see unused Convex functions; `convex/publicFunctions.test.ts` does.
 - Small focused files. Match the surrounding code's naming and comment density.
 - Unit tests sit next to the code as `*.test.ts`. Vitest runs in Node; a test that needs the DOM adds
   `// @vitest-environment jsdom` at the top.
