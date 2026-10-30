@@ -1,5 +1,4 @@
 import { track as vercelTrack } from "@vercel/analytics";
-import { env } from "@/env";
 import { logWarn } from "@/lib/log";
 import { redact } from "@/lib/redact";
 import { analyticsAllowed } from "./consent";
@@ -66,9 +65,15 @@ export function createTracker(options: {
 	};
 }
 
+// The build flags are read here when an event is sent, not through `@/env`: the key vault imports this
+// module, e2e specs import the vault's provider list in Node, and `@/env` throws there at import time
+// (no Convex URLs). `src/env.ts` still validates both flags in the app.
+
 /** "record" keeps events in memory (dev, e2e, tests); "vercel" is a production build. */
 export function analyticsMode(): "record" | "vercel" {
-	return import.meta.env.DEV || env.VITE_E2E === "true" ? "record" : "vercel";
+	return import.meta.env.DEV || import.meta.env.VITE_E2E === "true"
+		? "record"
+		: "vercel";
 }
 
 const recorded: TrackedEvent[] = [];
@@ -95,7 +100,7 @@ function defaultSink(event: TrackedEvent): void {
 		if (typeof window !== "undefined") window.__highEloAnalytics = recorded;
 		return;
 	}
-	if (env.VITE_ANALYTICS_CUSTOM_EVENTS === "true") {
+	if (import.meta.env.VITE_ANALYTICS_CUSTOM_EVENTS === "true") {
 		vercelTrack(event.name, event.properties);
 	}
 }
