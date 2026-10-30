@@ -76,9 +76,9 @@ function referencedByApp(fullName: string): boolean {
 	);
 }
 
-describe("public Convex functions", async () => {
-	const names = await publicFunctionNames();
+const names = await publicFunctionNames();
 
+describe("public Convex functions", () => {
 	it("finds the functions the app is known to call", () => {
 		expect(names).toEqual(
 			expect.arrayContaining([
