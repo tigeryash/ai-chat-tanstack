@@ -1,8 +1,13 @@
+import babel from "@rolldown/plugin-babel";
+import { reactCompilerPreset } from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 
 // Kept separate from vite.config.ts on purpose: the app config loads nitro, TanStack Start, and the
 // devtools plugins, which crash Vitest ("module is not defined") and keep it from exiting.
 export default defineConfig({
+	// The React Compiler, as in the app build, so render-count tests (chat-screen.test.tsx) measure
+	// what ships.
+	plugins: [babel({ presets: [reactCompilerPreset()] })],
 	resolve: {
 		tsconfigPaths: true,
 	},

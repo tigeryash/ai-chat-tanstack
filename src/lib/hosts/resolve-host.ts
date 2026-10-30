@@ -13,15 +13,22 @@ import type { HostPrefs } from "./host-prefs";
 // (Auto, or a pinned host and upstream); this resolves it against the hosts as they are now, every
 // render, so a choice made before keys loaded, or for a key since deleted, lands on a connected host.
 
-/** What the chat's messages need from a host. */
+/**
+ * What the chat's messages need from a host. Only the person's messages count, so this changes when
+ * they send, not on every chunk of a streaming reply.
+ */
 export function chatNeeds(messages: readonly UIMessage[]): ChatNeeds {
-	const images = messages.some((message) =>
-		message.parts.some(
-			(part) => part.type === "file" && part.mediaType.startsWith("image/"),
-		),
+	const images = messages.some(
+		(message) =>
+			message.role === "user" &&
+			message.parts.some(
+				(part) => part.type === "file" && part.mediaType.startsWith("image/"),
+			),
 	);
 	return { images };
 }
+
+export const sameNeeds = (a: ChatNeeds, b: ChatNeeds) => a.images === b.images;
 
 export interface ResolvedHost {
 	/** The choice the request uses. */

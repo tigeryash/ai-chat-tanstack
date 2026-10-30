@@ -18,6 +18,9 @@ export interface ChatViewProps {
 	onSend?: () => void;
 }
 
+/** At most one render per 50 ms while a reply streams; status changes still land at once. */
+const STREAM_THROTTLE_MS = 50;
+
 const logFailure = (error: unknown) =>
 	logError("Chat request failed:", error instanceof Error ? error.name : error);
 
@@ -31,6 +34,7 @@ export function ChatView({
 }: ChatViewProps) {
 	const { messages, sendMessage, regenerate, stop, status, error } = useChat({
 		chat,
+		throttle: STREAM_THROTTLE_MS,
 	});
 	const busy = status === "submitted" || status === "streaming";
 	const options = selection && { body: selection };
@@ -62,12 +66,8 @@ export function ChatView({
 				) : (
 					<MessagesList
 						messages={messages}
-						currentModel={
-							selection && {
-								model: selection.model,
-								gatewayId: selection.gatewayId,
-							}
-						}
+						// The selection itself (kept by value upstream), so finished messages keep their props.
+						currentModel={selection}
 						onRegenerate={
 							busy || !options
 								? undefined

@@ -1,4 +1,4 @@
-import { type Chat, useChat } from "@ai-sdk/react";
+import type { Chat } from "@ai-sdk/react";
 import type { UIMessage } from "ai";
 import { ChatView } from "@/components/chat/chat-view";
 import { HostSwitcher } from "@/components/models/host-switcher";
@@ -18,8 +18,8 @@ export function ChatScreen({
 	chat: Chat<UIMessage>;
 	onSend?: () => void;
 }) {
-	const { messages } = useChat({ chat });
-	const model = useChatModel(chat.id, messages);
+	// No `useChat` here: the header shouldn't re-render per streamed chunk. ChatView subscribes.
+	const model = useChatModel(chat);
 	const { choice, wanted, chosenModel } = model;
 	const isLocal = choice?.provider === LOCAL_PROVIDER && choice.model !== "";
 	const localEndpoint = useLocalEndpointFor(
