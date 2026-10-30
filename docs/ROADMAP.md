@@ -566,7 +566,7 @@ This is effectively a small agent harness. Slices below are a draft; 4.0 settles
 - [ ] **7.1 Terms and privacy.** Drafts start now from [data-inventory.md](./data-inventory.md) and are revised as
   features land. Finalize and have them reviewed before the first public sign-up (Google's OAuth consent screen
   also wants a privacy policy link when you publish).
-  *Status 2026-10-30:* first drafts in `docs/legal/`, served at `/privacy` and `/terms` (PR [TODO: link]).
+  *Status 2026-10-30:* first drafts in `docs/legal/`, served at `/privacy` and `/terms` ([PR #43](https://github.com/tigeryash/ai-chat-tanstack/pull/43)).
   Stays open until the placeholders are filled and a lawyer has reviewed them.
 - [ ] **7.2 Account deletion and data export** for cloud data.
 - [ ] **7.3 Security review** against OWASP Top 10 for LLM Applications (2026) and for Agentic Applications, plus
