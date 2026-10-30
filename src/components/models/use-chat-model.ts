@@ -171,5 +171,6 @@ export function useChatModel(chat: Chat<UIMessage>) {
 	};
 }
 
+/** @public The model settings panel (2.4b, PR #47) takes one. */
 export type ChatModel = ReturnType<typeof useChatModel>;
 export { autoChoiceFor };
