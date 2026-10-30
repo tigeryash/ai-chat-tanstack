@@ -1,5 +1,5 @@
-import { motion } from "motion/react";
-import { useLayoutEffect, useRef, useState } from "react";
+import { m } from "motion/react";
+import { useId, useLayoutEffect, useRef, useState } from "react";
 
 type TextInputProps = {
 	input: string;
@@ -10,6 +10,7 @@ type TextInputProps = {
 export const TextInput = ({ input, setInput, onKeyDown }: TextInputProps) => {
 	const inputTextHeigh = 35;
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
+	const id = useId();
 	const [height, setHeight] = useState(inputTextHeigh);
 	useLayoutEffect(() => {
 		const textarea = textareaRef.current;
@@ -22,9 +23,11 @@ export const TextInput = ({ input, setInput, onKeyDown }: TextInputProps) => {
 		textarea.style.height = `${newHeight}px`;
 	});
 	return (
-		<motion.div layout="position" className="w-full">
-			<motion.div
+		<m.div layout="position" className="w-full">
+			<m.div
 				initial={false}
+				// The box grows with the text (the composer's resize, hard rule 3 covers it).
+				// react-doctor-disable-next-line react-doctor/no-layout-property-animation
 				animate={{ height: `${height}px` }}
 				transition={{
 					duration: 0.2,
@@ -32,7 +35,11 @@ export const TextInput = ({ input, setInput, onKeyDown }: TextInputProps) => {
 				}}
 				className="overflow-hidden"
 			>
+				<label htmlFor={id} className="sr-only">
+					Message
+				</label>
 				<textarea
+					id={id}
 					ref={textareaRef}
 					style={{ height: `${height}px` }}
 					value={input}
@@ -46,7 +53,7 @@ export const TextInput = ({ input, setInput, onKeyDown }: TextInputProps) => {
                   text-black placeholder-black/60 max-h-52"
 					onKeyDown={onKeyDown}
 				/>
-			</motion.div>
-		</motion.div>
+			</m.div>
+		</m.div>
 	);
 };
