@@ -1,8 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChatScreen } from "@/components/chat/chat-screen";
 import { useViewer } from "@/lib/account";
 import { openNewChat } from "@/lib/chat/chat-sessions";
+import { retainChat } from "@/lib/chat/open-chats";
 
 // A new local chat. Nothing is stored (and nothing touches Convex) until its first reply finishes.
 // Sending moves to the chat's own URL; the reply keeps streaming, because the open chat outlives
@@ -22,6 +23,8 @@ function RouteComponent() {
 function NewChat({ ownerId }: { ownerId: string | null }) {
 	const navigate = useNavigate();
 	const [chat] = useState(() => openNewChat({ ownerId }));
+	// Keeps the chat open while it's on screen (open chats are released when idle, quality audit P8).
+	useEffect(() => retainChat(chat.id), [chat.id]);
 	return (
 		<ChatScreen
 			chat={chat}

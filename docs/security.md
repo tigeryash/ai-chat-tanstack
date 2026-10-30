@@ -58,7 +58,8 @@ have put words in its mouth).
 - All model output renders through `SafeMarkdown` (`src/components/ai-elements/safe-markdown.tsx`): raw HTML is
   sanitized with GitHub's schema, then links must start with `https://`, `http://` or `mailto:`, and an `https://`
   image becomes an "Image from host (opens in a new tab)" link (`src/lib/security/markdown-urls.ts`). Never render
-  model output with plain `<Streamdown>`.
+  model output with plain `<Streamdown>`, or with `hardened-streamdown.tsx` (SafeMarkdown's lazy-loaded half,
+  which lacks the safe link and image components).
 - Huge or deeply nested replies can hang or overflow the parser (2,000 nested `>` overflows the stack; 40,000
   unmatched `*_` take 4.5 s). Past the limits in `src/lib/security/markdown-limits.ts` a reply renders as plain
   text, and an error boundary does the same for anything else that throws.

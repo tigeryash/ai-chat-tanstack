@@ -1,12 +1,11 @@
-import { Component, type ComponentProps, type ReactNode } from "react";
-import { harden } from "rehype-harden";
 import {
-	type Components,
-	defaultRehypePlugins,
-	type ExtraProps,
-	Streamdown,
-	type StreamdownProps,
-} from "streamdown";
+	Component,
+	type ComponentProps,
+	lazy,
+	type ReactNode,
+	Suspense,
+} from "react";
+import type { Components, ExtraProps, StreamdownProps } from "streamdown";
 import { logWarn } from "@/lib/log";
 import { markdownVerdict } from "@/lib/security/markdown-limits";
 import {
@@ -21,25 +20,11 @@ import { cn } from "@/lib/utils";
 // then sanitized (GitHub's schema: no script, style, iframes, event handlers, or javascript: URLs).
 // rehype-harden then drops any link or image whose protocol isn't safe, and the components below
 // allow only ALLOWED_LINK_PREFIXES / ALLOWED_IMAGE_PREFIXES. Callers can't swap the plugins out.
-
-type RehypePlugin = NonNullable<StreamdownProps["rehypePlugins"]>[number];
-
-const strictHarden: RehypePlugin = [
-	harden,
-	{
-		// "*" allows http(s) only; the prefix check in the components is the stricter one.
-		allowedLinkPrefixes: ["*"],
-		allowedImagePrefixes: ["*"],
-		allowDataImages: false,
-	},
-];
-
-// Streamdown's defaults are raw → sanitize → harden with everything allowed; only harden changes.
-const hardenedRehypePlugins: RehypePlugin[] = [
-	defaultRehypePlugins.raw,
-	defaultRehypePlugins.sanitize,
-	strictHarden,
-];
+//
+// The markdown stack is most of a chat page's JavaScript, so it loads on first use (quality audit
+// P3). Until it arrives the text shows as plain text, the same fallback as for a parser crash, marked
+// `data-streamdown="loading"` so tests can wait for the real render.
+const HardenedStreamdown = lazy(() => import("./hardened-streamdown"));
 
 type LinkProps = ComponentProps<"a"> & ExtraProps;
 type ImageProps = ComponentProps<"img"> & ExtraProps;
@@ -125,17 +110,21 @@ export function SafeMarkdown({
 				plain
 			) : (
 				<MarkdownErrorBoundary text={text} fallback={plain}>
-					<Streamdown
-						{...props}
-						className={className}
-						rehypePlugins={hardenedRehypePlugins}
-						// Our SafeLink already opens in a new tab with the real host on hover; Streamdown's own
-						// link check would wrap it in a confirmation dialog it renders itself.
-						linkSafety={{ enabled: false }}
-						components={{ ...components, ...SAFE_COMPONENTS }}
+					<Suspense
+						fallback={
+							<PlainText className={className} loading>
+								{text}
+							</PlainText>
+						}
 					>
-						{text}
-					</Streamdown>
+						<HardenedStreamdown
+							{...props}
+							className={className}
+							components={{ ...components, ...SAFE_COMPONENTS }}
+						>
+							{text}
+						</HardenedStreamdown>
+					</Suspense>
 				</MarkdownErrorBoundary>
 			)}
 		</div>
@@ -146,13 +135,16 @@ export function SafeMarkdown({
 function PlainText({
 	children,
 	className,
+	loading = false,
 }: {
 	children: string;
 	className?: string;
+	/** Shown while the markdown renderer loads, rather than instead of it. */
+	loading?: boolean;
 }) {
 	return (
 		<div
-			data-streamdown="plain-text"
+			data-streamdown={loading ? "loading" : "plain-text"}
 			className={cn("whitespace-pre-wrap wrap-anywhere", className)}
 		>
 			{children}

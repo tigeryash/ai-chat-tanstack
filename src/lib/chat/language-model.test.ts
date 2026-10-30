@@ -24,12 +24,12 @@ async function captureRequest(
 		});
 		return new Response("{}", { status: 500 });
 	}) as typeof fetch;
-	const model = createLanguageModel(
+	const model = (await createLanguageModel(
 		selection,
 		key,
 		fetchImpl,
 		localBaseUrl,
-	) as StreamingModel;
+	)) as StreamingModel;
 	try {
 		await model.doStream({
 			prompt: [{ role: "user", content: [{ type: "text", text: "hi" }] }],

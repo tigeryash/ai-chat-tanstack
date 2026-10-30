@@ -1,6 +1,5 @@
 "use client";
 
-import { useGSAP } from "@gsap/react";
 import {
 	CatchBoundary,
 	ClientOnly,
@@ -10,16 +9,20 @@ import {
 	redirect,
 	useLocation,
 } from "@tanstack/react-router";
-import { gsap } from "gsap";
-import { SplitText } from "gsap/all";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { LINK_CLASS } from "@/components/auth/auth-form";
 import Models from "@/components/auth/models";
 import OAuthButtons from "@/components/auth/oauthbuttons";
+import { loadGsap, useLazyGsap } from "@/lib/lazy-gsap";
 import { logError } from "@/lib/log";
 import { FULL_MOTION } from "@/lib/reduced-motion";
 
-gsap.registerPlugin(SplitText);
+// Start fetching GSAP now, alongside hydration, so the reveals below rarely wait for it.
+if (typeof window !== "undefined") {
+	void loadGsap().catch(() => {
+		// useLazyGsap reports it if the reveals can't run.
+	});
+}
 
 // three.js and React Three Fiber are most of this route's JavaScript. Loading the background after
 // hydration keeps them off the critical path, so the form works before the scene arrives.
@@ -33,40 +36,37 @@ const AuthLayout = () => {
 	// after its children's, so the form below is hydrated by then too.
 	const [hydrated, setHydrated] = useState(false);
 	useEffect(() => setHydrated(true), []);
-	useGSAP(
-		() => {
-			if (!containerRef.current) return;
+	useLazyGsap(({ gsap, SplitText }) => {
+		if (!containerRef.current) return;
 
-			gsap.matchMedia().add(FULL_MOTION, () => {
-				const subtitle = new SplitText(".subtitle", {
-					type: "lines",
-				});
-
-				gsap.set(subtitle.lines, {
-					y: 100,
-				});
-				gsap.to(subtitle.lines, {
-					y: 0,
-					delay: 0.3,
-					duration: 1.2,
-					stagger: 0.075,
-					ease: "power2.inOut",
-				});
-				gsap.from(".auth", {
-					opacity: 0,
-					duration: 0.9,
-					ease: "power2.inOut",
-				});
-
-				gsap.from(".footer", {
-					opacity: 0,
-					duration: 0.7,
-					ease: "power2.in",
-				});
+		gsap.matchMedia().add(FULL_MOTION, () => {
+			const subtitle = new SplitText(".subtitle", {
+				type: "lines",
 			});
-		},
-		{ dependencies: [], scope: containerRef },
-	);
+
+			gsap.set(subtitle.lines, {
+				y: 100,
+			});
+			gsap.to(subtitle.lines, {
+				y: 0,
+				delay: 0.3,
+				duration: 1.2,
+				stagger: 0.075,
+				ease: "power2.inOut",
+			});
+			gsap.from(".auth", {
+				opacity: 0,
+				duration: 0.9,
+				ease: "power2.inOut",
+			});
+
+			gsap.from(".footer", {
+				opacity: 0,
+				duration: 0.7,
+				ease: "power2.in",
+			});
+		});
+	}, containerRef);
 	return (
 		<main
 			ref={containerRef}
@@ -140,29 +140,26 @@ const FormContainer = ({
 
 const Body = () => {
 	const titleRef = useRef<HTMLDivElement>(null);
-	useGSAP(
-		() => {
-			if (!titleRef.current) return;
-			const titleElement = titleRef.current;
-			gsap.matchMedia().add(FULL_MOTION, () => {
-				const title = new SplitText(titleElement, {
-					type: "lines",
-					mask: "lines",
-				});
-				gsap.set(title.lines, {
-					y: 200,
-				});
-				gsap.to(title.lines, {
-					y: 0,
-					delay: 0.27,
-					duration: 1.2,
-					stagger: 0.03,
-					ease: "power2.inOut",
-				});
+	useLazyGsap(({ gsap, SplitText }) => {
+		if (!titleRef.current) return;
+		const titleElement = titleRef.current;
+		gsap.matchMedia().add(FULL_MOTION, () => {
+			const title = new SplitText(titleElement, {
+				type: "lines",
+				mask: "lines",
 			});
-		},
-		{ dependencies: [], scope: titleRef },
-	);
+			gsap.set(title.lines, {
+				y: 200,
+			});
+			gsap.to(title.lines, {
+				y: 0,
+				delay: 0.27,
+				duration: 1.2,
+				stagger: 0.03,
+				ease: "power2.inOut",
+			});
+		});
+	}, titleRef);
 
 	return (
 		<>

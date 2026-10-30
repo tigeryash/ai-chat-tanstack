@@ -1,8 +1,9 @@
 import { createLocalStore } from "@/lib/local-store";
+import { chatStore } from "@/lib/storage/app-store";
 import type { ChatStore } from "@/lib/storage/chat-store";
 import { chatsOwnedBy, noAccountChats } from "@/lib/storage/ownership";
 import { z } from "@/lib/zod";
-import { chatStore, deleteChats, setChatOwner } from "./chat-sessions";
+import { deleteChats, setChatOwner } from "./open-chats";
 
 // What happens to chats on this device when people sign in and out (roadmap 1.9). After sign-in, an
 // account is asked once per browser what to do with the chats made signed out. Signing out hides the

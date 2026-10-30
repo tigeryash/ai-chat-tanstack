@@ -11,7 +11,8 @@ import {
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { createServerFn } from "@tanstack/react-start";
 import { MotionConfig } from "motion/react";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip-provider";
+import { currentViewer } from "@/lib/account";
 import { authClient } from "@/lib/auth-client";
 import { getToken } from "@/lib/auth-server";
 import { cspHeaders } from "@/lib/security/csp";
@@ -64,6 +65,15 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 	}),
 
 	beforeLoad: async (ctx) => {
+		// In the browser this runs on every navigation, and a server function would be a round trip to
+		// our server each time (quality audit P9). Better Auth's session store already knows whether
+		// someone is signed in. The token only matters on the server (SSR queries and the provider's
+		// first render, which hydration carries over).
+		if (!import.meta.env.SSR) {
+			const viewer = await currentViewer();
+			return { isAuthenticated: viewer !== null, token: undefined };
+		}
+
 		const token = await getAuth();
 
 		if (token) {

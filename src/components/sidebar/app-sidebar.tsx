@@ -18,8 +18,9 @@ import {
 } from "@/components/ui/sidebar";
 import { useViewer } from "@/lib/account";
 import { arrangeChats } from "@/lib/chat/chat-list";
-import { chatStore, deleteChat } from "@/lib/chat/chat-sessions";
+import { deleteChat } from "@/lib/chat/open-chats";
 import { logError } from "@/lib/log";
+import { chatStore } from "@/lib/storage/app-store";
 import type { ChatSummary } from "@/lib/storage/chat-store";
 import { type Viewer, visibleChats } from "@/lib/storage/ownership";
 import { AccountLinks } from "./account-links";
