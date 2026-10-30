@@ -29,6 +29,9 @@ jobs:
           bun-version: ${{ env.BUN_VERSION }}
       - run: bun install --frozen-lockfile
       - run: bun run verify
+      # Unused files, dependencies and exports. A step here rather than its own job, so it's covered by this
+      # required check. Pinned and not in package.json, so a knip release can't change the result without a PR.
+      - run: bunx knip@6.44.0
 
   bundle-budget:
     name: Bundle budget

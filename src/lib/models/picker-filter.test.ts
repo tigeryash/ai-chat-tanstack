@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { TEST_MODELS } from "./catalog.fixtures";
 import {
 	blendedPrice,
 	DEFAULT_FILTERS,
@@ -6,7 +7,6 @@ import {
 	filterModels,
 	type PickerFilters,
 } from "./picker-filter";
-import { TEST_MODELS } from "./test-catalog";
 
 const names = (filters: Partial<PickerFilters>) =>
 	filterModels(TEST_MODELS, { ...DEFAULT_FILTERS, ...filters }).map(

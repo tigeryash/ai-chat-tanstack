@@ -19,5 +19,10 @@ export default defineConfig({
 		],
 		// Pure logic by default. A test that needs the DOM opts in with `// @vitest-environment jsdom`.
 		environment: "node",
+		// `src/env.ts` requires these. Placeholders: unit tests never reach Convex.
+		env: {
+			VITE_CONVEX_URL: "https://placeholder.convex.cloud",
+			VITE_CONVEX_SITE_URL: "https://placeholder.convex.site",
+		},
 	},
 });

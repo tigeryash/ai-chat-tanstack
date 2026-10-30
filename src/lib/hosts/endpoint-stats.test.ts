@@ -8,7 +8,7 @@ import {
 import {
 	TEST_GATEWAY_ENDPOINTS,
 	TEST_OPENROUTER_ENDPOINTS,
-} from "./test-endpoints";
+} from "./endpoints.fixtures";
 
 const MODEL = "deepseek/deepseek-v4.1-flash";
 

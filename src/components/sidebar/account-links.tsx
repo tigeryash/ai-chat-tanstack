@@ -1,3 +1,4 @@
+import { api } from "@convex/_generated/api";
 import { Link } from "@tanstack/react-router";
 import { useConvexAuth, useMutation } from "convex/react";
 import { KeyRoundIcon, LogInIcon } from "lucide-react";
@@ -9,7 +10,6 @@ import {
 } from "@/components/ui/sidebar";
 import { useViewer } from "@/lib/account";
 import { logError } from "@/lib/log";
-import { api } from "../../../convex/_generated/api";
 import { SignOutItem } from "./sign-out-item";
 
 // Chatting needs no account (decision 4): keys and chats stay in this browser. Signing in is only for

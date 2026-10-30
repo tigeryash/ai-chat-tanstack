@@ -1,3 +1,4 @@
+import { MIN_PASSWORD_LENGTH } from "@convex/lib/passwordPolicy";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import {
@@ -12,7 +13,6 @@ import {
 import { authClient } from "@/lib/auth-client";
 import { authErrorMessage, requestAuth } from "@/lib/auth-errors";
 import { signupSchema } from "@/lib/auth-schemas";
-import { MIN_PASSWORD_LENGTH } from "../../../convex/lib/passwordPolicy";
 
 export const Route = createFileRoute("/(auth)/signup")({
 	component: RouteComponent,

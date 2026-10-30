@@ -61,13 +61,12 @@ test("Stop ends the reply where it is, keeps it, and allows a new message", asyn
 	await expect(status(page)).toHaveAttribute("data-chat-status", "ready");
 	const stopped = await reply(page).textContent();
 	expect(stopped).not.toContain("word40");
-	// Nothing more arrives after Stop. Whitespace is ignored: the final render can trim the trailing
-	// space the stream ended on ("word9 " → "word9"), which isn't new content.
-	const withoutSpaces = (text: string | null) => text?.replace(/\s/g, "");
+	// Nothing more arrives after Stop. Compare the reply's words only: the final render can trim the
+	// trailing space the stream ended on ("word9 " → "word9"), and the reasoning trace can collapse
+	// once the reply is done, which hides its text. Neither is new content.
+	const words = (text: string | null) => text?.match(/word\d+/g) ?? [];
 	await page.waitForTimeout(500);
-	expect(withoutSpaces(await reply(page).textContent())).toBe(
-		withoutSpaces(stopped),
-	);
+	expect(words(await reply(page).textContent())).toEqual(words(stopped));
 
 	// The stopped chat is saved, and the next message gets a full reply.
 	await send(page, "Again");

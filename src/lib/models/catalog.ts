@@ -1,8 +1,9 @@
+import { api } from "@convex/_generated/api";
+import type { CatalogModel } from "@convex/lib/modelCatalog/view";
 import { useQuery } from "@tanstack/react-query";
 import { ConvexHttpClient } from "convex/browser";
 import type { FunctionReturnType } from "convex/server";
-import { api } from "../../../convex/_generated/api";
-import type { CatalogModel } from "../../../convex/lib/modelCatalog/view";
+import { env } from "@/env";
 
 // The synced model catalog (roadmap 2.1) as the picker reads it. One HTTP query, not a live
 // subscription: the table changes once a day, the app's sync client waits for a session
@@ -16,7 +17,7 @@ const CATALOG_STALE_MS = 60 * 60 * 1000;
 
 let client: ConvexHttpClient | undefined;
 function catalogClient(): ConvexHttpClient {
-	client ??= new ConvexHttpClient(import.meta.env.VITE_CONVEX_URL);
+	client ??= new ConvexHttpClient(env.VITE_CONVEX_URL);
 	return client;
 }
 

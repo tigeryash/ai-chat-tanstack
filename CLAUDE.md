@@ -24,12 +24,13 @@ touching keys, rendering, tools, local endpoints, or Convex writes, and keep
 | `bun run check` / `bun run fix` | Biome lint + format check / apply safe fixes. |
 | `bun run test` | Vitest unit tests (`src/**/*.test.ts(x)`, `convex/**/*.test.ts`, `scripts/**/*.test.ts`). |
 | `bun run verify` | typecheck + Biome + Vitest. Run before every commit you hand over. |
+| `bunx knip@6.44.0` | Unused files, dependencies and exports (`knip.json`). Pinned, not in `package.json`. CI runs it. |
 | `bun run test:e2e` | Playwright against a production build (macOS screenshot baselines when run on a Mac). |
 | `bun run test:e2e:linux` | Playwright inside CI's Linux image via Docker. Add `--update-snapshots` to refresh Linux baselines. |
 | `bun scripts/bundle-budget.ts` | After `bun run build` (add `--sourcemap` for the package check): gzipped route preloads vs the budget. CI runs it. |
 
 The **pre-commit hook** (`.husky/pre-commit`) runs Biome on staged files and the type check. Don't bypass it with
-`--no-verify`; fix the error instead. **CI** (`.github/workflows/ci.yml`) runs `verify` and Playwright on every PR.
+`--no-verify`; fix the error instead. **CI** (`.github/workflows/ci.yml`) runs `verify`, knip and Playwright on every PR.
 Playwright runs in 4 shards with 2 workers each (4 workers per runner made timing-sensitive tests flaky); the
 `Playwright` check sums them up and passes without running e2e when a PR only touches `docs/` or `*.md`.
 
@@ -80,7 +81,7 @@ Playwright runs in 4 shards with 2 workers each (4 workers per runner made timin
   chats (and panes). Mounted once as `<BackgroundStatus />` in the `(dashboard)` layout.
 - **Models** (roadmap 2.1–2.2): Convex `models` table synced daily (`convex/modelCatalogSync.ts`, curation in
   `src/models/curation.ts`). The app reads `models.list` / `models.get` over HTTP (`src/lib/models/catalog.ts`), and
-  the e2e Convex stub serves the seeded catalog in `src/lib/models/test-catalog.ts`. Runnability per user is
+  the e2e Convex stub serves the seeded catalog in `src/lib/models/catalog.fixtures.ts`. Runnability per user is
   `src/lib/models/runnability.ts`; the picker, model card and removed-model banner are in `src/components/models/`.
   Each chat's model choice is kept by `src/lib/chat/chat-model-choice.ts`.
 - **UI**: Tailwind 4, shadcn components on Base UI (`base-vega` style; add more with `bunx shadcn add <name>`,
@@ -120,7 +121,20 @@ Playwright runs in 4 shards with 2 workers each (4 workers per runner made timin
 ## Conventions
 
 - Biome formats and lints (tabs, double quotes; scope is set in `biome.json`). Run `bun run fix` for formatting.
-- TypeScript strict, no `any` unless a comment says why. Import app code through `@/` (maps to `src/`).
+- TypeScript strict, no `any` unless a comment says why. Import app code through `@/` (maps to `src/`) and Convex
+  code through `@convex/` (maps to `convex/`, e.g. `@convex/_generated/api`). Code inside `convex/` keeps relative
+  imports.
+- Named exports only, except where a tool needs a default (config files, `convex/http.ts`, `crons.ts`, `*.config.ts`).
+- Features live in `src/lib/<feature>/` (logic, stores, hooks) with their UI in `src/components/<feature>/`; a
+  hook sits next to the feature it serves. `src/hooks/` is only for generic ones. Older names
+  (`components/chat/chatstuff/`, `src/utilities/`, `src/types/`) get renamed when next touched.
+- Test data in `src/` that tests or e2e import is named `*.fixtures.ts` (`catalog.fixtures.ts`), never imported by
+  app code.
+- Convex functions may `console.*` names, ids and config only, never prompts, replies, emails or keys
+  ([security.md](docs/security.md)).
+- **knip** (`bunx knip@6.44.0`, `knip.json`, a step in CI's required verify job) fails on unused files,
+  dependencies and exports. Delete them; keep an export that an open PR needs with a `/** @public */` tag naming
+  the PR. It can't see unused Convex functions; `convex/publicFunctions.test.ts` does.
 - Small focused files. Match the surrounding code's naming and comment density.
 - Unit tests sit next to the code as `*.test.ts`. Vitest runs in Node; a test that needs the DOM adds
   `// @vitest-environment jsdom` at the top.
@@ -169,8 +183,10 @@ Playwright runs in 4 shards with 2 workers each (4 workers per runner made timin
 ## Gotchas (learned in Phase 0)
 
 - **Biome skips this repo when it sits under `.claude/`** (`biome.json` ignores `.claude`, which also matches a
-  worktree's own path), so in a worktree `bun run check` and the pre-commit hook check nothing. Lint there with a
-  copy of `biome.json` minus the `!!**/.claude` line: `bunx biome check --config-path=<dir with that copy> src e2e`.
+  worktree's own path), so in a worktree `bun run check` checks nothing (the pre-commit hook's `--staged` run does
+  check staged files). A copy of `biome.json` elsewhere misses rules Biome turns on from `package.json` (the
+  Playwright and test domains). Check like CI from a clone outside `.claude/`: `git clone -q . /tmp/x`, symlink
+  `node_modules` into it, then `bun run check` there.
 - **Keep `convex` at 1.46 or newer.** `CONVEX_DEPLOY_KEY` can deploy but not read data. Older CLIs read table sizes
   when a push drops an index, so production builds failed with "You do not have permission to perform this operation
   (deployment:data:view)". Upgrade the CLI rather than giving the key data access.

@@ -2,7 +2,7 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "./support/fixtures";
 
 // Roadmap 2.1b + 2.2: the model picker and model card on /e2e/model-picker, against the seeded catalog
-// the Convex stub serves (src/lib/models/test-catalog.ts). The model is MockLanguageModelV4; its reply
+// the Convex stub serves (src/lib/models/catalog.fixtures.ts). The model is MockLanguageModelV4; its reply
 // names the provider and model id the request was routed to.
 
 const OPENROUTER_KEY = "sk-or-v1-e2eFakePickerKey0123456789beef";

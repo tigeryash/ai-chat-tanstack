@@ -1,14 +1,9 @@
 import { ConvexQueryClient } from "@convex-dev/react-query";
 import { QueryClient } from "@tanstack/react-query";
-
-const CONVEX_URL = import.meta.env.VITE_CONVEX_URL;
-
-if (!CONVEX_URL) {
-	throw new Error("Missing env var VITE_CONVEX_URL");
-}
+import { env } from "@/env";
 
 export function getContext() {
-	const convexQueryClient = new ConvexQueryClient(CONVEX_URL, {
+	const convexQueryClient = new ConvexQueryClient(env.VITE_CONVEX_URL, {
 		expectAuth: true,
 	});
 

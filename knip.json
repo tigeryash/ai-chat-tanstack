@@ -1,0 +1,10 @@
+{
+	"$schema": "https://unpkg.com/knip@6/schema.json",
+	"entry": ["scripts/*.ts", "src/routes/e2e/**/*.{ts,tsx}"],
+	"ignore": [
+		"src/components/ui/**",
+		"src/components/ai-elements/**"
+	],
+	"ignoreDependencies": ["glsl-noise", "web-vitals"],
+	"ignoreExportsUsedInFile": true
+}

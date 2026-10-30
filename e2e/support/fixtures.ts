@@ -1,5 +1,5 @@
 import { test as base, expect } from "@playwright/test";
-import { testEndpointsFor } from "../../src/lib/hosts/test-endpoints";
+import { testEndpointsFor } from "../../src/lib/hosts/endpoints.fixtures";
 import { E2E_ENFORCE_CSP_COOKIE } from "../../src/lib/security/csp";
 
 const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1", "[::1]"]);
@@ -49,7 +49,7 @@ declare global {
 //   as a model provider, a CDN, or analytics, is aborted and fails the test, so e2e can never call a
 //   real model or send data out. Chat tests use the AI SDK mock model from `ai/test` instead.
 //   The routers' public endpoint APIs are answered here with fixture data (src/lib/hosts/
-//   test-endpoints.ts) and never reach the network; a test can override them with `page.route`.
+//   endpoints.fixtures.ts) and never reach the network; a test can override them with `page.route`.
 // - An uncaught error in the page fails the test.
 // - Any Content Security Policy violation, report-only included, fails the test: the CSP report must
 //   stay clean in normal use (roadmap 1.0). Tests that provoke one on purpose read `cspViolations`
