@@ -25,7 +25,8 @@ Injections" (arXiv 2506.08837), Google DeepMind's CaMeL (arXiv 2503.18813), and 
   (`require-trusted-types-for 'script'`) once the codebase is clean, since it blocks DOM XSS sinks in Chromium.
 
 *Where it stands (1.0, 2026-10-25).* The policy is built in `src/lib/security/csp.ts`; the provider list is
-`src/lib/security/provider-origins.ts`. `getRouter` makes a nonce per server render (`ssr.nonce`; Start puts it on
+`src/lib/security/provider-origins.ts`, built from each entry's `apiOrigins` in the provider registry
+(`src/models/provider-registry.ts`, quality audit U1) and pinned by `provider-origins.test.ts`. `getRouter` makes a nonce per server render (`ssr.nonce`; Start puts it on
 every script it emits) and the root route's `headers` sends two policies:
 - **Enforced:** `object-src 'none'; base-uri 'none'; frame-ancestors 'none'`. These break nothing, so they didn't
   wait. (`frame-ancestors` is ignored in report-only policies, so this is what actually stops framing, with
@@ -36,8 +37,14 @@ every script it emits) and the root route's `headers` sends two policies:
   origin, page path; no query strings or script samples). No `report-to`: when it's present Chrome ignores
   `report-uri` and queues reports in the Reporting API, which never delivered in testing.
 - Every Playwright test fails on any CSP violation, report-only ones included (`e2e/support/fixtures.ts`), so the
-  report stays clean in normal use. **To enforce:** move the strict policy into `Content-Security-Policy` once
-  production logs show no `[csp]` lines from real use (signed-in chat included, which e2e can't reach yet).
+  report stays clean in normal use.
+- **To enforce:** set `ENFORCE_STRICT_CSP = true` in `csp.ts` (quality audit G1, off as of 2026-10-30). It sends
+  the strict policy as `Content-Security-Policy` and keeps a report-only copy (new directives get trialled there
+  first; until then each violation is reported twice, once per `disposition`). Flip it once Vercel's logs show no
+  `[csp]` lines after a week of real use, signed-in chat included (Owner to-do in the roadmap). The Playwright
+  project `csp-enforced` already runs the chat, key, local-model and XSS specs with the strict policy enforced
+  (in `VITE_E2E` builds an e2e-only cookie makes `src/start.ts` enforce it; `e2e/csp-enforced.spec.ts` checks it
+  blocks), so the flip needs no test changes.
 - Things the policy needed: Zod 4 compiles schemas with `new Function`, so `src/lib/zod.ts` (the only allowed Zod import) turns that off
   before any schema runs. The composer's image compression ran in a worker that loaded its library from
   `cdn.jsdelivr.net`; it now runs on the page (`useWebWorker: false`).
@@ -98,6 +105,10 @@ It is `src/lib/redact.ts`; app code logs through `logError`/`logWarn` in `src/li
 
 *Where it stands (1.1, 2026-10-26).* The vault is `src/lib/keys/`; other code reads a key only through
 `getProviderKey(providerId)` (`index.ts`).
+- **Adding a provider** is one entry in `src/models/provider-registry.ts` (name, key page, API origins, chat base
+  URL, key test, native ids). Its `apiOrigins` widen `connect-src`, so check the provider's CORS from a browser
+  first, update the pinned list in `provider-origins.test.ts`, and say so in the PR. Tests fail if any of the
+  entry's URLs sits outside its own origins.
 - **Storage.** Session keys sit in a `Map` in the vault module. Remembered keys are AES-GCM encrypted (random IV, the
   provider id as additional data, so a record moved to another provider won't decrypt) under one non-extractable
   device key, both in their own IndexedDB database `highelo-keys`. No cache: every read decrypts, so a key deleted in
@@ -212,6 +223,9 @@ enforcement layers (CSP, sandbox origin, SSRF checks) are never part of what YOL
   it. After a failed request we ask the Permissions API (`loopback-network`, `local-network-access`, then
   `local-network`, since Chrome renamed it) and show re-allow steps when it's `denied`. The picker asks saved
   endpoints for their models only when it opens.
+- **Limits** (quality audit G3). Listing a server's models gives up after 5 s, body included, and says it timed
+  out. It keeps the first 1,000 ids and drops ids longer than a `ModelChoice` can hold (200 characters), so a
+  stuck or hostile server can't hang the picker or swamp the page.
 
 ## Agents and tools (Phase 4)
 

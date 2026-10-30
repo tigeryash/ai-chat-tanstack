@@ -13,6 +13,7 @@ import {
 	removeLocalEndpoint,
 	updateLocalEndpoint,
 } from "@/lib/local-endpoints/endpoints";
+import { LIST_TIMEOUT_MS } from "@/lib/local-endpoints/list-models";
 import {
 	markNetworkAccessExplained,
 	useNetworkAccessExplained,
@@ -50,14 +51,26 @@ function FailureMessage({
 	result: Extract<ConnectionResult, { ok: false }>;
 }) {
 	if (result.reason === "denied") return <NetworkAccessDenied />;
-	const host = endpointHost(endpoint);
 	return (
 		<p role="alert" className="text-destructive text-sm">
-			{result.reason === "unreachable"
-				? `Couldn't reach ${host}. ${setupHint(endpoint.kind)}`
-				: `${host} answered${result.status ? ` with an error (${result.status})` : ", but not with a model list"}. Check that the URL is the server's OpenAI-compatible API (usually ending in /v1).`}
+			{failureText(endpoint, result)}
 		</p>
 	);
+}
+
+function failureText(
+	endpoint: LocalEndpoint,
+	result: Extract<ConnectionResult, { ok: false }>,
+): string {
+	const host = endpointHost(endpoint);
+	switch (result.reason) {
+		case "unreachable":
+			return `Couldn't reach ${host}. ${setupHint(endpoint.kind)}`;
+		case "timed-out":
+			return `${host} timed out: it didn't send its model list within ${LIST_TIMEOUT_MS / 1000} seconds. Check the server isn't stuck loading a model, then test again.`;
+		default:
+			return `${host} answered${result.status ? ` with an error (${result.status})` : ", but not with a model list"}. Check that the URL is the server's OpenAI-compatible API (usually ending in /v1).`;
+	}
 }
 
 function ModelsFound({ models }: { models: readonly string[] }) {

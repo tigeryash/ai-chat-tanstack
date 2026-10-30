@@ -4,7 +4,9 @@ import {
 	CSP_REPORT_PATH,
 	createNonce,
 	cspHeaders,
+	ENFORCE_STRICT_CSP,
 	ENFORCED_CSP,
+	withStrictCspEnforced,
 } from "@/lib/security/csp";
 import { parseCspReport } from "@/lib/security/csp-report";
 import { PROVIDER_API_ORIGINS } from "@/lib/security/provider-origins";
@@ -70,10 +72,27 @@ describe("buildStrictCsp", () => {
 	});
 
 	it("sends the strict policy as report-only and the safe subset enforced", () => {
-		const headers = cspHeaders({ nonce: "n", convexUrls: [] });
+		const headers = cspHeaders({ nonce: "n", convexUrls: [] }, false);
 		expect(headers["Content-Security-Policy"]).toBe(ENFORCED_CSP);
 		expect(headers["Content-Security-Policy-Report-Only"]).toContain(
 			"'nonce-n'",
+		);
+	});
+
+	it("enforces the strict policy when switched on, keeping a report-only copy", () => {
+		const strict = buildStrictCsp({ nonce: "n", convexUrls: [] });
+		const headers = cspHeaders({ nonce: "n", convexUrls: [] }, true);
+		expect(headers["Content-Security-Policy"]).toBe(strict);
+		expect(headers["Content-Security-Policy-Report-Only"]).toBe(strict);
+		// The strict policy covers everything the safe subset enforced.
+		for (const directive of ENFORCED_CSP.split("; ")) {
+			expect(strict).toContain(directive);
+		}
+	});
+
+	it("follows the switch by default", () => {
+		expect(cspHeaders({ nonce: "n", convexUrls: [] })).toEqual(
+			cspHeaders({ nonce: "n", convexUrls: [] }, ENFORCE_STRICT_CSP),
 		);
 	});
 });
@@ -136,5 +155,23 @@ describe("parseCspReport", () => {
 		expect(parseCspReport(null)).toEqual([]);
 		expect(parseCspReport({ hello: "world" })).toEqual([]);
 		expect(parseCspReport("text")).toEqual([]);
+	});
+});
+
+describe("withStrictCspEnforced", () => {
+	it("moves a response's strict policy into the enforced header", () => {
+		const response = new Response("page", {
+			headers: cspHeaders({ nonce: "n", convexUrls: [] }, false),
+		});
+		const enforced = withStrictCspEnforced(response).headers;
+		const expected = cspHeaders({ nonce: "n", convexUrls: [] }, true);
+		for (const [name, value] of Object.entries(expected)) {
+			expect(enforced.get(name)).toBe(value);
+		}
+	});
+
+	it("leaves a response without a strict policy alone", () => {
+		const response = new Response("{}");
+		expect(withStrictCspEnforced(response)).toBe(response);
 	});
 });

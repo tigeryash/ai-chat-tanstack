@@ -1,34 +1,27 @@
 import { createGateway, type LanguageModel } from "ai";
-import type { ProviderId } from "@/lib/keys";
 import { createThinkTagModel } from "@/lib/reasoning-middleware";
+import {
+	type OpenAiCompatibleId,
+	PROVIDER_IDS,
+	providerEntry,
+} from "@/models/provider-registry";
 import { LOCAL_PROVIDER, type ModelSelection } from "./model-selection";
 import { openRouterMetadataExtractor } from "./reply-host";
 
 // Builds the AI SDK model a chat streams from, in the browser (roadmap decision 3). Every base URL here
-// is one of the CSP's provider origins (src/lib/security/provider-origins.ts), and the key goes only
-// into that provider's own client, so it's only ever sent to that origin.
+// comes from the provider registry and is on one of the CSP's provider origins
+// (src/lib/security/provider-origins.ts), and the key goes only into that provider's own client, so
+// it's only ever sent to that origin.
 // The provider SDKs load on first use, so pages that never chat don't download them (quality audit P1).
 // The gateway stays a static import: `ai` bundles it anyway as its default provider.
 
-type OpenAiCompatibleId = Exclude<
-	ProviderId,
-	"anthropic" | "google" | "vercel"
->;
-
-/** Providers that speak OpenAI's chat completions API, and where. */
-export const OPENAI_COMPATIBLE_BASE_URLS: Record<OpenAiCompatibleId, string> = {
-	openai: "https://api.openai.com/v1",
-	xai: "https://api.x.ai/v1",
-	mistral: "https://api.mistral.ai/v1",
-	deepseek: "https://api.deepseek.com/v1",
-	groq: "https://api.groq.com/openai/v1",
-	together: "https://api.together.xyz/v1",
-	fireworks: "https://api.fireworks.ai/inference/v1",
-	moonshot: "https://api.moonshot.ai/v1",
-	cerebras: "https://api.cerebras.ai/v1",
-	openrouter: "https://openrouter.ai/api/v1",
-	huggingface: "https://router.huggingface.co/v1",
-};
+/** Providers that speak OpenAI's chat completions API, and where (from the provider registry). */
+export const OPENAI_COMPATIBLE_BASE_URLS = Object.fromEntries(
+	PROVIDER_IDS.flatMap((id) => {
+		const { chatBaseUrl } = providerEntry(id);
+		return chatBaseUrl ? [[id, chatBaseUrl]] : [];
+	}),
+) as Record<OpenAiCompatibleId, string>;
 
 /**
  * The model for `selection`. `key` is the provider's key from the vault (`getProviderKey`), or null

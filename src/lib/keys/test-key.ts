@@ -1,9 +1,16 @@
+import {
+	type KeyTestAuth,
+	type ModelListShape,
+	PROVIDER_IDS,
+	providerEntry,
+} from "@/models/provider-registry";
 import type { ProviderId } from "./providers";
 
 // "Test key" in settings: one authenticated GET to the provider's own API. Besides the chat
 // transport (1.2), this is the only code that puts a key in a request (docs/security.md, "API keys").
 // Most providers' model lists need the key. OpenRouter's, Hugging Face's and AI Gateway's are public,
-// so those use an endpoint that does need it.
+// so those use an endpoint that does need it. The URLs live in the provider registry
+// (src/models/provider-registry.ts).
 
 interface TestRequest {
 	url: string;
@@ -12,55 +19,41 @@ interface TestRequest {
 	countModels?: (body: unknown) => number | undefined;
 }
 
-const bearer = (key: string) => ({ Authorization: `Bearer ${key}` });
-
-const countData = (body: unknown) =>
-	arrayLength((body as { data?: unknown } | null)?.data);
-
-const openAiStyle = (url: string): TestRequest => ({
-	url,
-	headers: bearer,
-	countModels: countData,
-});
-
-export const TEST_REQUESTS: Record<ProviderId, TestRequest> = {
-	openai: openAiStyle("https://api.openai.com/v1/models"),
-	anthropic: {
-		url: "https://api.anthropic.com/v1/models?limit=1000",
-		headers: (key) => ({
-			"x-api-key": key,
-			"anthropic-version": "2023-06-01",
-			"anthropic-dangerous-direct-browser-access": "true",
-		}),
-		countModels: countData,
-	},
-	google: {
-		// The key goes in a header, never the `?key=` query parameter (no keys in URLs).
-		url: "https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000",
-		headers: (key) => ({ "x-goog-api-key": key }),
-		countModels: (body) =>
-			arrayLength((body as { models?: unknown } | null)?.models),
-	},
-	xai: openAiStyle("https://api.x.ai/v1/models"),
-	mistral: openAiStyle("https://api.mistral.ai/v1/models"),
-	deepseek: openAiStyle("https://api.deepseek.com/models"),
-	groq: openAiStyle("https://api.groq.com/openai/v1/models"),
-	together: {
-		url: "https://api.together.xyz/v1/models",
-		headers: bearer,
-		// Together answers with a bare array.
-		countModels: arrayLength,
-	},
-	fireworks: openAiStyle("https://api.fireworks.ai/inference/v1/models"),
-	moonshot: openAiStyle("https://api.moonshot.ai/v1/models"),
-	cerebras: openAiStyle("https://api.cerebras.ai/v1/models"),
-	openrouter: { url: "https://openrouter.ai/api/v1/key", headers: bearer },
-	huggingface: {
-		url: "https://huggingface.co/api/whoami-v2",
-		headers: bearer,
-	},
-	vercel: { url: "https://ai-gateway.vercel.sh/v1/credits", headers: bearer },
+const AUTH_HEADERS: Record<
+	KeyTestAuth,
+	(key: string) => Record<string, string>
+> = {
+	bearer: (key) => ({ Authorization: `Bearer ${key}` }),
+	anthropic: (key) => ({
+		"x-api-key": key,
+		"anthropic-version": "2023-06-01",
+		"anthropic-dangerous-direct-browser-access": "true",
+	}),
+	// The key goes in a header, never the `?key=` query parameter (no keys in URLs).
+	google: (key) => ({ "x-goog-api-key": key }),
 };
+
+const MODEL_COUNTERS: Record<
+	ModelListShape,
+	(body: unknown) => number | undefined
+> = {
+	data: (body) => arrayLength((body as { data?: unknown } | null)?.data),
+	models: (body) => arrayLength((body as { models?: unknown } | null)?.models),
+	array: arrayLength,
+};
+
+function testRequest(providerId: ProviderId): TestRequest {
+	const { url, auth, modelList } = providerEntry(providerId).keyTest;
+	return {
+		url,
+		headers: AUTH_HEADERS[auth],
+		countModels: modelList && MODEL_COUNTERS[modelList],
+	};
+}
+
+export const TEST_REQUESTS = Object.fromEntries(
+	PROVIDER_IDS.map((id) => [id, testRequest(id)]),
+) as Record<ProviderId, TestRequest>;
 
 export type KeyTestResult =
 	| { ok: true; modelCount?: number }

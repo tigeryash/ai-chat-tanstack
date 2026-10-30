@@ -1,5 +1,6 @@
 import { test as base, expect } from "@playwright/test";
 import { testEndpointsFor } from "../../src/lib/hosts/endpoints.fixtures";
+import { E2E_ENFORCE_CSP_COOKIE } from "../../src/lib/security/csp";
 
 const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1", "[::1]"]);
 
@@ -53,12 +54,16 @@ declare global {
 // - Any Content Security Policy violation, report-only included, fails the test: the CSP report must
 //   stay clean in normal use (roadmap 1.0). Tests that provoke one on purpose read `cspViolations`
 //   and set `allowCspViolations`.
+// - With `enforceStrictCsp` (the `csp-enforced` project), the server enforces every page's strict policy,
+//   as it will once ENFORCE_STRICT_CSP (src/lib/security/csp.ts) is on.
 export const test = base.extend<{
 	guards: undefined;
 	cspViolations: CspViolation[];
 	allowCspViolations: boolean;
+	enforceStrictCsp: boolean;
 }>({
 	allowCspViolations: [false, { option: true }],
+	enforceStrictCsp: [false, { option: true }],
 	cspViolations: async ({ context }, use) => {
 		const violations: CspViolation[] = [];
 		await context.exposeBinding("__reportCspViolation", (_, violation) => {
@@ -77,7 +82,22 @@ export const test = base.extend<{
 		await use(violations);
 	},
 	guards: [
-		async ({ context, page, cspViolations, allowCspViolations }, use) => {
+		async (
+			{
+				context,
+				page,
+				baseURL,
+				cspViolations,
+				allowCspViolations,
+				enforceStrictCsp,
+			},
+			use,
+		) => {
+			if (enforceStrictCsp) {
+				await context.addCookies([
+					{ name: E2E_ENFORCE_CSP_COOKIE, value: "1", url: baseURL },
+				]);
+			}
 			const externalRequests: string[] = [];
 			const pageErrors: string[] = [];
 

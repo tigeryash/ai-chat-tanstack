@@ -4,10 +4,19 @@ import { LOCAL_MODEL_ORIGINS, PROVIDER_API_ORIGINS } from "./provider-origins";
 // Content Security Policy (docs/security.md, "Baseline"). Two policies go out with every page:
 // - Enforced: the few directives nothing legitimate needs (plugins, <base>, being framed).
 // - Report-only: the strict policy (nonce + 'strict-dynamic' scripts, connect-src allowlist). It
-//   reports to CSP_REPORT_PATH instead of blocking until the reports stay clean; then it moves into
-//   the enforced header (roadmap 1.0 status note).
+//   reports to CSP_REPORT_PATH instead of blocking until the reports stay clean.
+// ENFORCE_STRICT_CSP moves the strict policy into the enforced header.
 
 export const CSP_REPORT_PATH = "/api/csp-report";
+
+/**
+ * Whether the strict policy is enforced. Off until production logs show no `[csp]` lines after a week
+ * of real use, signed-in chat included (Owner to-do in docs/ROADMAP.md); flipping it is the whole
+ * change. On, the strict policy goes out as `Content-Security-Policy` and a report-only copy stays,
+ * so a new directive can be trialled there first. The e2e `csp-enforced` project runs chat, keys and
+ * local models with the strict policy enforced either way.
+ */
+export const ENFORCE_STRICT_CSP = false;
 
 export const ENFORCED_CSP = [
 	"object-src 'none'",
@@ -94,9 +103,45 @@ export function createNonce(): string {
 }
 
 /** The headers a page response carries for its CSP. */
-export function cspHeaders(options: StrictCspOptions): Record<string, string> {
+export function cspHeaders(
+	options: StrictCspOptions,
+	enforce = ENFORCE_STRICT_CSP,
+): Record<string, string> {
+	return cspHeadersFor(buildStrictCsp(options), enforce);
+}
+
+/**
+ * The two CSP headers for an already built strict policy. Enforced, the strict policy replaces
+ * ENFORCED_CSP (it has all three of its directives) and the report-only copy starts out identical, so
+ * a violation is reported twice, once per `disposition`.
+ */
+export function cspHeadersFor(
+	strictPolicy: string,
+	enforce: boolean,
+): Record<string, string> {
 	return {
-		"Content-Security-Policy": ENFORCED_CSP,
-		"Content-Security-Policy-Report-Only": buildStrictCsp(options),
+		"Content-Security-Policy": enforce ? strictPolicy : ENFORCED_CSP,
+		"Content-Security-Policy-Report-Only": strictPolicy,
 	};
+}
+
+/**
+ * e2e only: the cookie the `csp-enforced` Playwright project sets so that VITE_E2E builds enforce each
+ * page's strict policy (src/start.ts), whatever ENFORCE_STRICT_CSP says.
+ */
+export const E2E_ENFORCE_CSP_COOKIE = "e2e-enforce-csp";
+
+/** A copy of `response` with its strict policy enforced, as ENFORCE_STRICT_CSP would send it. */
+export function withStrictCspEnforced(response: Response): Response {
+	const strict = response.headers.get("Content-Security-Policy-Report-Only");
+	if (!strict) return response;
+	const headers = new Headers(response.headers);
+	for (const [name, value] of Object.entries(cspHeadersFor(strict, true))) {
+		headers.set(name, value);
+	}
+	return new Response(response.body, {
+		status: response.status,
+		statusText: response.statusText,
+		headers,
+	});
 }
