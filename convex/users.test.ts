@@ -30,10 +30,11 @@ describe("convex/users.ts getOrCreate", () => {
 	it("refreshes stale profile fields from Better Auth", async () => {
 		const t = createConvexTest();
 		const { client, userId, authUserId } = await signIn(t, "alice");
-		await t.run((ctx) => ctx.db.patch(userId!, { name: "old name" }));
+		if (!userId) throw new Error("signIn made no app user");
+		await t.run((ctx) => ctx.db.patch(userId, { name: "old name" }));
 
 		await client.mutation(api.users.getOrCreate, {});
-		const refreshed = await t.run((ctx) => ctx.db.get(userId!));
+		const refreshed = await t.run((ctx) => ctx.db.get(userId));
 		expect(refreshed).toMatchObject({ name: "alice", authUserId });
 	});
 

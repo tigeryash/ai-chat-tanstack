@@ -11,8 +11,6 @@ import { hideAccountExistence } from "./lib/hideAccountExistence";
 import { dropOAuthTokens } from "./lib/oauthTokens";
 import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "./lib/passwordPolicy";
 
-const siteUrl = process.env.SITE_URL!;
-
 export const authComponent = createClient<DataModel>(components.betterAuth);
 
 export const createAuth = (
@@ -23,7 +21,7 @@ export const createAuth = (
 		logger: {
 			disabled: optionsOnly,
 		},
-		baseURL: siteUrl,
+		baseURL: process.env.SITE_URL,
 		database: authComponent.adapter(ctx),
 		hooks: {
 			before: requireEmailConfigured,
