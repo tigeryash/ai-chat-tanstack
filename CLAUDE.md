@@ -45,8 +45,9 @@ Playwright runs in 4 shards with 2 workers each (4 workers per runner made timin
   Convex, `/api/csp-report` logs CSP violations). There is no chat route on our server.
 - **Security baseline** (roadmap 1.0, `src/lib/security/`): `getRouter` makes a CSP nonce per request, the root
   route's `headers` sends the policy (strict one report-only for now), and `src/start.ts` adds the security headers
-  and Start's server-function CSRF check to every response. A new provider or third-party origin the browser
-  calls must go in `provider-origins.ts` / `csp.ts`, or the CSP reports it.
+  and Start's server-function CSRF check to every response. A new provider is one entry in
+  `src/models/provider-registry.ts` (its `apiOrigins` feed `provider-origins.ts`); any other third-party origin
+  the browser calls goes in `csp.ts`, or the CSP reports it. `ENFORCE_STRICT_CSP` in `csp.ts` is the enforce switch.
 - **Convex** (`convex/`) is the backend: `schema.ts` (the old chat tables are unused, kept until prod rows are
   checked), `users` row upsert in `authHelpers.ts`, `_generated/` is generated. Query keys go through
   `@convex-dev/react-query`. `convex/publicFunctions.test.ts` fails on any public function the app never calls as
