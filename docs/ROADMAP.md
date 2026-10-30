@@ -474,7 +474,7 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
 - [x] **2.4b Parameter registry + settings panel** (decision 15), including provider-specific options and local
   sampling settings.
   *Done when:* switching models shows/hides the right controls and no supported model errors across any control's range.
-  *Status (2026-10-30):* registry, panel and transport mapping in PR_LINK; checking each control's full range
+  *Status (2026-10-30):* registry, panel and transport mapping in [#47](https://github.com/tigeryash/ai-chat-tanstack/pull/47); checking each control's full range
   against real models is an owner to-do.
 - [ ] **2.5 Usage and cost display.** Tokens, TTFT, tokens/sec, and estimated cost per message, chat, and provider,
   from catalog pricing. It's the user's money, so make it visible.
