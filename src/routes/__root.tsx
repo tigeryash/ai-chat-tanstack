@@ -12,6 +12,7 @@ import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { createServerFn } from "@tanstack/react-start";
 import { MotionConfig } from "motion/react";
 import { TooltipProvider } from "@/components/ui/tooltip-provider";
+import { env } from "@/env";
 import { currentViewer } from "@/lib/account";
 import { authClient } from "@/lib/auth-client";
 import { getToken } from "@/lib/auth-server";
@@ -29,10 +30,7 @@ function pageCspHeaders(nonce: string | undefined): Record<string, string> {
 	if (!nonce) return {};
 	return cspHeaders({
 		nonce,
-		convexUrls: [
-			import.meta.env.VITE_CONVEX_URL,
-			import.meta.env.VITE_CONVEX_SITE_URL,
-		],
+		convexUrls: [env.VITE_CONVEX_URL, env.VITE_CONVEX_SITE_URL],
 		dev: import.meta.env.DEV,
 	});
 }
