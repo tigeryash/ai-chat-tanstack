@@ -5,7 +5,7 @@ const APP_PORT = 4174;
 const CONVEX_STUB_PORT = 4175;
 const convexStubUrl = `http://127.0.0.1:${CONVEX_STUB_PORT}`;
 
-export default defineConfig({
+export default defineConfig<{ enforceStrictCsp: boolean }>({
 	testDir: "./e2e",
 	fullyParallel: true,
 	forbidOnly: isCI,
@@ -18,9 +18,28 @@ export default defineConfig({
 	projects: [
 		{
 			name: "chromium",
+			testIgnore: "csp-enforced.spec.ts",
 			use: {
 				...devices["Desktop Chrome"],
 				viewport: { width: 1280, height: 720 },
+			},
+		},
+		{
+			// The specs that call providers, local servers and the chat runtime, with the strict CSP
+			// enforced (src/lib/security/csp.ts, ENFORCE_STRICT_CSP): proof the switch can be flipped.
+			name: "csp-enforced",
+			testMatch: [
+				"chat.spec.ts",
+				"chat-keys.spec.ts",
+				"keys.spec.ts",
+				"local-models.spec.ts",
+				"xss.spec.ts",
+				"csp-enforced.spec.ts",
+			],
+			use: {
+				...devices["Desktop Chrome"],
+				viewport: { width: 1280, height: 720 },
+				enforceStrictCsp: true,
 			},
 		},
 	],

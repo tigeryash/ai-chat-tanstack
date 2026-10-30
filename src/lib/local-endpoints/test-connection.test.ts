@@ -58,6 +58,20 @@ describe("testLocalEndpoint", () => {
 		).toEqual({ ok: false, reason: "unreachable" });
 		expect(probe).not.toHaveBeenCalled();
 	});
+
+	it("reports a server that never answers as timed out", async () => {
+		const probe = vi.fn();
+		const hanging = ((_url: string, init?: RequestInit) =>
+			new Promise((_, reject) => {
+				init?.signal?.addEventListener("abort", () =>
+					reject(init.signal?.reason),
+				);
+			})) as typeof fetch;
+		expect(
+			await testLocalEndpoint(BASE, { fetch: hanging, timeoutMs: 10, probe }),
+		).toEqual({ ok: false, reason: "timed-out" });
+		expect(probe).not.toHaveBeenCalled();
+	});
 });
 
 describe("localNetworkAccess", () => {

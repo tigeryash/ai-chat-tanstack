@@ -119,6 +119,10 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   and Convex file storage (dashboard → Files; old attachment uploads live there). Then say whether to drop the
   tables (and `users.preferences`) and delete any stored files. *Dev, 2026-10-30:* all six tables and file
   storage are empty.
+- [ ] Enforce the strict CSP (quality audit G1): after a week of real use of production, signed in and chatting
+  included, search Vercel's logs (Project → Logs) for `[csp]` lines and tell an agent what you find (none, or the
+  directive, blocked origin and page of each). With none, the agent sets `ENFORCE_STRICT_CSP = true` in
+  `src/lib/security/csp.ts`; until then the policy that stops an injected script sending a key elsewhere only reports.
 - [ ] Vercel Hobby is fine while this is a portfolio piece; move to Pro before charging money. *Still on Hobby
   (2026-10-23).*
 
