@@ -13,6 +13,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as authRouteRouteImport } from './routes/(auth)/route'
 import { Route as dashboardRouteRouteImport } from './routes/(dashboard)/route'
 import { Route as E2eRouteRouteImport } from './routes/e2e/route'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as authResetPasswordRouteImport } from './routes/(auth)/reset-password'
@@ -52,6 +54,16 @@ const dashboardRouteRoute = dashboardRouteRouteImport.update({
 const E2eRouteRoute = E2eRouteRouteImport.update({
   id: '/e2e',
   path: '/e2e',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const authForgotPasswordRoute = authForgotPasswordRouteImport.update({
@@ -168,6 +180,8 @@ const E2eDesignMinimalRoute = E2eDesignMinimalRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/e2e': typeof E2eRouteRouteWithChildren
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
   '/reset-password': typeof authResetPasswordRoute
@@ -194,6 +208,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/e2e': typeof E2eRouteRouteWithChildren
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
   '/reset-password': typeof authResetPasswordRoute
@@ -223,6 +239,8 @@ export interface FileRoutesById {
   '/(auth)': typeof authRouteRouteWithChildren
   '/(dashboard)': typeof dashboardRouteRouteWithChildren
   '/e2e': typeof E2eRouteRouteWithChildren
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/(auth)/forgot-password': typeof authForgotPasswordRoute
   '/(auth)/login': typeof authLoginRoute
   '/(auth)/reset-password': typeof authResetPasswordRoute
@@ -251,6 +269,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/e2e'
+    | '/privacy'
+    | '/terms'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
@@ -277,6 +297,8 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/e2e'
+    | '/privacy'
+    | '/terms'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
@@ -305,6 +327,8 @@ export interface FileRouteTypes {
     | '/(auth)'
     | '/(dashboard)'
     | '/e2e'
+    | '/privacy'
+    | '/terms'
     | '/(auth)/forgot-password'
     | '/(auth)/login'
     | '/(auth)/reset-password'
@@ -334,6 +358,8 @@ export interface RootRouteChildren {
   authRouteRoute: typeof authRouteRouteWithChildren
   dashboardRouteRoute: typeof dashboardRouteRouteWithChildren
   E2eRouteRoute: typeof E2eRouteRouteWithChildren
+  PrivacyRoute: typeof PrivacyRoute
+  TermsRoute: typeof TermsRoute
   ApiCspReportRoute: typeof ApiCspReportRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
@@ -366,6 +392,20 @@ declare module '@tanstack/react-router' {
       path: '/e2e'
       fullPath: '/e2e'
       preLoaderRoute: typeof E2eRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(auth)/forgot-password': {
@@ -600,6 +640,8 @@ const rootRouteChildren: RootRouteChildren = {
   authRouteRoute: authRouteRouteWithChildren,
   dashboardRouteRoute: dashboardRouteRouteWithChildren,
   E2eRouteRoute: E2eRouteRouteWithChildren,
+  PrivacyRoute: PrivacyRoute,
+  TermsRoute: TermsRoute,
   ApiCspReportRoute: ApiCspReportRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }

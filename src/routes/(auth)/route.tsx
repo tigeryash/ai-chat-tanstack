@@ -209,6 +209,14 @@ const Footer = () => {
 				>
 					Yash
 				</a>
+				{" · "}
+				<Link to="/privacy" className="hover:underline">
+					Privacy
+				</Link>
+				{" · "}
+				<Link to="/terms" className="hover:underline">
+					Terms
+				</Link>
 			</p>
 		</footer>
 	);

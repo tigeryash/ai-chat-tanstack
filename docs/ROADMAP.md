@@ -106,6 +106,10 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   chat, sign out (it disappears, the signed-out one stays). Sign in as the second: answer the question, and check
   the first account's chat isn't listed and its URL shows "not found". Sign back in as the first: its chat is
   back. Then try "Sign out and remove my chats from this device". e2e uses stubbed sessions, not real sign-ins.
+- [ ] Fill the `[TODO: …]` placeholders in `docs/legal/privacy-policy.md` and `docs/legal/terms.md` (legal name,
+  contact email, minimum age, jurisdiction, Convex region and backup retention, Vercel log retention), and have a
+  lawyer review both before the first public sign-up. Then add `https://www.highelollms.com/privacy` and `/terms`
+  to Google's OAuth consent screen.
 - [ ] Vercel Hobby is fine while this is a portfolio piece; move to Pro before charging money. *Still on Hobby
   (2026-10-23).*
 
@@ -562,6 +566,8 @@ This is effectively a small agent harness. Slices below are a draft; 4.0 settles
 - [ ] **7.1 Terms and privacy.** Drafts start now from [data-inventory.md](./data-inventory.md) and are revised as
   features land. Finalize and have them reviewed before the first public sign-up (Google's OAuth consent screen
   also wants a privacy policy link when you publish).
+  *Status 2026-10-30:* first drafts in `docs/legal/`, served at `/privacy` and `/terms` (PR [TODO: link]).
+  Stays open until the placeholders are filled and a lawyer has reviewed them.
 - [ ] **7.2 Account deletion and data export** for cloud data.
 - [ ] **7.3 Security review** against OWASP Top 10 for LLM Applications (2026) and for Agentic Applications, plus
   a dependency and CSP audit.

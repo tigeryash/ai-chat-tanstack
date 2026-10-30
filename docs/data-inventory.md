@@ -3,6 +3,10 @@
 What data the app touches, where it lives, who else sees it, and how long it's kept. This is the source for the
 privacy policy and terms (roadmap 7.1). **Any slice that adds, moves, or stores data updates this file in the same PR.**
 
+It feeds the drafts in [legal/privacy-policy.md](./legal/privacy-policy.md) and [legal/terms.md](./legal/terms.md)
+(served at `/privacy` and `/terms`). When a change here alters what those drafts say, update them too or flag
+them in the PR's "Needs Yash".
+
 Started 2026-10-20. "Today" means the code at that date; "Planned" refers to roadmap slices.
 
 ## Commitments (seed of the privacy policy)
@@ -80,4 +84,4 @@ Promises the design already makes. Changing one of these is a product decision, 
 - Convex region and backup retention (affects what we can promise about deletion).
 - Account deletion and export flow (roadmap 7.2).
 - Analytics and Sentry providers and their retention settings.
-- Minimum age and acceptable-use terms, including responsibility for what users do with agents in YOLO mode.
+- Minimum age, contact email, legal name and governing law: placeholders in the 7.1 drafts.

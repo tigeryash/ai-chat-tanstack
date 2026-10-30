@@ -126,6 +126,8 @@ Playwright runs in 4 shards with 2 workers each (4 workers per runner made timin
   bullets (manual checks, keys, decisions), or "Nothing". Keep the rest of a report short. Yash skims long ones.
 - **Owner tasks go in the roadmap.** Anything only Yash can do (accounts, keys, real-device or real-email checks)
   also goes under "Owner to-dos" in `docs/ROADMAP.md`.
+- **Data changes reach the legal drafts.** A slice that changes what data is collected, stored, or shared updates
+  `docs/data-inventory.md` and flags `docs/legal/` (privacy policy, terms) in its PR's "Needs Yash".
 - **Stay in scope.** Fix what blocks your slice. Propose anything else you find as a follow-up instead of doing it.
 - **Parallel sessions.** Other slices may be in progress in worktrees under `.claude/worktrees/` (Biome ignores
   that folder). Expect small conflicts in `bun.lock`, `convex/schema.ts`, and `docs/ROADMAP.md`. Rebase on

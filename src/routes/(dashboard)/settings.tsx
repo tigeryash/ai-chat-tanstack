@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { BackgroundStatusSettings } from "@/components/settings/background-status-settings";
 import { LocalEndpoints } from "@/components/settings/local-endpoints";
 import { ProviderKeys } from "@/components/settings/provider-keys";
@@ -18,6 +18,17 @@ function SettingsPage() {
 				<ProviderKeys />
 				<LocalEndpoints />
 				<BackgroundStatusSettings />
+				<nav
+					aria-label="Legal"
+					className="mt-10 flex gap-4 text-muted-foreground text-sm"
+				>
+					<Link to="/privacy" className="hover:text-foreground">
+						Privacy Policy
+					</Link>
+					<Link to="/terms" className="hover:text-foreground">
+						Terms of Service
+					</Link>
+				</nav>
 			</div>
 		</div>
 	);
