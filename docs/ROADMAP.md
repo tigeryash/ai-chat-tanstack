@@ -106,6 +106,13 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   chat, sign out (it disappears, the signed-out one stays). Sign in as the second: answer the question, and check
   the first account's chat isn't listed and its URL shows "not found". Sign back in as the first: its chat is
   back. Then try "Sign out and remove my chats from this device". e2e uses stubbed sessions, not real sign-ins.
+- [ ] Legal drafts (7.1): create `support@highelollms.com` (free forwarding to your inbox works, e.g. Cloudflare
+  Email Routing); the privacy policy and terms already give it as the contact. They name the operator as "the
+  developer, an individual based in Ontario"; register a business name or incorporate before charging money, then
+  update both. Open Convex's DPA (convex.dev/legal/dpa) and accept or request it if it isn't automatic:
+  the privacy policy says Convex covers EU/UK transfers in it. (Vercel's DPA covers only Pro, but Vercel is
+  certified under the EU-U.S. Data Privacy Framework, which the policy cites instead.) A lawyer's review is worth it before charging
+  money. Add `https://www.highelollms.com/privacy` and `/terms` to Google's OAuth consent screen.
 - [ ] Vercel Hobby is fine while this is a portfolio piece; move to Pro before charging money. *Still on Hobby
   (2026-10-23).*
 
@@ -562,6 +569,8 @@ This is effectively a small agent harness. Slices below are a draft; 4.0 settles
 - [ ] **7.1 Terms and privacy.** Drafts start now from [data-inventory.md](./data-inventory.md) and are revised as
   features land. Finalize and have them reviewed before the first public sign-up (Google's OAuth consent screen
   also wants a privacy policy link when you publish).
+  *Status 2026-10-30:* first drafts in `docs/legal/`, served at `/privacy` and `/terms` ([PR #43](https://github.com/tigeryash/ai-chat-tanstack/pull/43)).
+  Stays open until the placeholders are filled and a lawyer has reviewed them.
 - [ ] **7.2 Account deletion and data export** for cloud data.
 - [ ] **7.3 Security review** against OWASP Top 10 for LLM Applications (2026) and for Agentic Applications, plus
   a dependency and CSP audit.

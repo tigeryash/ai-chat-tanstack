@@ -3,6 +3,10 @@
 What data the app touches, where it lives, who else sees it, and how long it's kept. This is the source for the
 privacy policy and terms (roadmap 7.1). **Any slice that adds, moves, or stores data updates this file in the same PR.**
 
+It feeds the drafts in [legal/privacy-policy.md](./legal/privacy-policy.md) and [legal/terms.md](./legal/terms.md)
+(served at `/privacy` and `/terms`). When a change here alters what those drafts say, update them too or flag
+them in the PR's "Needs Yash".
+
 Started 2026-10-20. "Today" means the code at that date; "Planned" refers to roadmap slices.
 
 ## Commitments (seed of the privacy policy)
@@ -77,7 +81,7 @@ Promises the design already makes. Changing one of these is a product decision, 
 
 ## Open items for the policy
 
-- Convex region and backup retention (affects what we can promise about deletion).
+- Convex region: prod is AWS US East (N. Virginia). Backups: none automatic on our plan; a manual one is kept 7 days.
 - Account deletion and export flow (roadmap 7.2).
 - Analytics and Sentry providers and their retention settings.
-- Minimum age and acceptable-use terms, including responsibility for what users do with agents in YOLO mode.
+- Operator: "the developer, an individual in Ontario" until the app makes money; then a registered business name. Contact: support@highelollms.com. Decided 2026-10-30: 18+, Ontario law, deletion within 30 days, changes announced in the app's changelog.
