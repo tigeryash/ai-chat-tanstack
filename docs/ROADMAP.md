@@ -93,22 +93,40 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
 - [x] Run the 2.4a parameter probe once (about $0.10 of OpenRouter credit, capped at $0.50): from the main checkout,
   `bun scripts/probe-params.ts` (dry run, check the plan), then `bun scripts/probe-params.ts --yes`, and commit
   `src/models/parameter-probe.generated.ts`. 2.4b's settings panel reads it. *Ran 2026-10-29:* 20 models.
-- [ ] After the probe-results PR merges: `bunx convex dev --once`, `bunx convex run modelCatalogSync:sync`, then
+- [x] After the probe-results PR merges: `bunx convex dev --once`, `bunx convex run modelCatalogSync:sync`, then
   `bun scripts/probe-params.ts --yes --skip-high-elo --model alibaba/qwen3.8-max --model meta/muse-wonder-1.0
-  --model mistral/mistral-large-4` (about a cent) and commit the updated results.
+  --model mistral/mistral-large-4` (about a cent) and commit the updated results. *Results committed in the repo-cleanup PR.*
 - [ ] After 2.4b is deployed: on `www.highelollms.com`, open the sliders button next to the model for a few models
   (one Anthropic, one OpenAI, one open-weights model through OpenRouter, and a local one), set each shown
   control to its lowest and highest value, send, and note any error. e2e only checks requests against a fake
   OpenRouter.
-- [ ] After the production-test fixes deploy: on your Mac, Settings → Background status → "Send test
+- [x] After the production-test fixes deploy: on your Mac, Settings → Background status → "Send test
   notification" (Chrome and Helium) and confirm one appears; if not, follow the help it shows. Then, in a fresh
   browser profile (or after clearing site data), save the first OpenRouter key (paste or Connect OpenRouter), go
-  back to a chat without reloading, and check the picker's "Run with" light turns green.
+  back to a chat without reloading, and check the picker's "Run with" light turns green. *Checked 2026-10-29:*
+  the test notification appears once macOS allows the browser, and a re-added key turns the light green.
 - [ ] After 1.9 is deployed: on `www.highelollms.com`, with two real accounts (say email and GitHub). Signed out,
   make a chat. Sign in as the first: the "chats from before you signed in" question appears; choose Keep, make a
   chat, sign out (it disappears, the signed-out one stays). Sign in as the second: answer the question, and check
   the first account's chat isn't listed and its URL shows "not found". Sign back in as the first: its chat is
   back. Then try "Sign out and remove my chats from this device". e2e uses stubbed sessions, not real sign-ins.
+- [ ] Legal drafts (7.1): create `support@highelollms.com` (free forwarding to your inbox works, e.g. Cloudflare
+  Email Routing); the privacy policy and terms already give it as the contact. They name the operator as "the
+  developer, an individual based in Ontario"; register a business name or incorporate before charging money, then
+  update both. Open Convex's DPA (convex.dev/legal/dpa) and accept or request it if it isn't automatic:
+  the privacy policy says Convex covers EU/UK transfers in it. (Vercel's DPA covers only Pro, but Vercel is
+  certified under the EU-U.S. Data Privacy Framework, which the policy cites instead.) A lawyer's review is worth it before charging
+  money. Add `https://www.highelollms.com/privacy` and `/terms` to Google's OAuth consent screen.
+- [ ] After the old Convex chat backend is deleted (quality audit D1): its tables are still in `convex/schema.ts`
+  but nothing reads or writes them. Check prod's row counts for `conversations`, `conversationParticipants`,
+  `messages`, `attachments`, `messagePins` and `usageEvents` (`bunx convex data <table> --prod`, or the dashboard),
+  and Convex file storage (dashboard → Files; old attachment uploads live there). Then say whether to drop the
+  tables (and `users.preferences`) and delete any stored files. *Dev, 2026-10-30:* all six tables and file
+  storage are empty.
+- [ ] Enforce the strict CSP (quality audit G1): after a week of real use of production, signed in and chatting
+  included, search Vercel's logs (Project → Logs) for `[csp]` lines and tell an agent what you find (none, or the
+  directive, blocked origin and page of each). With none, the agent sets `ENFORCE_STRICT_CSP = true` in
+  `src/lib/security/csp.ts`; until then the policy that stops an injected script sending a key elsewhere only reports.
 - [ ] Vercel Hobby is fine while this is a portfolio piece; move to Pro before charging money. *Still on Hobby
   (2026-10-23).*
 
@@ -490,6 +508,13 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   *Status:* Picked A (minimal, neutral, dark default) with B's rounded pane cards
   ([#32](https://github.com/tigeryash/ai-chat-tanstack/pull/32)). Build it on tokens so 3.11 can make all of it
   user-adjustable.
+- [x] **3.0b Apply direction A.** Every color, font, text size, radius and spacing step comes from tokens in
+  `src/styles.css` (dark by default, light kept, following the system until 3.11), including the composer's
+  colors. Restyle the shell, sidebar, chat screen, model picker, Settings and the auth form card; chat panes
+  become B's rounded pane cards, ready for 3.1. Done when no component or route has a literal color (a unit test
+  checks), contrast is AA in both themes, and Playwright passes with refreshed baselines.
+  *Status:* done in [#45](https://github.com/tigeryash/ai-chat-tanstack/pull/45) (2026-10-30); the `/e2e/design`
+  prototypes were removed, their screenshots stay in design-directions.md.
 - [ ] **3.1 Pane layout.** 1–4 resizable panes (`react-resizable-panels`), add/remove/reorder with `LayoutGroup`.
 - [ ] **3.2 Synced composers + Stop** (decisions 16 and 18). Per-pane composer with a "Synced" toggle and mirrored
   input, the "diverged" badge, and the Stop behavior.
@@ -552,12 +577,18 @@ This is effectively a small agent harness. Slices below are a draft; 4.0 settles
 ## Phase 6: Accounts and cloud
 
 - [ ] **6.1 Convex `ChatStore` + sync** (decision 11). On sign-in, offer to upload local chats. Keys never sync.
+  The old Convex chat backend (`convex/messages.ts`, `conversations.ts`, `attachments.ts`, `branching.ts`,
+  `usage.ts`, `messagePins.ts` and their access helpers) was unused after 1.2/1.3 and was deleted (quality audit
+  D1). Restore pieces from git at `58853e2` if useful; its tables wait on the owner to-do above.
 - [ ] **6.2 Abuse protection on Convex writes.** Rate limits (`@convex-dev/rate-limiter`) on sync, share
   creation, and invites; captcha on sign-up (Better Auth captcha plugin with Turnstile).
 - [ ] **6.3 Sharing.** Read-only links for chats and workspaces via a server-rendered `/share/$id`, "Fork" into
-  your own chats, and a report-abuse link.
-- [ ] **6.3b Group chats.** Invites on single chats only; add the missing inverse check in
-  `requireMultiChatConversation`. Each sender's message runs on their own key.
+  your own chats, and a report-abuse link. The old `convex/sharing.ts` and `convex/lib/shareId.ts` (22-character
+  random IDs, projected `getShared`) were deleted with the old backend; restore them from git at `58853e2`.
+- [ ] **6.3b Group chats.** Invites on single chats only. Each sender's message runs on their own key. The old
+  `convex/groupChats.ts` and `requireMultiChatConversation` (in `authHelpers.ts`) were deleted with the old backend
+  (git `58853e2`); if they come back, add the inverse check they lacked (a chat in a multi-chat session can't
+  become a group chat).
 - [ ] **6.4 Better Auth extras.** Passkeys, magic link / email OTP, session list with revoke, account linking, 2FA.
 - [ ] **6.5 (Deferred) Pro tier.** Revisit with blind mode. Idea so far: charge for software, not tokens (sync,
   sharing, team workspaces, prompt-library sync) via the Better Auth Stripe or Polar plugin.
@@ -567,6 +598,8 @@ This is effectively a small agent harness. Slices below are a draft; 4.0 settles
 - [ ] **7.1 Terms and privacy.** Drafts start now from [data-inventory.md](./data-inventory.md) and are revised as
   features land. Finalize and have them reviewed before the first public sign-up (Google's OAuth consent screen
   also wants a privacy policy link when you publish).
+  *Status 2026-10-30:* first drafts in `docs/legal/`, served at `/privacy` and `/terms` ([PR #43](https://github.com/tigeryash/ai-chat-tanstack/pull/43)).
+  Stays open until the placeholders are filled and a lawyer has reviewed them.
 - [ ] **7.2 Account deletion and data export** for cloud data.
 - [ ] **7.3 Security review** against OWASP Top 10 for LLM Applications (2026) and for Agentic Applications, plus
   a dependency and CSP audit.

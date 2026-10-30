@@ -85,7 +85,7 @@ function RouteComponent() {
 				<ResendVerification email={unverifiedEmail} />
 			)}
 			<SubmitButton pending={pending}>Login</SubmitButton>
-			<p className="text-white/80">
+			<p className="text-muted-foreground">
 				New here?{" "}
 				<Link to="/signup" className={LINK_CLASS}>
 					Create an account
@@ -148,7 +148,7 @@ function ResendConfirmation() {
 		<p
 			ref={ref}
 			tabIndex={-1}
-			className="w-full rounded-lg border border-white/30 bg-white/10 p-3 text-white/90 focus:outline-none"
+			className="w-full rounded-lg border border-border bg-muted/50 p-3 text-foreground focus:outline-none"
 		>
 			If that address still needs verifying, we've sent it a new link. Open it,
 			then sign in. Nothing after a few minutes? Check your spam folder.

@@ -1,78 +1,37 @@
-import imageCompression from "browser-image-compression";
-import { Loader2, X } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { Loader2, Paperclip, X } from "lucide-react";
+import { AnimatePresence, m } from "motion/react";
 import { useEffect, useRef, useState } from "react";
-import { AnimateIcon } from "@/components/animate-ui/icons/icon";
-import { Paperclip } from "@/components/animate-ui/icons/paperclip";
-import { logError } from "@/lib/log";
-import type { FileObject } from "../input";
+import { createPortal } from "react-dom";
+import type { FileObject } from "@/lib/attachments/file-object";
+import { HoverIcon } from "./hover-icon";
 import { ToolTipContainer } from "./tooltip-container";
 
 export const Files = ({
 	files,
-	setFiles,
+	onRemove,
 }: {
-	files: FileObject[] | null;
-	setFiles: React.Dispatch<React.SetStateAction<FileObject[] | null>>;
+	files: FileObject[];
+	onRemove: (id: string) => void;
 }) => {
-	const [selectedImage, setSelectedImage] = useState<string | null>(null);
+	const [selected, setSelected] = useState<FileObject | null>(null);
 
-	useEffect(() => {
-		const handleKeyDown = (e: KeyboardEvent) => {
-			if (e.key === "Escape") setSelectedImage(null);
-		};
-
-		if (selectedImage) {
-			window.addEventListener("keydown", handleKeyDown);
-		}
-		return () => window.removeEventListener("keydown", handleKeyDown);
-	}, [selectedImage]);
-
-	const removeFile = (id: string) => {
-		setFiles((prev) => prev?.filter((f) => f.id !== id) || null);
-	};
-
-	if (!files || files.length === 0) return null;
+	if (files.length === 0) return null;
 
 	return (
 		<>
 			<div className="relative flex flex-nowrap gap-2 w-full  px-4 py-2 overflow-x-auto z-10 ">
 				<AnimatePresence mode="popLayout">
-					{files?.map((file) => (
-						<motion.div
+					{files.map((file) => (
+						<m.div
 							layout
 							initial={{ opacity: 0, scale: 0.8, x: 50 }}
 							animate={{ opacity: 1, scale: 1, x: 0 }}
 							exit={{ opacity: 0, scale: 0.8, x: -20 }}
 							transition={{ duration: 0.3 }}
 							key={file.id}
-							className="relative group bg-black/5  rounded-lg p-2 flex shrink-0 items-center space-x-2 border border-black/10"
+							className="relative group bg-composer-foreground/5  rounded-lg p-2 flex shrink-0 items-center space-x-2 border border-composer-border"
 						>
-							{file.type.startsWith("image/") ? (
-								<button
-									type="button"
-									className="relative shrink-0 focus:outline-none"
-									onClick={() =>
-										!file.isProcessing && setSelectedImage(file.preview)
-									}
-									disabled={file.isProcessing}
-								>
-									<img
-										src={file.preview}
-										alt="preview"
-										className={`w-10 h-10 object-cover rounded ${file.isProcessing ? "opacity-50" : ""}`}
-									/>
-									{file.isProcessing && (
-										<div className="absolute inset-0 flex items-center justify-center">
-											<Loader2 className="w-5 h-5 animate-spin text-black/50" />
-										</div>
-									)}
-								</button>
-							) : (
-								<div className="w-10 h-10 bg-blue-100 flex items-center justify-center rounded text-[10px] font-bold">
-									{file.file.name.split(".").pop()?.toUpperCase()}
-								</div>
-							)}
+							<FileThumbnail file={file} onOpen={() => setSelected(file)} />
 							<div className="flex flex-col">
 								<span className="text-xs max-w-[100px] truncate">
 									{file.file.name}
@@ -84,161 +43,133 @@ export const Files = ({
 
 							<button
 								type="button"
-								onClick={() => removeFile(file.id)}
-								className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600
-                             text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-all shadow-sm z-30"
+								onClick={() => onRemove(file.id)}
+								aria-label={`Remove ${file.file.name}`}
+								className="absolute -top-2 -right-2 bg-destructive hover:bg-destructive/90
+                             text-background rounded-full p-0.5 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity shadow-sm z-30"
 							>
 								<X size={12} />
 							</button>
-						</motion.div>
+						</m.div>
 					))}
 				</AnimatePresence>
 			</div>
-			{selectedImage && (
-				<button
-					className="fixed inset-0 z-100 h-screen flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200"
-					onClick={() => setSelectedImage(null)}
-					type="button"
-				>
-					<button
-						type="button"
-						className="absolute top-6 right-6 text-white/70 hover:text-white transition-colors"
-						onClick={() => setSelectedImage(null)}
-					>
-						<X size={32} strokeWidth={1.5} />
-					</button>
-					<img
-						src={selectedImage}
-						alt="Enlarged preview"
-						className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-						onKeyDown={(e) => e.stopPropagation()}
-						onClick={(e) => e.stopPropagation()}
-					/>
-					{/* <p>{selectedImage}</p> */}
-				</button>
+			{selected && (
+				<ImagePreview file={selected} onClose={() => setSelected(null)} />
 			)}
 		</>
 	);
 };
 
-export const FileInput = ({
-	setFiles,
+const FileThumbnail = ({
+	file,
+	onOpen,
 }: {
-	setFiles: React.Dispatch<React.SetStateAction<FileObject[] | null>>;
+	file: FileObject;
+	onOpen: () => void;
 }) => {
+	if (!file.preview) {
+		return (
+			<div className="w-10 h-10 bg-muted flex items-center justify-center rounded text-[10px] font-bold">
+				{file.file.name.split(".").pop()?.toUpperCase()}
+			</div>
+		);
+	}
+	return (
+		<button
+			type="button"
+			className="relative shrink-0 focus:outline-none"
+			onClick={onOpen}
+			disabled={file.isProcessing}
+			aria-label={`Preview ${file.file.name}`}
+		>
+			<img
+				src={file.preview}
+				alt=""
+				className={`w-10 h-10 object-cover rounded ${file.isProcessing ? "opacity-50" : ""}`}
+			/>
+			{file.isProcessing && (
+				<div className="absolute inset-0 flex items-center justify-center">
+					<Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+				</div>
+			)}
+		</button>
+	);
+};
+
+// The enlarged image. The backdrop is the one close button; the image sits above it. It is portaled
+// to <body> because the file row is transformed and clipped, which would trap a fixed element.
+const ImagePreview = ({
+	file,
+	onClose,
+}: {
+	file: FileObject;
+	onClose: () => void;
+}) => {
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (e.key === "Escape") onClose();
+		};
+		window.addEventListener("keydown", handleKeyDown);
+		return () => window.removeEventListener("keydown", handleKeyDown);
+	}, [onClose]);
+
+	return createPortal(
+		<div className="fixed inset-0 z-100 h-screen flex items-center justify-center p-4 animate-in fade-in duration-200">
+			<button
+				type="button"
+				onClick={onClose}
+				aria-label="Close preview"
+				className="absolute inset-0 bg-overlay/70 backdrop-blur-sm text-overlay-foreground/70 hover:text-overlay-foreground transition-colors"
+			>
+				<X
+					size={32}
+					strokeWidth={1.5}
+					className="absolute top-6 right-6"
+					aria-hidden
+				/>
+			</button>
+			<img
+				src={file.preview}
+				alt={file.file.name}
+				className="relative max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+			/>
+		</div>,
+		document.body,
+	);
+};
+
+export const FileInput = ({ onAdd }: { onAdd: (files: File[]) => void }) => {
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
-	const MAX_SIZE_MB = 20;
-	const ALLOWED_TYPES = [
-		"image/jpeg",
-		"image/png",
-		"image/webp",
-		"application/pdf",
-		"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-		"text/plain",
-		"text/csv",
-		"text/javascript",
-		"text/typescript",
-	];
-
-	const toBase64 = (file: File): Promise<string> =>
-		new Promise((resolve, reject) => {
-			const reader = new FileReader();
-			reader.readAsDataURL(file);
-			reader.onload = () => resolve(reader.result as string);
-			reader.onerror = (error) => reject(error);
-		});
-
-	const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-		const selectedFiles = Array.from(e.target.files || []);
-
-		const initialFiles: FileObject[] = selectedFiles.map((file) => ({
-			id: Math.random().toString(36).substr(2, 9),
-			file: file,
-			preview: file.type.startsWith("image/") ? URL.createObjectURL(file) : "",
-			base64: "",
-			type: file.type,
-			isProcessing: true,
-		}));
-
-		setFiles((prev) => [...(prev ?? []), ...initialFiles]);
+	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		onAdd(Array.from(e.target.files ?? []));
 		e.target.value = "";
-
-		for (const optimisticFile of initialFiles) {
-			const file = optimisticFile.file;
-
-			if (
-				file.size > MAX_SIZE_MB * 1024 * 1024 ||
-				(!ALLOWED_TYPES.includes(file.type) &&
-					!file.name.match(/\.(ts|tsx|js|jsx|py|cpp|h)$/))
-			) {
-				setFiles(
-					(prev) => prev?.filter((f) => f.id !== optimisticFile.id) || null,
-				);
-				continue;
-			}
-
-			let processedFile = file;
-			if (file.type.startsWith("image/")) {
-				try {
-					processedFile = await imageCompression(file, {
-						maxSizeMB: 1,
-						maxWidthOrHeight: 1920,
-						// Its worker mode loads the library from cdn.jsdelivr.net (third-party code with no
-						// integrity check, and blocked by the CSP's script-src), so it runs on the page.
-						useWebWorker: false,
-					});
-				} catch (error) {
-					logError("Compression failed", error);
-				}
-			}
-
-			const base64 = await toBase64(processedFile);
-			const finalPreview = file.type.startsWith("image/")
-				? URL.createObjectURL(processedFile)
-				: "";
-
-			setFiles(
-				(prev) =>
-					prev?.map((f) =>
-						f.id === optimisticFile.id
-							? {
-									...f,
-									file: processedFile,
-									preview: finalPreview,
-									base64,
-									isProcessing: false,
-								}
-							: f,
-					) || null,
-			);
-		}
-	};
-	const handleButtonClick = () => {
-		fileInputRef.current?.click();
 	};
 
 	return (
-		<ToolTipContainer Tip="Attach File">
-			<div>
-				<input
-					type="file"
-					ref={fileInputRef}
-					onChange={handleUpload}
-					className="hidden"
-					multiple
-				/>
-				<AnimateIcon animateOnHover>
-					<button
-						type="button"
-						className="input-button"
-						onClick={handleButtonClick}
-						aria-label="Upload files"
-					>
-						<Paperclip size={20} strokeWidth={0.75} />
-					</button>
-				</AnimateIcon>
-			</div>
-		</ToolTipContainer>
+		<>
+			<input
+				type="file"
+				ref={fileInputRef}
+				onChange={handleChange}
+				className="hidden"
+				multiple
+			/>
+			<ToolTipContainer Tip="Attach File">
+				<m.button
+					type="button"
+					className="input-button"
+					onClick={() => fileInputRef.current?.click()}
+					aria-label="Upload files"
+					initial="rest"
+					whileHover="hover"
+				>
+					<HoverIcon animation="attach">
+						<Paperclip size={20} strokeWidth={0.75} aria-hidden />
+					</HoverIcon>
+				</m.button>
+			</ToolTipContainer>
+		</>
 	);
 };

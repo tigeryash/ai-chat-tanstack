@@ -55,3 +55,76 @@ test("Enter sends the trimmed message and clears the box", async ({ page }) => {
 	).toHaveText(["Hello there"]);
 	await expect(textbox).toHaveValue("");
 });
+
+// A 1x1 PNG.
+const PIXEL = {
+	name: "pixel.png",
+	mimeType: "image/png",
+	buffer: Buffer.from(
+		"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+		"base64",
+	),
+};
+
+test("an attached image can be previewed and removed", async ({ page }) => {
+	await page.locator('input[type="file"]').setInputFiles(PIXEL);
+
+	const enlarged = page.getByRole("img", { name: "pixel.png" });
+	await page.getByRole("button", { name: "Preview pixel.png" }).click();
+	await expect(enlarged).toBeInViewport();
+	await page.keyboard.press("Escape");
+	await expect(enlarged).toHaveCount(0);
+
+	await page.getByRole("button", { name: "Preview pixel.png" }).click();
+	// The X in the corner (the middle of the backdrop is under the image).
+	await page
+		.getByRole("button", { name: "Close preview" })
+		.click({ position: { x: 20, y: 20 } });
+	await expect(enlarged).toHaveCount(0);
+
+	await page.getByRole("button", { name: "Remove pixel.png" }).click();
+	await expect(
+		page.getByRole("button", { name: "Preview pixel.png" }),
+	).toHaveCount(0);
+	await expect(page.locator("form")).toHaveCSS("border-radius", "9999px");
+});
+
+test("files dropped on the composer are attached", async ({ page }) => {
+	const dataTransfer = await page.evaluateHandle(() => {
+		const transfer = new DataTransfer();
+		transfer.items.add(
+			new File(["hello"], "notes.txt", { type: "text/plain" }),
+		);
+		return transfer;
+	});
+
+	await page.locator("form").dispatchEvent("drop", { dataTransfer });
+
+	await expect(
+		page.getByRole("button", { name: "Remove notes.txt" }),
+	).toBeAttached();
+});
+
+test("every composer control has a name", async ({ page }) => {
+	await expect(page.getByRole("textbox", { name: "Message" })).toBeVisible();
+	await page.getByRole("textbox", { name: "Message" }).fill("hi");
+	await expect(page.getByRole("button", { name: "Send" })).toBeVisible();
+	await expect(
+		page.getByRole("button", { name: "Upload files" }),
+	).toBeVisible();
+});
+
+test.describe("in dark mode", () => {
+	test.use({ colorScheme: "dark" });
+
+	test("takes its colors from the dark tokens", async ({ page }) => {
+		const composer = page.locator("form");
+
+		await expect(composer).toHaveScreenshot("composer-collapsed-dark.png");
+		await page
+			.getByPlaceholder("Ask anything")
+			.fill("First line\nSecond line\nThird line");
+		await expect(composer).toHaveCSS("border-radius", "12px");
+		await expect(composer).toHaveScreenshot("composer-expanded-dark.png");
+	});
+});

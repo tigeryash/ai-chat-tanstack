@@ -1,8 +1,8 @@
-import { describe, expect, it } from "vitest";
 import {
 	MAX_PASSWORD_LENGTH,
 	MIN_PASSWORD_LENGTH,
-} from "../../convex/lib/passwordPolicy";
+} from "@convex/lib/passwordPolicy";
+import { describe, expect, it } from "vitest";
 import {
 	fieldErrors,
 	forgotPasswordSchema,

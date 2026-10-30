@@ -2,7 +2,7 @@ import type { Page, Request } from "@playwright/test";
 import { expect, test } from "./support/fixtures";
 
 // Roadmap 2.2b: host choice on /e2e/chat-live (real picker, transport and providers), with OpenRouter
-// and Fireworks faked and the routers' endpoint APIs answered from src/lib/hosts/test-endpoints.ts.
+// and Fireworks faked and the routers' endpoint APIs answered from src/lib/hosts/endpoints.fixtures.ts.
 // The model is the seeded catalog's DeepSeek V4.1 Flash: on OpenRouter, Fireworks, DeepSeek and AI
 // Gateway.
 

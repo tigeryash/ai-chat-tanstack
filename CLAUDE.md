@@ -24,11 +24,13 @@ touching keys, rendering, tools, local endpoints, or Convex writes, and keep
 | `bun run check` / `bun run fix` | Biome lint + format check / apply safe fixes. |
 | `bun run test` | Vitest unit tests (`src/**/*.test.ts(x)`, `convex/**/*.test.ts`, `scripts/**/*.test.ts`). |
 | `bun run verify` | typecheck + Biome + Vitest. Run before every commit you hand over. |
+| `bunx knip@6.44.0` | Unused files, dependencies and exports (`knip.json`). Pinned, not in `package.json`. CI runs it. |
 | `bun run test:e2e` | Playwright against a production build (macOS screenshot baselines when run on a Mac). |
 | `bun run test:e2e:linux` | Playwright inside CI's Linux image via Docker. Add `--update-snapshots` to refresh Linux baselines. |
+| `bun scripts/bundle-budget.ts` | After `bun run build` (add `--sourcemap` for the package check): gzipped route preloads vs the budget. CI runs it. |
 
 The **pre-commit hook** (`.husky/pre-commit`) runs Biome on staged files and the type check. Don't bypass it with
-`--no-verify`; fix the error instead. **CI** (`.github/workflows/ci.yml`) runs `verify` and Playwright on every PR.
+`--no-verify`; fix the error instead. **CI** (`.github/workflows/ci.yml`) runs `verify`, knip and Playwright on every PR.
 Playwright runs in 4 shards with 2 workers each (4 workers per runner made timing-sensitive tests flaky); the
 `Playwright` check sums them up and passes without running e2e when a PR only touches `docs/` or `*.md`.
 
@@ -44,10 +46,13 @@ Playwright runs in 4 shards with 2 workers each (4 workers per runner made timin
   Convex, `/api/csp-report` logs CSP violations). There is no chat route on our server.
 - **Security baseline** (roadmap 1.0, `src/lib/security/`): `getRouter` makes a CSP nonce per request, the root
   route's `headers` sends the policy (strict one report-only for now), and `src/start.ts` adds the security headers
-  and Start's server-function CSRF check to every response. A new provider or third-party origin the browser
-  calls must go in `provider-origins.ts` / `csp.ts`, or the CSP reports it.
-- **Convex** (`convex/`) is the backend: `schema.ts` (message `parts` mirror AI SDK `UIMessage` parts),
-  access checks in `authHelpers.ts`, `_generated/` is generated. Query keys go through `@convex-dev/react-query`.
+  and Start's server-function CSRF check to every response. A new provider is one entry in
+  `src/models/provider-registry.ts` (its `apiOrigins` feed `provider-origins.ts`); any other third-party origin
+  the browser calls goes in `csp.ts`, or the CSP reports it. `ENFORCE_STRICT_CSP` in `csp.ts` is the enforce switch.
+- **Convex** (`convex/`) is the backend: `schema.ts` (the old chat tables are unused, kept until prod rows are
+  checked), `users` row upsert in `authHelpers.ts`, `_generated/` is generated. Query keys go through
+  `@convex-dev/react-query`. `convex/publicFunctions.test.ts` fails on any public function the app never calls as
+  `api.<module>.<name>`; delete it or allowlist it there with a reason.
 - **Local chats** (roadmap 1.3, `src/lib/storage/`): a `ChatStore` interface over Dexie (IndexedDB database
   `highelo-chats`). Every stored chat has a `formatVersion`; `format.ts` lists the migrations and how to add one.
   Export/import are versioned JSON in `export.ts`. Each chat has an `ownerId` (roadmap 1.9): the Better Auth user ID
@@ -57,10 +62,16 @@ Playwright runs in 4 shards with 2 workers each (4 workers per runner made timin
   `src/lib/auth-client.ts`, SSR helpers `src/lib/auth-server.ts`). Email/password plus Google, GitHub, Discord.
 - **AI SDK 7, chat in the browser** (roadmap 1.2, `src/lib/chat/`). Chat routes (`/new`, `/$chatId`, both
   `ssr: false`) run `useChat` on `Chat` objects from `chat-sessions.ts`, which outlive a route (so `/new` hands a
-  streaming chat to `/$chatId`) and save to the ChatStore when a reply finishes. `BrowserChatTransport` runs
+  streaming chat to `/$chatId`) and save to the ChatStore when a reply finishes. `open-chats.ts` tracks them
+  (and releases idle ones past 8; a route showing a chat calls `retainChat`). `BrowserChatTransport` runs
   `streamText` in the page against the provider in each request's `body` (`language-model.ts`; local models get
   the `<think>` middleware). Tests use `mockChatModel` (`src/lib/chat/mock-model.ts`) and the `/e2e/chat` pages; in `VITE_E2E`
   builds the local model `e2e-mock-model` is the mock too (`e2e-model.ts`), so Playwright can drive `/new`.
+- **First load** (quality audit 2026-10, `scripts/bundle-budget.ts`): only chat routes may load the AI SDK, Dexie,
+  GSAP or Streamdown. Route `loader`/`beforeLoad`/`validateSearch` code isn't code-split, so anything they import
+  statically lands on every page: import chat code there with `import()` (see `$chatId.tsx`). The chat store
+  singleton is `src/lib/storage/app-store.ts`; provider SDKs, GSAP (`src/lib/lazy-gsap.ts`) and Streamdown load on
+  first use; brand logos are SVG files in `public/brand-logos/`.
 - **Local models** (roadmap 2.3, `src/lib/local-endpoints/`): endpoints saved in Settings (localStorage, localhost
   and 127.0.0.1 only, to match `connect-src`); a local `ModelChoice` names its `endpoint` id. Nothing calls one
   before it's saved and the Local Network Access explainer was clicked through. e2e stubs a server with
@@ -77,9 +88,16 @@ Playwright runs in 4 shards with 2 workers each (4 workers per runner made timin
   chats (and panes). Mounted once as `<BackgroundStatus />` in the `(dashboard)` layout.
 - **Models** (roadmap 2.1–2.2): Convex `models` table synced daily (`convex/modelCatalogSync.ts`, curation in
   `src/models/curation.ts`). The app reads `models.list` / `models.get` over HTTP (`src/lib/models/catalog.ts`), and
-  the e2e Convex stub serves the seeded catalog in `src/lib/models/test-catalog.ts`. Runnability per user is
+  the e2e Convex stub serves the seeded catalog in `src/lib/models/catalog.fixtures.ts`. Runnability per user is
   `src/lib/models/runnability.ts`; the picker, model card and removed-model banner are in `src/components/models/`.
   Each chat's model choice is kept by `src/lib/chat/chat-model-choice.ts`.
+- **Design tokens** (roadmap 3.0b, direction A from [design-directions.md](docs/design-directions.md)): every
+  color, font, radius and spacing step comes from `src/styles.css`, so 3.11's Appearance settings only override
+  tokens. Each color token is a `light-dark()` pair: dark or light follows the system, and a `dark` / `light`
+  class on an element forces it (the auth pages are always `dark`); the `dark:` variant follows the same rule.
+  Use token classes (`bg-card`, `text-muted-foreground`, `text-success`, `bg-overlay/70`, `rounded-pane`), never
+  palette classes or literal colors: `src/lib/design-tokens.test.ts` fails on them. Need a new color? Add a token.
+  Chat panes are cards (`rounded-pane border bg-card`, in `chat-view.tsx`).
 - **UI**: Tailwind 4, shadcn components on Base UI (`base-vega` style; add more with `bunx shadcn add <name>`,
   then change their `cn` import from `"cn"` to `@/lib/utils`), no Radix. `src/components/ai-elements/` keeps the
   AI SDK Elements export names but is built on shadcn's AI Elements patterns (Message, Trace, Message Scroller).
@@ -117,7 +135,20 @@ Playwright runs in 4 shards with 2 workers each (4 workers per runner made timin
 ## Conventions
 
 - Biome formats and lints (tabs, double quotes; scope is set in `biome.json`). Run `bun run fix` for formatting.
-- TypeScript strict, no `any` unless a comment says why. Import app code through `@/` (maps to `src/`).
+- TypeScript strict, no `any` unless a comment says why. Import app code through `@/` (maps to `src/`) and Convex
+  code through `@convex/` (maps to `convex/`, e.g. `@convex/_generated/api`). Code inside `convex/` keeps relative
+  imports.
+- Named exports only, except where a tool needs a default (config files, `convex/http.ts`, `crons.ts`, `*.config.ts`).
+- Features live in `src/lib/<feature>/` (logic, stores, hooks) with their UI in `src/components/<feature>/`; a
+  hook sits next to the feature it serves. `src/hooks/` is only for generic ones. Older names
+  (`components/chat/chatstuff/`, `src/utilities/`, `src/types/`) get renamed when next touched.
+- Test data in `src/` that tests or e2e import is named `*.fixtures.ts` (`catalog.fixtures.ts`), never imported by
+  app code.
+- Convex functions may `console.*` names, ids and config only, never prompts, replies, emails or keys
+  ([security.md](docs/security.md)).
+- **knip** (`bunx knip@6.44.0`, `knip.json`, a step in CI's required verify job) fails on unused files,
+  dependencies and exports. Delete them; keep an export that an open PR needs with a `/** @public */` tag naming
+  the PR. It can't see unused Convex functions; `convex/publicFunctions.test.ts` does.
 - Small focused files. Match the surrounding code's naming and comment density.
 - Unit tests sit next to the code as `*.test.ts`. Vitest runs in Node; a test that needs the DOM adds
   `// @vitest-environment jsdom` at the top.
@@ -133,6 +164,8 @@ Playwright runs in 4 shards with 2 workers each (4 workers per runner made timin
   bullets (manual checks, keys, decisions), or "Nothing". Keep the rest of a report short. Yash skims long ones.
 - **Owner tasks go in the roadmap.** Anything only Yash can do (accounts, keys, real-device or real-email checks)
   also goes under "Owner to-dos" in `docs/ROADMAP.md`.
+- **Data changes reach the legal drafts.** A slice that changes what data is collected, stored, or shared updates
+  `docs/data-inventory.md` and flags `docs/legal/` (privacy policy, terms) in its PR's "Needs Yash".
 - **Stay in scope.** Fix what blocks your slice. Propose anything else you find as a follow-up instead of doing it.
 - **Parallel sessions.** Other slices may be in progress in worktrees under `.claude/worktrees/` (Biome ignores
   that folder). Expect small conflicts in `bun.lock`, `convex/schema.ts`, and `docs/ROADMAP.md`. Rebase on
@@ -164,8 +197,10 @@ Playwright runs in 4 shards with 2 workers each (4 workers per runner made timin
 ## Gotchas (learned in Phase 0)
 
 - **Biome skips this repo when it sits under `.claude/`** (`biome.json` ignores `.claude`, which also matches a
-  worktree's own path), so in a worktree `bun run check` and the pre-commit hook check nothing. Lint there with a
-  copy of `biome.json` minus the `!!**/.claude` line: `bunx biome check --config-path=<dir with that copy> src e2e`.
+  worktree's own path), so in a worktree `bun run check` checks nothing (the pre-commit hook's `--staged` run does
+  check staged files). A copy of `biome.json` elsewhere misses rules Biome turns on from `package.json` (the
+  Playwright and test domains). Check like CI from a clone outside `.claude/`: `git clone -q . /tmp/x`, symlink
+  `node_modules` into it, then `bun run check` there.
 - **Keep `convex` at 1.46 or newer.** `CONVEX_DEPLOY_KEY` can deploy but not read data. Older CLIs read table sizes
   when a push drops an index, so production builds failed with "You do not have permission to perform this operation
   (deployment:data:view)". Upgrade the CLI rather than giving the key data access.

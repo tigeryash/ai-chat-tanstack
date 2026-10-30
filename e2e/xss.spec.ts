@@ -22,6 +22,10 @@ test.describe("model output with XSS payloads", () => {
 	test.beforeEach(async ({ page }) => {
 		await page.goto("/e2e/markdown");
 		await expect(page.locator("main")).toHaveAttribute("data-hydrated", "true");
+		// SafeMarkdown shows plain text until Streamdown loads; check what Streamdown renders.
+		await expect(
+			page.locator(`${RENDERED} [data-streamdown="loading"]`),
+		).toHaveCount(0);
 	});
 
 	test("renders every payload in both the reply and the reasoning", async ({
@@ -162,6 +166,10 @@ test("huge payloads render without hanging or crashing", async ({ page }) => {
 	await expect(page.locator("main")).toHaveAttribute("data-hydrated", "true", {
 		timeout: 15_000,
 	});
+	// Wait for Streamdown to load and parse them, not just the plain text shown until it does.
+	await expect(
+		page.locator(`${RENDERED} [data-streamdown="loading"]`),
+	).toHaveCount(0, { timeout: 15_000 });
 
 	for (const { name } of HUGE_PAYLOADS) {
 		await expect(

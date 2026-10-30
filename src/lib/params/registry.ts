@@ -33,7 +33,6 @@ export const REASONING_EFFORTS = [
 export type ReasoningEffort = (typeof REASONING_EFFORTS)[number];
 
 export const VERBOSITIES = ["low", "medium", "high"] as const;
-export type Verbosity = (typeof VERBOSITIES)[number];
 
 export const MAX_STOP_SEQUENCES = 4;
 export const MAX_STOP_SEQUENCE_LENGTH = 100;

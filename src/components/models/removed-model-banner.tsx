@@ -18,7 +18,7 @@ export function RemovedModelBanner({
 	return (
 		<div
 			role="status"
-			className="mx-4 my-2 flex w-full max-w-3xl flex-wrap items-center gap-3 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm"
+			className="mx-4 my-2 flex w-full max-w-3xl flex-wrap items-center gap-3 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-sm"
 		>
 			<span className="flex-1">
 				{model.name} is no longer offered

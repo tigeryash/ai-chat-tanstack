@@ -7,17 +7,18 @@ import {
 import { createDexieChatStore } from "@/lib/storage/dexie-chat-store";
 import { openTestDatabase } from "@/lib/storage/test-support";
 import { BrowserChatTransport } from "./browser-transport";
+import { openChat, openNewChat, openSavedChat } from "./chat-sessions";
+import { mockChatModel } from "./mock-model";
 import {
+	closeChat,
 	deleteChat,
 	deleteChats,
 	isChatOpen,
 	isOpenChatVisibleTo,
-	openChat,
-	openNewChat,
-	openSavedChat,
+	MAX_IDLE_OPEN_CHATS,
+	retainChat,
 	setChatOwner,
-} from "./chat-sessions";
-import { mockChatModel } from "./mock-model";
+} from "./open-chats";
 
 const SELECTION = { provider: "local", model: "mock" } as const;
 
@@ -178,5 +179,49 @@ describe("chat sessions", () => {
 		expect(ended).toContainEqual({ chatId: failing.id, outcome: "failed" });
 		expect(replyingCount()).toBe(0);
 		stop();
+	});
+
+	it("releases the least recently used idle chats, but not busy or on-screen ones", async () => {
+		const store = createDexieChatStore({ db: openTestDatabase() });
+		const transport = new BrowserChatTransport(async () =>
+			mockChatModel({ text: ["a", "b", "c"], chunkDelayInMs: 50 }),
+		);
+		// With the busy and the shown chat, `others` fills the tab to the limit; `extra` goes past it.
+		const others = Array.from(
+			{ length: MAX_IDLE_OPEN_CHATS - 2 },
+			(_, index) => `lru-${index}`,
+		);
+		const extra = ["lru-extra-1", "lru-extra-2"];
+		// Start from an empty tab: earlier tests leave chats open.
+		for (const id of ["lru-busy", "lru-shown", ...others, ...extra]) {
+			closeChat(id);
+		}
+
+		const busy = openChat("lru-busy", { transport, store });
+		const reply = busy.sendMessage({ text: "hi" }, { body: SELECTION });
+		await vi.waitFor(() => expect(busy.status).toBe("streaming"));
+		const shown = openChat("lru-shown", { store });
+		const letGo = retainChat("lru-shown");
+		for (const id of others) openChat(id, { store });
+		openChat(others[0]); // used again, so it's now the most recent
+		for (const id of extra) openChat(id, { store });
+
+		expect(isChatOpen("lru-busy")).toBe(true);
+		expect(openChat("lru-shown")).toBe(shown);
+		expect(isChatOpen(others[0])).toBe(true);
+		expect(isChatOpen(others[1])).toBe(false);
+		expect(isChatOpen(others[2])).toBe(false);
+		expect(isChatOpen(others[3])).toBe(true);
+
+		letGo();
+		await reply;
+		// Finished now, the busy chat is the oldest idle one, so it goes first.
+		openChat("lru-one-more", { store });
+		expect(isChatOpen("lru-busy")).toBe(false);
+		expect(isChatOpen(others[3])).toBe(true);
+		openChat("lru-two-more", { store });
+		expect(isChatOpen(others[3])).toBe(false);
+		closeChat("lru-one-more");
+		closeChat("lru-two-more");
 	});
 });

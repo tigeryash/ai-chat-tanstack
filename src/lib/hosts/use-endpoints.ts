@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { logWarn } from "@/lib/log";
 import type { CatalogModel } from "@/lib/models/catalog";
+import { PROVIDER_REGISTRY } from "@/models/provider-registry";
 import {
 	type EndpointStats,
 	parseGatewayEndpoints,
@@ -13,8 +14,8 @@ import {
 // picker opens and cached a few minutes. Both APIs are public: no key and no chat content is sent,
 // only the public model id in the path. Both origins are already in the CSP's provider origins.
 
-export const OPENROUTER_API = "https://openrouter.ai/api/v1";
-export const GATEWAY_API = "https://ai-gateway.vercel.sh/v1";
+export const OPENROUTER_API = PROVIDER_REGISTRY.openrouter.publicApiUrl;
+export const GATEWAY_API = PROVIDER_REGISTRY.vercel.publicApiUrl;
 
 const STALE_MS = 3 * 60 * 1000;
 

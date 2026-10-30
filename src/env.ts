@@ -1,41 +1,21 @@
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "@/lib/zod";
 
+// Client variables, validated when this module loads. Vite inlines `import.meta.env.VITE_*` at build
+// time, so the server bundle sees the same values. Server-only code that needs them at runtime (the
+// Better Auth proxy in `auth-server.ts`) reads `process.env` instead.
 export const env = createEnv({
-	server: {
-		SERVER_URL: z.string().url().optional(),
-	},
-
-	/**
-	 * The prefix that client-side variables must have. This is enforced both at
-	 * a type-level and at runtime.
-	 */
 	clientPrefix: "VITE_",
 
 	client: {
-		VITE_APP_TITLE: z.string().min(1).optional(),
+		VITE_CONVEX_URL: z.url(),
+		VITE_CONVEX_SITE_URL: z.url(),
 		// Build-time switch for the /e2e test pages (on in dev regardless). Set only by playwright.config.ts.
 		VITE_E2E: z.enum(["true", "false"]).optional(),
 	},
 
-	/**
-	 * What object holds the environment variables at runtime. This is usually
-	 * `process.env` or `import.meta.env`.
-	 */
 	runtimeEnv: import.meta.env,
 
-	/**
-	 * By default, this library will feed the environment variables directly to
-	 * the Zod validator.
-	 *
-	 * This means that if you have an empty string for a value that is supposed
-	 * to be a number (e.g. `PORT=` in a ".env" file), Zod will incorrectly flag
-	 * it as a type mismatch violation. Additionally, if you have an empty string
-	 * for a value that is supposed to be a string with a default value (e.g.
-	 * `DOMAIN=` in an ".env" file), the default value will never be applied.
-	 *
-	 * In order to solve these issues, we recommend that all new projects
-	 * explicitly specify this option as true.
-	 */
+	// Treat `VAR=` in a .env file as unset rather than as an empty string.
 	emptyStringAsUndefined: true,
 });

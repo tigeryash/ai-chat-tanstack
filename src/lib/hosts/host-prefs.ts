@@ -1,4 +1,4 @@
-import { AUTO_SORTS, type AutoSort } from "@/lib/chat/model-selection";
+import { AUTO_SORTS } from "@/lib/chat/model-selection";
 import { createLocalStore } from "@/lib/local-store";
 import { z } from "@/lib/zod";
 
@@ -30,10 +30,6 @@ const prefs = createLocalStore<HostPrefs>(
 	DEFAULT_HOST_PREFS,
 );
 
-export function readHostPrefs(): HostPrefs {
-	return prefs.read();
-}
-
 export function updateHostPrefs(change: Partial<HostPrefs>): void {
 	prefs.write({ ...prefs.read(), ...change });
 }
@@ -41,5 +37,3 @@ export function updateHostPrefs(change: Partial<HostPrefs>): void {
 export function useHostPrefs() {
 	return [prefs.use(), updateHostPrefs] as const;
 }
-
-export type { AutoSort };

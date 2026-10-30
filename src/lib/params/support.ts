@@ -5,7 +5,6 @@ import {
 	type NumberParam,
 	PARAM_IDS,
 	PARAMS,
-	type ParamId,
 	REASONING_EFFORTS,
 	type ReasoningEffort,
 } from "./registry";
@@ -129,8 +128,4 @@ export function paramSupport(input: SupportInput): ParamSupport {
 			? { reasoningBudget: budget }
 			: {}),
 	};
-}
-
-export function supports(support: ParamSupport, id: ParamId): boolean {
-	return support.params.includes(id);
 }

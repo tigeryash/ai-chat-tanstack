@@ -2,7 +2,11 @@ import { APIError, createAuthMiddleware } from "better-auth/api";
 import { EmailNotConfiguredError, missingEmailEnv } from "./email";
 
 // Better Auth routes that exist to send an email.
-const EMAIL_SENDING_PATHS = new Set(["/sign-up/email", "/request-password-reset", "/send-verification-email"]);
+const EMAIL_SENDING_PATHS = new Set([
+	"/sign-up/email",
+	"/request-password-reset",
+	"/send-verification-email",
+]);
 
 /**
  * Better Auth `hooks.before`. Sign-up and reset emails are sent outside the request, from a scheduled
@@ -12,11 +16,11 @@ const EMAIL_SENDING_PATHS = new Set(["/sign-up/email", "/request-password-reset"
  * depend on the address, so a 503 reveals nothing about which accounts exist.
  */
 export const requireEmailConfigured = createAuthMiddleware(async (ctx) => {
-  if (!EMAIL_SENDING_PATHS.has(ctx.path)) return;
-  const missing = missingEmailEnv();
-  if (missing.length === 0) return;
-  console.error(new EmailNotConfiguredError(missing).message);
-  throw new APIError("SERVICE_UNAVAILABLE", {
-    message: "Email sign-up and password reset are unavailable right now.",
-  });
+	if (!EMAIL_SENDING_PATHS.has(ctx.path)) return;
+	const missing = missingEmailEnv();
+	if (missing.length === 0) return;
+	console.error(new EmailNotConfiguredError(missing).message);
+	throw new APIError("SERVICE_UNAVAILABLE", {
+		message: "Email sign-up and password reset are unavailable right now.",
+	});
 });

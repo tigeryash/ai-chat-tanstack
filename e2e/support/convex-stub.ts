@@ -4,13 +4,13 @@ import {
 	TEST_CATALOG,
 	testCatalogModel,
 	testModelParameters,
-} from "../../src/lib/models/test-catalog";
+} from "../../src/lib/models/catalog.fixtures";
 import { E2E_USER_COOKIE } from "./accounts";
 
 // Stands in for Convex and its Better Auth endpoints during e2e runs, so tests never touch a real
 // deployment and need no secrets. Visitors are signed out unless a test signs one in as a test user
 // (see the `e2e-user` cookie below). Run by playwright.config.ts.
-// The model catalog's public queries answer from the seeded catalog in src/lib/models/test-catalog.ts.
+// The model catalog's public queries answer from the seeded catalog in src/lib/models/catalog.fixtures.ts.
 
 const port = Number(process.env.CONVEX_STUB_PORT ?? 4175);
 const WEBSOCKET_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";

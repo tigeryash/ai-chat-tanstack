@@ -1,8 +1,8 @@
-import { z } from "@/lib/zod";
 import {
 	MAX_PASSWORD_LENGTH,
 	MIN_PASSWORD_LENGTH,
-} from "../../convex/lib/passwordPolicy";
+} from "@convex/lib/passwordPolicy";
+import { z } from "@/lib/zod";
 
 // Better Auth sets no limit on names. This one only stops a pasted essay.
 export const MAX_NAME_LENGTH = 100;

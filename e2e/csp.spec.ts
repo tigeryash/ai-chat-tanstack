@@ -1,8 +1,10 @@
+import { ENFORCE_STRICT_CSP, ENFORCED_CSP } from "../src/lib/security/csp";
 import { expect, test } from "./support/fixtures";
 
-// The CSP and security headers (src/lib/security/). The strict policy is report-only for now, so these
-// tests check that it is sent, that it would block what it should (the browser reports a violation),
-// and that the enforced subset really blocks.
+// The CSP and security headers (src/lib/security/). The strict policy is report-only until
+// ENFORCE_STRICT_CSP is on, so these tests check that it is sent, that it would block what it should
+// (the browser reports a violation), and that the enforced subset really blocks. csp-enforced.spec.ts
+// covers the strict policy enforced.
 
 test("pages carry the security headers and a per-request nonce", async ({
 	request,
@@ -17,11 +19,14 @@ test("pages carry the security headers and a per-request nonce", async ({
 	expect(headers["permissions-policy"]).toContain("camera=()");
 	expect(headers["cross-origin-opener-policy"]).toBe("same-origin");
 	expect(headers["x-frame-options"]).toBe("DENY");
+	const policy = headers["content-security-policy-report-only"] ?? "";
 	expect(headers["content-security-policy"]).toBe(
+		ENFORCE_STRICT_CSP ? policy : ENFORCED_CSP,
+	);
+	expect(ENFORCED_CSP).toBe(
 		"object-src 'none'; base-uri 'none'; frame-ancestors 'none'",
 	);
 
-	const policy = headers["content-security-policy-report-only"] ?? "";
 	expect(policy).toContain("'strict-dynamic'");
 	expect(policy).not.toContain("'unsafe-eval'");
 	expect(policy).toContain("report-uri /api/csp-report");
@@ -74,8 +79,10 @@ test.describe("violations", () => {
 		await expect
 			.poll(() => cspViolations.map((violation) => violation.directive))
 			.toContain("script-src-attr");
-		// Report-only for now; this flips to "enforce" when the policy does.
-		expect(cspViolations[0]?.disposition).toBe("report");
+		// Report-only until ENFORCE_STRICT_CSP is on; then the report-only copy reports it too.
+		await expect
+			.poll(() => cspViolations.map((violation) => violation.disposition))
+			.toContain(ENFORCE_STRICT_CSP ? "enforce" : "report");
 	});
 
 	test("a connection to an unlisted origin is reported", async ({

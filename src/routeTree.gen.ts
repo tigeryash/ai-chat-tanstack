@@ -13,6 +13,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as authRouteRouteImport } from './routes/(auth)/route'
 import { Route as dashboardRouteRouteImport } from './routes/(dashboard)/route'
 import { Route as E2eRouteRouteImport } from './routes/e2e/route'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as authResetPasswordRouteImport } from './routes/(auth)/reset-password'
@@ -31,10 +33,6 @@ import { Route as E2eMessagesRouteImport } from './routes/e2e/messages'
 import { Route as E2eModelPickerRouteImport } from './routes/e2e/model-picker'
 import { Route as E2eStorageRouteImport } from './routes/e2e/storage'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
-import { Route as E2eDesignIndexRouteImport } from './routes/e2e/design/index'
-import { Route as E2eDesignBrandRouteImport } from './routes/e2e/design/brand'
-import { Route as E2eDesignEditorialRouteImport } from './routes/e2e/design/editorial'
-import { Route as E2eDesignMinimalRouteImport } from './routes/e2e/design/minimal'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -52,6 +50,16 @@ const dashboardRouteRoute = dashboardRouteRouteImport.update({
 const E2eRouteRoute = E2eRouteRouteImport.update({
   id: '/e2e',
   path: '/e2e',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const authForgotPasswordRoute = authForgotPasswordRouteImport.update({
@@ -144,30 +152,12 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
-const E2eDesignIndexRoute = E2eDesignIndexRouteImport.update({
-  id: '/design/',
-  path: '/design/',
-  getParentRoute: () => E2eRouteRoute,
-} as any)
-const E2eDesignBrandRoute = E2eDesignBrandRouteImport.update({
-  id: '/design/brand',
-  path: '/design/brand',
-  getParentRoute: () => E2eRouteRoute,
-} as any)
-const E2eDesignEditorialRoute = E2eDesignEditorialRouteImport.update({
-  id: '/design/editorial',
-  path: '/design/editorial',
-  getParentRoute: () => E2eRouteRoute,
-} as any)
-const E2eDesignMinimalRoute = E2eDesignMinimalRouteImport.update({
-  id: '/design/minimal',
-  path: '/design/minimal',
-  getParentRoute: () => E2eRouteRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/e2e': typeof E2eRouteRouteWithChildren
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
   '/reset-password': typeof authResetPasswordRoute
@@ -186,14 +176,12 @@ export interface FileRoutesByFullPath {
   '/e2e/model-picker': typeof E2eModelPickerRoute
   '/e2e/storage': typeof E2eStorageRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/e2e/design/brand': typeof E2eDesignBrandRoute
-  '/e2e/design/editorial': typeof E2eDesignEditorialRoute
-  '/e2e/design/minimal': typeof E2eDesignMinimalRoute
-  '/e2e/design/': typeof E2eDesignIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/e2e': typeof E2eRouteRouteWithChildren
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
   '/reset-password': typeof authResetPasswordRoute
@@ -212,10 +200,6 @@ export interface FileRoutesByTo {
   '/e2e/model-picker': typeof E2eModelPickerRoute
   '/e2e/storage': typeof E2eStorageRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/e2e/design/brand': typeof E2eDesignBrandRoute
-  '/e2e/design/editorial': typeof E2eDesignEditorialRoute
-  '/e2e/design/minimal': typeof E2eDesignMinimalRoute
-  '/e2e/design': typeof E2eDesignIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -223,6 +207,8 @@ export interface FileRoutesById {
   '/(auth)': typeof authRouteRouteWithChildren
   '/(dashboard)': typeof dashboardRouteRouteWithChildren
   '/e2e': typeof E2eRouteRouteWithChildren
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/(auth)/forgot-password': typeof authForgotPasswordRoute
   '/(auth)/login': typeof authLoginRoute
   '/(auth)/reset-password': typeof authResetPasswordRoute
@@ -241,16 +227,14 @@ export interface FileRoutesById {
   '/e2e/model-picker': typeof E2eModelPickerRoute
   '/e2e/storage': typeof E2eStorageRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/e2e/design/brand': typeof E2eDesignBrandRoute
-  '/e2e/design/editorial': typeof E2eDesignEditorialRoute
-  '/e2e/design/minimal': typeof E2eDesignMinimalRoute
-  '/e2e/design/': typeof E2eDesignIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/e2e'
+    | '/privacy'
+    | '/terms'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
@@ -269,14 +253,12 @@ export interface FileRouteTypes {
     | '/e2e/model-picker'
     | '/e2e/storage'
     | '/api/auth/$'
-    | '/e2e/design/brand'
-    | '/e2e/design/editorial'
-    | '/e2e/design/minimal'
-    | '/e2e/design/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/e2e'
+    | '/privacy'
+    | '/terms'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
@@ -295,16 +277,14 @@ export interface FileRouteTypes {
     | '/e2e/model-picker'
     | '/e2e/storage'
     | '/api/auth/$'
-    | '/e2e/design/brand'
-    | '/e2e/design/editorial'
-    | '/e2e/design/minimal'
-    | '/e2e/design'
   id:
     | '__root__'
     | '/'
     | '/(auth)'
     | '/(dashboard)'
     | '/e2e'
+    | '/privacy'
+    | '/terms'
     | '/(auth)/forgot-password'
     | '/(auth)/login'
     | '/(auth)/reset-password'
@@ -323,10 +303,6 @@ export interface FileRouteTypes {
     | '/e2e/model-picker'
     | '/e2e/storage'
     | '/api/auth/$'
-    | '/e2e/design/brand'
-    | '/e2e/design/editorial'
-    | '/e2e/design/minimal'
-    | '/e2e/design/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -334,6 +310,8 @@ export interface RootRouteChildren {
   authRouteRoute: typeof authRouteRouteWithChildren
   dashboardRouteRoute: typeof dashboardRouteRouteWithChildren
   E2eRouteRoute: typeof E2eRouteRouteWithChildren
+  PrivacyRoute: typeof PrivacyRoute
+  TermsRoute: typeof TermsRoute
   ApiCspReportRoute: typeof ApiCspReportRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
@@ -366,6 +344,20 @@ declare module '@tanstack/react-router' {
       path: '/e2e'
       fullPath: '/e2e'
       preLoaderRoute: typeof E2eRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(auth)/forgot-password': {
@@ -494,34 +486,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/e2e/design/': {
-      id: '/e2e/design/'
-      path: '/design'
-      fullPath: '/e2e/design/'
-      preLoaderRoute: typeof E2eDesignIndexRouteImport
-      parentRoute: typeof E2eRouteRoute
-    }
-    '/e2e/design/brand': {
-      id: '/e2e/design/brand'
-      path: '/design/brand'
-      fullPath: '/e2e/design/brand'
-      preLoaderRoute: typeof E2eDesignBrandRouteImport
-      parentRoute: typeof E2eRouteRoute
-    }
-    '/e2e/design/editorial': {
-      id: '/e2e/design/editorial'
-      path: '/design/editorial'
-      fullPath: '/e2e/design/editorial'
-      preLoaderRoute: typeof E2eDesignEditorialRouteImport
-      parentRoute: typeof E2eRouteRoute
-    }
-    '/e2e/design/minimal': {
-      id: '/e2e/design/minimal'
-      path: '/design/minimal'
-      fullPath: '/e2e/design/minimal'
-      preLoaderRoute: typeof E2eDesignMinimalRouteImport
-      parentRoute: typeof E2eRouteRoute
-    }
   }
 }
 
@@ -569,10 +533,6 @@ interface E2eRouteRouteChildren {
   E2eMessagesRoute: typeof E2eMessagesRoute
   E2eModelPickerRoute: typeof E2eModelPickerRoute
   E2eStorageRoute: typeof E2eStorageRoute
-  E2eDesignBrandRoute: typeof E2eDesignBrandRoute
-  E2eDesignEditorialRoute: typeof E2eDesignEditorialRoute
-  E2eDesignMinimalRoute: typeof E2eDesignMinimalRoute
-  E2eDesignIndexRoute: typeof E2eDesignIndexRoute
 }
 
 const E2eRouteRouteChildren: E2eRouteRouteChildren = {
@@ -585,10 +545,6 @@ const E2eRouteRouteChildren: E2eRouteRouteChildren = {
   E2eMessagesRoute: E2eMessagesRoute,
   E2eModelPickerRoute: E2eModelPickerRoute,
   E2eStorageRoute: E2eStorageRoute,
-  E2eDesignBrandRoute: E2eDesignBrandRoute,
-  E2eDesignEditorialRoute: E2eDesignEditorialRoute,
-  E2eDesignMinimalRoute: E2eDesignMinimalRoute,
-  E2eDesignIndexRoute: E2eDesignIndexRoute,
 }
 
 const E2eRouteRouteWithChildren = E2eRouteRoute._addFileChildren(
@@ -600,6 +556,8 @@ const rootRouteChildren: RootRouteChildren = {
   authRouteRoute: authRouteRouteWithChildren,
   dashboardRouteRoute: dashboardRouteRouteWithChildren,
   E2eRouteRoute: E2eRouteRouteWithChildren,
+  PrivacyRoute: PrivacyRoute,
+  TermsRoute: TermsRoute,
   ApiCspReportRoute: ApiCspReportRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }

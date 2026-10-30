@@ -1,5 +1,4 @@
 import type { ChatModel } from "@/components/models/use-chat-model";
-import { chatStore } from "@/lib/chat/chat-sessions";
 import {
 	modelKey,
 	pinChatSettings,
@@ -18,6 +17,7 @@ import type { RequestSettings } from "@/lib/params/request";
 import { developerOf } from "@/lib/params/routes";
 import type { ChatSettings } from "@/lib/params/settings";
 import { NO_SUPPORT, paramSupport } from "@/lib/params/support";
+import { chatStore } from "@/lib/storage/app-store";
 
 // A chat's settings panel state (roadmap 2.4b): its values, what its model and host support, the
 // shared system prompt, and what the next request carries.

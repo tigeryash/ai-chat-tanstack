@@ -1,4 +1,4 @@
-import { safeValidateUIMessages, type UIMessage } from "ai";
+import type { UIMessage } from "ai";
 import { cleanSettings } from "@/lib/params/settings";
 import { z } from "@/lib/zod";
 import type { Chat } from "./chat-store";
@@ -74,13 +74,17 @@ function formatVersionOf(raw: unknown, chatId: string | undefined): number {
 	return version as number;
 }
 
-/** Validates messages against AI SDK's `UIMessage` schema. Returns AI SDK's parsed copy. */
+/**
+ * Validates messages against AI SDK's `UIMessage` schema. Returns AI SDK's parsed copy. The AI SDK
+ * loads on first use, so the sidebar can list chats without it (quality audit P1).
+ */
 export async function validateMessages(
 	messages: readonly unknown[],
 	chatId?: string,
 ): Promise<UIMessage[]> {
 	// AI SDK rejects an empty list, but a chat may have no messages yet.
 	if (messages.length === 0) return [];
+	const { safeValidateUIMessages } = await import("ai");
 	const result = await safeValidateUIMessages({ messages });
 	if (!result.success) {
 		throw new ChatStoreError("invalid-chat", "A chat has invalid messages.", {

@@ -1,8 +1,7 @@
 "use client";
-import { useGSAP } from "@gsap/react";
-import gsap from "gsap";
 import { useRef } from "react";
 import { authClient } from "@/lib/auth-client";
+import { useLazyGsap } from "@/lib/lazy-gsap";
 import { FULL_MOTION } from "@/lib/reduced-motion";
 import DiscordIcon from "../../../public/discord-icon.svg";
 import AuthButton from "./authbutton";
@@ -10,28 +9,25 @@ import { brandLogos } from "./brand-logos";
 
 const OAuthButtons = () => {
 	const containerRef = useRef<HTMLDivElement>(null);
-	useGSAP(
-		() => {
-			gsap.matchMedia().add(FULL_MOTION, () => {
-				gsap.fromTo(
-					".auth-button > button",
-					{
-						opacity: 0,
-						y: -180,
-					},
-					{
-						opacity: 1,
-						y: 0,
-						stagger: 0.1,
-						duration: 0.3,
-						ease: "power2.inOut",
-						delay: 0.12,
-					},
-				);
-			});
-		},
-		{ scope: containerRef },
-	);
+	useLazyGsap(({ gsap }) => {
+		gsap.matchMedia().add(FULL_MOTION, () => {
+			gsap.fromTo(
+				".auth-button > button",
+				{
+					opacity: 0,
+					y: -180,
+				},
+				{
+					opacity: 1,
+					y: 0,
+					stagger: 0.1,
+					duration: 0.3,
+					ease: "power2.inOut",
+					delay: 0.12,
+				},
+			);
+		});
+	}, containerRef);
 
 	const handleProviderSignIn = async (provider: string) => {
 		await authClient.signIn.social({
@@ -43,9 +39,11 @@ const OAuthButtons = () => {
 	return (
 		<>
 			<div className="relative w-full flex items-center justify-center px-4 space-x-1">
-				<div className="bg-white/70 h-[.5px] w-[85%]  " />
-				<div className="text-nowrap text-white/90">or sign in with</div>
-				<div className="bg-white/70 h-[.5px] w-[85%] " />
+				<div className="bg-border h-px w-[85%]" />
+				<div className="text-nowrap text-sm text-muted-foreground">
+					or sign in with
+				</div>
+				<div className="bg-border h-px w-[85%]" />
 			</div>
 			<div
 				ref={containerRef}

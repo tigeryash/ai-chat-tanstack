@@ -21,10 +21,16 @@ export interface ChatViewProps {
 	onSend?: () => void;
 }
 
+/** At most one render per 50 ms while a reply streams; status changes still land at once. */
+const STREAM_THROTTLE_MS = 50;
+
 const logFailure = (error: unknown) =>
 	logError("Chat request failed:", error instanceof Error ? error.name : error);
 
-/** One chat: its messages, streaming live, and the composer with Stop. */
+/**
+ * One chat: its messages, streaming live, and the composer with Stop. Drawn as a pane card (direction
+ * A with B's rounded cards, roadmap 3.0b), so 3.1 can lay several side by side.
+ */
 export function ChatView({
 	chat,
 	selection,
@@ -35,6 +41,7 @@ export function ChatView({
 }: ChatViewProps) {
 	const { messages, sendMessage, regenerate, stop, status, error } = useChat({
 		chat,
+		throttle: STREAM_THROTTLE_MS,
 	});
 	const busy = status === "submitted" || status === "streaming";
 	const options = selection && { body: { ...selection, settings } };
@@ -51,10 +58,12 @@ export function ChatView({
 
 	return (
 		<div
-			className="flex h-full flex-col items-center pb-4"
+			className="flex h-full min-h-0 min-w-0 flex-col items-center overflow-hidden rounded-pane border bg-card pb-4 text-card-foreground"
 			data-chat-status={status}
 		>
-			{header}
+			{header && (
+				<div className="flex w-full shrink-0 flex-col border-b">{header}</div>
+			)}
 			<div className="w-full flex-1 overflow-auto">
 				{messages.length === 0 ? (
 					<div className="flex h-full items-center justify-center p-4 text-muted-foreground">
@@ -66,12 +75,8 @@ export function ChatView({
 				) : (
 					<MessagesList
 						messages={messages}
-						currentModel={
-							selection && {
-								model: selection.model,
-								gatewayId: selection.gatewayId,
-							}
-						}
+						// The selection itself (kept by value upstream), so finished messages keep their props.
+						currentModel={selection}
 						onRegenerate={
 							busy || !options
 								? undefined

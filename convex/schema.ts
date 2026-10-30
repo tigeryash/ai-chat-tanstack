@@ -1,84 +1,87 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
-import { catalogSourceValidator, modelFields } from "./lib/modelCatalog/validators";
+import {
+	catalogSourceValidator,
+	modelFields,
+} from "./lib/modelCatalog/validators";
 
 // ============================================================================
 // TYPE DEFINITIONS
 // ============================================================================
 
 const messageRoleValidator = v.union(
-  v.literal("user"),
-  v.literal("assistant"),
-  v.literal("system"),
-  v.literal("tool")
+	v.literal("user"),
+	v.literal("assistant"),
+	v.literal("system"),
+	v.literal("tool"),
 );
 
 const toolStateValidator = v.union(
-  v.literal("input-streaming"),
-  v.literal("input-available"),
-  v.literal("output-available"),
-  v.literal("output-error")
+	v.literal("input-streaming"),
+	v.literal("input-available"),
+	v.literal("output-available"),
+	v.literal("output-error"),
 );
 
 const messagePartValidator = v.union(
-  v.object({
-    type: v.literal("text"),
-    text: v.string(),
-    state: v.optional(v.union(v.literal("streaming"), v.literal("done"))),
-  }),
-  v.object({
-    type: v.literal("tool-invocation"),
-    toolCallId: v.string(),
-    toolName: v.string(),
-    state: toolStateValidator,
-    input: v.any(),
-    output: v.optional(v.any()),
-    errorText: v.optional(v.string()),
-  }),
-  v.object({
-    type: v.literal("file"),
-    mediaType: v.string(),
-    filename: v.optional(v.string()),
-    url: v.optional(v.string()),
-    storageId: v.optional(v. id("_storage")),
-  }),
-  v.object({
-    type: v.literal("reasoning"),
-    text: v.string(),
-    state: v.optional(v.union(v.literal("streaming"), v.literal("done"))),
-  }),
-  v.object({
-    type: v.literal("source"),
-    sourceType: v.union(v. literal("url"), v.literal("document")),
-    id: v.optional(v.string()),
-    url: v.optional(v.string()),
-    title: v.optional(v.string()),
-  }),
-  v.object({
-    type: v.literal("step-start"),
-    stepNumber: v.optional(v.number()),
-  }),
-  // For image generations
-  v.object({
-    type: v.literal("image"),
-    url: v.string(),
-    storageId: v.optional(v.id("_storage")),
-    prompt: v.optional(v.string()),
-    revisedPrompt: v.optional(v.string()),
-  })
+	v.object({
+		type: v.literal("text"),
+		text: v.string(),
+		state: v.optional(v.union(v.literal("streaming"), v.literal("done"))),
+	}),
+	v.object({
+		type: v.literal("tool-invocation"),
+		toolCallId: v.string(),
+		toolName: v.string(),
+		state: toolStateValidator,
+		input: v.any(),
+		output: v.optional(v.any()),
+		errorText: v.optional(v.string()),
+	}),
+	v.object({
+		type: v.literal("file"),
+		mediaType: v.string(),
+		filename: v.optional(v.string()),
+		url: v.optional(v.string()),
+		storageId: v.optional(v.id("_storage")),
+	}),
+	v.object({
+		type: v.literal("reasoning"),
+		text: v.string(),
+		state: v.optional(v.union(v.literal("streaming"), v.literal("done"))),
+	}),
+	v.object({
+		type: v.literal("source"),
+		sourceType: v.union(v.literal("url"), v.literal("document")),
+		id: v.optional(v.string()),
+		url: v.optional(v.string()),
+		title: v.optional(v.string()),
+	}),
+	v.object({
+		type: v.literal("step-start"),
+		stepNumber: v.optional(v.number()),
+	}),
+	// For image generations
+	v.object({
+		type: v.literal("image"),
+		url: v.string(),
+		storageId: v.optional(v.id("_storage")),
+		prompt: v.optional(v.string()),
+		revisedPrompt: v.optional(v.string()),
+	}),
 );
 
 const conversationSettingsValidator = v.object({
-  temperature: v.optional(v.number()),
-  maxTokens: v.optional(v.number()),
-  topP: v.optional(v.number()),
-  reasoningEffort: v.optional(
-    v.union(v.literal("low"), v.literal("medium"), v.literal("high"))
-  ),
-  webSearchEnabled: v.optional(v.boolean()),
-  deepResearchEnabled: v.optional(v.boolean()),
-  contextWindow: v.optional(v.number()),
-  metadata: v.optional(v.any()),
+	temperature: v.optional(v.number()),
+	maxTokens: v.optional(v.number()),
+	topP: v.optional(v.number()),
+	reasoningEffort: v.optional(
+		v.union(v.literal("low"), v.literal("medium"), v.literal("high")),
+	),
+	webSearchEnabled: v.optional(v.boolean()),
+	deepResearchEnabled: v.optional(v.boolean()),
+	contextWindow: v.optional(v.number()),
+	metadata: v.optional(v.any()),
 });
 
 // ============================================================================
@@ -86,280 +89,298 @@ const conversationSettingsValidator = v.object({
 // ============================================================================
 
 export default defineSchema({
-  // ==========================================================================
-  // USERS
-  // ==========================================================================
-  
-  users: defineTable({
-    authUserId: v.optional(v.string()),
-    tokenIdentifier: v.optional(v.string()),
-    name: v.optional(v.string()),
-    email: v.optional(v.string()),
-    avatarUrl: v.optional(v.string()),
-    
-    preferences: v.optional(v.object({
-      defaultModel: v. optional(v.string()),
-      defaultModelProvider: v.optional(v.string()),
-      theme: v.optional(v. union(v.literal("light"), v.literal("dark"), v.literal("system"))),
-    })),
-    
-    createdAt: v.number(),
-    updatedAt: v.number(),
-  })
-    .index("by_auth_user", ["authUserId"])
-    .index("by_token", ["tokenIdentifier"])
-    .index("by_email", ["email"]),
+	// ==========================================================================
+	// USERS
+	// ==========================================================================
 
-  // ==========================================================================
-  // CONVERSATIONS
-  // ==========================================================================
+	users: defineTable({
+		authUserId: v.optional(v.string()),
+		tokenIdentifier: v.optional(v.string()),
+		name: v.optional(v.string()),
+		email: v.optional(v.string()),
+		avatarUrl: v.optional(v.string()),
 
-  conversations: defineTable({
-    userId: v.id("users"),
-    
-    title: v.optional(v.string()),
-    
-    model: v.optional(v.string()),
-    modelProvider: v.optional(v. string()),
-    systemPrompt: v. optional(v.string()),
-    settings: v.optional(conversationSettingsValidator),
-    
-    status: v.union(
-      v.literal("active"),
-      v.literal("archived"),
-      v.literal("deleted")
-    ),
-    
-    isPinned: v.optional(v.boolean()),
-    
-    // Sharing - public link sharing
-    isShared: v. optional(v.boolean()),
-    shareId: v.optional(v.string()),
-    
-    // Group chat support
-    isGroupChat: v.optional(v. boolean()),
-    
-    messageCount: v.optional(v. number()),
-    totalTokens: v.optional(v.number()),
-    totalCostUsd:  v.optional(v.float64()),
-    
-    metadata: v.optional(v.any()),
-    
-    createdAt: v.number(),
-    updatedAt: v.number(),
-    lastMessageAt: v.optional(v.number()),
-  })
-    .index("by_user", ["userId"])
-    .index("by_user_updated", ["userId", "updatedAt"])
-    .index("by_user_status", ["userId", "status"])
-    .index("by_share_id", ["shareId"])
-    .index("by_user_pinned", ["userId", "isPinned"]),
+		preferences: v.optional(
+			v.object({
+				defaultModel: v.optional(v.string()),
+				defaultModelProvider: v.optional(v.string()),
+				theme: v.optional(
+					v.union(v.literal("light"), v.literal("dark"), v.literal("system")),
+				),
+			}),
+		),
 
-  // ==========================================================================
-  // CONVERSATION PARTICIPANTS (for group chats)
-  // ==========================================================================
+		createdAt: v.number(),
+		updatedAt: v.number(),
+	})
+		.index("by_auth_user", ["authUserId"])
+		.index("by_token", ["tokenIdentifier"])
+		.index("by_email", ["email"]),
 
-  conversationParticipants: defineTable({
-    conversationId: v.id("conversations"),
-    userId: v.id("users"),
-    
-    role: v.union(
-      v.literal("owner"),
-      v.literal("member")
-    ),
-    
-    // For tracking unread messages
-    lastReadAt: v.optional(v.number()),
-    
-    joinedAt: v.number(),
-    leftAt: v.optional(v.number()),
-  })
-    .index("by_conversation", ["conversationId"])
-    .index("by_user", ["userId"])
-    .index("by_user_conversation", ["userId", "conversationId"]),
+	// ==========================================================================
+	// UNUSED: the old Convex chat backend (conversations through usageEvents)
+	// ==========================================================================
+	// No function reads or writes these tables since roadmap 1.2/1.3 moved chat into the browser and
+	// its functions were deleted (restore them from git at 58853e2). They stay until Yash checks the prod
+	// row counts (Owner to-do in docs/ROADMAP.md); then drop them along with `users.preferences`.
 
-  // ==========================================================================
-  // MESSAGES
-  // ==========================================================================
+	// ==========================================================================
+	// CONVERSATIONS
+	// ==========================================================================
 
-  messages: defineTable({
-    conversationId: v.id("conversations"),
-    userId: v.id("users"),
-    
-    // Branching support
-    parentId: v.optional(v.id("messages")),
-    branchIndex: v.optional(v.number()),
-    isActiveBranch:  v.optional(v.boolean()),
-    
-    // For group chats - which user is being addressed
-    mentionedUserId: v.optional(v. id("users")),
+	conversations: defineTable({
+		userId: v.id("users"),
 
-    inputMode: v.optional(
-      v.union(
-        v.literal("text"),
-        v.literal("voice"),
-        v.literal("image"),
-        v.literal("file"),
-        v.literal("mixed")
-      )
-    ),
-    transcription: v.optional(v.object({
-      provider: v.optional(v.string()),
-      model: v.optional(v.string()),
-      language: v.optional(v.string()),
-      durationMs: v.optional(v.number()),
-      confidence: v.optional(v.number()),
-      audioAttachmentId: v.optional(v.id("attachments")),
-    })),
-    
-    role: messageRoleValidator,
-    parts:  v.array(messagePartValidator),
-    content: v.optional(v.string()),
-    
-    status: v.union(
-      v.literal("pending"),
-      v.literal("streaming"),
-      v.literal("completed"),
-      v.literal("failed"),
-      v.literal("cancelled")
-    ),
-    
-    model: v.optional(v.string()),
-    modelProvider: v.optional(v.string()),
-    finishReason: v.optional(v.union(
-      v.literal("stop"),
-      v.literal("length"),
-      v.literal("tool-calls"),
-      v.literal("content-filter"),
-      v.literal("error"),
-      v.literal("cancelled")
-    )),
-    
-    usage: v.optional(v.object({
-      promptTokens: v.number(),
-      completionTokens: v. number(),
-      totalTokens:  v.number(),
-      reasoningTokens: v.optional(v.number()),
-      cachedTokens: v.optional(v. number()),
-    })),
-    costUsd: v.optional(v.float64()),
-    latencyMs: v.optional(v.number()),
-    
-    hasToolCalls: v.optional(v.boolean()),
-    toolCallIds: v.optional(v. array(v.string())),
-    toolCallId: v.optional(v.string()),
-    
-    // Feedback for AI responses
-    feedback: v.optional(v.object({
-      rating: v.optional(v.union(v.literal("positive"), v.literal("negative"))),
-      comment: v.optional(v.string()),
-      feedbackAt: v.optional(v.number()),
-    })),
-    
-    // Edit tracking
-    isEdited: v.optional(v.boolean()),
-    editedAt: v.optional(v.number()),
-    originalContent: v.optional(v. string()),
-    
-    metadata:  v.optional(v.any()),
-    deletedAt: v.optional(v.number()),
-    
-    createdAt: v.number(),
-    updatedAt: v.number(),
-  })
-    .index("by_conversation", ["conversationId"])
-    .index("by_conversation_created", ["conversationId", "createdAt"])
-    .index("by_parent", ["parentId"])
-    .index("by_tool_call_id", ["toolCallId"])
-    .index("by_user", ["userId"]),
+		title: v.optional(v.string()),
 
-  // ==========================================================================
-  // ATTACHMENTS
-  // ==========================================================================
+		model: v.optional(v.string()),
+		modelProvider: v.optional(v.string()),
+		systemPrompt: v.optional(v.string()),
+		settings: v.optional(conversationSettingsValidator),
 
-  attachments: defineTable({
-    conversationId: v.optional(v.id("conversations")),
-    messageId: v.optional(v.id("messages")),
-    userId: v.id("users"),
-    
-    storageId: v.id("_storage"),
-    
-    filename: v.string(),
-    mimeType: v.string(),
-    fileSize: v.number(),
-    
-    width: v.optional(v.number()),
-    height: v.optional(v.number()),
-    
-    metadata: v.optional(v.any()),
-    
-    createdAt: v.number(),
-  })
-    .index("by_conversation", ["conversationId"])
-    .index("by_message", ["messageId"])
-    .index("by_user", ["userId"])
-    .index("by_storage", ["storageId"]),
+		status: v.union(
+			v.literal("active"),
+			v.literal("archived"),
+			v.literal("deleted"),
+		),
 
-  // ==========================================================================
-  // MESSAGE PINS
-  // ==========================================================================
+		isPinned: v.optional(v.boolean()),
 
-  messagePins: defineTable({
-    userId: v.id("users"),
-    conversationId: v.id("conversations"),
-    messageId: v.id("messages"),
+		// Sharing - public link sharing
+		isShared: v.optional(v.boolean()),
+		shareId: v.optional(v.string()),
 
-    createdAt: v.number(),
-  })
-    .index("by_user", ["userId"])
-    .index("by_conversation", ["conversationId"])
-    .index("by_message", ["messageId"])
-    .index("by_user_message", ["userId", "messageId"]),
+		// Group chat support
+		isGroupChat: v.optional(v.boolean()),
 
-  // ==========================================================================
-  // USAGE TRACKING
-  // ==========================================================================
+		messageCount: v.optional(v.number()),
+		totalTokens: v.optional(v.number()),
+		totalCostUsd: v.optional(v.float64()),
 
-  usageEvents: defineTable({
-    userId:  v.id("users"),
-    conversationId: v.optional(v.id("conversations")),
-    messageId: v.optional(v. id("messages")),
-    
-    model: v.string(),
-    modelProvider: v. string(),
-    
-    promptTokens: v.number(),
-    completionTokens: v. number(),
-    totalTokens: v.number(),
-    reasoningTokens: v.optional(v.number()),
-    cachedTokens: v.optional(v.number()),
-    
-    costUsd: v.float64(),
-    latencyMs: v.optional(v.number()),
-    
-    createdAt: v.number(),
-  })
-    .index("by_user", ["userId"])
-    .index("by_user_date", ["userId", "createdAt"])
-    .index("by_conversation", ["conversationId"]),
+		metadata: v.optional(v.any()),
 
-  // ==========================================================================
-  // MODEL CATALOG (roadmap 2.1): public data synced daily by convex/modelCatalogSync.ts
-  // ==========================================================================
+		createdAt: v.number(),
+		updatedAt: v.number(),
+		lastMessageAt: v.optional(v.number()),
+	})
+		.index("by_user", ["userId"])
+		.index("by_user_updated", ["userId", "updatedAt"])
+		.index("by_user_status", ["userId", "status"])
+		.index("by_share_id", ["shareId"])
+		.index("by_user_pinned", ["userId", "isPinned"]),
 
-  models: defineTable(modelFields)
-    .index("by_gateway_id", ["gatewayId"])
-    .index("by_status", ["status"]),
+	// ==========================================================================
+	// CONVERSATION PARTICIPANTS (for group chats)
+	// ==========================================================================
 
-  modelCatalogSources: defineTable({
-    source: catalogSourceValidator,
-    lastAttemptAt: v.number(),
-    /** Last run where this source answered. Its data in `models` is as of this time. */
-    lastSyncedAt: v.optional(v.number()),
-    /** Set while the latest attempt failed. */
-    lastError: v.optional(v.string()),
-    /** Set when the latest attempt answered only partly. */
-    lastWarning: v.optional(v.string()),
-    itemCount: v.optional(v.number()),
-  }).index("by_source", ["source"]),
+	conversationParticipants: defineTable({
+		conversationId: v.id("conversations"),
+		userId: v.id("users"),
+
+		role: v.union(v.literal("owner"), v.literal("member")),
+
+		// For tracking unread messages
+		lastReadAt: v.optional(v.number()),
+
+		joinedAt: v.number(),
+		leftAt: v.optional(v.number()),
+	})
+		.index("by_conversation", ["conversationId"])
+		.index("by_user", ["userId"])
+		.index("by_user_conversation", ["userId", "conversationId"]),
+
+	// ==========================================================================
+	// MESSAGES
+	// ==========================================================================
+
+	messages: defineTable({
+		conversationId: v.id("conversations"),
+		userId: v.id("users"),
+
+		// Branching support
+		parentId: v.optional(v.id("messages")),
+		branchIndex: v.optional(v.number()),
+		isActiveBranch: v.optional(v.boolean()),
+
+		// For group chats - which user is being addressed
+		mentionedUserId: v.optional(v.id("users")),
+
+		inputMode: v.optional(
+			v.union(
+				v.literal("text"),
+				v.literal("voice"),
+				v.literal("image"),
+				v.literal("file"),
+				v.literal("mixed"),
+			),
+		),
+		transcription: v.optional(
+			v.object({
+				provider: v.optional(v.string()),
+				model: v.optional(v.string()),
+				language: v.optional(v.string()),
+				durationMs: v.optional(v.number()),
+				confidence: v.optional(v.number()),
+				audioAttachmentId: v.optional(v.id("attachments")),
+			}),
+		),
+
+		role: messageRoleValidator,
+		parts: v.array(messagePartValidator),
+		content: v.optional(v.string()),
+
+		status: v.union(
+			v.literal("pending"),
+			v.literal("streaming"),
+			v.literal("completed"),
+			v.literal("failed"),
+			v.literal("cancelled"),
+		),
+
+		model: v.optional(v.string()),
+		modelProvider: v.optional(v.string()),
+		finishReason: v.optional(
+			v.union(
+				v.literal("stop"),
+				v.literal("length"),
+				v.literal("tool-calls"),
+				v.literal("content-filter"),
+				v.literal("error"),
+				v.literal("cancelled"),
+			),
+		),
+
+		usage: v.optional(
+			v.object({
+				promptTokens: v.number(),
+				completionTokens: v.number(),
+				totalTokens: v.number(),
+				reasoningTokens: v.optional(v.number()),
+				cachedTokens: v.optional(v.number()),
+			}),
+		),
+		costUsd: v.optional(v.float64()),
+		latencyMs: v.optional(v.number()),
+
+		hasToolCalls: v.optional(v.boolean()),
+		toolCallIds: v.optional(v.array(v.string())),
+		toolCallId: v.optional(v.string()),
+
+		// Feedback for AI responses
+		feedback: v.optional(
+			v.object({
+				rating: v.optional(
+					v.union(v.literal("positive"), v.literal("negative")),
+				),
+				comment: v.optional(v.string()),
+				feedbackAt: v.optional(v.number()),
+			}),
+		),
+
+		// Edit tracking
+		isEdited: v.optional(v.boolean()),
+		editedAt: v.optional(v.number()),
+		originalContent: v.optional(v.string()),
+
+		metadata: v.optional(v.any()),
+		deletedAt: v.optional(v.number()),
+
+		createdAt: v.number(),
+		updatedAt: v.number(),
+	})
+		.index("by_conversation", ["conversationId"])
+		.index("by_conversation_created", ["conversationId", "createdAt"])
+		.index("by_parent", ["parentId"])
+		.index("by_tool_call_id", ["toolCallId"])
+		.index("by_user", ["userId"]),
+
+	// ==========================================================================
+	// ATTACHMENTS
+	// ==========================================================================
+
+	attachments: defineTable({
+		conversationId: v.optional(v.id("conversations")),
+		messageId: v.optional(v.id("messages")),
+		userId: v.id("users"),
+
+		storageId: v.id("_storage"),
+
+		filename: v.string(),
+		mimeType: v.string(),
+		fileSize: v.number(),
+
+		width: v.optional(v.number()),
+		height: v.optional(v.number()),
+
+		metadata: v.optional(v.any()),
+
+		createdAt: v.number(),
+	})
+		.index("by_conversation", ["conversationId"])
+		.index("by_message", ["messageId"])
+		.index("by_user", ["userId"])
+		.index("by_storage", ["storageId"]),
+
+	// ==========================================================================
+	// MESSAGE PINS
+	// ==========================================================================
+
+	messagePins: defineTable({
+		userId: v.id("users"),
+		conversationId: v.id("conversations"),
+		messageId: v.id("messages"),
+
+		createdAt: v.number(),
+	})
+		.index("by_user", ["userId"])
+		.index("by_conversation", ["conversationId"])
+		.index("by_message", ["messageId"])
+		.index("by_user_message", ["userId", "messageId"]),
+
+	// ==========================================================================
+	// USAGE TRACKING
+	// ==========================================================================
+
+	usageEvents: defineTable({
+		userId: v.id("users"),
+		conversationId: v.optional(v.id("conversations")),
+		messageId: v.optional(v.id("messages")),
+
+		model: v.string(),
+		modelProvider: v.string(),
+
+		promptTokens: v.number(),
+		completionTokens: v.number(),
+		totalTokens: v.number(),
+		reasoningTokens: v.optional(v.number()),
+		cachedTokens: v.optional(v.number()),
+
+		costUsd: v.float64(),
+		latencyMs: v.optional(v.number()),
+
+		createdAt: v.number(),
+	})
+		.index("by_user", ["userId"])
+		.index("by_user_date", ["userId", "createdAt"])
+		.index("by_conversation", ["conversationId"]),
+
+	// ==========================================================================
+	// MODEL CATALOG (roadmap 2.1): public data synced daily by convex/modelCatalogSync.ts
+	// ==========================================================================
+
+	models: defineTable(modelFields)
+		.index("by_gateway_id", ["gatewayId"])
+		.index("by_status", ["status"]),
+
+	modelCatalogSources: defineTable({
+		source: catalogSourceValidator,
+		lastAttemptAt: v.number(),
+		/** Last run where this source answered. Its data in `models` is as of this time. */
+		lastSyncedAt: v.optional(v.number()),
+		/** Set while the latest attempt failed. */
+		lastError: v.optional(v.string()),
+		/** Set when the latest attempt answered only partly. */
+		lastWarning: v.optional(v.string()),
+		itemCount: v.optional(v.number()),
+	}).index("by_source", ["source"]),
 });

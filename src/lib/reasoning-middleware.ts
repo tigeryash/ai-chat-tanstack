@@ -12,13 +12,3 @@ export function createThinkTagModel(baseModel: BaseModel) {
 		}),
 	});
 }
-
-// For models that use [THINK] tags (Mistral, etc.)
-export function createBracketThinkModel(baseModel: BaseModel) {
-	return wrapLanguageModel({
-		model: baseModel,
-		middleware: extractReasoningMiddleware({
-			tagName: "THINK",
-		}),
-	});
-}

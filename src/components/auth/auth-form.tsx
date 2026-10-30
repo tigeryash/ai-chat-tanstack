@@ -1,9 +1,8 @@
 import { Field } from "@base-ui/react/field";
 import { Form } from "@base-ui/react/form";
-import { useGSAP } from "@gsap/react";
-import gsap from "gsap";
 import { type RefObject, useEffect, useRef, useState } from "react";
 import { fieldErrors } from "@/lib/auth-schemas";
+import { useLazyGsap } from "@/lib/lazy-gsap";
 import { FULL_MOTION } from "@/lib/reduced-motion";
 import type { z } from "@/lib/zod";
 
@@ -11,28 +10,25 @@ import type { z } from "@/lib/zod";
 
 /** Fades the form's fields in on mount. With reduced motion it never starts (hard rule 3). */
 function useFormReveal(scope: RefObject<HTMLElement | null>) {
-	useGSAP(
-		() => {
-			gsap.matchMedia().add(FULL_MOTION, () => {
-				gsap.fromTo(
-					".form-root",
-					{
-						opacity: 0,
-						y: 50,
-					},
-					{
-						opacity: 1,
-						y: 0,
-						duration: 1.1,
-						stagger: 0.1,
-						ease: "power2.inOut",
-						delay: 0.1,
-					},
-				);
-			});
-		},
-		{ scope },
-	);
+	useLazyGsap(({ gsap }) => {
+		gsap.matchMedia().add(FULL_MOTION, () => {
+			gsap.fromTo(
+				".form-root",
+				{
+					opacity: 0,
+					y: 50,
+				},
+				{
+					opacity: 1,
+					y: 0,
+					duration: 1.1,
+					stagger: 0.1,
+					ease: "power2.inOut",
+					delay: 0.1,
+				},
+			);
+		});
+	}, scope);
 }
 
 interface AuthFormProps {
@@ -100,7 +96,7 @@ export function useAuthSubmit<Values>(
 
 // Underlined so links inside a sentence don't rely on color alone.
 export const LINK_CLASS =
-	"text-white/90 underline decoration-white/40 underline-offset-4 hover:text-white hover:decoration-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded";
+	"text-foreground underline decoration-foreground/40 underline-offset-4 hover:decoration-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded";
 
 interface AuthFieldProps {
 	name: string;
@@ -126,7 +122,7 @@ export function AuthField({
 			className="flex flex-col w-full space-y-2 form-root"
 		>
 			<div className="flex items-baseline justify-between gap-2">
-				<Field.Label className="text-xl font-semibold text-white/90">
+				<Field.Label className="text-base font-medium text-foreground">
 					{label}
 				</Field.Label>
 				{labelAside}
@@ -135,10 +131,9 @@ export function AuthField({
 				type={type}
 				autoComplete={autoComplete}
 				placeholder={placeholder}
-				className=" text-lg bg-[#101010]/60 hover:bg-[#101010]/80 focus:bg-[#101010]/80 rounded-lg p-3 placeholder:text-slate-400 focus:outline-none focus:ring-2
-           focus:ring-blue-400 text-white"
+				className="text-base bg-background/60 border border-input hover:bg-background/80 focus:bg-background rounded-lg px-3 py-2.5 placeholder:text-muted-foreground focus:outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 text-foreground"
 			/>
-			<Field.Error className="text-red-200" />
+			<Field.Error className="text-sm text-destructive" />
 		</Field.Root>
 	);
 }
@@ -155,10 +150,10 @@ export function SubmitButton({
 			type="submit"
 			disabled={pending}
 			aria-busy={pending}
-			className="py-3 px-4 rounded-xl border border-white hover:bg-white w-full
-         hover:text-black transition-all duration-300 hover:scale-105 hover:shadow-lg
-         hover:border-white text-lg overflow-hidden cursor-pointer
-         disabled:cursor-wait disabled:opacity-60 disabled:hover:scale-100 disabled:hover:bg-transparent disabled:hover:text-white"
+			className="py-2.5 px-4 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 w-full
+         transition-all duration-300 hover:scale-[1.02] text-base overflow-hidden cursor-pointer
+         focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50
+         disabled:cursor-wait disabled:opacity-60 disabled:hover:scale-100 disabled:hover:bg-primary"
 		>
 			{children}
 		</button>
@@ -171,7 +166,7 @@ export function FormAlert({ message }: { message: string | null }) {
 	return (
 		<p
 			role="alert"
-			className="w-full rounded-lg border border-red-300/40 bg-red-950/40 p-3 text-red-100"
+			className="w-full rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-destructive"
 		>
 			{message}
 		</p>
@@ -194,11 +189,11 @@ export function AuthNotice({ title, children, focusTitle }: AuthNoticeProps) {
 	}, [focusTitle]);
 
 	return (
-		<section className="w-full max-w-md space-y-4 px-2 text-lg text-white/90">
+		<section className="w-full max-w-md space-y-4 px-2 text-base text-foreground">
 			<h3
 				ref={titleRef}
 				tabIndex={-1}
-				className="text-2xl font-semibold text-white focus:outline-none"
+				className="text-xl font-semibold text-foreground focus:outline-none"
 			>
 				{title}
 			</h3>

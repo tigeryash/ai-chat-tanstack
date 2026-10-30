@@ -1,6 +1,5 @@
 "use client";
 
-import { useGSAP } from "@gsap/react";
 import {
 	CatchBoundary,
 	ClientOnly,
@@ -10,16 +9,20 @@ import {
 	redirect,
 	useLocation,
 } from "@tanstack/react-router";
-import { gsap } from "gsap";
-import { SplitText } from "gsap/all";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { LINK_CLASS } from "@/components/auth/auth-form";
 import Models from "@/components/auth/models";
 import OAuthButtons from "@/components/auth/oauthbuttons";
+import { loadGsap, useLazyGsap } from "@/lib/lazy-gsap";
 import { logError } from "@/lib/log";
 import { FULL_MOTION } from "@/lib/reduced-motion";
 
-gsap.registerPlugin(SplitText);
+// Start fetching GSAP now, alongside hydration, so the reveals below rarely wait for it.
+if (typeof window !== "undefined") {
+	void loadGsap().catch(() => {
+		// useLazyGsap reports it if the reveals can't run.
+	});
+}
 
 // three.js and React Three Fiber are most of this route's JavaScript. Loading the background after
 // hydration keeps them off the critical path, so the form works before the scene arrives.
@@ -33,45 +36,42 @@ const AuthLayout = () => {
 	// after its children's, so the form below is hydrated by then too.
 	const [hydrated, setHydrated] = useState(false);
 	useEffect(() => setHydrated(true), []);
-	useGSAP(
-		() => {
-			if (!containerRef.current) return;
+	useLazyGsap(({ gsap, SplitText }) => {
+		if (!containerRef.current) return;
 
-			gsap.matchMedia().add(FULL_MOTION, () => {
-				const subtitle = new SplitText(".subtitle", {
-					type: "lines",
-				});
-
-				gsap.set(subtitle.lines, {
-					y: 100,
-				});
-				gsap.to(subtitle.lines, {
-					y: 0,
-					delay: 0.3,
-					duration: 1.2,
-					stagger: 0.075,
-					ease: "power2.inOut",
-				});
-				gsap.from(".auth", {
-					opacity: 0,
-					duration: 0.9,
-					ease: "power2.inOut",
-				});
-
-				gsap.from(".footer", {
-					opacity: 0,
-					duration: 0.7,
-					ease: "power2.in",
-				});
+		gsap.matchMedia().add(FULL_MOTION, () => {
+			const subtitle = new SplitText(".subtitle", {
+				type: "lines",
 			});
-		},
-		{ dependencies: [], scope: containerRef },
-	);
+
+			gsap.set(subtitle.lines, {
+				y: 100,
+			});
+			gsap.to(subtitle.lines, {
+				y: 0,
+				delay: 0.3,
+				duration: 1.2,
+				stagger: 0.075,
+				ease: "power2.inOut",
+			});
+			gsap.from(".auth", {
+				opacity: 0,
+				duration: 0.9,
+				ease: "power2.inOut",
+			});
+
+			gsap.from(".footer", {
+				opacity: 0,
+				duration: 0.7,
+				ease: "power2.in",
+			});
+		});
+	}, containerRef);
 	return (
 		<main
 			ref={containerRef}
 			data-hydrated={hydrated}
-			className="flex relative flex-col-reverse items-center xl:flex-row min-h-screen xl:h-screen  overflow-hidden p-6 md:p-3 bg-slate-900"
+			className="dark flex relative flex-col-reverse items-center xl:flex-row min-h-screen xl:h-screen  overflow-hidden p-6 md:p-3 bg-auth-backdrop text-foreground"
 		>
 			<ClientOnly>
 				{/* The scene is decoration: if it can't load or WebGL is missing, show the plain background. */}
@@ -86,13 +86,13 @@ const AuthLayout = () => {
 				</CatchBoundary>
 			</ClientOnly>
 
-			<div className="space-y-7 xl:w-full pt-10 md:pt-18 pb-12 text-gray-300 h-full flex flex-col md:rounded-2xl relative overflow-hidden">
+			<div className="space-y-7 xl:w-full pt-10 md:pt-18 pb-12 text-foreground/85 h-full flex flex-col md:rounded-2xl relative overflow-hidden">
 				<Body />
 
 				<Models />
 				<Footer />
 			</div>
-			<div className="xl:w-1/3  md:w-[600px] lg:h-full text-white z-2 w-full p-2 lg:pl-0 auth">
+			<div className="xl:w-1/3  md:w-[600px] lg:h-full text-foreground z-2 w-full p-2 lg:pl-0 auth">
 				<FormContainer pathname={pathname}>
 					<Outlet />
 				</FormContainer>
@@ -120,12 +120,14 @@ const FormContainer = ({
 }) => {
 	return (
 		<div
-			className="inset-shadow-lg bg-slate-300/30 flex flex-col py-10  
-    items-center space-y-5 xl:space-y-10 rounded-2xl backdrop-blur-md border-[2px] lg:pt-6  lg:space-y-6 lg:h-full border-white/20"
+			className="bg-card/85 text-card-foreground flex flex-col py-10
+    items-center space-y-5 xl:space-y-10 rounded-pane backdrop-blur-md border lg:pt-6  lg:space-y-6 lg:h-full border-border"
 		>
-			<h2 className="text-[2.5rem] font-semibold">{pageTitle(pathname)}</h2>
+			<h2 className="text-3xl font-semibold tracking-tight">
+				{pageTitle(pathname)}
+			</h2>
 			{/* No login wall (decision 4): an account is only for the cloud features. */}
-			<p className="px-8 text-center text-white/80">
+			<p className="px-8 text-center text-muted-foreground">
 				Sign in to sync and share. Chatting doesn't need an account: your keys
 				and chats stay in this browser.{" "}
 				<Link to="/new" className={LINK_CLASS}>
@@ -140,29 +142,26 @@ const FormContainer = ({
 
 const Body = () => {
 	const titleRef = useRef<HTMLDivElement>(null);
-	useGSAP(
-		() => {
-			if (!titleRef.current) return;
-			const titleElement = titleRef.current;
-			gsap.matchMedia().add(FULL_MOTION, () => {
-				const title = new SplitText(titleElement, {
-					type: "lines",
-					mask: "lines",
-				});
-				gsap.set(title.lines, {
-					y: 200,
-				});
-				gsap.to(title.lines, {
-					y: 0,
-					delay: 0.27,
-					duration: 1.2,
-					stagger: 0.03,
-					ease: "power2.inOut",
-				});
+	useLazyGsap(({ gsap, SplitText }) => {
+		if (!titleRef.current) return;
+		const titleElement = titleRef.current;
+		gsap.matchMedia().add(FULL_MOTION, () => {
+			const title = new SplitText(titleElement, {
+				type: "lines",
+				mask: "lines",
 			});
-		},
-		{ dependencies: [], scope: titleRef },
-	);
+			gsap.set(title.lines, {
+				y: 200,
+			});
+			gsap.to(title.lines, {
+				y: 0,
+				delay: 0.27,
+				duration: 1.2,
+				stagger: 0.03,
+				ease: "power2.inOut",
+			});
+		});
+	}, titleRef);
 
 	return (
 		<>
@@ -178,11 +177,10 @@ const Body = () => {
 					clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
 				}}
 			>
-				Chat with the smartest{" "}
-				<span className="text-[oklch(70%.1375_229)]">AI</span> found on the of
-				the{" "}
+				Chat with the smartest <span className="text-link">AI</span> found on
+				the of the{" "}
 				<a
-					className="hover:underline text-[oklch(70%.1375_229)]"
+					className="hover:underline text-link"
 					href="https://lmarena.ai/leaderboard"
 					target="_blank"
 					rel="noopener noreferrer"
@@ -198,7 +196,7 @@ const Body = () => {
 
 const Footer = () => {
 	return (
-		<footer className="footer text-gray-300 mt-auto self-center shadow-lg bg-gray-950/10 rounded-xl py-2 px-4">
+		<footer className="footer text-foreground/85 mt-auto self-center shadow-lg bg-overlay/10 rounded-xl py-2 px-4">
 			<p>
 				Project made by{" "}
 				<a
@@ -209,6 +207,14 @@ const Footer = () => {
 				>
 					Yash
 				</a>
+				{" · "}
+				<Link to="/privacy" className="hover:underline">
+					Privacy
+				</Link>
+				{" · "}
+				<Link to="/terms" className="hover:underline">
+					Terms
+				</Link>
 			</p>
 		</footer>
 	);

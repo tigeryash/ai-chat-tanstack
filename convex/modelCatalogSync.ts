@@ -13,18 +13,23 @@ import { runCatalogSync, type SyncResult } from "./lib/modelCatalog/sync";
  * Without ARTIFICIAL_ANALYSIS_API_KEY on the deployment, it skips that source and keeps old scores.
  */
 export const sync = internalAction({
-  args: {},
-  handler: async (ctx): Promise<SyncResult["summary"]> => {
-    const now = Date.now();
-    const previous = await ctx.runQuery(internal.models.snapshot, {});
-    const result = await runCatalogSync({
-      now,
-      previous,
-      artificialAnalysisKey: process.env[ARTIFICIAL_ANALYSIS_KEY_ENV] || undefined,
-      log: (line) => console.log(line),
-      warn: (line) => console.warn(line),
-    });
-    await ctx.runMutation(internal.models.applySync, { rows: result.writes, runs: result.runs, now });
-    return result.summary;
-  },
+	args: {},
+	handler: async (ctx): Promise<SyncResult["summary"]> => {
+		const now = Date.now();
+		const previous = await ctx.runQuery(internal.models.snapshot, {});
+		const result = await runCatalogSync({
+			now,
+			previous,
+			artificialAnalysisKey:
+				process.env[ARTIFICIAL_ANALYSIS_KEY_ENV] || undefined,
+			log: (line) => console.log(line),
+			warn: (line) => console.warn(line),
+		});
+		await ctx.runMutation(internal.models.applySync, {
+			rows: result.writes,
+			runs: result.runs,
+			now,
+		});
+		return result.summary;
+	},
 });

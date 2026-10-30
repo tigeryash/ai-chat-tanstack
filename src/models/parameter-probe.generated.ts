@@ -2,6 +2,34 @@
 import type { ParameterProbeResults } from "./parameter-probe";
 
 export const PARAMETER_PROBE: ParameterProbeResults = {
+	"alibaba/qwen3.8-max": {
+		openrouter: {
+			modelId: "qwen/qwen3.8-max-0902",
+			notes: {
+				min_p: "No endpoints found that can handle the requested parameters. To learn more about provider routing, visit: https://openrouter.ai/docs/guides/routing/provider-selection",
+				repetition_penalty: "No endpoints found that can handle the requested parameters. To learn more about provider routing, visit: https://openrouter.ai/docs/guides/routing/provider-selection",
+				tool_choice: "No endpoints found that support the provided 'tool_choice' value. To learn more about provider routing, visit: https://openrouter.ai/docs/guides/routing/provider-selection",
+			},
+			parameters: {
+				frequency_penalty: "accepted",
+				max_tokens: "accepted",
+				min_p: "rejected",
+				presence_penalty: "accepted",
+				reasoning: "accepted",
+				repetition_penalty: "rejected",
+				response_format: "accepted",
+				seed: "accepted",
+				stop: "accepted",
+				structured_outputs: "accepted",
+				temperature: "accepted",
+				tool_choice: "rejected",
+				tools: "accepted",
+				top_k: "accepted",
+				top_p: "accepted",
+			},
+			probedAt: "2026-10-29",
+		},
+	},
 	"anthropic/claude-fable-5.1": {
 		openrouter: {
 			modelId: "anthropic/claude-fable-5.1",
@@ -302,6 +330,37 @@ export const PARAMETER_PROBE: ParameterProbeResults = {
 			probedAt: "2026-10-29",
 		},
 	},
+	"meta/muse-wonder-1.0": {
+		openrouter: {
+			modelId: "meta/muse-wonder",
+			notes: {
+				frequency_penalty: "No endpoints found that can handle the requested parameters. To learn more about provider routing, visit: https://openrouter.ai/docs/guides/routing/provider-selection",
+				min_p: "No endpoints found that can handle the requested parameters. To learn more about provider routing, visit: https://openrouter.ai/docs/guides/routing/provider-selection",
+				presence_penalty: "No endpoints found that can handle the requested parameters. To learn more about provider routing, visit: https://openrouter.ai/docs/guides/routing/provider-selection",
+				seed: "No endpoints found that can handle the requested parameters. To learn more about provider routing, visit: https://openrouter.ai/docs/guides/routing/provider-selection",
+				stop: "No endpoints found that can handle the requested parameters. To learn more about provider routing, visit: https://openrouter.ai/docs/guides/routing/provider-selection",
+				tool_choice: "Provider returned error",
+			},
+			parameters: {
+				frequency_penalty: "rejected",
+				max_tokens: "accepted",
+				min_p: "rejected",
+				presence_penalty: "rejected",
+				reasoning: "accepted",
+				repetition_penalty: "accepted",
+				response_format: "accepted",
+				seed: "rejected",
+				stop: "rejected",
+				structured_outputs: "accepted",
+				temperature: "accepted",
+				tool_choice: "rejected",
+				tools: "accepted",
+				top_k: "accepted",
+				top_p: "accepted",
+			},
+			probedAt: "2026-10-29",
+		},
+	},
 	"minimax/minimax-m3.1-flash": {
 		openrouter: {
 			modelId: "minimax/minimax-m3.1-flash",
@@ -320,6 +379,34 @@ export const PARAMETER_PROBE: ParameterProbeResults = {
 				tool_choice: "accepted",
 				tools: "accepted",
 				top_k: "accepted",
+				top_p: "accepted",
+			},
+			probedAt: "2026-10-29",
+		},
+	},
+	"mistral/mistral-large-4": {
+		openrouter: {
+			modelId: "mistralai/mistral-large-4-0",
+			notes: {
+				min_p: "No endpoints found that can handle the requested parameters. To learn more about provider routing, visit: https://openrouter.ai/docs/guides/routing/provider-selection",
+				repetition_penalty: "No endpoints found that can handle the requested parameters. To learn more about provider routing, visit: https://openrouter.ai/docs/guides/routing/provider-selection",
+				top_k: "No endpoints found that can handle the requested parameters. To learn more about provider routing, visit: https://openrouter.ai/docs/guides/routing/provider-selection",
+			},
+			parameters: {
+				frequency_penalty: "accepted",
+				max_tokens: "accepted",
+				min_p: "rejected",
+				presence_penalty: "accepted",
+				reasoning: "accepted",
+				repetition_penalty: "rejected",
+				response_format: "accepted",
+				seed: "accepted",
+				stop: "accepted",
+				structured_outputs: "accepted",
+				temperature: "accepted",
+				tool_choice: "accepted",
+				tools: "accepted",
+				top_k: "rejected",
 				top_p: "accepted",
 			},
 			probedAt: "2026-10-29",

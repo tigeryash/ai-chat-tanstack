@@ -13,14 +13,15 @@
 			"**/scripts/**/*.ts",
 			"**/vitest.config.ts",
 			"**/playwright.config.ts",
+			"**/vite.config.ts",
+			"**/convex/**/*.ts",
 			"**/.vscode/**/*",
-			"**/index.html",
-			"**/vite.config.js",
 			"!!**/.claude",
 			"!**/src/routeTree.gen.ts",
 			"!**/src/models/parameter-probe.generated.ts",
 			"!**/src/styles.css",
-			"!**/src/shadcn-tailwind.css"
+			"!**/src/shadcn-tailwind.css",
+			"!**/convex/_generated"
 		]
 	},
 	"formatter": {

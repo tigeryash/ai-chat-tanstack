@@ -1,4 +1,4 @@
-import { type Chat, useChat } from "@ai-sdk/react";
+import type { Chat } from "@ai-sdk/react";
 import type { UIMessage } from "ai";
 import { ChatView } from "@/components/chat/chat-view";
 import { HostSwitcher } from "@/components/models/host-switcher";
@@ -20,8 +20,8 @@ export function ChatScreen({
 	chat: Chat<UIMessage>;
 	onSend?: () => void;
 }) {
-	const { messages } = useChat({ chat });
-	const model = useChatModel(chat.id, messages);
+	// No `useChat` here: the header shouldn't re-render per streamed chunk. ChatView subscribes.
+	const model = useChatModel(chat);
 	const params = useChatParams(chat.id, model);
 	const { choice, wanted, chosenModel } = model;
 	const isLocal = choice?.provider === LOCAL_PROVIDER && choice.model !== "";
@@ -60,7 +60,7 @@ export function ChatScreen({
 			empty={empty}
 			header={
 				<>
-					<div className="flex w-full items-center gap-1 px-2 py-1">
+					<div className="flex w-full items-center gap-2 px-3 py-2">
 						<ModelPicker
 							choice={choice}
 							wanted={wanted}
@@ -78,7 +78,7 @@ export function ChatScreen({
 							/>
 						)}
 						{isLocal && (
-							<span className="text-muted-foreground text-xs">
+							<span className="font-mono text-muted-foreground text-xs">
 								via{" "}
 								{localEndpoint?.name ??
 									(choice.endpoint ? "a removed local server" : "Local")}

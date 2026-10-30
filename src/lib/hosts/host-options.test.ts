@@ -1,11 +1,15 @@
 import { describe, expect, it } from "vitest";
 import type { ProviderId } from "@/lib/keys/providers";
-import { testCatalogModel } from "@/lib/models/test-catalog";
+import { testCatalogModel } from "@/lib/models/catalog.fixtures";
 import {
 	parseGatewayEndpoints,
 	parseOpenRouterEndpoints,
 	withPolicies,
 } from "./endpoint-stats";
+import {
+	TEST_GATEWAY_ENDPOINTS,
+	TEST_OPENROUTER_ENDPOINTS,
+} from "./endpoints.fixtures";
 import {
 	autoHost,
 	type ChatNeeds,
@@ -15,10 +19,6 @@ import {
 } from "./host-options";
 import { DEFAULT_HOST_PREFS, type HostPrefs } from "./host-prefs";
 import { resolveHost, selectionExtras } from "./resolve-host";
-import {
-	TEST_GATEWAY_ENDPOINTS,
-	TEST_OPENROUTER_ENDPOINTS,
-} from "./test-endpoints";
 
 const ID = "deepseek/deepseek-v4.1-flash";
 const model = testCatalogModel(ID);

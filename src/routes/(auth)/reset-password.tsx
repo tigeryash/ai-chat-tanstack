@@ -1,3 +1,4 @@
+import { MIN_PASSWORD_LENGTH } from "@convex/lib/passwordPolicy";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import {
@@ -15,7 +16,6 @@ import {
 	resetPasswordSchema,
 	resetPasswordSearchSchema,
 } from "@/lib/auth-schemas";
-import { MIN_PASSWORD_LENGTH } from "../../../convex/lib/passwordPolicy";
 
 // The token is a bearer credential for this account: it goes only into the reset request's body,
 // never into logs or anywhere else.
@@ -79,7 +79,7 @@ function ResetPasswordForm({
 			<SubmitButton pending={pending}>
 				{pending ? "Saving…" : "Reset password"}
 			</SubmitButton>
-			<p className="text-white/80">
+			<p className="text-muted-foreground">
 				<Link to="/login" className={LINK_CLASS}>
 					Back to sign in
 				</Link>
