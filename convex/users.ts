@@ -6,9 +6,9 @@ import { upsertCurrentUser } from "./authHelpers";
  * Called on app load / sign in. The only place a `users` row is created or its profile refreshed.
  */
 export const getOrCreate = mutation({
-  args: {},
-  handler: async (ctx) => {
-    const user = await upsertCurrentUser(ctx);
-    return user._id;
-  },
+	args: {},
+	handler: async (ctx) => {
+		const user = await upsertCurrentUser(ctx);
+		return user._id;
+	},
 });
