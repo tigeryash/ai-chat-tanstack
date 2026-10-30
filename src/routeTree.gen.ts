@@ -23,6 +23,7 @@ import { Route as dashboardChatIdRouteImport } from './routes/(dashboard)/$chatI
 import { Route as dashboardNewRouteImport } from './routes/(dashboard)/new'
 import { Route as dashboardSettingsRouteImport } from './routes/(dashboard)/settings'
 import { Route as ApiCspReportRouteImport } from './routes/api/csp-report'
+import { Route as E2eAnalyticsRouteImport } from './routes/e2e/analytics'
 import { Route as E2eChatRouteImport } from './routes/e2e/chat'
 import { Route as E2eChatLiveRouteImport } from './routes/e2e/chat-live'
 import { Route as E2eComposerRouteImport } from './routes/e2e/composer'
@@ -102,6 +103,11 @@ const ApiCspReportRoute = ApiCspReportRouteImport.update({
   path: '/api/csp-report',
   getParentRoute: () => rootRouteImport,
 } as any)
+const E2eAnalyticsRoute = E2eAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => E2eRouteRoute,
+} as any)
 const E2eChatRoute = E2eChatRouteImport.update({
   id: '/chat',
   path: '/chat',
@@ -166,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/new': typeof dashboardNewRoute
   '/settings': typeof dashboardSettingsRoute
   '/api/csp-report': typeof ApiCspReportRoute
+  '/e2e/analytics': typeof E2eAnalyticsRoute
   '/e2e/chat': typeof E2eChatRoute
   '/e2e/chat-live': typeof E2eChatLiveRoute
   '/e2e/composer': typeof E2eComposerRoute
@@ -190,6 +197,7 @@ export interface FileRoutesByTo {
   '/new': typeof dashboardNewRoute
   '/settings': typeof dashboardSettingsRoute
   '/api/csp-report': typeof ApiCspReportRoute
+  '/e2e/analytics': typeof E2eAnalyticsRoute
   '/e2e/chat': typeof E2eChatRoute
   '/e2e/chat-live': typeof E2eChatLiveRoute
   '/e2e/composer': typeof E2eComposerRoute
@@ -217,6 +225,7 @@ export interface FileRoutesById {
   '/(dashboard)/new': typeof dashboardNewRoute
   '/(dashboard)/settings': typeof dashboardSettingsRoute
   '/api/csp-report': typeof ApiCspReportRoute
+  '/e2e/analytics': typeof E2eAnalyticsRoute
   '/e2e/chat': typeof E2eChatRoute
   '/e2e/chat-live': typeof E2eChatLiveRoute
   '/e2e/composer': typeof E2eComposerRoute
@@ -243,6 +252,7 @@ export interface FileRouteTypes {
     | '/new'
     | '/settings'
     | '/api/csp-report'
+    | '/e2e/analytics'
     | '/e2e/chat'
     | '/e2e/chat-live'
     | '/e2e/composer'
@@ -267,6 +277,7 @@ export interface FileRouteTypes {
     | '/new'
     | '/settings'
     | '/api/csp-report'
+    | '/e2e/analytics'
     | '/e2e/chat'
     | '/e2e/chat-live'
     | '/e2e/composer'
@@ -293,6 +304,7 @@ export interface FileRouteTypes {
     | '/(dashboard)/new'
     | '/(dashboard)/settings'
     | '/api/csp-report'
+    | '/e2e/analytics'
     | '/e2e/chat'
     | '/e2e/chat-live'
     | '/e2e/composer'
@@ -416,6 +428,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCspReportRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/e2e/analytics': {
+      id: '/e2e/analytics'
+      path: '/analytics'
+      fullPath: '/e2e/analytics'
+      preLoaderRoute: typeof E2eAnalyticsRouteImport
+      parentRoute: typeof E2eRouteRoute
+    }
     '/e2e/chat': {
       id: '/e2e/chat'
       path: '/chat'
@@ -524,6 +543,7 @@ const dashboardRouteRouteWithChildren = dashboardRouteRoute._addFileChildren(
 )
 
 interface E2eRouteRouteChildren {
+  E2eAnalyticsRoute: typeof E2eAnalyticsRoute
   E2eChatRoute: typeof E2eChatRoute
   E2eChatLiveRoute: typeof E2eChatLiveRoute
   E2eComposerRoute: typeof E2eComposerRoute
@@ -536,6 +556,7 @@ interface E2eRouteRouteChildren {
 }
 
 const E2eRouteRouteChildren: E2eRouteRouteChildren = {
+  E2eAnalyticsRoute: E2eAnalyticsRoute,
   E2eChatRoute: E2eChatRoute,
   E2eChatLiveRoute: E2eChatLiveRoute,
   E2eComposerRoute: E2eComposerRoute,

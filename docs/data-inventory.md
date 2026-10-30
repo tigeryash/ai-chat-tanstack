@@ -59,8 +59,11 @@ Promises the design already makes. Changing one of these is a product decision, 
 | Synced chats | Convex | You (and group members) | Until you delete them or turn off sync | Planned (6.1) |
 | Shared chat snapshots | Convex | Anyone with the link | Until you unshare | Planned (6.3); the old sharing backend was deleted unused on 2026-10-30 |
 | CSP violation reports: the policy directive, the blocked origin (or `inline`/`eval`), and the page path; the browser also sends the page URL, user agent and a script sample, which are dropped before logging | Vercel function logs (one `[csp]` line each, from `/api/csp-report`); nothing stored | Us | Vercel log retention | Since 1.0 (2026-10-25) |
-| Product analytics events (no content) | Analytics provider (TBD, cookieless) | Us | Provider retention (TBD) | Planned (1.8) |
-| Error reports (scrubbed of keys and content) | Sentry | Us | Sentry retention (TBD) | Planned (1.8) |
+| Page views: the page's route only (`/new`, `/settings`, a chat as `/[chatId]`; no query string, fragment or chat id), plus what Vercel's script adds itself: referrer, country, browser, OS and device type. No cookies; Vercel tells visitors apart with a hash of the request that changes daily | Vercel Web Analytics (`@vercel/analytics`, `src/lib/analytics/vercel.ts`) | Us (Vercel dashboard) | Vercel Hobby: 1 month | Since 1.8 (2026-10-30). Off with Settings → Analytics, or when the browser sends Global Privacy Control or Do Not Track |
+| Web Vitals (load and interaction timings) per page route, with device type and connection info | Vercel Speed Insights (`@vercel/speed-insights`) | Us (Vercel dashboard) | Vercel Hobby: 1 month | Since 1.8 (2026-10-30). Same switch |
+| Usage events, names and fixed-choice properties only (`src/lib/analytics/events.ts`): `chat_sent` {providerKind: hosted or local, paneCount when known, hasAttachment}; `model_picked` {developer id from the catalog, or local / custom; highElo}; `key_connected` {provider id}; `local_endpoint_added` {kind: lmstudio, ollama or custom}. Never prompts, replies, files, keys, chat titles, model names you typed, URLs or any other free text | Only through `track()` (`src/lib/analytics/track.ts`). Sent to Vercel Web Analytics only when `VITE_ANALYTICS_CUSTOM_EVENTS=true`, which needs Vercel Pro; on Hobby they go nowhere | Us (Vercel dashboard) | Vercel Hobby: 1 month (if enabled) | Since 1.8 (2026-10-30). Same switch |
+| Analytics on/off | Your browser's localStorage (`highelo-analytics`) | Nobody else | Until you change it or clear site data | Since 1.8 (2026-10-30) |
+| Error reports (scrubbed of keys and content) | Sentry | Us | Sentry retention (TBD) | Planned (1.8b) |
 | Model catalog: public model data (names, prices, limits, providers, Artificial Analysis scores) and when each source last synced | Convex `models` and `modelCatalogSources`, refreshed daily by `convex/modelCatalogSync.ts` | Public (`models.list` / `models.get` need no session) | Rows are never deleted; models the Gateway drops are marked `removed` | Since 2.1 (2026-10-26); not user data |
 | Parameter probe results: which generation settings each model accepted on OpenRouter, with the hosts' error messages | `src/models/parameter-probe.generated.ts` in the repo, written by `scripts/probe-params.ts` with the developer's own OpenRouter key (never stored) | Public (ships in the app bundle) | Until the next probe run replaces it | Since 2.4a (2026-10-29); not user data |
 
@@ -77,11 +80,13 @@ Promises the design already makes. Changing one of these is a product decision, 
 | OpenRouter (Connect OpenRouter) | The sign-in on their site; then the code and verifier, from your browser, in exchange for a key you own | Making a key without copy-paste | Since 1.1 |
 | Your local model server (LM Studio, Ollama) | Your prompts, from your browser to your own machine | Local generation | Since 1.2; only the endpoints you save in Settings since 2.3. Its model list is read when you test it or open the picker, never on page load |
 | AI Gateway (public catalog), Artificial Analysis, models.dev, OpenRouter (public model list) | Nothing about users: a daily Convex action fetches public model data. Artificial Analysis also gets our own API key (`ARTIFICIAL_ANALYSIS_API_KEY`, a Convex env var) | Model catalog | Since 2.1 (2026-10-26) |
-| Analytics provider, Sentry | Content-free events and scrubbed errors | Product analytics, debugging | Planned (1.8) |
+| Vercel Web Analytics and Speed Insights | Page routes (no query strings or chat ids), Web Vitals, and the browser details their scripts collect (referrer, country, browser, OS, device). Content-free usage events only if custom events are turned on (Pro plan). Same-origin requests to `/_vercel/…`, no cookies | Product analytics and performance | Since 1.8 (2026-10-30), unless switched off in Settings or the browser sends GPC / Do Not Track |
+| Sentry | Scrubbed errors | Debugging | Planned (1.8b) |
 
 ## Open items for the policy
 
 - Convex region: prod is AWS US East (N. Virginia). Backups: none automatic on our plan; a manual one is kept 7 days.
 - Account deletion and export flow (roadmap 7.2).
-- Analytics and Sentry providers and their retention settings.
+- Sentry provider and its retention settings (1.8b). Analytics is Vercel Web Analytics and Speed Insights (1.8),
+  kept 1 month on Hobby.
 - Operator: "the developer, an individual in Ontario" until the app makes money; then a registered business name. Contact: support@highelollms.com. Decided 2026-10-30: 18+, Ontario law, deletion within 30 days, changes announced in the app's changelog.
