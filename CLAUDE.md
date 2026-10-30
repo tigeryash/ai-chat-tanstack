@@ -182,8 +182,10 @@ Playwright runs in 4 shards with 2 workers each (4 workers per runner made timin
 ## Gotchas (learned in Phase 0)
 
 - **Biome skips this repo when it sits under `.claude/`** (`biome.json` ignores `.claude`, which also matches a
-  worktree's own path), so in a worktree `bun run check` and the pre-commit hook check nothing. Lint there with a
-  copy of `biome.json` minus the `!!**/.claude` line: `bunx biome check --config-path=<dir with that copy> src e2e`.
+  worktree's own path), so in a worktree `bun run check` checks nothing (the pre-commit hook's `--staged` run does
+  check staged files). A copy of `biome.json` elsewhere misses rules Biome turns on from `package.json` (the
+  Playwright and test domains). Check like CI from a clone outside `.claude/`: `git clone -q . /tmp/x`, symlink
+  `node_modules` into it, then `bun run check` there.
 - **Keep `convex` at 1.46 or newer.** `CONVEX_DEPLOY_KEY` can deploy but not read data. Older CLIs read table sizes
   when a push drops an index, so production builds failed with "You do not have permission to perform this operation
   (deployment:data:view)". Upgrade the CLI rather than giving the key data access.
