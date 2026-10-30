@@ -11,6 +11,11 @@ export interface Chat {
 	updatedAt: number;
 	/** Pinned chats sit at the top of the sidebar. Absent means not pinned. */
 	pinned?: boolean;
+	/**
+	 * The Better Auth user ID of the account the chat belongs to, or null for a chat made signed out
+	 * (roadmap 1.9). Only decides what the app shows: every chat is still readable in this browser.
+	 */
+	ownerId: string | null;
 	messages: UIMessage[];
 }
 
@@ -22,6 +27,7 @@ export interface ChatSummary {
 	updatedAt: number;
 	messageCount: number;
 	pinned: boolean;
+	ownerId: string | null;
 }
 
 // Where chats live on this device (roadmap decision 8). The browser saves once when a reply finishes
@@ -32,17 +38,20 @@ export interface ChatStore {
 	/** Migrated and validated; `undefined` if there is no such chat. */
 	getChat(id: string): Promise<Chat | undefined>;
 	/**
-	 * Replaces the chat's messages, creating the chat if it's new. Call `requestPersistentStorage()`
-	 * when `created` is true (decision 9).
+	 * Replaces the chat's messages, creating the chat if it's new. A new chat belongs to `ownerId`; an
+	 * existing one keeps its owner. Call `requestPersistentStorage()` when `created` is true (decision 9).
 	 */
 	saveMessages(
 		chatId: string,
 		messages: readonly UIMessage[],
+		ownerId: string | null,
 	): Promise<{ created: boolean }>;
 	/** Doesn't change `updatedAt`, so a rename doesn't reorder the sidebar. */
 	renameChat(chatId: string, title: string): Promise<void>;
 	/** Like a rename, doesn't change `updatedAt`. */
 	setPinned(chatId: string, pinned: boolean): Promise<void>;
+	/** Moves chats to another owner, skipping any that no longer exist. Doesn't change `updatedAt`. */
+	setOwner(chatIds: readonly string[], ownerId: string | null): Promise<void>;
 	/**
 	 * Calls `onChange` with `listChats()` now and after every change, from any tab, until the returned
 	 * function is called.

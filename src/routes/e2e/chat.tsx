@@ -30,10 +30,12 @@ function useHarnessChat(savedId: string | undefined) {
 	const [chatId, setChatId] = useState<string | null>(null);
 	useEffect(() => {
 		if (!savedId) {
-			setChatId(openNewChat({ transport }).id);
+			setChatId(openNewChat({ transport, ownerId: null }).id);
 			return;
 		}
-		openSavedChat(savedId).then((found) => setChatId(found ? savedId : null));
+		openSavedChat(savedId, null).then((found) =>
+			setChatId(found ? savedId : null),
+		);
 	}, [savedId]);
 	return chatId ? openChat(chatId) : null;
 }

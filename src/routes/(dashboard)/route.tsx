@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { BackgroundStatus } from "@/components/background-status/background-status";
+import { NoAccountChatsPrompt } from "@/components/chat-ownership/no-account-chats-prompt";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import {
 	SidebarInset,
@@ -28,6 +29,7 @@ function DashboardLayout() {
 				</div>
 			</SidebarInset>
 			<BackgroundStatus />
+			<NoAccountChatsPrompt />
 		</SidebarProvider>
 	);
 }

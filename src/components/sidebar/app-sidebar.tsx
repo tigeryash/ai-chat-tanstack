@@ -16,20 +16,24 @@ import {
 	SidebarRail,
 	useSidebar,
 } from "@/components/ui/sidebar";
+import { useViewer } from "@/lib/account";
 import { arrangeChats } from "@/lib/chat/chat-list";
 import { chatStore, deleteChat } from "@/lib/chat/chat-sessions";
 import { logError } from "@/lib/log";
 import type { ChatSummary } from "@/lib/storage/chat-store";
+import { type Viewer, visibleChats } from "@/lib/storage/ownership";
 import { AccountLinks } from "./account-links";
 import { ChatListItem } from "./chat-list-item";
 import { type ChatListState, useChatList } from "./use-chat-list";
 
 // The app's sidebar (roadmap 1.4): this browser's chats from the ChatStore, newest first with pinned
 // ones on top, plus new chat, search, and the account links. On narrow screens it's a sheet behind
-// the header's toggle.
+// the header's toggle. It lists only the chats the viewer may see (roadmap 1.9): signed in, their
+// account's chats and the ones made signed out, which get a quiet marker.
 
 export function AppSidebar() {
 	const list = useChatList();
+	const viewer = useViewer();
 	const [query, setQuery] = useState("");
 	const { setOpenMobile } = useSidebar();
 
@@ -56,7 +60,7 @@ export function AppSidebar() {
 				/>
 			</SidebarHeader>
 			<SidebarContent>
-				<ChatGroups list={list} query={query} />
+				<ChatGroups list={list} viewer={viewer} query={query} />
 			</SidebarContent>
 			<SidebarFooter>
 				<AccountLinks />
@@ -66,12 +70,20 @@ export function AppSidebar() {
 	);
 }
 
-function ChatGroups({ list, query }: { list: ChatListState; query: string }) {
+function ChatGroups({
+	list,
+	viewer,
+	query,
+}: {
+	list: ChatListState;
+	viewer: Viewer | undefined;
+	query: string;
+}) {
 	const [failed, setFailed] = useState(false);
 	const navigate = useNavigate();
 	const { chatId: activeId } = useParams({ strict: false });
 
-	if (list.status === "loading") return null;
+	if (list.status === "loading" || viewer === undefined) return null;
 	if (list.status === "error") {
 		return (
 			<p role="alert" className="px-4 py-2 text-sm text-destructive">
@@ -99,7 +111,8 @@ function ChatGroups({ list, query }: { list: ChatListState; query: string }) {
 			),
 	});
 
-	const { pinned, recent } = arrangeChats(list.chats, query);
+	const visible = visibleChats(list.chats, viewer);
+	const { pinned, recent } = arrangeChats(visible, query);
 	const renderGroup = (label: string, chats: ChatSummary[]) =>
 		chats.length > 0 && (
 			<SidebarGroup>
@@ -111,6 +124,7 @@ function ChatGroups({ list, query }: { list: ChatListState; query: string }) {
 								key={chat.id}
 								chat={chat}
 								active={chat.id === activeId}
+								noAccount={viewer !== null && chat.ownerId === null}
 								{...actionsFor(chat)}
 							/>
 						))}
@@ -130,7 +144,7 @@ function ChatGroups({ list, query }: { list: ChatListState; query: string }) {
 			{renderGroup("Recent", recent)}
 			{pinned.length + recent.length === 0 && (
 				<p className="px-4 py-2 text-sm text-muted-foreground">
-					{list.chats.length === 0
+					{visible.length === 0
 						? "Your chats will show up here. They stay in this browser."
 						: "No chats match your search."}
 				</p>

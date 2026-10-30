@@ -9,10 +9,13 @@ import { openTestDatabase } from "@/lib/storage/test-support";
 import { BrowserChatTransport } from "./browser-transport";
 import {
 	deleteChat,
+	deleteChats,
 	isChatOpen,
+	isOpenChatVisibleTo,
 	openChat,
 	openNewChat,
 	openSavedChat,
+	setChatOwner,
 } from "./chat-sessions";
 import { mockChatModel } from "./mock-model";
 
@@ -24,7 +27,7 @@ describe("chat sessions", () => {
 		const transport = new BrowserChatTransport(async () =>
 			mockChatModel({ reasoning: ["hm"], text: ["Hi ", "there"] }),
 		);
-		const chat = openNewChat({ transport, store });
+		const chat = openNewChat({ transport, store, ownerId: null });
 		expect(await store.getChat(chat.id)).toBeUndefined();
 
 		await chat.sendMessage({ text: "hello" }, { body: SELECTION });
@@ -51,14 +54,59 @@ describe("chat sessions", () => {
 
 	it("opens a saved chat with its messages, and reports a missing one", async () => {
 		const store = createDexieChatStore({ db: openTestDatabase() });
-		await store.saveMessages("saved-1", [
-			{ id: "m1", role: "user", parts: [{ type: "text", text: "hi" }] },
-		]);
+		await store.saveMessages(
+			"saved-1",
+			[{ id: "m1", role: "user", parts: [{ type: "text", text: "hi" }] }],
+			null,
+		);
 
-		expect(await openSavedChat("saved-1", store)).toBe(true);
+		expect(await openSavedChat("saved-1", null, store)).toBe(true);
 		expect(openChat("saved-1").messages).toHaveLength(1);
-		expect(await openSavedChat("nope", store)).toBe(false);
+		expect(await openSavedChat("nope", null, store)).toBe(false);
 		expect(isChatOpen("nope")).toBe(false);
+	});
+
+	it("treats another account's chat as missing, open or not", async () => {
+		const store = createDexieChatStore({ db: openTestDatabase() });
+		const hi = [
+			{
+				id: "m1",
+				role: "user" as const,
+				parts: [{ type: "text" as const, text: "hi" }],
+			},
+		];
+		await store.saveMessages("a-chat", hi, "user-a");
+		await store.saveMessages("shared", hi, null);
+
+		expect(await openSavedChat("a-chat", "user-b", store)).toBe(false);
+		expect(await openSavedChat("a-chat", null, store)).toBe(false);
+		expect(isChatOpen("a-chat")).toBe(false);
+		expect(await openSavedChat("a-chat", "user-a", store)).toBe(true);
+		// Open in this tab now, and still hidden from anyone else (after a sign-out, say).
+		expect(isOpenChatVisibleTo("a-chat", "user-a")).toBe(true);
+		expect(isOpenChatVisibleTo("a-chat", null)).toBe(false);
+		expect(await openSavedChat("a-chat", null, store)).toBe(false);
+		expect(await openSavedChat("shared", "user-b", store)).toBe(true);
+	});
+
+	it("saves a new chat for the account it was opened for, and moves chats between owners", async () => {
+		const store = createDexieChatStore({ db: openTestDatabase() });
+		const transport = new BrowserChatTransport(async () =>
+			mockChatModel({ text: ["ok"] }),
+		);
+		const chat = openNewChat({ transport, store, ownerId: "user-a" });
+		await chat.sendMessage({ text: "hi" }, { body: SELECTION });
+		await vi.waitFor(async () =>
+			expect(await store.getChat(chat.id)).toMatchObject({ ownerId: "user-a" }),
+		);
+
+		await setChatOwner([chat.id], null, store);
+		expect(await store.getChat(chat.id)).toMatchObject({ ownerId: null });
+		expect(isOpenChatVisibleTo(chat.id, "user-b")).toBe(true);
+
+		await deleteChats([chat.id], store);
+		expect(isChatOpen(chat.id)).toBe(false);
+		expect(await store.getChat(chat.id)).toBeUndefined();
 	});
 
 	it("names a new chat after its first message", async () => {
@@ -66,7 +114,7 @@ describe("chat sessions", () => {
 		const transport = new BrowserChatTransport(async () =>
 			mockChatModel({ text: ["ok"] }),
 		);
-		const chat = openNewChat({ transport, store });
+		const chat = openNewChat({ transport, store, ownerId: null });
 
 		await chat.sendMessage(
 			{ text: "Plan a trip\nto Lisbon" },
@@ -82,9 +130,11 @@ describe("chat sessions", () => {
 
 	it("deletes a chat mid-reply without the stopped reply saving it again", async () => {
 		const store = createDexieChatStore({ db: openTestDatabase() });
-		await store.saveMessages("busy", [
-			{ id: "m1", role: "user", parts: [{ type: "text", text: "hi" }] },
-		]);
+		await store.saveMessages(
+			"busy",
+			[{ id: "m1", role: "user", parts: [{ type: "text", text: "hi" }] }],
+			null,
+		);
 		const transport = new BrowserChatTransport(async () =>
 			mockChatModel({ text: ["a", "b", "c"], chunkDelayInMs: 50 }),
 		);
@@ -107,7 +157,7 @@ describe("chat sessions", () => {
 		const transport = new BrowserChatTransport(async () =>
 			mockChatModel({ text: ["a", "b"], chunkDelayInMs: 20 }),
 		);
-		const chat = openNewChat({ transport, store });
+		const chat = openNewChat({ transport, store, ownerId: null });
 
 		const reply = chat.sendMessage({ text: "hi" }, { body: SELECTION });
 		await vi.waitFor(() => expect(replyingCount()).toBe(1));
@@ -119,6 +169,7 @@ describe("chat sessions", () => {
 
 		const failing = openNewChat({
 			store,
+			ownerId: null,
 			transport: new BrowserChatTransport(async () => {
 				throw new Error("no model");
 			}),

@@ -94,18 +94,22 @@ function StorageHarness() {
 		{
 			label: "Save chat",
 			act: async ({ store }) => {
-				const { created } = await store.saveMessages("sample", [
-					{
-						id: "u1",
-						role: "user",
-						parts: [{ type: "text", text: "Hello storage" }],
-					},
-					{
-						id: "a1",
-						role: "assistant",
-						parts: [{ type: "text", text: "Saved locally" }],
-					},
-				]);
+				const { created } = await store.saveMessages(
+					"sample",
+					[
+						{
+							id: "u1",
+							role: "user",
+							parts: [{ type: "text", text: "Hello storage" }],
+						},
+						{
+							id: "a1",
+							role: "assistant",
+							parts: [{ type: "text", text: "Saved locally" }],
+						},
+					],
+					null,
+				);
 				if (created) return `Persistence: ${await requestPersistentStorage()}`;
 			},
 		},
@@ -126,7 +130,7 @@ function StorageHarness() {
 		{
 			label: "Export",
 			act: async ({ store }) => {
-				const result = await exportChats(store);
+				const result = await exportChats(store, null);
 				setExported(result.json);
 				return `Exported ${result.chatCount}`;
 			},
@@ -143,7 +147,7 @@ function StorageHarness() {
 		{
 			label: "Import",
 			act: async ({ store }) => {
-				const { imported } = await importChats(store, exported);
+				const { imported } = await importChats(store, exported, null);
 				return `Imported ${imported}`;
 			},
 		},

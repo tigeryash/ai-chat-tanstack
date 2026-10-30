@@ -4,9 +4,11 @@ import {
 	TEST_CATALOG,
 	testCatalogModel,
 } from "../../src/lib/models/test-catalog";
+import { E2E_USER_COOKIE } from "./accounts";
 
 // Stands in for Convex and its Better Auth endpoints during e2e runs, so tests never touch a real
-// deployment and need no secrets. Every visitor is signed out. Run by playwright.config.ts.
+// deployment and need no secrets. Visitors are signed out unless a test signs one in as a test user
+// (see the `e2e-user` cookie below). Run by playwright.config.ts.
 // The model catalog's public queries answer from the seeded catalog in src/lib/models/test-catalog.ts.
 
 const port = Number(process.env.CONVEX_STUB_PORT ?? 4175);
@@ -24,6 +26,42 @@ const QUERIES: Record<string, (args: Record<string, unknown>) => unknown> = {
 	"models:list": () => TEST_CATALOG,
 	"models:get": (args) => testCatalogModel(String(args.gatewayId)),
 };
+
+/** The signed-in test user's ID from the `e2e-user` cookie, if any. */
+function e2eUserOf(request: IncomingMessage): string | undefined {
+	for (const pair of (request.headers.cookie ?? "").split(";")) {
+		const [name, value] = pair.trim().split("=");
+		if (name === E2E_USER_COOKIE && value && /^[\w-]{1,64}$/.test(value)) {
+			return value;
+		}
+	}
+	return undefined;
+}
+
+/** What Better Auth's `get-session` returns for a signed-in user. */
+function sessionFor(userId: string) {
+	const now = new Date().toISOString();
+	const expiresAt = new Date(Date.now() + 86_400_000).toISOString();
+	return {
+		session: {
+			id: `session-${userId}`,
+			userId,
+			token: `token-${userId}`,
+			expiresAt,
+			createdAt: now,
+			updatedAt: now,
+		},
+		user: {
+			id: userId,
+			name: userId,
+			email: `${userId}@example.com`,
+			emailVerified: true,
+			image: null,
+			createdAt: now,
+			updatedAt: now,
+		},
+	};
+}
 
 async function readJson(request: IncomingMessage): Promise<unknown> {
 	let body = "";
@@ -75,7 +113,24 @@ const server = createServer((request, response) => {
 		return;
 	}
 
-	// Better Auth: `/api/auth/get-session` and `/api/auth/convex/token` answer `null` when signed out.
+	// Better Auth. A test signs in by setting the `e2e-user` cookie (e2e/support/accounts.ts); the app's
+	// `/api/auth/*` proxy passes it here. Signed in, `/api/auth/get-session` answers with that user and
+	// sign-out clears the cookie. Convex itself stays signed out: `/api/auth/convex/token` and anything
+	// else answer `null`.
+	if (path === "/api/auth/get-session") {
+		const userId = e2eUserOf(request);
+		response.writeHead(200, { "content-type": "application/json" });
+		response.end(JSON.stringify(userId ? sessionFor(userId) : null));
+		return;
+	}
+	if (path === "/api/auth/sign-out") {
+		response.writeHead(200, {
+			"content-type": "application/json",
+			"set-cookie": `${E2E_USER_COOKIE}=; Path=/; Max-Age=0`,
+		});
+		response.end(JSON.stringify({ success: true }));
+		return;
+	}
 	if (path.startsWith("/api/auth/")) {
 		response.writeHead(200, { "content-type": "application/json" });
 		response.end("null");

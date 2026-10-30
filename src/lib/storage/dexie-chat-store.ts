@@ -12,6 +12,7 @@ import {
 	CHAT_FORMAT_VERSION,
 	chatIdSchema,
 	normalizeTitle,
+	ownerIdSchema,
 	upgradeChat,
 	validateMessages,
 } from "./format";
@@ -27,6 +28,15 @@ function checkChatId(chatId: string): void {
 	}
 }
 
+function checkOwnerId(ownerId: string | null): void {
+	if (!ownerIdSchema.safeParse(ownerId).success) {
+		throw new ChatStoreError(
+			"invalid-chat",
+			"An owner ID is empty or too long.",
+		);
+	}
+}
+
 function toSummary(row: ChatRow): ChatSummary {
 	return {
 		id: row.id,
@@ -35,6 +45,7 @@ function toSummary(row: ChatRow): ChatSummary {
 		updatedAt: row.updatedAt,
 		messageCount: row.messageCount,
 		pinned: row.pinned ?? false,
+		ownerId: row.ownerId ?? null,
 	};
 }
 
@@ -100,8 +111,9 @@ export function createDexieChatStore({
 			return raw && upgradeChat(raw);
 		},
 
-		async saveMessages(chatId, messages) {
+		async saveMessages(chatId, messages, ownerId) {
 			checkChatId(chatId);
+			checkOwnerId(ownerId);
 			const valid = await validateMessages(messages, chatId);
 			return db.transaction("rw", db.chats, db.messages, async () => {
 				const existing = await db.chats.get(chatId);
@@ -120,6 +132,7 @@ export function createDexieChatStore({
 						id: chatId,
 						title: existing?.title ?? "",
 						...(existing?.pinned && { pinned: true }),
+						ownerId: existing ? (existing.ownerId ?? null) : ownerId,
 						createdAt: existing?.createdAt ?? timestamp,
 						updatedAt: timestamp,
 						messageCount: valid.length,
@@ -137,6 +150,14 @@ export function createDexieChatStore({
 
 		async setPinned(chatId, pinned) {
 			await updateRow(db, chatId, { pinned });
+		},
+
+		async setOwner(chatIds, ownerId) {
+			checkOwnerId(ownerId);
+			await db.chats
+				.where("id")
+				.anyOf([...chatIds])
+				.modify({ ownerId });
 		},
 
 		async deleteChat(chatId) {
@@ -164,6 +185,7 @@ export function createDexieChatStore({
 							updatedAt: chat.updatedAt,
 							messageCount: chat.messages.length,
 							...(chat.pinned && { pinned: true }),
+							ownerId: chat.ownerId,
 							formatVersion: CHAT_FORMAT_VERSION,
 						},
 						chat.messages,

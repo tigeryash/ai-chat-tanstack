@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ChatStoreError } from "./errors";
 import v0Chat from "./fixtures/chat-v0.json";
+import v1Chat from "./fixtures/chat-v1.json";
 import { CHAT_FORMAT_VERSION, MAX_TITLE_LENGTH, upgradeChat } from "./format";
 
 async function rejection(promise: Promise<unknown>): Promise<ChatStoreError> {
@@ -20,6 +21,7 @@ const currentChat = {
 	title: "Hello",
 	createdAt: 1,
 	updatedAt: 2,
+	ownerId: "user-a",
 	messages: [{ id: "m1", role: "user", parts: [{ type: "text", text: "hi" }] }],
 };
 
@@ -30,6 +32,7 @@ describe("upgradeChat", () => {
 			title: "hi",
 			createdAt: 1792730874429,
 			updatedAt: 1792730931000,
+			ownerId: null,
 			messages: [
 				{
 					id: "m1",
@@ -98,6 +101,21 @@ describe("upgradeChat", () => {
 					parts: [{ type: "text", text: "thanks", state: "done" }],
 				},
 			],
+		});
+	});
+
+	it("loads a v1 chat (before owners) as a no-account chat", async () => {
+		const { formatVersion: _, ...chat } = v1Chat;
+		expect(await upgradeChat(v1Chat)).toEqual({ ...chat, ownerId: null });
+	});
+
+	it("needs an owner on a current chat: an account's user ID or null", async () => {
+		const { ownerId: _, ...ownerless } = currentChat;
+		for (const raw of [ownerless, { ...currentChat, ownerId: "" }]) {
+			expect((await rejection(upgradeChat(raw))).code).toBe("invalid-chat");
+		}
+		expect(await upgradeChat({ ...currentChat, ownerId: null })).toMatchObject({
+			ownerId: null,
 		});
 	});
 

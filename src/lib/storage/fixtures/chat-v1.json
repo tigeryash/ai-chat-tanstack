@@ -1,0 +1,30 @@
+{
+	"formatVersion": 1,
+	"id": "chat-v1",
+	"title": "Plan a trip",
+	"createdAt": 1792900000000,
+	"updatedAt": 1792900042000,
+	"pinned": true,
+	"messages": [
+		{
+			"id": "m1",
+			"role": "user",
+			"parts": [
+				{ "type": "text", "text": "Plan a trip to Lisbon", "state": "done" }
+			]
+		},
+		{
+			"id": "m2",
+			"role": "assistant",
+			"parts": [
+				{ "type": "step-start" },
+				{
+					"type": "reasoning",
+					"text": "Three days is a good length.",
+					"state": "done"
+				},
+				{ "type": "text", "text": "Here's a three-day plan.", "state": "done" }
+			]
+		}
+	]
+}

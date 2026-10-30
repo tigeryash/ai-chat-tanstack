@@ -50,7 +50,9 @@ Playwright runs in 4 shards with 2 workers each (4 workers per runner made timin
   access checks in `authHelpers.ts`, `_generated/` is generated. Query keys go through `@convex-dev/react-query`.
 - **Local chats** (roadmap 1.3, `src/lib/storage/`): a `ChatStore` interface over Dexie (IndexedDB database
   `highelo-chats`). Every stored chat has a `formatVersion`; `format.ts` lists the migrations and how to add one.
-  Export/import are versioned JSON in `export.ts`.
+  Export/import are versioned JSON in `export.ts`. Each chat has an `ownerId` (roadmap 1.9): the Better Auth user ID
+  that made it, or null when made signed out. What a viewer may see is `ownership.ts`; the viewer comes from
+  `src/lib/account.ts` (Better Auth's session, not Convex auth). Never list or open chats without that filter.
 - **Better Auth 1.6.x** via `@convex-dev/better-auth` (server config `convex/auth.ts`, client
   `src/lib/auth-client.ts`, SSR helpers `src/lib/auth-server.ts`). Email/password plus Google, GitHub, Discord.
 - **AI SDK 7, chat in the browser** (roadmap 1.2, `src/lib/chat/`). Chat routes (`/new`, `/$chatId`, both
@@ -138,8 +140,9 @@ Playwright runs in 4 shards with 2 workers each (4 workers per runner made timin
   Better Auth component, and `signIn(t, name)` seeds a Better Auth user and session and returns a client acting as
   them. Files with two dots (`*.test.ts`, `test.helpers.ts`) are never deployed by Convex.
 - **Playwright** (`e2e/`, config `playwright.config.ts`) builds the app with `VITE_E2E=true` and runs it on :4174
-  against `e2e/support/convex-stub.ts`, a local stand-in for Convex and Better Auth where everyone is signed out.
-  No secrets or network needed.
+  against `e2e/support/convex-stub.ts`, a local stand-in for Convex and Better Auth where everyone is signed out,
+  unless a test calls `signInAs` (`e2e/support/accounts.ts`) to get a Better Auth session as a test user (Convex
+  itself stays signed out). No secrets or network needed.
 - **Test pages** under `src/routes/e2e/` render components without a session (`/e2e/composer`). They exist in
   `bun run dev` and in `VITE_E2E` builds, and 404 in normal production builds. Add a page there when a test or a
   preview needs a component that normally sits behind sign-in.
