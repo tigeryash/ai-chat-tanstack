@@ -22,7 +22,8 @@ import { cn } from "@/lib/utils";
 // allow only ALLOWED_LINK_PREFIXES / ALLOWED_IMAGE_PREFIXES. Callers can't swap the plugins out.
 //
 // The markdown stack is most of a chat page's JavaScript, so it loads on first use (quality audit
-// P3). Until it arrives the text shows as plain text, the same fallback as for a parser crash.
+// P3). Until it arrives the text shows as plain text, the same fallback as for a parser crash, marked
+// `data-streamdown="loading"` so tests can wait for the real render.
 const HardenedStreamdown = lazy(() => import("./hardened-streamdown"));
 
 type LinkProps = ComponentProps<"a"> & ExtraProps;
@@ -109,7 +110,13 @@ export function SafeMarkdown({
 				plain
 			) : (
 				<MarkdownErrorBoundary text={text} fallback={plain}>
-					<Suspense fallback={plain}>
+					<Suspense
+						fallback={
+							<PlainText className={className} loading>
+								{text}
+							</PlainText>
+						}
+					>
 						<HardenedStreamdown
 							{...props}
 							className={className}
@@ -128,13 +135,16 @@ export function SafeMarkdown({
 function PlainText({
 	children,
 	className,
+	loading = false,
 }: {
 	children: string;
 	className?: string;
+	/** Shown while the markdown renderer loads, rather than instead of it. */
+	loading?: boolean;
 }) {
 	return (
 		<div
-			data-streamdown="plain-text"
+			data-streamdown={loading ? "loading" : "plain-text"}
 			className={cn("whitespace-pre-wrap wrap-anywhere", className)}
 		>
 			{children}
