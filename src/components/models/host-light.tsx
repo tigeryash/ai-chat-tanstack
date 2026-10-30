@@ -15,9 +15,9 @@ export const LIGHT_LABELS: Record<LightState, string> = {
 };
 
 const LIGHT_CLASSES: Record<LightState, string> = {
-	up: "bg-emerald-500",
-	slow: "bg-amber-500",
-	down: "bg-red-500",
+	up: "bg-success",
+	slow: "bg-warning",
+	down: "bg-destructive",
 	unknown: "border border-muted-foreground/60 bg-transparent",
 	"not-connected": "bg-muted-foreground/40",
 };

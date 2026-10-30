@@ -46,7 +46,7 @@ function ReplyLine({ summary }: { summary: ReplySummary }) {
 					<button
 						type="button"
 						aria-label={`${text}. ${summary.details}`}
-						className="ml-2 rounded text-muted-foreground text-xs outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+						className="ml-2 rounded font-mono text-muted-foreground text-xs outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
 					/>
 				}
 			>

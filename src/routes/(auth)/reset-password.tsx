@@ -79,7 +79,7 @@ function ResetPasswordForm({
 			<SubmitButton pending={pending}>
 				{pending ? "Saving…" : "Reset password"}
 			</SubmitButton>
-			<p className="text-white/80">
+			<p className="text-muted-foreground">
 				<Link to="/login" className={LINK_CLASS}>
 					Back to sign in
 				</Link>

@@ -19,8 +19,8 @@ const AuthButton = ({
 			type="button"
 			onClick={onClick}
 			className={cn(
-				"py-3 px-4 rounded-xl border border-white/70 flex items-center gap-2 hover:bg-white w-full justify-center",
-				" hover:text-black transition-all duration-300 hover:scale-105 hover:shadow-lg hover:border-white text-lg overflow-hidden cursor-pointer",
+				"py-2.5 px-4 rounded-lg border border-input bg-background/40 flex items-center gap-2 hover:bg-accent w-full justify-center",
+				" hover:text-accent-foreground transition-all duration-300 hover:scale-[1.02] text-base overflow-hidden cursor-pointer focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
 				className,
 			)}
 		>

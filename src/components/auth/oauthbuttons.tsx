@@ -39,9 +39,11 @@ const OAuthButtons = () => {
 	return (
 		<>
 			<div className="relative w-full flex items-center justify-center px-4 space-x-1">
-				<div className="bg-white/70 h-[.5px] w-[85%]  " />
-				<div className="text-nowrap text-white/90">or sign in with</div>
-				<div className="bg-white/70 h-[.5px] w-[85%] " />
+				<div className="bg-border h-px w-[85%]" />
+				<div className="text-nowrap text-sm text-muted-foreground">
+					or sign in with
+				</div>
+				<div className="bg-border h-px w-[85%]" />
 			</div>
 			<div
 				ref={containerRef}

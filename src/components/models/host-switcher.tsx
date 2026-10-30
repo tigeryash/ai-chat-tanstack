@@ -37,7 +37,9 @@ export function HostSwitcher({
 	const connected = hosts.filter((option) => option.connected);
 	const text = viaText(choice, hosts);
 	if (connected.length < 2) {
-		return <span className="text-muted-foreground text-xs">{text}</span>;
+		return (
+			<span className="font-mono text-muted-foreground text-xs">{text}</span>
+		);
 	}
 	const value = choice.autoHost !== false ? AUTO : choice.provider;
 	const select = (next: unknown) => {
@@ -59,7 +61,7 @@ export function HostSwitcher({
 		<DropdownMenu>
 			<DropdownMenuTrigger
 				aria-label={`Host: ${text}${value === AUTO ? " (Auto)" : ""}`}
-				className="flex items-center gap-1 rounded px-1.5 py-0.5 text-muted-foreground text-xs hover:bg-muted"
+				className="flex items-center gap-1 rounded-md px-1.5 py-0.5 font-mono text-muted-foreground text-xs outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50"
 			>
 				{text}
 				{value === AUTO && " (Auto)"}

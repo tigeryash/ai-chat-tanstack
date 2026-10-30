@@ -51,7 +51,7 @@ function ForgotPasswordForm({ onSent }: { onSent: () => void }) {
 
 	return (
 		<AuthForm errors={errors} onSubmit={onSubmit}>
-			<p className="w-full text-white/80 form-root">
+			<p className="w-full text-muted-foreground form-root">
 				Enter the email you signed up with and we'll send you a link to choose a
 				new password.
 			</p>
@@ -66,7 +66,7 @@ function ForgotPasswordForm({ onSent }: { onSent: () => void }) {
 			<SubmitButton pending={pending}>
 				{pending ? "Sending…" : "Send reset link"}
 			</SubmitButton>
-			<p className="text-white/80">
+			<p className="text-muted-foreground">
 				Remembered it?{" "}
 				<Link to="/login" className={LINK_CLASS}>
 					Back to sign in
@@ -84,7 +84,7 @@ function LinkSent() {
 				If an account exists for that address, we sent it a link to reset your
 				password. The link works once.
 			</p>
-			<p className="text-base text-white/70">
+			<p className="text-base text-muted-foreground">
 				Nothing after a few minutes? Check your spam folder, or{" "}
 				<Link to="/login" className={LINK_CLASS}>
 					go back to sign in

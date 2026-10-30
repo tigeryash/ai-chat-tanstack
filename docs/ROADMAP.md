@@ -502,6 +502,13 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   *Status:* Picked A (minimal, neutral, dark default) with B's rounded pane cards
   ([#32](https://github.com/tigeryash/ai-chat-tanstack/pull/32)). Build it on tokens so 3.11 can make all of it
   user-adjustable.
+- [x] **3.0b Apply direction A.** Every color, font, text size, radius and spacing step comes from tokens in
+  `src/styles.css` (dark by default, light kept, following the system until 3.11), including the composer's
+  colors. Restyle the shell, sidebar, chat screen, model picker, Settings and the auth form card; chat panes
+  become B's rounded pane cards, ready for 3.1. Done when no component or route has a literal color (a unit test
+  checks), contrast is AA in both themes, and Playwright passes with refreshed baselines.
+  *Status:* done in [#45](https://github.com/tigeryash/ai-chat-tanstack/pull/45) (2026-10-30); the `/e2e/design`
+  prototypes were removed, their screenshots stay in design-directions.md.
 - [ ] **3.1 Pane layout.** 1–4 resizable panes (`react-resizable-panels`), add/remove/reorder with `LayoutGroup`.
 - [ ] **3.2 Synced composers + Stop** (decisions 16 and 18). Per-pane composer with a "Synced" toggle and mirrored
   input, the "diverged" badge, and the Stop behavior.

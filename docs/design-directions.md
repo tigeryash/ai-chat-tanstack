@@ -5,11 +5,11 @@ the same screen from fixture data: the sidebar with chats, two panes side by sid
 "via OpenRouter"), a reply still streaming its reasoning next to a finished one, and the real composer with its
 animations.
 
-**See them live:** `bun run dev`, then open `/e2e/design/minimal`, `/e2e/design/brand` or
-`/e2e/design/editorial` (`/e2e/design` lists them). The A/B/C buttons switch directions, the sun/moon button
-switches mode, and `?theme=light|dark` picks one directly. The pages only exist in dev and `VITE_E2E` builds.
+**The prototype pages are gone** (roadmap 3.0b): A now lives in the real app's tokens (`src/styles.css`), so
+the screenshots below are the reference. To see them again, check out
+[#32](https://github.com/tigeryash/ai-chat-tanstack/pull/32)'s branch and open `/e2e/design` in `bun run dev`.
 
-**How they're built:** `src/routes/e2e/design/`. One shared shell (`-shared/design-shell.tsx`) uses the real
+**How they were built:** `src/routes/e2e/design/`. One shared shell (`-shared/design-shell.tsx`) uses the real
 sidebar primitives, message list, reasoning trace and composer; each direction is only a stylesheet
 (`-shared/<id>.css`) that overrides the shadcn tokens under `[data-design="<id>"]`. No production component or
 global token changed. The composer hard-codes black text, so `-shared/base.css` restyles it from outside; the

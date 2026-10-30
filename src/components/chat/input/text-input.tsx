@@ -50,7 +50,7 @@ export const TextInput = ({ input, setInput, onKeyDown }: TextInputProps) => {
 					placeholder="Ask anything"
 					className="resize-none overflow-y-auto 
                     rounded px-7 py-1 w-full ring-0  focus:outline-none focus:ring-0 bg-transparent
-                  text-black placeholder-black/60 max-h-52"
+                  text-composer-foreground placeholder-muted-foreground max-h-52"
 					onKeyDown={onKeyDown}
 				/>
 			</m.div>

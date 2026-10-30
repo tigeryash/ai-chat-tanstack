@@ -24,7 +24,7 @@ function DashboardLayout() {
 				<header className="flex h-12 shrink-0 items-center px-2">
 					<SidebarTrigger aria-label="Toggle sidebar" />
 				</header>
-				<div className="min-h-0 flex-1">
+				<div className="min-h-0 flex-1 px-3 pb-3">
 					<Outlet />
 				</div>
 			</SidebarInset>

@@ -16,7 +16,7 @@ export function CorsNotice({
 }) {
 	if (cors === "this-site") {
 		return (
-			<p className="flex items-center gap-1.5 text-emerald-700 text-sm dark:text-emerald-400">
+			<p className="flex items-center gap-1.5 text-sm text-success">
 				<CheckIcon aria-hidden="true" className="size-4" />
 				Only this site can use this server.
 			</p>
@@ -35,9 +35,9 @@ export function CorsNotice({
 		<div
 			role="alert"
 			aria-label="Every website can use this server"
-			className="grid gap-2 rounded-lg border border-amber-500/50 bg-amber-500/5 p-3 text-sm"
+			className="grid gap-2 rounded-lg border border-warning/50 bg-warning/5 p-3 text-sm"
 		>
-			<p className="flex items-center gap-1.5 font-medium text-amber-800 dark:text-amber-300">
+			<p className="flex items-center gap-1.5 font-medium text-warning">
 				<TriangleAlertIcon aria-hidden="true" className="size-4" />
 				Every website you visit can use this server
 			</p>

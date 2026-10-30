@@ -136,7 +136,7 @@ function SavedKeyStatus({ saved }: { saved: KeySummary }) {
 			{saved.mode === "remember" ? (
 				"Remembered on this device"
 			) : (
-				<span className="font-medium text-amber-700 dark:text-amber-400">
+				<span className="font-medium text-warning">
 					This session only: gone when you reload or close this tab
 				</span>
 			)}
@@ -167,7 +167,7 @@ function TestResultMessage({ result }: { result: TestOutcome }) {
 		);
 	}
 	return (
-		<span className="text-emerald-700 dark:text-emerald-400">
+		<span className="text-success">
 			Key works
 			{result.modelCount !== undefined &&
 				` · ${result.modelCount} models available`}

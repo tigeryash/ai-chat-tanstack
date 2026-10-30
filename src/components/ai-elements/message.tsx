@@ -325,7 +325,7 @@ export const MessageResponse = memo(
 	({ className, ...props }: MessageResponseProps) => (
 		<SafeMarkdown
 			className={cn(
-				"size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
+				"size-full font-reading [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
 				className,
 			)}
 			{...props}
