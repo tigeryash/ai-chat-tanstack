@@ -88,31 +88,44 @@ function fadedRevealTargets(page: Page) {
 	}, REVEAL_TARGETS);
 }
 
-// Waits until 10 frames in a row each took under 50 ms. On a busy CI runner the login page can stall
-// for 300 ms while the WebGL scene starts, long enough to hide a whole hover transition between two
-// samples (PR #43: 287.5 → 301.77 → 301.875).
-async function waitForSteadyFrames(page: Page) {
-	await page.evaluate(
-		() =>
-			new Promise<void>((resolve) => {
-				let steady = 0;
-				let last = performance.now();
-				const tick = (now: number) => {
-					steady = now - last < 50 ? steady + 1 : 0;
-					last = now;
-					if (steady >= 10) resolve();
-					else requestAnimationFrame(tick);
-				};
-				requestAnimationFrame(tick);
-			}),
+// Hovers a button and reports the transitions that ran (from `transitionrun`, which fires even when
+// a busy CI runner renders the whole transition in one slow frame) and the longest computed
+// duration. Sampling widths per frame failed there: the WebGL scene keeps frames over 50 ms.
+async function hoverTransitions(page: Page, button: Locator) {
+	const box = await button.boundingBox();
+	if (!box) throw new Error("button has no box");
+	await button.evaluate((element) => {
+		const ran: string[] = [];
+		(window as unknown as { hoverTransitions: string[] }).hoverTransitions =
+			ran;
+		element.addEventListener("transitionrun", (event) =>
+			ran.push((event as TransitionEvent).propertyName),
+		);
+	});
+	await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+	await expect
+		.poll(() =>
+			page.evaluate(
+				() =>
+					(window as unknown as { hoverTransitions: string[] })
+						.hoverTransitions,
+			),
+		)
+		.toContain("scale");
+	const durationMs = await button.evaluate((element) =>
+		Math.max(
+			...getComputedStyle(element)
+				.transitionDuration.split(",")
+				.map((value) => Number.parseFloat(value) * 1000),
+		),
 	);
+	return durationMs;
 }
 
 // Moves the mouse onto a button and records its rendered width (hover scale included) on every
 // animation frame for about 0.75 s. Sampling starts before the mouse arrives, so the first sample is
 // the resting width.
 async function buttonWidthsWhileHovering(page: Page, button: Locator) {
-	await waitForSteadyFrames(page);
 	const box = await button.boundingBox();
 	if (!box) throw new Error("button has no box");
 	await button.evaluate((element) => {
@@ -345,12 +358,13 @@ test.describe("with full motion", () => {
 		await page.goto("/login");
 		await expect(page.locator("canvas")).toBeVisible();
 
-		const widths = await buttonWidthsWhileHovering(
+		const durationMs = await hoverTransitions(
 			page,
 			page.getByRole("button", { name: "Login", exact: true }),
 		);
 
-		expect(inBetween(widths).length).toBeGreaterThan(0);
+		// Reduced motion turns this into 0.01 ms (src/styles.css).
+		expect(durationMs).toBeGreaterThanOrEqual(100);
 	});
 
 	test("the composer's tooltip fades in", async ({ page }) => {

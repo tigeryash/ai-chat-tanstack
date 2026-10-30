@@ -81,7 +81,7 @@ Promises the design already makes. Changing one of these is a product decision, 
 
 ## Open items for the policy
 
-- Convex region and backup retention (affects what we can promise about deletion).
+- Convex region (check the prod deployment in the dashboard). Backups: none automatic on our plan; a manual one is kept 7 days.
 - Account deletion and export flow (roadmap 7.2).
 - Analytics and Sentry providers and their retention settings.
-- Minimum age, contact email, legal name and governing law: placeholders in the 7.1 drafts.
+- Operator name and contact email: placeholders in the 7.1 drafts. Decided 2026-10-30: 18+, Ontario law, deletion within 30 days, changes announced in the app's changelog.

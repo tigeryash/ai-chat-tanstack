@@ -5,7 +5,7 @@
 
 Last updated: 2026-10-30
 
-These terms are an agreement between you and [TODO: legal name of the person or company running the app]
+These terms are an agreement between you and [TODO: your full name, or a registered business name], Ontario, Canada
 ("we", "us") about your use of High Elo LLMs at www.highelollms.com ("the app"). By using the app you agree to
 them. If you don't agree, don't use the app. Our Privacy Policy (at /privacy) explains how we handle your data.
 
@@ -19,8 +19,8 @@ The app is a personal project and is provided free of charge. Features may chang
 
 ## Who can use it
 
-You must be at least [TODO: minimum age, e.g. 13, or 16 in the EU/UK] to create an account, and old enough to
-accept the terms of each AI provider you connect. If you use the app for an organization, you confirm you're
+You must be at least 18 to use the app, and meet the requirements of each AI provider you connect (most
+also require 18). If you use the app for an organization, you confirm you're
 allowed to accept these terms for it.
 
 ## Your account
@@ -91,7 +91,8 @@ Privacy Policy. You're responsible for its spend; we recommend a dedicated key w
 ## Ending your use
 
 You can stop using the app at any time and delete your local data by clearing your browser's site data.
-[TODO: account deletion steps, once roadmap 7.2 ships; until then, contact us.]
+To delete your account, email us at the address below (self-serve deletion is coming). We delete it as soon as
+we get your request, and always within 30 days.
 
 We may suspend or close an account that breaks these terms, or stop offering the app, with or without notice.
 Data stored only in your browser stays with you.
@@ -106,24 +107,26 @@ secure or free of errors, or that your data won't be lost.
 
 To the extent the law allows, we're not liable for any indirect, incidental, special, consequential or punitive
 damages, or for lost data, profits or provider charges, arising from your use of the app. Our total liability for
-any claim is limited to [TODO: amount, e.g. the greater of USD 50 or what you paid us in the past 12 months
-(currently nothing)]. Some places don't allow these limits, so they may not all apply to you.
+any claim is limited to what you paid us in the 12 months before the claim. The app is free, so that's
+nothing. Where the law doesn't allow that limit, it's CAD $100. Some places don't allow these limits, so they may not all apply to you.
 
 ## Indemnity
 
-[TODO: decide whether to include an indemnity clause (you cover our costs if your misuse leads to claims
-against us).]
+If someone makes a claim against us because of how you used the app (for example breaking the law, a
+provider's terms or these terms, infringing someone's rights, or what an agent did on your behalf), you agree to
+cover our reasonable costs of dealing with it, including legal fees, to the extent the law allows.
 
 ## Governing law
 
-These terms are governed by the laws of [TODO: jurisdiction]. Disputes go to the courts of [TODO: venue], unless
-the law where you live says otherwise.
+These terms are governed by the laws of the Province of Ontario and the federal laws of Canada that apply there.
+Disputes go to the courts of Ontario, unless the law where you live gives you the right to bring them where you
+live.
 
 ## Changes
 
 We may update these terms. We'll change the "Last updated" date and, for significant changes, tell signed-in
-users [TODO: how] before they take effect. Using the app after that means you accept the new terms.
+users through the app's changelog and a notice in the app before they take effect. Using the app after that means you accept the new terms.
 
 ## Contact
 
-[TODO: contact email]
+[TODO: contact email, e.g. privacy@highelollms.com]

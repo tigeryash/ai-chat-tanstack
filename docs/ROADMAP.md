@@ -106,9 +106,10 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   chat, sign out (it disappears, the signed-out one stays). Sign in as the second: answer the question, and check
   the first account's chat isn't listed and its URL shows "not found". Sign back in as the first: its chat is
   back. Then try "Sign out and remove my chats from this device". e2e uses stubbed sessions, not real sign-ins.
-- [ ] Fill the `[TODO: …]` placeholders in `docs/legal/privacy-policy.md` and `docs/legal/terms.md` (legal name,
-  contact email, minimum age, jurisdiction, Convex region and backup retention, Vercel log retention), and have a
-  lawyer review both before the first public sign-up. Then add `https://www.highelollms.com/privacy` and `/terms`
+- [ ] Fill the last `[TODO: …]` placeholders in `docs/legal/privacy-policy.md` and `docs/legal/terms.md`: your
+  name (or a registered business name), a contact email (free forwarding like Cloudflare Email Routing works), and
+  the prod Convex deployment's region (Convex dashboard → deployment settings). Then have a lawyer review both
+  before the first public sign-up; the two `[TODO: lawyer: …]` notes are questions for them. Then add `https://www.highelollms.com/privacy` and `/terms`
   to Google's OAuth consent screen.
 - [ ] Vercel Hobby is fine while this is a portfolio piece; move to Pro before charging money. *Still on Hobby
   (2026-10-23).*

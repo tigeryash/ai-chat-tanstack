@@ -5,7 +5,7 @@
 
 Last updated: 2026-10-30
 
-High Elo LLMs ("the app", "we", "us") is run by [TODO: legal name of the person or company running the app].
+High Elo LLMs ("the app", "we", "us") is run by [TODO: your full name, or a registered business name], Ontario, Canada.
 This policy explains what data the app handles, where it lives, who receives it, how long it's kept, and how
 you can export or delete it.
 
@@ -60,8 +60,9 @@ Our backend is [Convex](https://www.convex.dev). Today it holds account data onl
 
 Our backend also holds a public model catalog (model names, prices, scores), which is not about you.
 
-Convex stores this data in [TODO: Convex deployment region]. Convex keeps backups for [TODO: Convex backup
-retention], so deleted data may remain in backups until they expire.
+Convex stores this data in [TODO: the production deployment's region, shown in the Convex dashboard; the
+default is AWS us-east-1, Virginia, United States]. We don't keep automatic backups. If we make one by hand (for
+example before a risky change), Convex keeps it for 7 days, so deleted data can remain in it until then.
 
 **Planned features that will change this section** (this policy will be updated before each one ships):
 syncing chats across devices, sharing a chat by link, group chats, and durable agent runs.
@@ -83,14 +84,17 @@ syncing chats across devices, sharing a chat by link, group chats, and durable a
   machine (localhost). Nothing is sent there until you add the server in Settings.
 - **Convex** stores the server data listed above.
 - **Vercel** hosts the app. It receives your requests to our pages (IP address, user agent, the page address)
-  and keeps request logs for [TODO: Vercel log retention on our plan]. No keys or prompts pass through it.
+  and keeps request logs for 1 hour. No keys or prompts pass through it.
 - **Brevo** sends our verification and password-reset emails, so it receives your email address and the
   message.
 - **Google, GitHub and Discord**, if you sign in with them. They take part in the sign-in and share your name,
   email and avatar with us.
-- **Analytics and error reporting** (planned): [TODO: analytics provider] for content-free usage events and
-  [TODO: error reporting provider, e.g. Sentry] for error reports scrubbed of keys and content. This section
-  will name them and their retention before they're turned on.
+- **Vercel Web Analytics and Speed Insights** (being added): page views and page-speed measurements. They use
+  no cookies, see only the page's route (never chat IDs, codes or tokens in the address), never include
+  content, and keep data for 1 month. You can turn them off in Settings, and we honor Global Privacy Control
+  and Do Not Track.
+- **Error reporting** (planned, likely Sentry): error reports scrubbed of keys and content. This section will
+  give its retention before it's turned on.
 
 We don't sell your data, and we don't share it for advertising.
 
@@ -102,7 +106,7 @@ rule, the blocked origin and the page path, in Vercel's logs, and drop the rest.
 ## Cookies and local storage
 
 We use cookies only to keep you signed in (a session cookie set by our sign-in system, Better Auth). We don't use
-advertising or tracking cookies. Planned analytics will be cookieless.
+advertising or tracking cookies. Analytics are cookieless.
 
 The app also uses your browser's local storage (IndexedDB, localStorage, sessionStorage) for the data in "What
 stays in your browser". It stays on your device.
@@ -115,8 +119,8 @@ message content.
 - **Chats:** delete them in the app, or export them as a file (JSON) and import them elsewhere. Exports never
   include API keys. Clearing your browser's site data for this app deletes everything stored in the browser.
 - **API keys:** delete them in Settings → API keys. To revoke a key entirely, do it on the provider's site.
-- **Your account:** [TODO: self-serve account deletion and export are planned (roadmap 7.2). Until then: email
-  [TODO: contact email] and we'll delete your account and its server data within [TODO: number] days.]
+- **Your account:** self-serve account deletion and export are planned. Until then, email us at the address below. We
+  delete your account and its server data as soon as we get your request, and always within 30 days.
 
 ## Durable agent runs (planned, opt-in)
 
@@ -127,27 +131,28 @@ limit. This section will be expanded before the feature ships.
 
 ## Children
 
-The app isn't meant for children. You must be at least [TODO: minimum age, e.g. 13, or 16 in the EU/UK] to create
-an account, and old enough to agree to the terms of the AI providers you connect (several require 18).
+The app isn't meant for children. You must be at least 18 to use it. That's also
+the minimum age for most AI providers it connects to, such as OpenRouter, Anthropic and Google.
 
 ## International transfers
 
-We and our service providers (Convex, Vercel, Brevo) may process data in [TODO: countries, e.g. the United
-States]. AI providers you connect process your prompts wherever they operate, under their own terms.
-[TODO: transfer mechanism if serving EU/UK users, e.g. the providers' Standard Contractual Clauses.]
+We're based in Ontario, Canada. Our service providers (Convex, Vercel, Brevo) may process data in the United
+States and other countries where they operate, so your data may be handled under those countries' laws. AI
+providers you connect process your prompts wherever they operate, under their own terms. [TODO: lawyer: is
+anything more needed for EU/UK visitors, e.g. relying on the providers' Standard Contractual Clauses?]
 
 ## Your rights
 
 Depending on where you live, you may have the right to access, correct, export or delete your data, and to object
 to or limit how it's used. Most of your data is on your own device, where you control it directly. For data on
-our servers, contact us below. [TODO: legal basis for processing (GDPR) and any state-specific notices, e.g.
-CCPA, if needed.]
+our servers, contact us below. [TODO: lawyer: confirm which privacy laws apply (Canada's PIPEDA, and
+GDPR or US state laws for visitors from there) and whether they need extra wording here.]
 
 ## Changes
 
 We'll update this policy as features change, and change the "Last updated" date at the top. For significant
-changes we'll tell signed-in users [TODO: how, e.g. by email or an in-app notice] before they take effect.
+changes we'll also post in the app's changelog and show a notice in the app before they take effect.
 
 ## Contact
 
-[TODO: contact email for privacy questions]
+Questions or requests about your data: [TODO: contact email, e.g. privacy@highelollms.com]
