@@ -6,8 +6,8 @@ import {
 	type NotificationAccess,
 	requestNotificationAccess,
 } from "@/lib/background-status/notifications";
-import { chatStore } from "@/lib/chat/chat-sessions";
 import { REDUCED_MOTION } from "@/lib/reduced-motion";
+import { chatStore } from "@/lib/storage/app-store";
 
 /**
  * Tab status and reply notifications while the tab is hidden (roadmap 3.10), plus our one-time offer

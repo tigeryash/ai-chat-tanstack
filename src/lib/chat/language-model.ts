@@ -1,6 +1,3 @@
-import { createAnthropic } from "@ai-sdk/anthropic";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { createGateway, type LanguageModel } from "ai";
 import type { ProviderId } from "@/lib/keys";
 import { createThinkTagModel } from "@/lib/reasoning-middleware";
@@ -10,6 +7,8 @@ import { openRouterMetadataExtractor } from "./reply-host";
 // Builds the AI SDK model a chat streams from, in the browser (roadmap decision 3). Every base URL here
 // is one of the CSP's provider origins (src/lib/security/provider-origins.ts), and the key goes only
 // into that provider's own client, so it's only ever sent to that origin.
+// The provider SDKs load on first use, so pages that never chat don't download them (quality audit P1).
+// The gateway stays a static import: `ai` bundles it anyway as its default provider.
 
 type OpenAiCompatibleId = Exclude<
 	ProviderId,
@@ -36,17 +35,20 @@ export const OPENAI_COMPATIBLE_BASE_URLS: Record<OpenAiCompatibleId, string> = {
  * for a local server, which is called at `localBaseUrl` (a saved endpoint's URL, which
  * `checkBaseUrl` keeps to the CSP's localhost origins). `fetchImpl` is for tests.
  */
-export function createLanguageModel(
+export async function createLanguageModel(
 	{ provider, model }: ModelSelection,
 	key: string | null,
 	fetchImpl?: typeof fetch,
 	localBaseUrl?: string,
-): LanguageModel {
+): Promise<LanguageModel> {
 	const apiKey = key ?? undefined;
 	switch (provider) {
-		case LOCAL_PROVIDER:
+		case LOCAL_PROVIDER: {
 			if (!localBaseUrl)
 				throw new Error("A local model needs its endpoint's URL.");
+			const { createOpenAICompatible } = await import(
+				"@ai-sdk/openai-compatible"
+			);
 			// Local reasoning models (DeepSeek R1 distills, Qwen, GLM) put their thinking in <think> tags.
 			return createThinkTagModel(
 				createOpenAICompatible({
@@ -55,7 +57,9 @@ export function createLanguageModel(
 					fetch: fetchImpl,
 				})(model),
 			);
-		case "anthropic":
+		}
+		case "anthropic": {
+			const { createAnthropic } = await import("@ai-sdk/anthropic");
 			return createAnthropic({
 				apiKey,
 				// Anthropic refuses browser calls without it. The name warns against shipping your own key in a
@@ -63,12 +67,18 @@ export function createLanguageModel(
 				headers: { "anthropic-dangerous-direct-browser-access": "true" },
 				fetch: fetchImpl,
 			})(model);
-		case "google":
+		}
+		case "google": {
+			const { createGoogleGenerativeAI } = await import("@ai-sdk/google");
 			// Sends the key in the `x-goog-api-key` header, never the URL.
 			return createGoogleGenerativeAI({ apiKey, fetch: fetchImpl })(model);
+		}
 		case "vercel":
 			return createGateway({ apiKey, fetch: fetchImpl })(model);
-		case "openrouter":
+		case "openrouter": {
+			const { createOpenAICompatible } = await import(
+				"@ai-sdk/openai-compatible"
+			);
 			return createOpenAICompatible({
 				name: provider,
 				baseURL: OPENAI_COMPATIBLE_BASE_URLS.openrouter,
@@ -78,12 +88,17 @@ export function createLanguageModel(
 				// Records which upstream answered and the real cost (roadmap 2.2b).
 				metadataExtractor: openRouterMetadataExtractor,
 			})(model);
-		default:
+		}
+		default: {
+			const { createOpenAICompatible } = await import(
+				"@ai-sdk/openai-compatible"
+			);
 			return createOpenAICompatible({
 				name: provider,
 				baseURL: OPENAI_COMPATIBLE_BASE_URLS[provider],
 				apiKey,
 				fetch: fetchImpl,
 			})(model);
+		}
 	}
 }

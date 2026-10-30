@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/sidebar";
 import { authClient } from "@/lib/auth-client";
 import { removeAccountChats } from "@/lib/chat/chat-ownership";
-import { isOpenChatVisibleTo } from "@/lib/chat/chat-sessions";
+import { isOpenChatVisibleTo } from "@/lib/chat/open-chats";
 import { logError } from "@/lib/log";
 import { chatsOwnedBy } from "@/lib/storage/ownership";
 import { useChatList } from "./use-chat-list";

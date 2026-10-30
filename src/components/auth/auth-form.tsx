@@ -1,9 +1,8 @@
 import { Field } from "@base-ui/react/field";
 import { Form } from "@base-ui/react/form";
-import { useGSAP } from "@gsap/react";
-import gsap from "gsap";
 import { type RefObject, useEffect, useRef, useState } from "react";
 import { fieldErrors } from "@/lib/auth-schemas";
+import { useLazyGsap } from "@/lib/lazy-gsap";
 import { FULL_MOTION } from "@/lib/reduced-motion";
 import type { z } from "@/lib/zod";
 
@@ -11,28 +10,25 @@ import type { z } from "@/lib/zod";
 
 /** Fades the form's fields in on mount. With reduced motion it never starts (hard rule 3). */
 function useFormReveal(scope: RefObject<HTMLElement | null>) {
-	useGSAP(
-		() => {
-			gsap.matchMedia().add(FULL_MOTION, () => {
-				gsap.fromTo(
-					".form-root",
-					{
-						opacity: 0,
-						y: 50,
-					},
-					{
-						opacity: 1,
-						y: 0,
-						duration: 1.1,
-						stagger: 0.1,
-						ease: "power2.inOut",
-						delay: 0.1,
-					},
-				);
-			});
-		},
-		{ scope },
-	);
+	useLazyGsap(({ gsap }) => {
+		gsap.matchMedia().add(FULL_MOTION, () => {
+			gsap.fromTo(
+				".form-root",
+				{
+					opacity: 0,
+					y: 50,
+				},
+				{
+					opacity: 1,
+					y: 0,
+					duration: 1.1,
+					stagger: 0.1,
+					ease: "power2.inOut",
+					delay: 0.1,
+				},
+			);
+		});
+	}, scope);
 }
 
 interface AuthFormProps {

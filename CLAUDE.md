@@ -26,6 +26,7 @@ touching keys, rendering, tools, local endpoints, or Convex writes, and keep
 | `bun run verify` | typecheck + Biome + Vitest. Run before every commit you hand over. |
 | `bun run test:e2e` | Playwright against a production build (macOS screenshot baselines when run on a Mac). |
 | `bun run test:e2e:linux` | Playwright inside CI's Linux image via Docker. Add `--update-snapshots` to refresh Linux baselines. |
+| `bun scripts/bundle-budget.ts` | After `bun run build` (add `--sourcemap` for the package check): gzipped route preloads vs the budget. CI runs it. |
 
 The **pre-commit hook** (`.husky/pre-commit`) runs Biome on staged files and the type check. Don't bypass it with
 `--no-verify`; fix the error instead. **CI** (`.github/workflows/ci.yml`) runs `verify` and Playwright on every PR.
@@ -57,10 +58,16 @@ Playwright runs in 4 shards with 2 workers each (4 workers per runner made timin
   `src/lib/auth-client.ts`, SSR helpers `src/lib/auth-server.ts`). Email/password plus Google, GitHub, Discord.
 - **AI SDK 7, chat in the browser** (roadmap 1.2, `src/lib/chat/`). Chat routes (`/new`, `/$chatId`, both
   `ssr: false`) run `useChat` on `Chat` objects from `chat-sessions.ts`, which outlive a route (so `/new` hands a
-  streaming chat to `/$chatId`) and save to the ChatStore when a reply finishes. `BrowserChatTransport` runs
+  streaming chat to `/$chatId`) and save to the ChatStore when a reply finishes. `open-chats.ts` tracks them
+  (and releases idle ones past 8; a route showing a chat calls `retainChat`). `BrowserChatTransport` runs
   `streamText` in the page against the provider in each request's `body` (`language-model.ts`; local models get
   the `<think>` middleware). Tests use `mockChatModel` (`src/lib/chat/mock-model.ts`) and the `/e2e/chat` pages; in `VITE_E2E`
   builds the local model `e2e-mock-model` is the mock too (`e2e-model.ts`), so Playwright can drive `/new`.
+- **First load** (quality audit 2026-10, `scripts/bundle-budget.ts`): only chat routes may load the AI SDK, Dexie,
+  GSAP or Streamdown. Route `loader`/`beforeLoad`/`validateSearch` code isn't code-split, so anything they import
+  statically lands on every page: import chat code there with `import()` (see `$chatId.tsx`). The chat store
+  singleton is `src/lib/storage/app-store.ts`; provider SDKs, GSAP (`src/lib/lazy-gsap.ts`) and Streamdown load on
+  first use; brand logos are SVG files in `public/brand-logos/`.
 - **Local models** (roadmap 2.3, `src/lib/local-endpoints/`): endpoints saved in Settings (localStorage, localhost
   and 127.0.0.1 only, to match `connect-src`); a local `ModelChoice` names its `endpoint` id. Nothing calls one
   before it's saved and the Local Network Access explainer was clicked through. e2e stubs a server with

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { chatStore } from "@/lib/chat/chat-sessions";
 import { logError } from "@/lib/log";
+import { chatStore } from "@/lib/storage/app-store";
 import type { ChatStore, ChatSummary } from "@/lib/storage/chat-store";
 
 export type ChatListState =
