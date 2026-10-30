@@ -1,7 +1,6 @@
 # Terms of Service
 
-> **Draft. Not legal advice: have a lawyer review before public launch.** Items marked [TODO: …] are still
-> open. These terms are revised as features land.
+> **Draft. Not legal advice: have a lawyer review before public launch.** These terms are revised as features land.
 
 Last updated: 2026-10-30
 

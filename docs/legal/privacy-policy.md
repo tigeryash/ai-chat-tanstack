@@ -1,7 +1,6 @@
 # Privacy Policy
 
-> **Draft. Not legal advice: have a lawyer review before public launch.** Items marked [TODO: …] are still
-> open. This draft is built from the project's data inventory and is revised as features land.
+> **Draft. Not legal advice: have a lawyer review before public launch.** This draft is built from the project's data inventory and is revised as features land.
 
 Last updated: 2026-10-30
 
@@ -136,17 +135,31 @@ the minimum age for most AI providers it connects to, such as OpenRouter, Anthro
 
 ## International transfers
 
-We're based in Ontario, Canada. Our service providers (Convex, Vercel, Brevo) may process data in the United
-States and other countries where they operate, so your data may be handled under those countries' laws. AI
-providers you connect process your prompts wherever they operate, under their own terms. [TODO: lawyer: is
-anything more needed for EU/UK visitors, e.g. relying on the providers' Standard Contractual Clauses?]
+We're based in Ontario, Canada. Convex stores our server data in the United States, and Vercel and Brevo may
+process it in the United States and other countries where they operate, so it may be handled under those
+countries' laws. For data from the EU or UK, Vercel is certified under the EU-U.S. Data Privacy Framework and
+its UK Extension. Convex covers transfers in its Data Processing Agreement. Brevo is based in the EU. AI providers you connect process your prompts wherever they operate, under their own terms.
 
 ## Your rights
 
-Depending on where you live, you may have the right to access, correct, export or delete your data, and to object
-to or limit how it's used. Most of your data is on your own device, where you control it directly. For data on
-our servers, contact us below. [TODO: lawyer: confirm which privacy laws apply (Canada's PIPEDA, and
-GDPR or US state laws for visitors from there) and whether they need extra wording here.]
+You can see, correct, export or delete your data, and object to how we use it. Most of your data is on your own
+device, where you control it directly. For data on our servers, email us (see Contact) and we'll answer within
+30 days. We follow the principles of Canada's privacy law (PIPEDA): we collect only what the app needs, use it
+only for the reasons in this policy, and keep it only as long as this policy says.
+
+### If you're in the EU or UK
+
+The GDPR and UK GDPR give you the rights above, plus the right to restrict how we use your data and to complain
+to your data protection authority (in the UK, the Information Commissioner's Office). Our legal bases are:
+
+- **Contract:** your account data, sessions and sign-in emails, which we need to provide the account you asked
+  for.
+- **Legitimate interests:** keeping the app secure and working (request and security logs, error reports) and
+  understanding how it's used through cookieless, content-free analytics. You can turn analytics off in Settings.
+- **Consent:** notifications and anything else the app asks you to turn on. You can withdraw it at any time.
+
+We don't sell your data, use it for advertising, or make automated decisions about you that have legal or
+similarly significant effects.
 
 ## Changes
 

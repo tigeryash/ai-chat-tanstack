@@ -109,8 +109,10 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
 - [ ] Legal drafts (7.1): create `support@highelollms.com` (free forwarding to your inbox works, e.g. Cloudflare
   Email Routing); the privacy policy and terms already give it as the contact. They name the operator as "the
   developer, an individual based in Ontario"; register a business name or incorporate before charging money, then
-  update both. Have a lawyer review them before the first public sign-up (the two `[TODO: lawyer: …]` notes are
-  questions for them), and add `https://www.highelollms.com/privacy` and `/terms` to Google's OAuth consent screen.
+  update both. Open Convex's DPA (convex.dev/legal/dpa) and accept or request it if it isn't automatic:
+  the privacy policy says Convex covers EU/UK transfers in it. (Vercel's DPA covers only Pro, but Vercel is
+  certified under the EU-U.S. Data Privacy Framework, which the policy cites instead.) A lawyer's review is worth it before charging
+  money. Add `https://www.highelollms.com/privacy` and `/terms` to Google's OAuth consent screen.
 - [ ] Vercel Hobby is fine while this is a portfolio piece; move to Pro before charging money. *Still on Hobby
   (2026-10-23).*
 
