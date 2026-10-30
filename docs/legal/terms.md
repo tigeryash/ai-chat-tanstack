@@ -5,8 +5,8 @@
 
 Last updated: 2026-10-30
 
-These terms are an agreement between you and [TODO: your full name, or a registered business name], Ontario, Canada
-("we", "us") about your use of High Elo LLMs at www.highelollms.com ("the app"). By using the app you agree to
+These terms are an agreement between you and the developer of High Elo LLMs, an individual based in Ontario,
+Canada ("we", "us") about your use of High Elo LLMs at www.highelollms.com ("the app"). By using the app you agree to
 them. If you don't agree, don't use the app. Our Privacy Policy (at /privacy) explains how we handle your data.
 
 ## What the app is
@@ -129,4 +129,4 @@ users through the app's changelog and a notice in the app before they take effec
 
 ## Contact
 
-[TODO: contact email, e.g. privacy@highelollms.com]
+support@highelollms.com

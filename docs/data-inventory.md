@@ -81,7 +81,7 @@ Promises the design already makes. Changing one of these is a product decision, 
 
 ## Open items for the policy
 
-- Convex region (check the prod deployment in the dashboard). Backups: none automatic on our plan; a manual one is kept 7 days.
+- Convex region: prod is AWS US East (N. Virginia). Backups: none automatic on our plan; a manual one is kept 7 days.
 - Account deletion and export flow (roadmap 7.2).
 - Analytics and Sentry providers and their retention settings.
-- Operator name and contact email: placeholders in the 7.1 drafts. Decided 2026-10-30: 18+, Ontario law, deletion within 30 days, changes announced in the app's changelog.
+- Operator: "the developer, an individual in Ontario" until the app makes money; then a registered business name. Contact: support@highelollms.com. Decided 2026-10-30: 18+, Ontario law, deletion within 30 days, changes announced in the app's changelog.

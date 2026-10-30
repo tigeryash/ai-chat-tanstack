@@ -5,7 +5,8 @@
 
 Last updated: 2026-10-30
 
-High Elo LLMs ("the app", "we", "us") is run by [TODO: your full name, or a registered business name], Ontario, Canada.
+High Elo LLMs ("the app", "we", "us") is an independent, non-commercial project run by its developer, an individual based in Ontario,
+Canada. You can reach us at support@highelollms.com.
 This policy explains what data the app handles, where it lives, who receives it, how long it's kept, and how
 you can export or delete it.
 
@@ -60,8 +61,7 @@ Our backend is [Convex](https://www.convex.dev). Today it holds account data onl
 
 Our backend also holds a public model catalog (model names, prices, scores), which is not about you.
 
-Convex stores this data in [TODO: the production deployment's region, shown in the Convex dashboard; the
-default is AWS us-east-1, Virginia, United States]. We don't keep automatic backups. If we make one by hand (for
+Convex stores this data in the United States (AWS US East, Northern Virginia). We don't keep automatic backups. If we make one by hand (for
 example before a risky change), Convex keeps it for 7 days, so deleted data can remain in it until then.
 
 **Planned features that will change this section** (this policy will be updated before each one ships):
@@ -155,4 +155,4 @@ changes we'll also post in the app's changelog and show a notice in the app befo
 
 ## Contact
 
-Questions or requests about your data: [TODO: contact email, e.g. privacy@highelollms.com]
+Questions or requests about your data: support@highelollms.com
