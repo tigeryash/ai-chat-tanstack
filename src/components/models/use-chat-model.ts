@@ -1,5 +1,9 @@
+import type { Chat } from "@ai-sdk/react";
 import type { UIMessage } from "ai";
-import { useChatModelChoice } from "@/lib/chat/chat-model-choice";
+import {
+	lastReplyChoice,
+	useChatModelChoice,
+} from "@/lib/chat/chat-model-choice";
 import {
 	type AutoSort,
 	LOCAL_PROVIDER,
@@ -7,6 +11,7 @@ import {
 	type ModelSelection,
 	toSelection,
 } from "@/lib/chat/model-selection";
+import { useChatMessagesValue } from "@/lib/chat/use-chat-messages-value";
 import { useHostFailures } from "@/lib/hosts/host-failures";
 import { type HostOption, hostOptionsFor } from "@/lib/hosts/host-options";
 import { useHostPrefs } from "@/lib/hosts/host-prefs";
@@ -14,6 +19,7 @@ import {
 	chatNeeds,
 	type ResolvedHost,
 	resolveHost,
+	sameNeeds,
 	selectionExtras,
 } from "@/lib/hosts/resolve-host";
 import { useHostData } from "@/lib/hosts/use-endpoints";
@@ -25,6 +31,7 @@ import {
 	useModelCatalog,
 } from "@/lib/models/catalog";
 import { routesFor } from "@/lib/models/runnability";
+import { sameJson, useSameValue } from "@/lib/use-same-value";
 import { suggestReplacement } from "@/models/family";
 
 // Everything a chat screen needs about its model (roadmap 2.1b/2.2/2.2b): the chat's choice, its
@@ -84,8 +91,12 @@ function resolveWanted({
 	return catalogFailed ? { choice: wanted, option: undefined } : null;
 }
 
-export function useChatModel(chatId: string, messages: readonly UIMessage[]) {
-	const [stored, setChoice] = useChatModelChoice(chatId, messages);
+export function useChatModel(chat: Chat<UIMessage>) {
+	// Read from the messages without re-rendering per streamed chunk: both change only when the
+	// person sends or a reply records its model.
+	const replyChoice = useChatMessagesValue(chat, lastReplyChoice, sameJson);
+	const needs = useChatMessagesValue(chat, chatNeeds, sameNeeds);
+	const [stored, setChoice] = useChatModelChoice(chat.id, replyChoice);
 	const catalog = useModelCatalog();
 	const connected = useConnectedProviders();
 	const failures = useHostFailures();
@@ -100,7 +111,6 @@ export function useChatModel(chatId: string, messages: readonly UIMessage[]) {
 	const chosenModel = listed ?? lookup.data ?? undefined;
 	// Only what the picker already loaded: opening a chat fetches nothing from the routers.
 	const hostData = useHostData(chosenModel, false);
-	const needs = chatNeeds(messages);
 
 	const hosts: HostOption[] =
 		chosenModel && connected
@@ -121,7 +131,8 @@ export function useChatModel(chatId: string, messages: readonly UIMessage[]) {
 		sort: prefs.autoSort,
 		catalogFailed: catalog.isError || lookup.isError,
 	});
-	const choice = resolved?.choice ?? null;
+	// Rebuilt every render; kept by value so the picker and each message see the same object.
+	const choice = useSameValue(resolved?.choice ?? null);
 
 	const replacement =
 		chosenModel?.status === "removed" && models
@@ -131,10 +142,11 @@ export function useChatModel(chatId: string, messages: readonly UIMessage[]) {
 		choice !== null &&
 		(choice.provider === LOCAL_PROVIDER ||
 			connected?.has(choice.provider) === true);
-	const selection: ModelSelection | undefined =
+	const selection: ModelSelection | undefined = useSameValue(
 		resolved?.option && chosenModel
 			? toSelection(choice, selectionExtras(resolved, chosenModel, prefs))
-			: toSelection(choice);
+			: toSelection(choice),
+	);
 
 	return {
 		choice,

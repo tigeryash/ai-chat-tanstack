@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useId, useState } from "react";
+import { useId } from "react";
 import {
 	Accordion,
 	AccordionContent,
@@ -12,12 +12,13 @@ import {
 	type ModelChoice,
 	providerName,
 } from "@/lib/chat/model-selection";
-import { type HostOption, isAvailable } from "@/lib/hosts/host-options";
+import type { HostOption } from "@/lib/hosts/host-options";
 import type { HostPrefs } from "@/lib/hosts/host-prefs";
 import { formatSpeed } from "@/lib/models/format";
 import { cn } from "@/lib/utils";
 import { DirectHostDetails, priceText, RouterUpstreams } from "./host-details";
 import { HostLight, LIGHT_LABELS, lightState } from "./host-light";
+import { useRunWithRows } from "./use-run-with-rows";
 
 // The picker preview's "Run with" section (roadmap 2.2b): every host that can run the model, as an
 // accordion. Auto picks the host (and the router picks its upstream); turning it off, or picking a
@@ -87,59 +88,14 @@ export function RunWith({
 	loading,
 }: RunWithProps) {
 	const sortId = useId();
-	// Previewing another model: Auto stays on until a host is picked.
-	const [previewAuto, setPreviewAuto] = useState(true);
-	const auto = current ? current.auto : previewAuto;
-	const visible = prefs.hideUnavailable
-		? hosts.filter((option) => isAvailable(option) && !option.excluded)
-		: hosts;
-
-	const pin = (option: HostOption, upstream?: string) =>
-		onChoose(
-			{
-				provider: option.provider,
-				model: option.model,
-				gatewayId,
-				upstream,
-				autoHost: false,
-			},
-			true,
-		);
-	const setAuto = (on: boolean) => {
-		if (!current) {
-			setPreviewAuto(on);
-			return;
-		}
-		if (on) {
-			const pick = autoPick ?? hosts[0];
-			if (pick) {
-				onChoose(
-					{
-						provider: pick.provider,
-						model: pick.model,
-						gatewayId,
-						autoHost: true,
-					},
-					false,
-				);
-			}
-			return;
-		}
-		// Off: keep the host Auto chose, pinned.
-		const now = hosts.find((option) => option.provider === current.provider);
-		if (now?.connected) {
-			onChoose(
-				{
-					provider: now.provider,
-					model: now.model,
-					gatewayId,
-					upstream: current.upstream,
-					autoHost: false,
-				},
-				false,
-			);
-		}
-	};
+	const { auto, visible, pin, setAuto } = useRunWithRows({
+		gatewayId,
+		hosts,
+		autoPick,
+		current,
+		prefs,
+		onChoose,
+	});
 
 	return (
 		<section aria-label="Run with" className="grid gap-2">

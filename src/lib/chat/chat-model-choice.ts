@@ -67,15 +67,14 @@ export function readChatModelChoice(
 	);
 }
 
-/** A chat's model choice and its setter. */
+/** A chat's model choice and its setter. `replyChoice` is `lastReplyChoice` of its messages. */
 export function useChatModelChoice(
 	chatId: string,
-	messages: readonly UIMessage[],
+	replyChoice: ModelChoice | undefined,
 ) {
 	const entries = choices.use();
 	const [lastChoice] = useModelChoice();
-	const choice =
-		storedChoice(entries, chatId) ?? lastReplyChoice(messages) ?? lastChoice;
+	const choice = storedChoice(entries, chatId) ?? replyChoice ?? lastChoice;
 	const setChoice = (next: ModelChoice) => storeChatModelChoice(chatId, next);
 	return [choice, setChoice] as const;
 }
