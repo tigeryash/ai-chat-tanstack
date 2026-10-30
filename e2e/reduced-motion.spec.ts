@@ -88,10 +88,31 @@ function fadedRevealTargets(page: Page) {
 	}, REVEAL_TARGETS);
 }
 
+// Waits until 10 frames in a row each took under 50 ms. On a busy CI runner the login page can stall
+// for 300 ms while the WebGL scene starts, long enough to hide a whole hover transition between two
+// samples (PR #43: 287.5 → 301.77 → 301.875).
+async function waitForSteadyFrames(page: Page) {
+	await page.evaluate(
+		() =>
+			new Promise<void>((resolve) => {
+				let steady = 0;
+				let last = performance.now();
+				const tick = (now: number) => {
+					steady = now - last < 50 ? steady + 1 : 0;
+					last = now;
+					if (steady >= 10) resolve();
+					else requestAnimationFrame(tick);
+				};
+				requestAnimationFrame(tick);
+			}),
+	);
+}
+
 // Moves the mouse onto a button and records its rendered width (hover scale included) on every
 // animation frame for about 0.75 s. Sampling starts before the mouse arrives, so the first sample is
 // the resting width.
 async function buttonWidthsWhileHovering(page: Page, button: Locator) {
+	await waitForSteadyFrames(page);
 	const box = await button.boundingBox();
 	if (!box) throw new Error("button has no box");
 	await button.evaluate((element) => {
