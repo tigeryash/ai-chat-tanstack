@@ -111,6 +111,13 @@ export default defineSchema({
     .index("by_email", ["email"]),
 
   // ==========================================================================
+  // UNUSED: the old Convex chat backend (conversations through usageEvents)
+  // ==========================================================================
+  // No function reads or writes these tables since roadmap 1.2/1.3 moved chat into the browser and
+  // its functions were deleted (restore them from git at 58853e2). They stay until Yash checks the prod
+  // row counts (Owner to-do in docs/ROADMAP.md); then drop them along with `users.preferences`.
+
+  // ==========================================================================
   // CONVERSATIONS
   // ==========================================================================
 

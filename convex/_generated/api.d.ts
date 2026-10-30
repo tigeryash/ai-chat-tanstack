@@ -8,16 +8,12 @@
  * @module
  */
 
-import type * as attachments from "../attachments.js";
 import type * as auth from "../auth.js";
 import type * as authHelpers from "../authHelpers.js";
 import type * as authMaintenance from "../authMaintenance.js";
-import type * as branching from "../branching.js";
-import type * as conversations from "../conversations.js";
 import type * as crons from "../crons.js";
 import type * as email from "../email.js";
 import type * as emailGuard from "../emailGuard.js";
-import type * as groupChats from "../groupChats.js";
 import type * as http from "../http.js";
 import type * as lib_hideAccountExistence from "../lib/hideAccountExistence.js";
 import type * as lib_modelCatalog_diff from "../lib/modelCatalog/diff.js";
@@ -35,15 +31,9 @@ import type * as lib_modelCatalog_validators from "../lib/modelCatalog/validator
 import type * as lib_modelCatalog_view from "../lib/modelCatalog/view.js";
 import type * as lib_oauthTokens from "../lib/oauthTokens.js";
 import type * as lib_passwordPolicy from "../lib/passwordPolicy.js";
-import type * as lib_shareId from "../lib/shareId.js";
-import type * as lib_utils from "../lib/utils.js";
 import type * as lib_zod from "../lib/zod.js";
-import type * as messagePins from "../messagePins.js";
-import type * as messages from "../messages.js";
 import type * as modelCatalogSync from "../modelCatalogSync.js";
 import type * as models from "../models.js";
-import type * as sharing from "../sharing.js";
-import type * as usage from "../usage.js";
 import type * as users from "../users.js";
 
 import type {
@@ -53,16 +43,12 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  attachments: typeof attachments;
   auth: typeof auth;
   authHelpers: typeof authHelpers;
   authMaintenance: typeof authMaintenance;
-  branching: typeof branching;
-  conversations: typeof conversations;
   crons: typeof crons;
   email: typeof email;
   emailGuard: typeof emailGuard;
-  groupChats: typeof groupChats;
   http: typeof http;
   "lib/hideAccountExistence": typeof lib_hideAccountExistence;
   "lib/modelCatalog/diff": typeof lib_modelCatalog_diff;
@@ -80,15 +66,9 @@ declare const fullApi: ApiFromModules<{
   "lib/modelCatalog/view": typeof lib_modelCatalog_view;
   "lib/oauthTokens": typeof lib_oauthTokens;
   "lib/passwordPolicy": typeof lib_passwordPolicy;
-  "lib/shareId": typeof lib_shareId;
-  "lib/utils": typeof lib_utils;
   "lib/zod": typeof lib_zod;
-  messagePins: typeof messagePins;
-  messages: typeof messages;
   modelCatalogSync: typeof modelCatalogSync;
   models: typeof models;
-  sharing: typeof sharing;
-  usage: typeof usage;
   users: typeof users;
 }>;
 

@@ -236,8 +236,14 @@ The industry consensus: **you cannot filter your way out of prompt injection; yo
 
 ## Convex
 
-- Every mutation checks membership and authorship. Clients can't write `streaming` partials, other users'
-  messages, or usage records (audit items 1–3).
+- The only public functions are `users.getOrCreate` and the catalog queries `models.list` / `models.get`.
+  `convex/publicFunctions.test.ts` fails on any public query, mutation or action that `src/` and `e2e/` never call
+  as `api.<module>.<name>`, unless it's allowlisted there with a reason. Delete functions the app stops using.
+- The old chat backend (messages, conversations, group chats, sharing, attachments with `generateUploadUrl`,
+  branching, usage, pins) was deleted unused on 2026-10-30 (quality audit D1). Restore from git at `58853e2`. Its
+  mutations checked membership and authorship, so clients couldn't write `streaming` partials, other users'
+  messages, or usage records (audit items 1–3); anything restored for 6.1 or 6.3 keeps those checks and gets 6.2's
+  rate limits.
 - Public queries return projections, never whole documents. Share IDs come from `crypto.getRandomValues`.
 - Rate limits on sync, share creation, and invites (roadmap 6.2).
 

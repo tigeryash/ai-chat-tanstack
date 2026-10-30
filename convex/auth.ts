@@ -2,7 +2,6 @@ import { createClient } from '@convex-dev/better-auth'
 import { convex } from '@convex-dev/better-auth/plugins'
 import { betterAuth } from 'better-auth'
 import { components } from './_generated/api'
-import { query } from './_generated/server'
 import type { GenericCtx } from '@convex-dev/better-auth'
 import type { DataModel } from './_generated/dataModel'
 import { queueEmail, sendPasswordChangedNotice } from "./email";
@@ -89,9 +88,3 @@ export const createAuth = (
     plugins: [convex({ authConfig, jwksRotateOnTokenGenerationError: true, }), hideAccountExistence()],
   }) 
 }
-export const getCurrentUser = query({
-  args: {},
-  handler: async (ctx) => {
-    return authComponent.getAuthUser(ctx)
-  },
-})
