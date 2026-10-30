@@ -1,4 +1,5 @@
 import type { UIMessage } from "ai";
+import type { ChatSettings } from "@/lib/params/settings";
 
 // What the app sees of a stored chat. `formatVersion` is a storage detail: chats come out of the store
 // already migrated to the current format (see format.ts).
@@ -16,6 +17,8 @@ export interface Chat {
 	 * (roadmap 1.9). Only decides what the app shows: every chat is still readable in this browser.
 	 */
 	ownerId: string | null;
+	/** The settings panel's values and system prompt (roadmap 2.4b). Absent: never set. */
+	settings?: ChatSettings;
 	messages: UIMessage[];
 }
 
@@ -50,6 +53,11 @@ export interface ChatStore {
 	renameChat(chatId: string, title: string): Promise<void>;
 	/** Like a rename, doesn't change `updatedAt`. */
 	setPinned(chatId: string, pinned: boolean): Promise<void>;
+	/** Replaces the chat's settings. Does nothing for a chat that isn't saved, nor to `updatedAt`. */
+	setSettings(chatId: string, settings: ChatSettings): Promise<void>;
+	/** The shared system prompt (decision 19), "" when none. */
+	getDefaultSystemPrompt(): Promise<string>;
+	setDefaultSystemPrompt(prompt: string): Promise<void>;
 	/** Moves chats to another owner, skipping any that no longer exist. Doesn't change `updatedAt`. */
 	setOwner(chatIds: readonly string[], ownerId: string | null): Promise<void>;
 	/**

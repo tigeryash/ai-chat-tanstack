@@ -1,4 +1,5 @@
 import { safeValidateUIMessages, type UIMessage } from "ai";
+import { cleanSettings } from "@/lib/params/settings";
 import { z } from "@/lib/zod";
 import type { Chat } from "./chat-store";
 import { ChatStoreError, issuesOf } from "./errors";
@@ -44,6 +45,8 @@ const currentChat = z.object({
 	// Optional, so chats saved before pinning existed still read without a migration.
 	pinned: z.boolean().optional(),
 	ownerId: ownerIdSchema,
+	// Optional, so older chats read without a migration. Bad values are dropped, not the chat.
+	settings: z.unknown().optional(),
 	messages: z.array(z.unknown()),
 });
 
@@ -117,9 +120,10 @@ export async function upgradeChat(raw: unknown): Promise<Chat> {
 			issues: issuesOf(parsed.error),
 		});
 	}
-	const { formatVersion: _, ...fields } = parsed.data;
+	const { formatVersion: _, settings, ...fields } = parsed.data;
 	return {
 		...fields,
+		...(settings !== undefined && { settings: cleanSettings(settings) }),
 		messages: await validateMessages(fields.messages, fields.id),
 	};
 }

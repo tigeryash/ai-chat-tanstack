@@ -1,4 +1,5 @@
 import Dexie, { type DexieOptions, type EntityTable, type Table } from "dexie";
+import type { ChatSettings } from "@/lib/params/settings";
 
 // Chats get their own IndexedDB database. API keys (roadmap 1.1) live elsewhere, so nothing that reads
 // this database, export included, can reach them.
@@ -18,6 +19,11 @@ export interface ChatRow {
 	 * format (a test seed) can lack it, which reads as null. Not indexed: IndexedDB can't index null.
 	 */
 	ownerId?: string | null;
+	/**
+	 * The settings panel's values and the chat's own system prompt (roadmap 2.4b). Absent: never set.
+	 * Optional and cleaned on read, so it needed no format migration.
+	 */
+	settings?: ChatSettings;
 	/** The chat's format (format.ts), not Dexie's schema version below. */
 	formatVersion: number;
 }
@@ -29,9 +35,16 @@ export interface MessageRow {
 	message: unknown;
 }
 
+/** App-wide values that hold content, so they stay out of localStorage (the shared system prompt). */
+export interface PrefRow {
+	key: string;
+	value: unknown;
+}
+
 export type ChatDatabase = Dexie & {
 	chats: EntityTable<ChatRow, "id">;
 	messages: Table<MessageRow, [string, number]>;
+	prefs: EntityTable<PrefRow, "key">;
 };
 
 export function openChatDatabase(
@@ -58,6 +71,12 @@ export function openChatDatabase(
 					ref.value = { ...row, formatVersion: 2, ownerId: null };
 				}),
 		);
+	// Roadmap 2.4b: the shared system prompt.
+	db.version(3).stores({
+		chats: "id, updatedAt",
+		messages: "[chatId+position]",
+		prefs: "key",
+	});
 	return db;
 }
 

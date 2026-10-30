@@ -6,11 +6,14 @@ import { Input } from "@/components/chat/input";
 import { Button } from "@/components/ui/button";
 import type { ModelSelection } from "@/lib/chat/model-selection";
 import { logError } from "@/lib/log";
+import type { RequestSettings } from "@/lib/params/request";
 
 export interface ChatViewProps {
 	chat: Chat<UIMessage>;
 	/** Where requests go. Sending is off until there is one. */
 	selection: ModelSelection | undefined;
+	/** The settings panel's values and system prompt (roadmap 2.4b), sent with each request. */
+	settings?: RequestSettings;
 	header?: ReactNode;
 	/** What an empty chat shows (the model card). */
 	empty?: ReactNode;
@@ -25,6 +28,7 @@ const logFailure = (error: unknown) =>
 export function ChatView({
 	chat,
 	selection,
+	settings,
 	header,
 	empty,
 	onSend,
@@ -33,7 +37,7 @@ export function ChatView({
 		chat,
 	});
 	const busy = status === "submitted" || status === "streaming";
-	const options = selection && { body: selection };
+	const options = selection && { body: { ...selection, settings } };
 
 	const handleSubmit = async (text: string) => {
 		if (!options) return;

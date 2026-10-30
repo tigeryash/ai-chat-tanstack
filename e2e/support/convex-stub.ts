@@ -3,6 +3,7 @@ import { createServer, type IncomingMessage } from "node:http";
 import {
 	TEST_CATALOG,
 	testCatalogModel,
+	testModelParameters,
 } from "../../src/lib/models/test-catalog";
 import { E2E_USER_COOKIE } from "./accounts";
 
@@ -25,6 +26,7 @@ const CORS_HEADERS = {
 const QUERIES: Record<string, (args: Record<string, unknown>) => unknown> = {
 	"models:list": () => TEST_CATALOG,
 	"models:get": (args) => testCatalogModel(String(args.gatewayId)),
+	"models:parameters": (args) => testModelParameters(String(args.gatewayId)),
 };
 
 /** The signed-in test user's ID from the `e2e-user` cookie, if any. */

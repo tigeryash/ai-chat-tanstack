@@ -6,6 +6,8 @@ import { LocalModelCard, ModelCard } from "@/components/models/model-card";
 import { ModelPicker } from "@/components/models/model-picker";
 import { RemovedModelBanner } from "@/components/models/removed-model-banner";
 import { useChatModel } from "@/components/models/use-chat-model";
+import { SettingsPanel } from "@/components/params/settings-panel";
+import { useChatParams } from "@/components/params/use-chat-params";
 import { storeChatModelChoice } from "@/lib/chat/chat-model-choice";
 import { LOCAL_PROVIDER } from "@/lib/chat/model-selection";
 import { useLocalEndpointFor } from "@/lib/local-endpoints/endpoints";
@@ -20,6 +22,7 @@ export function ChatScreen({
 }) {
 	const { messages } = useChat({ chat });
 	const model = useChatModel(chat.id, messages);
+	const params = useChatParams(chat.id, model);
 	const { choice, wanted, chosenModel } = model;
 	const isLocal = choice?.provider === LOCAL_PROVIDER && choice.model !== "";
 	const localEndpoint = useLocalEndpointFor(
@@ -30,6 +33,7 @@ export function ChatScreen({
 		// Pin the chat to the model it was sent with, even if the default changes later. Its host
 		// settings (Auto or a pinned host) are kept as picked, so Auto keeps re-checking hosts.
 		if (wanted) storeChatModelChoice(chat.id, wanted);
+		params.pin();
 		onSend?.();
 	};
 
@@ -51,6 +55,7 @@ export function ChatScreen({
 		<ChatView
 			chat={chat}
 			selection={model.selection}
+			settings={params.request}
 			onSend={handleSend}
 			empty={empty}
 			header={
@@ -78,6 +83,12 @@ export function ChatScreen({
 								{localEndpoint?.name ??
 									(choice.endpoint ? "a removed local server" : "Local")}
 							</span>
+						)}
+						{choice?.model && (
+							<SettingsPanel
+								params={params}
+								modelName={chosenModel?.name ?? choice.model}
+							/>
 						)}
 					</div>
 					{chosenModel?.status === "removed" && (

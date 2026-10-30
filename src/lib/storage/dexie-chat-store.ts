@@ -1,5 +1,10 @@
 import type { UIMessage } from "ai";
 import { liveQuery } from "dexie";
+import {
+	chatSettingsSchema,
+	MAX_SYSTEM_PROMPT_LENGTH,
+} from "@/lib/params/settings";
+import { z } from "@/lib/zod";
 import type { Chat, ChatStore, ChatSummary } from "./chat-store";
 import {
 	type ChatDatabase,
@@ -16,6 +21,9 @@ import {
 	upgradeChat,
 	validateMessages,
 } from "./format";
+
+const DEFAULT_SYSTEM_PROMPT_KEY = "defaultSystemPrompt";
+const systemPromptSchema = z.string().max(MAX_SYSTEM_PROMPT_LENGTH);
 
 export interface DexieChatStoreOptions {
 	db?: ChatDatabase;
@@ -132,6 +140,7 @@ export function createDexieChatStore({
 						id: chatId,
 						title: existing?.title ?? "",
 						...(existing?.pinned && { pinned: true }),
+						...(existing?.settings && { settings: existing.settings }),
 						ownerId: existing ? (existing.ownerId ?? null) : ownerId,
 						createdAt: existing?.createdAt ?? timestamp,
 						updatedAt: timestamp,
@@ -150,6 +159,25 @@ export function createDexieChatStore({
 
 		async setPinned(chatId, pinned) {
 			await updateRow(db, chatId, { pinned });
+		},
+
+		async setSettings(chatId, settings) {
+			checkChatId(chatId);
+			const clean = chatSettingsSchema.parse(settings);
+			await db.chats.update(chatId, { settings: clean });
+		},
+
+		async getDefaultSystemPrompt() {
+			const row = await db.prefs.get(DEFAULT_SYSTEM_PROMPT_KEY);
+			const parsed = systemPromptSchema.safeParse(row?.value);
+			return parsed.success ? parsed.data : "";
+		},
+
+		async setDefaultSystemPrompt(prompt) {
+			await db.prefs.put({
+				key: DEFAULT_SYSTEM_PROMPT_KEY,
+				value: systemPromptSchema.parse(prompt),
+			});
 		},
 
 		async setOwner(chatIds, ownerId) {
@@ -185,6 +213,7 @@ export function createDexieChatStore({
 							updatedAt: chat.updatedAt,
 							messageCount: chat.messages.length,
 							...(chat.pinned && { pinned: true }),
+							...(chat.settings && { settings: chat.settings }),
 							ownerId: chat.ownerId,
 							formatVersion: CHAT_FORMAT_VERSION,
 						},

@@ -116,3 +116,55 @@ describe("resolveProviderModel", () => {
 		).rejects.toThrow("This chat's local server was removed in Settings.");
 	});
 });
+
+describe("BrowserChatTransport settings (roadmap 2.4b)", () => {
+	function recordingModel() {
+		const model = mockChatModel({ text: ["ok"] });
+		const spy = vi.spyOn(model, "doStream");
+		return { model, calls: () => spy.mock.calls.map(([options]) => options) };
+	}
+
+	it("applies supported settings and the system prompt, and strips the rest", async () => {
+		const { model, calls } = recordingModel();
+		await collect(
+			await send(new BrowserChatTransport(async () => model), {
+				...SELECTION,
+				settings: {
+					params: { temperature: 0.4, topK: 12, seed: 3, minP: 0.1 },
+					support: {
+						params: ["temperature", "topK"],
+						reasoningEfforts: [],
+					},
+					systemPrompt: "Be brief.",
+				},
+			}),
+		);
+		const [options] = calls();
+		expect(options?.temperature).toBe(0.4);
+		expect(options?.seed).toBeUndefined();
+		expect(options?.providerOptions?.openrouter).toEqual({
+			usage: { include: true },
+			top_k: 12,
+		});
+		expect(options?.prompt[0]).toEqual({
+			role: "system",
+			content: "Be brief.",
+		});
+	});
+
+	it("sends no settings when the body has none or bad ones", async () => {
+		const { model, calls } = recordingModel();
+		const transport = new BrowserChatTransport(async () => model);
+		await collect(await send(transport, SELECTION));
+		await collect(
+			await send(transport, {
+				...SELECTION,
+				settings: { params: { temperature: 99 }, support: "all" },
+			}),
+		);
+		for (const options of calls()) {
+			expect(options.temperature).toBeUndefined();
+			expect(options.prompt[0]?.role).toBe("user");
+		}
+	});
+});

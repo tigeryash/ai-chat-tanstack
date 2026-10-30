@@ -10,6 +10,11 @@ import { createDexieChatStore } from "@/lib/storage/dexie-chat-store";
 import { isVisibleTo, type Viewer } from "@/lib/storage/ownership";
 import { requestPersistentStorage } from "@/lib/storage/persistence";
 import { BrowserChatTransport } from "./browser-transport";
+import {
+	chatSettingsOf,
+	forgetChatSettings,
+	loadChatSettings,
+} from "./chat-settings";
 import { titleFromMessages } from "./chat-title";
 import { resolveAppModel } from "./e2e-model";
 
@@ -55,6 +60,9 @@ export async function saveChat(
 	try {
 		const { created } = await store.saveMessages(chatId, messages, ownerId);
 		if (!created) return;
+		// Settings changed before the first reply had nowhere to go until now (roadmap 2.4b).
+		const settings = chatSettingsOf(chatId);
+		if (settings) await store.setSettings(chatId, settings);
 		const title = titleFromMessages(messages);
 		if (title) await store.renameChat(chatId, title);
 		await requestPersistentStorage();
@@ -107,6 +115,7 @@ export function closeChat(id: string): void {
 	const open = openChats.get(id);
 	if (!open) return;
 	openChats.delete(id);
+	forgetChatSettings(id);
 	setReplying(id, false);
 	open.chat
 		.stop()
@@ -136,6 +145,7 @@ export async function openSavedChat(
 	if (open) return isVisibleTo(open, viewer);
 	const saved = await store.getChat(id);
 	if (!saved || !isVisibleTo(saved, viewer)) return false;
+	loadChatSettings(id, saved.settings);
 	openChat(id, { messages: saved.messages, store, ownerId: saved.ownerId });
 	return true;
 }

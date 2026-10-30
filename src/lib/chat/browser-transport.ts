@@ -10,6 +10,9 @@ import { hostKey, recordHostResult } from "@/lib/hosts/host-failures";
 import { getProviderKey } from "@/lib/keys";
 import { localEndpointFor } from "@/lib/local-endpoints/endpoints";
 import { logError } from "@/lib/log";
+import { mergeProviderOptions, toCallParams } from "@/lib/params/mapping";
+import { parseRequestSettings } from "@/lib/params/request";
+import { developerOf, type ParamRoute } from "@/lib/params/routes";
 import {
 	ChatSetupError,
 	chatErrorLogFields,
@@ -28,7 +31,8 @@ import { routingOptions } from "./routing-options";
 // The chat engine's transport (roadmap decision 7): `useChat` hands it the messages, and it runs
 // `streamText` right here in the browser against the chosen provider. Nothing goes through our server.
 // The provider and model come in each request's `body` (`sendMessage(…, { body: selection })`), so
-// every pane can pick its own.
+// every pane can pick its own. The chat's settings ride along in `body.settings` (roadmap 2.4b): the
+// transport sends only what the model and host support (src/lib/params/mapping.ts).
 
 /**
  * Saved on each reply, so a chat shows which model wrote what, which host answered (roadmap 2.2b)
@@ -69,6 +73,18 @@ export const resolveProviderModel: ResolveModel = async (selection) => {
 	return createLanguageModel(selection, key);
 };
 
+/** Where the settings go: the route decides which settings exist and how they're sent. */
+function paramRouteOf(selection: ModelSelection): ParamRoute {
+	return {
+		provider: selection.provider,
+		endpointKind:
+			selection.provider === LOCAL_PROVIDER
+				? localEndpointFor(selection.endpoint)?.kind
+				: undefined,
+		developer: developerOf(selection.gatewayId),
+	};
+}
+
 function parseSelection(body: object | undefined): ModelSelection {
 	const parsed = modelSelectionSchema.safeParse(body);
 	if (!parsed.success) {
@@ -93,6 +109,10 @@ export class BrowserChatTransport implements ChatTransport<UIMessage> {
 		ReadableStream<UIMessageChunk>
 	> {
 		const selection = parseSelection(body);
+		const { params, support, systemPrompt } = parseRequestSettings(
+			(body as { settings?: unknown } | undefined)?.settings,
+		);
+		const call = toCallParams(paramRouteOf(selection), params, support);
 		const name = providerName(selection.provider);
 		const host = hostKey(selection.provider, selection.upstream);
 		const onError = (error: unknown) => {
@@ -111,8 +131,13 @@ export class BrowserChatTransport implements ChatTransport<UIMessage> {
 		try {
 			const result = streamText({
 				model: await this.#resolveModel(selection),
+				...call.settings,
+				...(systemPrompt !== undefined && { system: systemPrompt }),
 				messages: await convertToModelMessages(messages),
-				providerOptions: routingOptions(selection),
+				providerOptions: mergeProviderOptions(
+					routingOptions(selection),
+					call.providerOptions,
+				),
 				abortSignal,
 			});
 			return result.toUIMessageStream({
