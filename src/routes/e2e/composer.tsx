@@ -26,7 +26,10 @@ function ComposerHarness() {
 					setSubmitted((previous) => [...previous, message]);
 				}}
 			/>
-			<ol aria-label="Submitted messages" className="text-sm text-black/60">
+			<ol
+				aria-label="Submitted messages"
+				className="text-sm text-muted-foreground"
+			>
 				{submitted.map((message, index) => (
 					// biome-ignore lint/suspicious/noArrayIndexKey: append-only test log
 					<li key={index}>{message}</li>

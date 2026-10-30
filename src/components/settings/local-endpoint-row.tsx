@@ -83,7 +83,7 @@ function ModelsFound({ models }: { models: readonly string[] }) {
 	}
 	return (
 		<div className="grid gap-1.5">
-			<p className="text-emerald-700 text-sm dark:text-emerald-400">
+			<p className="text-sm text-success">
 				Connected · {models.length} {models.length === 1 ? "model" : "models"}
 			</p>
 			<ul aria-label="Models on this server" className="flex flex-wrap gap-1">

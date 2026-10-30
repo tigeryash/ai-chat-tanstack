@@ -13,7 +13,7 @@ export const Route = createFileRoute("/(dashboard)/settings")({
 
 function SettingsPage() {
 	return (
-		<div className="h-full overflow-y-auto">
+		<div className="h-full overflow-y-auto rounded-pane border bg-card text-card-foreground">
 			<div className="mx-auto max-w-3xl px-6 py-10">
 				<ProviderKeys />
 				<LocalEndpoints />

@@ -55,7 +55,7 @@ export function ChatScreen({
 			empty={empty}
 			header={
 				<>
-					<div className="flex w-full items-center gap-1 px-2 py-1">
+					<div className="flex w-full items-center gap-2 px-3 py-2">
 						<ModelPicker
 							choice={choice}
 							wanted={wanted}
@@ -73,7 +73,7 @@ export function ChatScreen({
 							/>
 						)}
 						{isLocal && (
-							<span className="text-muted-foreground text-xs">
+							<span className="font-mono text-muted-foreground text-xs">
 								via{" "}
 								{localEndpoint?.name ??
 									(choice.endpoint ? "a removed local server" : "Local")}

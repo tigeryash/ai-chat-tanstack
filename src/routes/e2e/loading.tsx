@@ -39,7 +39,7 @@ function LoadingHarness() {
 					<ReasoningContent>Done thinking.</ReasoningContent>
 				</Reasoning>
 			</div>
-			<Loader2 className="w-5 h-5 animate-spin text-black/50" />
+			<Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
 		</main>
 	);
 }

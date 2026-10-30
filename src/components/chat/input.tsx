@@ -57,7 +57,7 @@ export const Input = ({ onSubmit, isLoading, onStop }: InputProps) => {
 							animation: "border-radius 0.5s ease-in-out",
 						}}
 						className={`w-full max-w-md xl:max-w-3xl flex flex-col items-center
-             py-3 shadow-lg border-t border-black/10 `}
+             py-3 bg-composer text-composer-foreground shadow-composer border-t border-composer-border `}
 					>
 						<AnimatePresence mode="popLayout">
 							{hasFiles && (

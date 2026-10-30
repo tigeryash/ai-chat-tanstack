@@ -96,7 +96,8 @@ export function ModelPicker({
 			<PopoverTrigger
 				render={
 					<Button
-						variant="ghost"
+						variant="outline"
+						size="sm"
 						className="gap-2 font-medium"
 						aria-label={`Model: ${label}`}
 					/>

@@ -71,7 +71,7 @@ const AuthLayout = () => {
 		<main
 			ref={containerRef}
 			data-hydrated={hydrated}
-			className="flex relative flex-col-reverse items-center xl:flex-row min-h-screen xl:h-screen  overflow-hidden p-6 md:p-3 bg-slate-900"
+			className="dark flex relative flex-col-reverse items-center xl:flex-row min-h-screen xl:h-screen  overflow-hidden p-6 md:p-3 bg-auth-backdrop text-foreground"
 		>
 			<ClientOnly>
 				{/* The scene is decoration: if it can't load or WebGL is missing, show the plain background. */}
@@ -86,13 +86,13 @@ const AuthLayout = () => {
 				</CatchBoundary>
 			</ClientOnly>
 
-			<div className="space-y-7 xl:w-full pt-10 md:pt-18 pb-12 text-gray-300 h-full flex flex-col md:rounded-2xl relative overflow-hidden">
+			<div className="space-y-7 xl:w-full pt-10 md:pt-18 pb-12 text-foreground/85 h-full flex flex-col md:rounded-2xl relative overflow-hidden">
 				<Body />
 
 				<Models />
 				<Footer />
 			</div>
-			<div className="xl:w-1/3  md:w-[600px] lg:h-full text-white z-2 w-full p-2 lg:pl-0 auth">
+			<div className="xl:w-1/3  md:w-[600px] lg:h-full text-foreground z-2 w-full p-2 lg:pl-0 auth">
 				<FormContainer pathname={pathname}>
 					<Outlet />
 				</FormContainer>
@@ -120,12 +120,14 @@ const FormContainer = ({
 }) => {
 	return (
 		<div
-			className="inset-shadow-lg bg-slate-300/30 flex flex-col py-10  
-    items-center space-y-5 xl:space-y-10 rounded-2xl backdrop-blur-md border-[2px] lg:pt-6  lg:space-y-6 lg:h-full border-white/20"
+			className="bg-card/85 text-card-foreground flex flex-col py-10
+    items-center space-y-5 xl:space-y-10 rounded-pane backdrop-blur-md border lg:pt-6  lg:space-y-6 lg:h-full border-border"
 		>
-			<h2 className="text-[2.5rem] font-semibold">{pageTitle(pathname)}</h2>
+			<h2 className="text-3xl font-semibold tracking-tight">
+				{pageTitle(pathname)}
+			</h2>
 			{/* No login wall (decision 4): an account is only for the cloud features. */}
-			<p className="px-8 text-center text-white/80">
+			<p className="px-8 text-center text-muted-foreground">
 				Sign in to sync and share. Chatting doesn't need an account: your keys
 				and chats stay in this browser.{" "}
 				<Link to="/new" className={LINK_CLASS}>
@@ -175,11 +177,10 @@ const Body = () => {
 					clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
 				}}
 			>
-				Chat with the smartest{" "}
-				<span className="text-[oklch(70%.1375_229)]">AI</span> found on the of
-				the{" "}
+				Chat with the smartest <span className="text-link">AI</span> found on
+				the of the{" "}
 				<a
-					className="hover:underline text-[oklch(70%.1375_229)]"
+					className="hover:underline text-link"
 					href="https://lmarena.ai/leaderboard"
 					target="_blank"
 					rel="noopener noreferrer"
@@ -195,7 +196,7 @@ const Body = () => {
 
 const Footer = () => {
 	return (
-		<footer className="footer text-gray-300 mt-auto self-center shadow-lg bg-gray-950/10 rounded-xl py-2 px-4">
+		<footer className="footer text-foreground/85 mt-auto self-center shadow-lg bg-overlay/10 rounded-xl py-2 px-4">
 			<p>
 				Project made by{" "}
 				<a

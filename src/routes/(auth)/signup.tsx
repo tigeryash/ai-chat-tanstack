@@ -77,7 +77,7 @@ function SignupForm({ onSignedUp }: { onSignedUp: (email: string) => void }) {
 			<SubmitButton pending={pending}>
 				{pending ? "Creating account…" : "Create account"}
 			</SubmitButton>
-			<p className="text-white/80">
+			<p className="text-muted-foreground">
 				Already have an account?{" "}
 				<Link to="/login" className={LINK_CLASS}>
 					Sign in
@@ -94,10 +94,10 @@ function CheckEmail({ email }: { email: string }) {
 		<AuthNotice title="Check your email" focusTitle>
 			<p>
 				We sent a verification link to{" "}
-				<strong className="break-all text-white">{email}</strong>. Open it, then
-				sign in.
+				<strong className="break-all text-foreground">{email}</strong>. Open it,
+				then sign in.
 			</p>
-			<p className="text-base text-white/70">
+			<p className="text-base text-muted-foreground">
 				Nothing after a few minutes? Check your spam folder. If you already have
 				an account with this address,{" "}
 				<Link to="/login" className={LINK_CLASS}>

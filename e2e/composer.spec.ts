@@ -113,3 +113,18 @@ test("every composer control has a name", async ({ page }) => {
 		page.getByRole("button", { name: "Upload files" }),
 	).toBeVisible();
 });
+
+test.describe("in dark mode", () => {
+	test.use({ colorScheme: "dark" });
+
+	test("takes its colors from the dark tokens", async ({ page }) => {
+		const composer = page.locator("form");
+
+		await expect(composer).toHaveScreenshot("composer-collapsed-dark.png");
+		await page
+			.getByPlaceholder("Ask anything")
+			.fill("First line\nSecond line\nThird line");
+		await expect(composer).toHaveCSS("border-radius", "12px");
+		await expect(composer).toHaveScreenshot("composer-expanded-dark.png");
+	});
+});

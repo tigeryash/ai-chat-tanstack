@@ -83,6 +83,13 @@ Playwright runs in 4 shards with 2 workers each (4 workers per runner made timin
   the e2e Convex stub serves the seeded catalog in `src/lib/models/test-catalog.ts`. Runnability per user is
   `src/lib/models/runnability.ts`; the picker, model card and removed-model banner are in `src/components/models/`.
   Each chat's model choice is kept by `src/lib/chat/chat-model-choice.ts`.
+- **Design tokens** (roadmap 3.0b, direction A from [design-directions.md](docs/design-directions.md)): every
+  color, font, radius and spacing step comes from `src/styles.css`, so 3.11's Appearance settings only override
+  tokens. Each color token is a `light-dark()` pair: dark or light follows the system, and a `dark` / `light`
+  class on an element forces it (the auth pages are always `dark`); the `dark:` variant follows the same rule.
+  Use token classes (`bg-card`, `text-muted-foreground`, `text-success`, `bg-overlay/70`, `rounded-pane`), never
+  palette classes or literal colors: `src/lib/design-tokens.test.ts` fails on them. Need a new color? Add a token.
+  Chat panes are cards (`rounded-pane border bg-card`, in `chat-view.tsx`).
 - **UI**: Tailwind 4, shadcn components on Base UI (`base-vega` style; add more with `bunx shadcn add <name>`,
   then change their `cn` import from `"cn"` to `@/lib/utils`), no Radix. `src/components/ai-elements/` keeps the
   AI SDK Elements export names but is built on shadcn's AI Elements patterns (Message, Trace, Message Scroller).
