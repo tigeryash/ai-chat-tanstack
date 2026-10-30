@@ -78,7 +78,7 @@ vi.mock("@/components/chat/input", () => ({
 
 vi.mock("@/lib/models/catalog", async (importOriginal) => {
 	const actual = await importOriginal<typeof import("@/lib/models/catalog")>();
-	const { TEST_CATALOG } = await import("@/lib/models/test-catalog");
+	const { TEST_CATALOG } = await import("@/lib/models/catalog.fixtures");
 	const catalog = { data: TEST_CATALOG, isError: false, refetch: vi.fn() };
 	const none = { data: undefined, isError: false };
 	return {
