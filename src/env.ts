@@ -12,6 +12,9 @@ export const env = createEnv({
 		VITE_CONVEX_SITE_URL: z.url(),
 		// Build-time switch for the /e2e test pages (on in dev regardless). Set only by playwright.config.ts.
 		VITE_E2E: z.enum(["true", "false"]).optional(),
+		// Send `track()` events to Vercel Web Analytics (src/lib/analytics/track.ts). Custom events need
+		// Vercel Pro; leave unset on Hobby, where page views and Web Vitals still go.
+		VITE_ANALYTICS_CUSTOM_EVENTS: z.enum(["true", "false"]).optional(),
 	},
 
 	runtimeEnv: import.meta.env,

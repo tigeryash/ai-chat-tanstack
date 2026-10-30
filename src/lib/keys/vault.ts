@@ -1,3 +1,4 @@
+import { track } from "@/lib/analytics/track";
 import { logWarn } from "@/lib/log";
 import { forgetSecret, registerSecret } from "@/lib/redact";
 import { createDeviceKey, decryptSecret, encryptSecret } from "./crypto";
@@ -169,7 +170,9 @@ export async function saveProviderKey(
 	...args: Parameters<KeyVault["save"]>
 ): Promise<KeySummary> {
 	try {
-		return await vault.save(...args);
+		const summary = await vault.save(...args);
+		track("key_connected", { provider: summary.providerId });
+		return summary;
 	} finally {
 		// Also after a failure: save deletes the old key first.
 		notifyKeysChanged();

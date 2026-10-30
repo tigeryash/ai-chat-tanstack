@@ -79,6 +79,10 @@ Playwright runs in 4 shards with 2 workers each (4 workers per runner made timin
 - **Background status** (roadmap 3.10, `src/lib/background-status/`): `chat-sessions.ts` reports every chat's
   replying/finished/failed into `activity.ts`, so the hidden-tab title, favicon and notifications cover all open
   chats (and panes). Mounted once as `<BackgroundStatus />` in the `(dashboard)` layout.
+- **Analytics** (roadmap 1.8, `src/lib/analytics/`): `track()` is the only way to send an event; add new ones to
+  the allowlist in `events.ts` (closed-set properties only) and to `docs/data-inventory.md`. Vercel Web Analytics
+  and Speed Insights load from `<VercelAnalytics />` in `__root.tsx` in production builds only; dev and e2e record
+  events in `window.__highEloAnalytics`. Settings → Analytics (and GPC / Do Not Track) turns everything off.
 - **Models** (roadmap 2.1–2.2): Convex `models` table synced daily (`convex/modelCatalogSync.ts`, curation in
   `src/models/curation.ts`). The app reads `models.list` / `models.get` over HTTP (`src/lib/models/catalog.ts`), and
   the e2e Convex stub serves the seeded catalog in `src/lib/models/catalog.fixtures.ts`. Runnability per user is

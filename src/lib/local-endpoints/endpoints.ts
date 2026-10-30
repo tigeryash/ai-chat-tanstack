@@ -1,3 +1,4 @@
+import { track } from "@/lib/analytics/track";
 import { createLocalStore } from "@/lib/local-store";
 import { z } from "@/lib/zod";
 
@@ -138,6 +139,7 @@ export function addLocalEndpoint(draft: EndpointDraft): LocalEndpoint {
 	}
 	const endpoint = toEndpoint(newId(), draft);
 	store.write([...current, endpoint]);
+	track("local_endpoint_added", { kind: endpoint.kind });
 	return endpoint;
 }
 

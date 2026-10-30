@@ -17,8 +17,8 @@ you can export or delete it.
   join a group chat. None of those features is live yet.
 - **We never see your prompts or replies.** They go from your browser straight to the provider you choose, under
   your own account with that provider.
-- **Analytics never include content.** No prompts, replies, file contents, or keys. You'll be able to turn
-  analytics off.
+- **Analytics never include content.** No prompts, replies, file contents, or keys. You can turn analytics
+  off in Settings.
 - **An account is optional.** You can chat without one. You need one only for cloud features.
 
 ## What stays in your browser
@@ -88,7 +88,7 @@ syncing chats across devices, sharing a chat by link, group chats, and durable a
   message.
 - **Google, GitHub and Discord**, if you sign in with them. They take part in the sign-in and share your name,
   email and avatar with us.
-- **Vercel Web Analytics and Speed Insights** (being added): page views and page-speed measurements. They use
+- **Vercel Web Analytics and Speed Insights**: page views and page-speed measurements. They use
   no cookies, see only the page's route (never chat IDs, codes or tokens in the address), never include
   content, and keep data for 1 month. You can turn them off in Settings, and we honor Global Privacy Control
   and Do Not Track.

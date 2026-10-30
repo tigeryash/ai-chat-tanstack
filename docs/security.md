@@ -87,6 +87,16 @@ analytics never receive prompt or reply text at all.
 It is `src/lib/redact.ts`; app code logs through `logError`/`logWarn` in `src/lib/log.ts`, which run it first.
 `convex/` has its own logging (names and config only) and doesn't import it yet.
 
+*Analytics (1.8, 2026-10-30).* `track()` (`src/lib/analytics/track.ts`) is the only way to send an event: the name
+must be on the allowlist in `events.ts`, properties must pass that event's schema (booleans, small numbers, enums,
+short lowercase slugs; unknown ones are dropped), and if `redact()` would change anything the event is dropped.
+Page views and Web Vitals go to Vercel Web Analytics and Speed Insights, whose scripts and endpoints are on our own
+origin (`/_vercel/…`), so the CSP needed no new source: `'strict-dynamic'` trusts the script our code inserts, and
+`connect-src 'self'` covers the posts. Their `beforeSend` cuts page URLs down to the route (no query string, so no
+OAuth `?code=` or reset `?token=`; a chat id becomes `/[chatId]`). One Settings switch (`highelo-analytics`), and
+the browser's Global Privacy Control or Do Not Track, turn all three off. Dev and e2e builds record events in
+memory instead; `e2e/analytics.spec.ts` loads stand-in scripts from the same paths under the CSP.
+
 **Dependencies (1.0).** `bunfig.toml` sets `minimumReleaseAge` to 3 days, `trustedDependencies` is an empty list
 (this also turns off Bun's built-in trust list; esbuild works without its postinstall), and
 `.github/dependabot.yml` opens grouped weekly PRs with a matching cooldown, skipping `better-auth` 1.7+ and

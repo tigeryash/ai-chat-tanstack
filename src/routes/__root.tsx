@@ -11,6 +11,7 @@ import {
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { createServerFn } from "@tanstack/react-start";
 import { MotionConfig } from "motion/react";
+import { VercelAnalytics } from "@/components/analytics/vercel-analytics";
 import { TooltipProvider } from "@/components/ui/tooltip-provider";
 import { env } from "@/env";
 import { currentViewer } from "@/lib/account";
@@ -115,6 +116,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 						{/* Base UI tooltips share their open delay through one provider (0 ms, as before). */}
 						<TooltipProvider>{children}</TooltipProvider>
 					</MotionConfig>
+					{/* Page views and Web Vitals in production, unless switched off (roadmap 1.8). */}
+					<VercelAnalytics />
 					<TanStackDevtools
 						config={{
 							position: "bottom-right",

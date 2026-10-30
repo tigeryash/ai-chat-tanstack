@@ -4,7 +4,11 @@ import type { ReactNode } from "react";
 import MessagesList from "@/components/chat/chatstuff/messages-list";
 import { Input } from "@/components/chat/input";
 import { Button } from "@/components/ui/button";
-import type { ModelSelection } from "@/lib/chat/model-selection";
+import { track } from "@/lib/analytics/track";
+import {
+	LOCAL_PROVIDER,
+	type ModelSelection,
+} from "@/lib/chat/model-selection";
 import { logError } from "@/lib/log";
 
 export interface ChatViewProps {
@@ -46,6 +50,11 @@ export function ChatView({
 		if (!options) return;
 		// Not awaited: it resolves when the reply finishes, and the composer clears once this returns.
 		sendMessage({ text }, options).catch(logFailure);
+		track("chat_sent", {
+			providerKind:
+				options.body.provider === LOCAL_PROVIDER ? "local" : "hosted",
+			hasAttachment: false,
+		});
 		onSend?.();
 	};
 	const retry = options

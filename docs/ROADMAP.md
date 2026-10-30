@@ -101,6 +101,11 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   browser profile (or after clearing site data), save the first OpenRouter key (paste or Connect OpenRouter), go
   back to a chat without reloading, and check the picker's "Run with" light turns green. *Checked 2026-10-29:*
   the test notification appears once macOS allows the browser, and a re-added key turns the light green.
+- [ ] For 1.8: in the Vercel dashboard, open the project and turn on **Analytics** (Web Analytics) and **Speed
+  Insights** (both free on Hobby), then redeploy. Until then `/_vercel/insights/script.js` and
+  `/_vercel/speed-insights/script.js` 404 and nothing is collected. After deploying, load a page, check the Analytics
+  tab shows a visit, and that Vercel's `[csp]` log has no `_vercel` lines. Custom events (`track()`) need Pro; on
+  Hobby leave `VITE_ANALYTICS_CUSTOM_EVENTS` unset.
 - [ ] After 1.9 is deployed: on `www.highelollms.com`, with two real accounts (say email and GitHub). Signed out,
   make a chat. Sign in as the first: the "chats from before you signed in" question appears; choose Keep, make a
   chat, sign out (it disappears, the signed-out one stays). Sign in as the second: answer the question, and check
@@ -424,8 +429,11 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   drag-drop and paperclip validation; revoke object URLs.
 - [ ] **1.7 Edit and branch.** Edit a user message → new branch; switch between siblings.
 - [ ] **1.8 Analytics foundation** (decision 23). A `track()` wrapper with an allowlist of event names and
-  properties; cookieless page analytics and Web Vitals (`web-vitals` is already installed); Sentry with scrubbing.
-  From here on, each slice lists the events it adds.
+  properties; cookieless page analytics and Web Vitals (Vercel Web Analytics and Speed Insights, free on Hobby); an
+  opt-out in Settings that also honors Do Not Track / Global Privacy Control. From here on, each slice lists the
+  events it adds.
+- [ ] **1.8b Error reporting (Sentry, scrubbed).** Sentry with `redact()` in `beforeSend`, no content, behind the
+  same opt-out.
 - [x] **1.9 Chat ownership on this device.** Each stored chat records its owner (a Better Auth user ID, or none
   when made signed out), through a format migration that makes existing chats no-account chats. Signed out, the
   sidebar shows only no-account chats; signed in, the account's own plus the no-account ones (marked "Not saved to

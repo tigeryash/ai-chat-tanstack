@@ -6,6 +6,7 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
+import { track } from "@/lib/analytics/track";
 import { LOCAL_PROVIDER, type ModelChoice } from "@/lib/chat/model-selection";
 import type { ChatNeeds } from "@/lib/hosts/host-options";
 import type { ProviderId } from "@/lib/keys/providers";
@@ -41,6 +42,19 @@ export interface ModelPickerProps {
 	connected: ReadonlySet<ProviderId> | null;
 }
 
+/** `model_picked` with the catalog's developer id (or local / custom) and whether it's High Elo. */
+function trackPick(next: ModelChoice, models: readonly CatalogModel[]) {
+	const model = next.gatewayId
+		? models.find((entry) => entry.gatewayId === next.gatewayId)
+		: undefined;
+	track("model_picked", {
+		developer:
+			model?.developer ??
+			(next.provider === LOCAL_PROVIDER ? LOCAL_PROVIDER : "custom"),
+		highElo: model?.highElo ?? false,
+	});
+}
+
 function triggerLabel(
 	choice: ModelChoice | null,
 	chosenModel: CatalogModel | undefined,
@@ -72,6 +86,9 @@ export function ModelPicker({
 	const local = useLocalModels(open);
 
 	const choose = (next: ModelChoice, close: boolean) => {
+		if (next.gatewayId !== choice?.gatewayId || next.model !== choice?.model) {
+			trackPick(next, catalog.models ?? []);
+		}
 		onChange(next);
 		if (close) setOpen(false);
 	};
