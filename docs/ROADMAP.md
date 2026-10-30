@@ -93,13 +93,14 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
 - [x] Run the 2.4a parameter probe once (about $0.10 of OpenRouter credit, capped at $0.50): from the main checkout,
   `bun scripts/probe-params.ts` (dry run, check the plan), then `bun scripts/probe-params.ts --yes`, and commit
   `src/models/parameter-probe.generated.ts`. 2.4b's settings panel reads it. *Ran 2026-10-29:* 20 models.
-- [ ] After the probe-results PR merges: `bunx convex dev --once`, `bunx convex run modelCatalogSync:sync`, then
+- [x] After the probe-results PR merges: `bunx convex dev --once`, `bunx convex run modelCatalogSync:sync`, then
   `bun scripts/probe-params.ts --yes --skip-high-elo --model alibaba/qwen3.8-max --model meta/muse-wonder-1.0
-  --model mistral/mistral-large-4` (about a cent) and commit the updated results.
-- [ ] After the production-test fixes deploy: on your Mac, Settings → Background status → "Send test
+  --model mistral/mistral-large-4` (about a cent) and commit the updated results. *Results committed in the repo-cleanup PR.*
+- [x] After the production-test fixes deploy: on your Mac, Settings → Background status → "Send test
   notification" (Chrome and Helium) and confirm one appears; if not, follow the help it shows. Then, in a fresh
   browser profile (or after clearing site data), save the first OpenRouter key (paste or Connect OpenRouter), go
-  back to a chat without reloading, and check the picker's "Run with" light turns green.
+  back to a chat without reloading, and check the picker's "Run with" light turns green. *Checked 2026-10-29:*
+  the test notification appears once macOS allows the browser, and a re-added key turns the light green.
 - [ ] After 1.9 is deployed: on `www.highelollms.com`, with two real accounts (say email and GitHub). Signed out,
   make a chat. Sign in as the first: the "chats from before you signed in" question appears; choose Keep, make a
   chat, sign out (it disappears, the signed-out one stays). Sign in as the second: answer the question, and check
