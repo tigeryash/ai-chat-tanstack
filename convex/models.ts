@@ -7,7 +7,7 @@ import {
 	modelRowValidator,
 	sourceRunValidator,
 } from "./lib/modelCatalog/validators";
-import { toCatalogModel } from "./lib/modelCatalog/view";
+import { toCatalogModel, toModelParameters } from "./lib/modelCatalog/view";
 
 // The model catalog (roadmap 2.1, decision 13). Public data, so the queries need no session.
 // Written only by the daily sync in convex/modelCatalogSync.ts.
@@ -55,6 +55,21 @@ export const get = query({
 			.withIndex("by_gateway_id", (q) => q.eq("gatewayId", gatewayId))
 			.first();
 		return row ? toCatalogModel(toRow(row), false) : null;
+	},
+});
+
+/**
+ * One model's parameter lists and reasoning options, for the settings panel (roadmap 2.4b). Kept out
+ * of `list`, which would grow by a parameter list per model.
+ */
+export const parameters = query({
+	args: { gatewayId: v.string() },
+	handler: async (ctx, { gatewayId }) => {
+		const row = await ctx.db
+			.query("models")
+			.withIndex("by_gateway_id", (q) => q.eq("gatewayId", gatewayId))
+			.first();
+		return row ? toModelParameters(toRow(row)) : null;
 	},
 });
 

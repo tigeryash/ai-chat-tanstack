@@ -76,6 +76,13 @@ Playwright runs in 4 shards with 2 workers each (4 workers per runner made timin
   and 127.0.0.1 only, to match `connect-src`); a local `ModelChoice` names its `endpoint` id. Nothing calls one
   before it's saved and the Local Network Access explainer was clicked through. e2e stubs a server with
   `context.route` (`e2e/local-models.spec.ts`); note `route.fulfill` adds a matching CORS header when you set none.
+- **Model settings** (roadmap 2.4b, `src/lib/params/`): `registry.ts` defines each setting, `support.ts` decides
+  which a model and host take (2.4a probe "accepted" first, then the catalog's lists from Convex `models.parameters`;
+  unknown means hidden), `mapping.ts` turns them into `streamText` options and strips the rest. Each chat's
+  settings sit on its ChatStore row (`lib/chat/chat-settings.ts`), the shared system prompt in the `prefs` table.
+  The panel is `src/components/params/`. A React Compiler trap found here: a hook called as a method
+  (`store.use()`) or a read of a mutable Map can get memoized; wrap the first in a `use…` function and make
+  the second an immutable snapshot.
 - **Background status** (roadmap 3.10, `src/lib/background-status/`): `chat-sessions.ts` reports every chat's
   replying/finished/failed into `activity.ts`, so the hidden-tab title, favicon and notifications cover all open
   chats (and panes). Mounted once as `<BackgroundStatus />` in the `(dashboard)` layout.

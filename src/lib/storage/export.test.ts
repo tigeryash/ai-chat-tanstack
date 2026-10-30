@@ -42,7 +42,12 @@ describe("export and import", () => {
 			null,
 		);
 		await store.renameChat("c2", "Second");
+		await store.setSettings("c2", {
+			params: { temperature: 0.5 },
+			systemPrompt: "Be brief.",
+		});
 		const before = await everything(store);
+		expect(before.find((chat) => chat.id === "c2")?.settings).toBeDefined();
 
 		const exported = await exportChats(store, null);
 		expect(exported).toMatchObject({ chatCount: 2, unreadableChatIds: [] });

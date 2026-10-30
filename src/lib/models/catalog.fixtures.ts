@@ -1,4 +1,4 @@
-import type { CatalogModel, ModelCatalog } from "./catalog";
+import type { CatalogModel, ModelCatalog, ModelParameters } from "./catalog";
 
 // A small seeded catalog for unit tests and the e2e Convex stub (e2e/support/convex-stub.ts), which
 // serves it as `models.list` and `models.get`. Made-up but shaped like the real sync's output.
@@ -160,4 +160,39 @@ export function testCatalogModel(gatewayId: string): CatalogModel | null {
 			(entry) => entry.gatewayId === gatewayId,
 		) ?? null
 	);
+}
+
+/**
+ * What `models.parameters` answers (roadmap 2.4b). Opus 5.5 and DeepSeek V4.1 Flash are also in the
+ * real probe results, which win over these lists; Kimi K3 isn't, so its list decides.
+ */
+const TEST_MODEL_PARAMETERS: Readonly<Record<string, ModelParameters>> = {
+	"anthropic/claude-opus-5.5": {
+		supportedParameters: ["max_tokens", "reasoning", "stop", "temperature"],
+		openRouterParameters: ["max_tokens", "reasoning", "stop", "verbosity"],
+		reasoningOptions: [
+			{ type: "effort", values: ["low", "medium", "high", "xhigh", "max"] },
+		],
+	},
+	"deepseek/deepseek-v4.1-flash": {
+		supportedParameters: ["max_tokens", "temperature", "top_p", "seed"],
+		openRouterParameters: [
+			"max_tokens",
+			"temperature",
+			"top_p",
+			"top_k",
+			"min_p",
+			"seed",
+		],
+		reasoningOptions: [],
+	},
+	"moonshotai/kimi-k3": {
+		supportedParameters: ["max_tokens", "temperature"],
+		openRouterParameters: ["max_tokens", "temperature", "top_p"],
+		reasoningOptions: [],
+	},
+};
+
+export function testModelParameters(gatewayId: string): ModelParameters | null {
+	return TEST_MODEL_PARAMETERS[gatewayId] ?? null;
 }

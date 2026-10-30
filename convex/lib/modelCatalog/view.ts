@@ -65,3 +65,21 @@ export function toCatalogModel(row: ModelRow, highElo: boolean): CatalogModel {
 		removedAt: row.removedAt,
 	};
 }
+
+/**
+ * What the settings panel (roadmap 2.4b) needs of one model: which parameters each route lists, in
+ * OpenRouter's names, and its reasoning options (effort values, thinking budget range).
+ */
+export type ModelParameters = {
+	supportedParameters: string[];
+	openRouterParameters?: string[];
+	reasoningOptions: ModelRow["reasoningOptions"];
+};
+
+export function toModelParameters(row: ModelRow): ModelParameters {
+	return {
+		supportedParameters: row.supportedParameters,
+		openRouterParameters: row.openRouter?.supportedParameters,
+		reasoningOptions: row.reasoningOptions,
+	};
+}

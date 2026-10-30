@@ -45,6 +45,8 @@ test("a saved chat survives a reload, and works offline", async ({
 test("a v0 chat loads through migration", async ({ page }) => {
 	await open(page);
 	await press(page, "Seed v0 chat");
+	// The seed is two IndexedDB writes; reloading before they commit loses the chat.
+	await expect(chat(page, "chat-v0")).toBeVisible();
 	await page.reload();
 	await expect(page.locator("main[data-ready='true']")).toBeAttached();
 

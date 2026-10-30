@@ -317,4 +317,46 @@ describe("DexieChatStore", () => {
 			(await createDexieChatStore({ db }).getChat("c1"))?.messages,
 		).toEqual(hello);
 	});
+	it("keeps a chat's settings across saves, and skips settings for unsaved chats", async () => {
+		const { store } = setup();
+		const settings = {
+			params: { temperature: 0.2, stopSequences: ["END"] },
+			systemPrompt: "Be brief.",
+		};
+		await store.setSettings("c1", settings);
+		await store.saveMessages("c1", hello, null);
+		expect((await store.getChat("c1"))?.settings).toBeUndefined();
+
+		await store.setSettings("c1", settings);
+		await store.saveMessages("c1", hello, null);
+		expect((await store.getChat("c1"))?.settings).toEqual(settings);
+		await expect(
+			store.setSettings("c1", { params: { temperature: 9 } }),
+		).rejects.toThrow();
+	});
+
+	it("drops bad settings on read instead of failing the chat", async () => {
+		const { db, store } = setup();
+		await store.saveMessages("c1", hello, null);
+		await db.chats.update("c1", {
+			settings: {
+				params: { temperature: 99, seed: 4, nonsense: true },
+				systemPrompt: 42,
+			} as never,
+		});
+		expect((await store.getChat("c1"))?.settings).toEqual({
+			params: { seed: 4 },
+		});
+	});
+
+	it("keeps the shared system prompt", async () => {
+		const { db, store } = setup();
+		expect(await store.getDefaultSystemPrompt()).toBe("");
+		await store.setDefaultSystemPrompt("You are terse.");
+		db.close();
+		await db.open();
+		expect(await createDexieChatStore({ db }).getDefaultSystemPrompt()).toBe(
+			"You are terse.",
+		);
+	});
 });

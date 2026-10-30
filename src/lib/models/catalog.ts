@@ -1,5 +1,8 @@
 import { api } from "@convex/_generated/api";
-import type { CatalogModel } from "@convex/lib/modelCatalog/view";
+import type {
+	CatalogModel,
+	ModelParameters,
+} from "@convex/lib/modelCatalog/view";
 import { useQuery } from "@tanstack/react-query";
 import { ConvexHttpClient } from "convex/browser";
 import type { FunctionReturnType } from "convex/server";
@@ -10,7 +13,7 @@ import { env } from "@/env";
 // (`expectAuth`) and chatting needs none (decision 4), and the e2e Convex stub can answer a plain
 // POST with a seeded catalog.
 
-export type { CatalogModel };
+export type { CatalogModel, ModelParameters };
 export type ModelCatalog = FunctionReturnType<typeof api.models.list>;
 
 const CATALOG_STALE_MS = 60 * 60 * 1000;
@@ -39,5 +42,19 @@ export function useCatalogModel(gatewayId: string | undefined) {
 			catalogClient().query(api.models.get, { gatewayId: gatewayId ?? "" }),
 		enabled: gatewayId !== undefined,
 		staleTime: CATALOG_STALE_MS,
+	});
+}
+
+/** One model's parameter lists and reasoning options, for the settings panel (roadmap 2.4b). */
+export function useModelParameters(gatewayId: string | undefined) {
+	return useQuery({
+		queryKey: ["model-parameters", gatewayId],
+		queryFn: () =>
+			catalogClient().query(api.models.parameters, {
+				gatewayId: gatewayId ?? "",
+			}),
+		enabled: gatewayId !== undefined,
+		staleTime: CATALOG_STALE_MS,
+		retry: 2,
 	});
 }

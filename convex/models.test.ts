@@ -172,6 +172,22 @@ describe("model catalog sync", () => {
 		).toBeNull();
 	});
 
+	it("serves one model's parameter lists and reasoning options", async () => {
+		const t = createConvexTest();
+		await sync(t);
+
+		const opus = await t.query(api.models.parameters, {
+			gatewayId: "anthropic/claude-opus-5.5",
+		});
+		expect(opus?.supportedParameters).toContain("max_tokens");
+		expect(opus?.reasoningOptions).toEqual([
+			{ type: "effort", values: ["low", "medium", "high", "xhigh", "max"] },
+		]);
+		expect(
+			await t.query(api.models.parameters, { gatewayId: "nobody/nothing" }),
+		).toBeNull();
+	});
+
 	it.each([
 		"gateway",
 		"gatewayEndpoints",

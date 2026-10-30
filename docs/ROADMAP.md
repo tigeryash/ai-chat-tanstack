@@ -96,6 +96,10 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
 - [x] After the probe-results PR merges: `bunx convex dev --once`, `bunx convex run modelCatalogSync:sync`, then
   `bun scripts/probe-params.ts --yes --skip-high-elo --model alibaba/qwen3.8-max --model meta/muse-wonder-1.0
   --model mistral/mistral-large-4` (about a cent) and commit the updated results. *Results committed in the repo-cleanup PR.*
+- [ ] After 2.4b is deployed: on `www.highelollms.com`, open the sliders button next to the model for a few models
+  (one Anthropic, one OpenAI, one open-weights model through OpenRouter, and a local one), set each shown
+  control to its lowest and highest value, send, and note any error. e2e only checks requests against a fake
+  OpenRouter.
 - [x] After the production-test fixes deploy: on your Mac, Settings → Background status → "Send test
   notification" (Chrome and Helium) and confirm one appears; if not, follow the help it shows. Then, in a fresh
   browser profile (or after clearing site data), save the first OpenRouter key (paste or Connect OpenRouter), go
@@ -493,9 +497,11 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
 - [x] **2.4a Parameter probe script.** Sends one tiny request per parameter per model with the developer's own keys
   (cents per run), records accept / reject / ignored, and writes results into `curation.ts`.
   *Status (2026-10-29):* script and tests in [#35](https://github.com/tigeryash/ai-chat-tanstack/pull/35); the first real run is an owner to-do.
-- [ ] **2.4b Parameter registry + settings panel** (decision 15), including provider-specific options and local
+- [x] **2.4b Parameter registry + settings panel** (decision 15), including provider-specific options and local
   sampling settings.
   *Done when:* switching models shows/hides the right controls and no supported model errors across any control's range.
+  *Status (2026-10-30):* registry, panel and transport mapping in [#47](https://github.com/tigeryash/ai-chat-tanstack/pull/47); checking each control's full range
+  against real models is an owner to-do.
 - [ ] **2.5 Usage and cost display.** Tokens, TTFT, tokens/sec, and estimated cost per message, chat, and provider,
   from catalog pricing. It's the user's money, so make it visible.
 - [ ] **2.6 (Stretch) In-browser models.** WebGPU (transformers.js / WebLLM) and browser built-in AI (e.g. Chrome's
