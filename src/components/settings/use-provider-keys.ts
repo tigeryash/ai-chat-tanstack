@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
-import type { KeySource } from "@/lib/keys/key-store";
-import type { ProviderId } from "@/lib/keys/providers";
 import {
 	deleteProviderKey,
 	type KeyMode,
 	type KeySummary,
 	listProviderKeys,
 	saveProviderKey,
-} from "@/lib/keys/vault";
+} from "@/lib/keys";
+import type { KeySource } from "@/lib/keys/key-store";
+import type { ProviderId } from "@/lib/keys/providers";
 import { logError } from "@/lib/log";
 
 interface LoadedKeys {

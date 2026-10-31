@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import type { KeyMode } from "@/lib/keys";
 import {
 	finishOpenRouterConnect,
 	OpenRouterConnectError,
@@ -7,7 +8,6 @@ import {
 	startOpenRouterConnect,
 	withoutOpenRouterCallback,
 } from "@/lib/keys/openrouter-oauth";
-import type { KeyMode } from "@/lib/keys/vault";
 import { logError } from "@/lib/log";
 import { KeyModeChoice } from "./key-mode-choice";
 
