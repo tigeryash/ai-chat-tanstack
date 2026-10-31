@@ -28,6 +28,20 @@ export const MAX_IDLE_OPEN_CHATS = 8;
 const openChats = new Map<string, OpenChat>();
 // Chats on screen, with how many places show each.
 const retained = new Map<string, number>();
+// Called whenever a chat is opened, released, closed or changes owner (`useOpenChat` re-renders).
+const listeners = new Set<() => void>();
+
+function notify(): void {
+	for (const listener of listeners) listener();
+}
+
+/** Calls `listener` whenever the set of open chats changes. Returns the unsubscribe function. */
+export function subscribeOpenChats(listener: () => void): () => void {
+	listeners.add(listener);
+	return () => {
+		listeners.delete(listener);
+	};
+}
 
 /** The open chat with this id, marked as just used. */
 export function getOpenChat(id: string): OpenChat | undefined {
@@ -48,6 +62,7 @@ export function addOpenChat(id: string, open: OpenChat): void {
 	openChats.delete(id);
 	openChats.set(id, open);
 	releaseIdleChats();
+	notify();
 }
 
 function isBusy({ chat }: OpenChat): boolean {
@@ -86,6 +101,7 @@ export function closeChat(id: string): void {
 	const open = openChats.get(id);
 	if (!open) return;
 	openChats.delete(id);
+	notify();
 	forgetChatSettings(id);
 	setReplying(id, false);
 	open.chat
@@ -130,4 +146,5 @@ export async function setChatOwner(
 		const open = openChats.get(id);
 		if (open) openChats.set(id, { ...open, ownerId });
 	}
+	notify();
 }

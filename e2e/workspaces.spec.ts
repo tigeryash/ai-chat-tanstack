@@ -281,3 +281,84 @@ test("screenshot: three panes side by side", async ({ page, context }) => {
 		page.locator("main, [data-slot=sidebar-inset]").first(),
 	).toHaveScreenshot("workspace-three-panes.png");
 });
+
+// Quality audit Q2, W1: the tab keeps at most 8 idle chats open, so opening 9 others releases the ones
+// shown before. Coming back has to read them from the store again, not start them empty: an empty
+// chat's next reply would save over the stored history.
+test.describe("after the tab releases idle chats", () => {
+	const OTHER_CHATS = 9;
+
+	async function openOtherChats(page: Page) {
+		const body = page.locator("body");
+		for (let i = 0; i < OTHER_CHATS; i++) {
+			await page.getByRole("link", { name: "New chat" }).click();
+			await expect(page).toHaveURL(/\/new$/);
+			await composer(body).fill(`Other ${i}`);
+			await composer(body).press("Enter");
+			await expect(page).toHaveURL(/\/[0-9a-f-]{36}$/);
+			await expect(status(body)).toHaveAttribute("data-chat-status", "ready");
+		}
+	}
+
+	test("a workspace's panes keep their history", async ({ page, context }) => {
+		test.setTimeout(90_000);
+		await setUp(context, page, e2eMockModel("alpha"));
+		await openWorkspace(page, 2);
+		const workspaceUrl = page.url();
+		await composer(pane(page, 1)).fill("Remember me");
+		await composer(pane(page, 1)).press("Enter");
+		for (const n of [1, 2]) {
+			await expect(status(pane(page, n))).toHaveAttribute(
+				"data-chat-status",
+				"ready",
+			);
+		}
+
+		await openOtherChats(page);
+		await page.getByRole("link", { name: /Remember me/ }).click();
+		await expect(page).toHaveURL(workspaceUrl);
+		for (const n of [1, 2]) {
+			await expect(pane(page, n).getByText("Remember me")).toBeVisible();
+		}
+
+		// The next reply adds to the history instead of replacing it, and both survive a reload.
+		await composer(pane(page, 1)).fill("After return");
+		await composer(pane(page, 1)).press("Enter");
+		for (const n of [1, 2]) {
+			await expect(status(pane(page, n))).toHaveAttribute(
+				"data-chat-status",
+				"ready",
+			);
+		}
+		await page.reload();
+		await expect(panes(page)).toHaveCount(2);
+		for (const n of [1, 2]) {
+			await expect(pane(page, n).getByText("Remember me")).toBeVisible();
+			await expect(pane(page, n).getByText("After return")).toBeVisible();
+		}
+	});
+
+	test("a single chat keeps its history", async ({ page, context }) => {
+		test.setTimeout(90_000);
+		await setUp(context, page, e2eMockModel("alpha"));
+		await page.goto("/new");
+		const body = page.locator("body");
+		await composer(body).fill("Remember me");
+		await composer(body).press("Enter");
+		await expect(page).toHaveURL(/\/[0-9a-f-]{36}$/);
+		const chatUrl = page.url();
+		await expect(status(body)).toHaveAttribute("data-chat-status", "ready");
+
+		await openOtherChats(page);
+		await page.getByRole("link", { name: /Remember me/ }).click();
+		await expect(page).toHaveURL(chatUrl);
+		await expect(page.getByText("Remember me").last()).toBeVisible();
+
+		await composer(body).fill("After return");
+		await composer(body).press("Enter");
+		await expect(status(body)).toHaveAttribute("data-chat-status", "ready");
+		await page.reload();
+		await expect(page.getByText(e2eMockReply("alpha"))).toHaveCount(2);
+		await expect(page.locator("main").getByText("Remember me")).toBeVisible();
+	});
+});
