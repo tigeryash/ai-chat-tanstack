@@ -28,6 +28,18 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
 4. **Voice:** Phase 5.
 5. **Cloud and launch:** Phases 6 and 7.
 
+## Quality audits
+
+Agents build slices in parallel, each seeing only its own part, so duplication, dead code and drift build up
+between the checks CI can run. Do a read-only audit at the end of every milestone (and whenever many slices land
+at once), then turn its findings into small refactor slices.
+
+- [x] **Q1 (2026-10):** [quality-audit-2026-10.md](./quality-audit-2026-10.md) ([#46](https://github.com/tigeryash/ai-chat-tanstack/pull/46)),
+  fixed in [#48](https://github.com/tigeryash/ai-chat-tanstack/pull/48)–[#53](https://github.com/tigeryash/ai-chat-tanstack/pull/53)
+  (old Convex chat backend retired, leaner first load, fewer re-renders, composer cleanup, knip and lint guards in CI,
+  provider registry and a CSP enforce switch).
+- [ ] **Q2:** after Milestone 1 (3.1 + 3.2).
+
 ## Owner to-dos (Yash)
 
 - [x] Buy a domain. Needed for stable auth and email links, and for the separate sandbox subdomain (4.8).
@@ -432,10 +444,11 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
 - [ ] **1.6 Attachments that send.** Images/PDFs as `file` parts where supported; blobs in IndexedDB; unified
   drag-drop and paperclip validation; revoke object URLs.
 - [ ] **1.7 Edit and branch.** Edit a user message → new branch; switch between siblings.
-- [ ] **1.8 Analytics foundation** (decision 23). A `track()` wrapper with an allowlist of event names and
+- [x] **1.8 Analytics foundation** (decision 23). A `track()` wrapper with an allowlist of event names and
   properties; cookieless page analytics and Web Vitals (Vercel Web Analytics and Speed Insights, free on Hobby); an
   opt-out in Settings that also honors Do Not Track / Global Privacy Control. From here on, each slice lists the
   events it adds.
+  *Status:* merged in [#44](https://github.com/tigeryash/ai-chat-tanstack/pull/44); turning on Analytics and Speed Insights in Vercel is an owner to-do.
 - [ ] **1.8b Error reporting (Sentry, scrubbed).** Sentry with `redact()` in `beforeSend`, no content, behind the
   same opt-out.
 - [x] **1.9 Chat ownership on this device.** Each stored chat records its owner (a Better Auth user ID, or none
@@ -486,14 +499,14 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   - [ ] A price cap for Auto.
   - [ ] Exclude quantized hosts (OpenRouter `quantizations`, Gateway `!quantization:`).
   - [ ] Context-length warnings per host (a chat longer than a host's context).
-- [ ] **2.3 Local models.** Endpoint settings for LM Studio / Ollama: test connection, list models, and keep the
+- [x] **2.3 Local models.** Endpoint settings for LM Studio / Ollama: test connection, list models, and keep the
   `<think>` middleware. Handle Chrome's Local Network Access prompt: explain it before it appears, and if the user
   denies it, show how to re-allow it in site settings (Chrome won't ask twice). CORS warning per [security.md](./security.md):
   warn only when the server allows every origin (`*`), with Ollama `OLLAMA_ORIGINS` instructions and a "don't show
   again" per endpoint.
   *Done when:* the deployed app chats with LM Studio on your laptop.
-  *Status:* Built and e2e-tested against a stubbed server ([#37](https://github.com/tigeryash/ai-chat-tanstack/pull/37)). Tick it after the owner to-do below: a
-  real LM Studio chat on www.highelollms.com.
+  *Status:* Built in [#37](https://github.com/tigeryash/ai-chat-tanstack/pull/37). *2026-10-29:* Yash added LM Studio on
+  www.highelollms.com: "Test connection" listed his models and they appear under "Local" in the picker.
 - [x] **2.4a Parameter probe script.** Sends one tiny request per parameter per model with the developer's own keys
   (cents per run), records accept / reject / ignored, and writes results into `curation.ts`.
   *Status (2026-10-29):* script and tests in [#35](https://github.com/tigeryash/ai-chat-tanstack/pull/35); the first real run is an owner to-do.
