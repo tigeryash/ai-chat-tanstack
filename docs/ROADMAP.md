@@ -100,6 +100,10 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   (one Anthropic, one OpenAI, one open-weights model through OpenRouter, and a local one), set each shown
   control to its lowest and highest value, send, and note any error. e2e only checks requests against a fake
   OpenRouter.
+- [ ] After 3.1/3.2 are deployed: on `www.highelollms.com`, open a chat, click "Add pane" (the columns icon) and
+  compare 2–3 real models (say one Anthropic, one OpenAI, one through OpenRouter): send synced, press the composer's
+  Stop mid-reply, unsync one pane and send to it alone, then re-sync it and check the "Diverged" badge. Reload and
+  check the panes, models and widths come back. e2e uses mock models only.
 - [x] After the production-test fixes deploy: on your Mac, Settings → Background status → "Send test
   notification" (Chrome and Helium) and confirm one appears; if not, follow the help it shows. Then, in a fresh
   browser profile (or after clearing site data), save the first OpenRouter key (paste or Connect OpenRouter), go
@@ -523,9 +527,11 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   checks), contrast is AA in both themes, and Playwright passes with refreshed baselines.
   *Status:* done in [#45](https://github.com/tigeryash/ai-chat-tanstack/pull/45) (2026-10-30); the `/e2e/design`
   prototypes were removed, their screenshots stay in design-directions.md.
-- [ ] **3.1 Pane layout.** 1–4 resizable panes (`react-resizable-panels`), add/remove/reorder with `LayoutGroup`.
-- [ ] **3.2 Synced composers + Stop** (decisions 16 and 18). Per-pane composer with a "Synced" toggle and mirrored
+- [x] **3.1 Pane layout.** 1–4 resizable panes (`react-resizable-panels`), add/remove/reorder with `LayoutGroup`.
+  *Status:* done with 3.2 in PR_LINK (2026-10-31): workspaces at `/w/$id`, one sidebar entry each.
+- [x] **3.2 Synced composers + Stop** (decisions 16 and 18). Per-pane composer with a "Synced" toggle and mirrored
   input, the "diverged" badge, and the Stop behavior.
+  *Status:* done with 3.1 in PR_LINK (2026-10-31).
 - [ ] **3.3 Capability-aware attachments** (decision 17).
 - [ ] **3.4 Compare tools.** Per-pane TTFT, tokens/sec, cost; sync scroll; thumbs up/down; "copy settings to all panes".
 - [ ] **3.5 Workspaces.** Save/restore layouts and models; deep link `?models=a,b,c`.

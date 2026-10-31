@@ -3,6 +3,7 @@ import type { UIMessage } from "ai";
 import { describe, expect, it } from "vitest";
 import {
 	CHAT_MODEL_CHOICES_KEY,
+	holdChatModelChoice,
 	readChatModelChoice,
 	storeChatModelChoice,
 } from "./chat-model-choice";
@@ -39,5 +40,18 @@ describe("chat model choice", () => {
 			{ id: "3", role: "assistant", parts: [], metadata: { junk: true } },
 		];
 		expect(readChatModelChoice("imported-chat", messages)).toEqual(opus);
+	});
+
+	it("holds a pane's model, so a pick in another pane doesn't move it (roadmap 3.1)", () => {
+		storeChatModelChoice("first", opus);
+		holdChatModelChoice("pane-1");
+		holdChatModelChoice("pane-2");
+		storeChatModelChoice("pane-2", gpt);
+
+		expect(readChatModelChoice("pane-1")).toEqual(opus);
+		expect(readChatModelChoice("pane-2")).toEqual(gpt);
+		// Holding again keeps a chat's own choice.
+		holdChatModelChoice("pane-2");
+		expect(readChatModelChoice("pane-2")).toEqual(gpt);
 	});
 });

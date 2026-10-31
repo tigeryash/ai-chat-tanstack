@@ -1,6 +1,7 @@
 import type { Chat } from "@ai-sdk/react";
 import type { UIMessage } from "ai";
-import { ChatView } from "@/components/chat/chat-view";
+import type { ReactNode } from "react";
+import { ChatView, type ChatViewProps } from "@/components/chat/chat-view";
 import { HostSwitcher } from "@/components/models/host-switcher";
 import { LocalModelCard, ModelCard } from "@/components/models/model-card";
 import { ModelPicker } from "@/components/models/model-picker";
@@ -12,14 +13,21 @@ import { storeChatModelChoice } from "@/lib/chat/chat-model-choice";
 import { LOCAL_PROVIDER } from "@/lib/chat/model-selection";
 import { useLocalEndpointFor } from "@/lib/local-endpoints/endpoints";
 
-/** A chat with its model picker above it, and the model's card while the chat is empty. */
+/**
+ * A chat with its model picker above it, and the model's card while the chat is empty. In a workspace
+ * it's one pane (roadmap 3.1): `actions` sit at the header's end, and `sync` joins it to the others.
+ */
 export function ChatScreen({
 	chat,
 	onSend,
+	actions,
+	sync,
+	paneCount,
 }: {
 	chat: Chat<UIMessage>;
 	onSend?: () => void;
-}) {
+	actions?: ReactNode;
+} & Pick<ChatViewProps, "sync" | "paneCount">) {
 	// No `useChat` here: the header shouldn't re-render per streamed chunk. ChatView subscribes.
 	const model = useChatModel(chat);
 	const params = useChatParams(chat.id, model);
@@ -58,37 +66,47 @@ export function ChatScreen({
 			settings={params.request}
 			onSend={handleSend}
 			empty={empty}
+			sync={sync}
+			paneCount={paneCount}
 			header={
 				<>
-					<div className="flex w-full items-center gap-2 px-3 py-2">
-						<ModelPicker
-							choice={choice}
-							wanted={wanted}
-							needs={model.needs}
-							chosenModel={chosenModel}
-							onChange={model.setChoice}
-							catalog={model.catalog}
-							connected={model.connected}
-						/>
-						{choice && chosenModel && model.runnable && (
-							<HostSwitcher
+					{/* A narrow pane (roadmap 3.1) leaves out "via host" so the model name has room. */}
+					<div className="@container/header flex w-full min-w-0 items-center gap-2 px-3 py-2">
+						<div className="flex min-w-0 flex-1 items-center gap-2">
+							<ModelPicker
 								choice={choice}
-								hosts={model.hosts}
+								wanted={wanted}
+								needs={model.needs}
+								chosenModel={chosenModel}
 								onChange={model.setChoice}
+								catalog={model.catalog}
+								connected={model.connected}
 							/>
-						)}
-						{isLocal && (
-							<span className="font-mono text-muted-foreground text-xs">
-								via{" "}
-								{localEndpoint?.name ??
-									(choice.endpoint ? "a removed local server" : "Local")}
-							</span>
-						)}
-						{choice?.model && (
-							<SettingsPanel
-								params={params}
-								modelName={chosenModel?.name ?? choice.model}
-							/>
+							{choice && chosenModel && model.runnable && (
+								<div className="@md/header:flex hidden">
+									<HostSwitcher
+										choice={choice}
+										hosts={model.hosts}
+										onChange={model.setChoice}
+									/>
+								</div>
+							)}
+							{isLocal && (
+								<span className="@md/header:inline hidden min-w-0 truncate font-mono text-muted-foreground text-xs">
+									via{" "}
+									{localEndpoint?.name ??
+										(choice.endpoint ? "a removed local server" : "Local")}
+								</span>
+							)}
+							{choice?.model && (
+								<SettingsPanel
+									params={params}
+									modelName={chosenModel?.name ?? choice.model}
+								/>
+							)}
+						</div>
+						{actions && (
+							<div className="flex shrink-0 items-center gap-1">{actions}</div>
 						)}
 					</div>
 					{chosenModel?.status === "removed" && (

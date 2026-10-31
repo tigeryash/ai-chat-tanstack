@@ -18,10 +18,21 @@ type InputProps = {
 	isLoading?: boolean;
 	/** While a reply streams: shows a Stop button in place of Send. */
 	onStop?: () => void;
+	/** A draft kept outside, so synced panes share one (roadmap 3.2). Without it, the composer keeps its own. */
+	value?: string;
+	onValueChange?: (value: string) => void;
 };
 
-export const Input = ({ onSubmit, isLoading, onStop }: InputProps) => {
-	const [input, setInput] = useState("");
+export const Input = ({
+	onSubmit,
+	isLoading,
+	onStop,
+	value,
+	onValueChange,
+}: InputProps) => {
+	const [ownInput, setOwnInput] = useState("");
+	const input = value ?? ownInput;
+	const setInput = onValueChange ?? setOwnInput;
 	const attachments = useAttachments();
 	const hasFiles = attachments.files.length > 0;
 

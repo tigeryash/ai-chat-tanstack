@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { BackgroundStatus } from "@/components/background-status/background-status";
 import { NoAccountChatsPrompt } from "@/components/chat-ownership/no-account-chats-prompt";
+import { HeaderSlot } from "@/components/header-slot";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import {
 	SidebarInset,
@@ -21,8 +22,9 @@ function DashboardLayout() {
 		<SidebarProvider>
 			<AppSidebar />
 			<SidebarInset className="h-svh overflow-hidden">
-				<header className="flex h-12 shrink-0 items-center px-2">
+				<header className="flex h-12 shrink-0 items-center gap-2 px-2">
 					<SidebarTrigger aria-label="Toggle sidebar" />
+					<HeaderSlot />
 				</header>
 				<div className="min-h-0 flex-1 px-3 pb-3">
 					<Outlet />

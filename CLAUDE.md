@@ -83,6 +83,12 @@ Playwright runs in 4 shards with 2 workers each (4 workers per runner made timin
   The panel is `src/components/params/`. A React Compiler trap found here: a hook called as a method
   (`store.use()`) or a read of a mutable Map can get memoized; wrap the first in a `use…` function and make
   the second an immutable snapshot.
+- **Workspaces** (roadmaps 3.1–3.2, `src/lib/workspaces/`, `src/components/workspaces/`): `/w/$workspaceId` shows
+  1–4 panes, each a `ChatScreen` on its own chat, in `react-resizable-panels`. The record (pane chat ids, widths,
+  synced) is the ChatStore's `workspaces` table (`storage/workspace.ts`, its own format version). `pane-sync.ts`
+  is the hub synced panes join: one shared draft (the composer's optional `value`/`onValueChange`), send to all,
+  Stop all, and the "Diverged" check. Panes hold their own model choice (`holdChatModelChoice`), or a pick in one
+  would move the others. The sidebar folds a workspace's chats into one entry (`sidebar-entries.ts`).
 - **Background status** (roadmap 3.10, `src/lib/background-status/`): `chat-sessions.ts` reports every chat's
   replying/finished/failed into `activity.ts`, so the hidden-tab title, favicon and notifications cover all open
   chats (and panes). Mounted once as `<BackgroundStatus />` in the `(dashboard)` layout.

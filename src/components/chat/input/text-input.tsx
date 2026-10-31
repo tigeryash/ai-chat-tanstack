@@ -3,7 +3,7 @@ import { useId, useLayoutEffect, useRef, useState } from "react";
 
 type TextInputProps = {
 	input: string;
-	setInput: React.Dispatch<React.SetStateAction<string>>;
+	setInput: (value: string) => void;
 	onKeyDown: (e: React.KeyboardEvent) => void;
 };
 

@@ -33,6 +33,7 @@ import { Route as E2eMarkdownRouteImport } from './routes/e2e/markdown'
 import { Route as E2eMessagesRouteImport } from './routes/e2e/messages'
 import { Route as E2eModelPickerRouteImport } from './routes/e2e/model-picker'
 import { Route as E2eStorageRouteImport } from './routes/e2e/storage'
+import { Route as dashboardWWorkspaceIdRouteImport } from './routes/(dashboard)/w/$workspaceId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const IndexRoute = IndexRouteImport.update({
@@ -153,6 +154,11 @@ const E2eStorageRoute = E2eStorageRouteImport.update({
   path: '/storage',
   getParentRoute: () => E2eRouteRoute,
 } as any)
+const dashboardWWorkspaceIdRoute = dashboardWWorkspaceIdRouteImport.update({
+  id: '/w/$workspaceId',
+  path: '/w/$workspaceId',
+  getParentRoute: () => dashboardRouteRoute,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -182,6 +188,7 @@ export interface FileRoutesByFullPath {
   '/e2e/messages': typeof E2eMessagesRoute
   '/e2e/model-picker': typeof E2eModelPickerRoute
   '/e2e/storage': typeof E2eStorageRoute
+  '/w/$workspaceId': typeof dashboardWWorkspaceIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
@@ -207,6 +214,7 @@ export interface FileRoutesByTo {
   '/e2e/messages': typeof E2eMessagesRoute
   '/e2e/model-picker': typeof E2eModelPickerRoute
   '/e2e/storage': typeof E2eStorageRoute
+  '/w/$workspaceId': typeof dashboardWWorkspaceIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
@@ -235,6 +243,7 @@ export interface FileRoutesById {
   '/e2e/messages': typeof E2eMessagesRoute
   '/e2e/model-picker': typeof E2eModelPickerRoute
   '/e2e/storage': typeof E2eStorageRoute
+  '/(dashboard)/w/$workspaceId': typeof dashboardWWorkspaceIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
@@ -262,6 +271,7 @@ export interface FileRouteTypes {
     | '/e2e/messages'
     | '/e2e/model-picker'
     | '/e2e/storage'
+    | '/w/$workspaceId'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -287,6 +297,7 @@ export interface FileRouteTypes {
     | '/e2e/messages'
     | '/e2e/model-picker'
     | '/e2e/storage'
+    | '/w/$workspaceId'
     | '/api/auth/$'
   id:
     | '__root__'
@@ -314,6 +325,7 @@ export interface FileRouteTypes {
     | '/e2e/messages'
     | '/e2e/model-picker'
     | '/e2e/storage'
+    | '/(dashboard)/w/$workspaceId'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
@@ -498,6 +510,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof E2eStorageRouteImport
       parentRoute: typeof E2eRouteRoute
     }
+    '/(dashboard)/w/$workspaceId': {
+      id: '/(dashboard)/w/$workspaceId'
+      path: '/w/$workspaceId'
+      fullPath: '/w/$workspaceId'
+      preLoaderRoute: typeof dashboardWWorkspaceIdRouteImport
+      parentRoute: typeof dashboardRouteRoute
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -530,12 +549,14 @@ interface dashboardRouteRouteChildren {
   dashboardChatIdRoute: typeof dashboardChatIdRoute
   dashboardNewRoute: typeof dashboardNewRoute
   dashboardSettingsRoute: typeof dashboardSettingsRoute
+  dashboardWWorkspaceIdRoute: typeof dashboardWWorkspaceIdRoute
 }
 
 const dashboardRouteRouteChildren: dashboardRouteRouteChildren = {
   dashboardChatIdRoute: dashboardChatIdRoute,
   dashboardNewRoute: dashboardNewRoute,
   dashboardSettingsRoute: dashboardSettingsRoute,
+  dashboardWWorkspaceIdRoute: dashboardWWorkspaceIdRoute,
 }
 
 const dashboardRouteRouteWithChildren = dashboardRouteRoute._addFileChildren(

@@ -115,7 +115,8 @@ export function ModelPicker({
 					<Button
 						variant="outline"
 						size="sm"
-						className="gap-2 font-medium"
+						// Shrinks (the name truncates) in a narrow pane (roadmap 3.1).
+						className="min-w-0 shrink gap-2 font-medium"
 						aria-label={`Model: ${label}`}
 					/>
 				}

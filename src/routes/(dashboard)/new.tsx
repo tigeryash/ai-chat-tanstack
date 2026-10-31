@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ChatScreen } from "@/components/chat/chat-screen";
+import { AddPaneButton } from "@/components/workspaces/add-pane-button";
 import { useViewer } from "@/lib/account";
 import { openNewChat } from "@/lib/chat/chat-sessions";
 import { retainChat } from "@/lib/chat/open-chats";
@@ -29,6 +30,7 @@ function NewChat({ ownerId }: { ownerId: string | null }) {
 		<ChatScreen
 			chat={chat}
 			onSend={() => navigate({ to: "/$chatId", params: { chatId: chat.id } })}
+			actions={<AddPaneButton chatId={chat.id} ownerId={ownerId} />}
 		/>
 	);
 }
