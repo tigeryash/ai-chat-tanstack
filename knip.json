@@ -3,6 +3,7 @@
 	"entry": ["scripts/*.ts", "src/routes/e2e/**/*.{ts,tsx}"],
 	"ignore": [
 		"src/components/ui/**",
+		"src/components/animate-ui/**",
 		"src/components/ai-elements/**"
 	],
 	"ignoreDependencies": ["glsl-noise", "web-vitals"],

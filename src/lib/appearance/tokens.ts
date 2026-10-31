@@ -82,7 +82,6 @@ export const COLOR_TOKENS = [
 		"oklch(0.94 0 0)",
 		"oklch(0.2 0 0)",
 	),
-	token("composer", "surfaces", "Composer", "var(--card)"),
 	token("overlay", "surfaces", "Dialog scrim", "oklch(0 0 0)"),
 	token(
 		"auth-backdrop",
@@ -133,7 +132,6 @@ export const COLOR_TOKENS = [
 		"Text on sidebar primary",
 		"var(--primary-foreground)",
 	),
-	token("composer-foreground", "text", "Composer text", "var(--foreground)"),
 	token("overlay-foreground", "text", "Text on the scrim", "oklch(1 0 0)"),
 
 	token("border", "borders", "Borders", "oklch(0.922 0 0)", "oklch(0.26 0 0)"),
@@ -153,7 +151,6 @@ export const COLOR_TOKENS = [
 		"oklch(0.22 0 0)",
 	),
 	token("sidebar-ring", "borders", "Sidebar focus ring", "var(--ring)"),
-	token("composer-border", "borders", "Composer border", "var(--border)"),
 
 	token("primary", "accents", "Primary", "oklch(0.205 0 0)", "oklch(0.94 0 0)"),
 	token("sidebar-primary", "accents", "Sidebar primary", "var(--primary)"),

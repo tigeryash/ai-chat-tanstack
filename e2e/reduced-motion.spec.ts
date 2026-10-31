@@ -4,7 +4,7 @@ import { MODEL_CHOICE_STORAGE_KEY } from "../src/lib/chat/model-selection";
 import { expect, test } from "./support/fixtures";
 
 // Hard rule 3 (roadmap 0.8): with the OS "Reduce motion" setting on, the composer resizes without
-// animating, the GSAP reveals on the auth pages are instant, and the WebGL background is one still
+// animating and its icons stay still on hover, the GSAP reveals on the auth pages are instant, and the WebGL background is one still
 // frame. Outside Motion and GSAP, CSS transitions and animations finish instantly (the reduced-motion
 // rule in `styles.css`), the "Thinking..." shimmer is still text, loading spinners keep turning, and a
 // theme switch in Settings → Appearance doesn't cross-fade. Multi-pane workspaces add and reorder panes
@@ -177,6 +177,31 @@ async function tooltipFadeFrames(page: Page) {
 	);
 	expect(opacities.at(-1)).toBe(1);
 	return opacities.filter((opacity) => opacity > 0.01 && opacity < 0.99);
+}
+
+// Hovers each of the composer's animated icons (attach, deep research, voice input, voice chat, then
+// Send) and counts the different renderings it goes through in about half a second: 1 is still.
+async function composerIconFrames(page: Page) {
+	await page.goto("/e2e/composer");
+	await expect(page.locator("main[data-hydrated='true']")).toBeAttached();
+	await page.getByPlaceholder("Ask anything").fill("Hello");
+	const buttons = page.locator("form .input-button");
+	const frames: number[] = [];
+	for (const index of [0, 2, 3, 4, 5]) {
+		const button = buttons.nth(index);
+		await button.hover();
+		frames.push(
+			await button.locator("svg").evaluate(async (icon) => {
+				const renderings = new Set<string>();
+				for (let frame = 0; frame < 30; frame++) {
+					renderings.add(icon.innerHTML);
+					await new Promise(requestAnimationFrame);
+				}
+				return renderings.size;
+			}),
+		);
+	}
+	return frames;
 }
 
 // How many different values a computed style property takes over about half a second of frames.
@@ -362,6 +387,10 @@ test.describe("with Reduce motion on", () => {
 		expect(inBetween(widths)).toEqual([]);
 	});
 
+	test("the composer's icons stay still on hover", async ({ page }) => {
+		expect(await composerIconFrames(page)).toEqual([1, 1, 1, 1, 1]);
+	});
+
 	test("the composer's tooltip appears without fading in", async ({ page }) => {
 		await recordTooltipOpacity(page);
 		await page.goto("/e2e/composer");
@@ -472,6 +501,14 @@ test.describe("with full motion", () => {
 
 		// Reduced motion turns this into 0.01 ms (src/styles.css).
 		expect(durationMs).toBeGreaterThanOrEqual(100);
+	});
+
+	test("the composer's icons animate on hover", async ({ page }) => {
+		const frames = await composerIconFrames(page);
+		expect(
+			frames.every((count) => count > 1),
+			`${frames}`,
+		).toBe(true);
 	});
 
 	test("the composer's tooltip fades in", async ({ page }) => {

@@ -11,7 +11,9 @@ export const ToolTipContainer = ({
 	return (
 		<Tooltip>
 			<TooltipTrigger render={children} />
-			<TooltipContent>
+			{/* composer-design: the tooltip keeps the composer's original colors in every theme. Radix
+			    added its 10px arrow to the offset, so the tooltip sat that much above the button. */}
+			<TooltipContent className="composer-design" sideOffset={10}>
 				<p>{Tip}</p>
 			</TooltipContent>
 		</Tooltip>

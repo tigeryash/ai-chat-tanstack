@@ -1,9 +1,10 @@
-import { Loader2, Paperclip, X } from "lucide-react";
-import { AnimatePresence, m } from "motion/react";
+import { Loader2, X } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { AnimateIcon } from "@/components/animate-ui/icons/icon";
+import { Paperclip } from "@/components/animate-ui/icons/paperclip";
 import type { FileObject } from "@/lib/attachments/file-object";
-import { HoverIcon } from "./hover-icon";
 import { ToolTipContainer } from "./tooltip-container";
 
 export const Files = ({
@@ -22,14 +23,14 @@ export const Files = ({
 			<div className="relative flex flex-nowrap gap-2 w-full  px-4 py-2 overflow-x-auto z-10 ">
 				<AnimatePresence mode="popLayout">
 					{files.map((file) => (
-						<m.div
+						<motion.div
 							layout
 							initial={{ opacity: 0, scale: 0.8, x: 50 }}
 							animate={{ opacity: 1, scale: 1, x: 0 }}
 							exit={{ opacity: 0, scale: 0.8, x: -20 }}
 							transition={{ duration: 0.3 }}
 							key={file.id}
-							className="relative group bg-composer-foreground/5  rounded-lg p-2 flex shrink-0 items-center space-x-2 border border-composer-border"
+							className="relative group bg-black/5  rounded-lg p-2 flex shrink-0 items-center space-x-2 border border-black/10"
 						>
 							<FileThumbnail file={file} onOpen={() => setSelected(file)} />
 							<div className="flex flex-col">
@@ -45,12 +46,12 @@ export const Files = ({
 								type="button"
 								onClick={() => onRemove(file.id)}
 								aria-label={`Remove ${file.file.name}`}
-								className="absolute -top-2 -right-2 bg-destructive hover:bg-destructive/90
-                             text-background rounded-full p-0.5 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity shadow-sm z-30"
+								className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600
+                             text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-all shadow-sm z-30"
 							>
 								<X size={12} />
 							</button>
-						</m.div>
+						</motion.div>
 					))}
 				</AnimatePresence>
 			</div>
@@ -70,7 +71,7 @@ const FileThumbnail = ({
 }) => {
 	if (!file.preview) {
 		return (
-			<div className="w-10 h-10 bg-muted flex items-center justify-center rounded text-[10px] font-bold">
+			<div className="w-10 h-10 bg-blue-100 flex items-center justify-center rounded text-[10px] font-bold">
 				{file.file.name.split(".").pop()?.toUpperCase()}
 			</div>
 		);
@@ -90,15 +91,16 @@ const FileThumbnail = ({
 			/>
 			{file.isProcessing && (
 				<div className="absolute inset-0 flex items-center justify-center">
-					<Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+					<Loader2 className="w-5 h-5 animate-spin text-black/50" />
 				</div>
 			)}
 		</button>
 	);
 };
 
-// The enlarged image. The backdrop is the one close button; the image sits above it. It is portaled
-// to <body> because the file row is transformed and clipped, which would trap a fixed element.
+// The enlarged image. It is portaled to <body> because the file row is transformed and clipped,
+// which would trap a fixed element. A click outside the image or on the X closes it, and so does
+// Escape.
 const ImagePreview = ({
 	file,
 	onClose,
@@ -115,24 +117,26 @@ const ImagePreview = ({
 	}, [onClose]);
 
 	return createPortal(
-		<div className="fixed inset-0 z-100 h-screen flex items-center justify-center p-4 animate-in fade-in duration-200">
+		// biome-ignore lint/a11y/noStaticElementInteractions: the backdrop; the X button and Escape are the keyboard ways out
+		// biome-ignore lint/a11y/useKeyWithClickEvents: as above
+		<div
+			className="composer-design fixed inset-0 z-100 h-screen flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+			onClick={(e) => {
+				if (e.target === e.currentTarget) onClose();
+			}}
+		>
 			<button
 				type="button"
-				onClick={onClose}
 				aria-label="Close preview"
-				className="absolute inset-0 bg-overlay/70 backdrop-blur-sm text-overlay-foreground/70 hover:text-overlay-foreground transition-colors"
+				className="absolute top-6 right-6 text-white/70 hover:text-white transition-colors"
+				onClick={onClose}
 			>
-				<X
-					size={32}
-					strokeWidth={1.5}
-					className="absolute top-6 right-6"
-					aria-hidden
-				/>
+				<X size={32} strokeWidth={1.5} />
 			</button>
 			<img
 				src={file.preview}
 				alt={file.file.name}
-				className="relative max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+				className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
 			/>
 		</div>,
 		document.body,
@@ -146,30 +150,31 @@ export const FileInput = ({ onAdd }: { onAdd: (files: File[]) => void }) => {
 		onAdd(Array.from(e.target.files ?? []));
 		e.target.value = "";
 	};
+	const handleButtonClick = () => {
+		fileInputRef.current?.click();
+	};
 
 	return (
-		<>
-			<input
-				type="file"
-				ref={fileInputRef}
-				onChange={handleChange}
-				className="hidden"
-				multiple
-			/>
-			<ToolTipContainer Tip="Attach File">
-				<m.button
-					type="button"
-					className="input-button"
-					onClick={() => fileInputRef.current?.click()}
-					aria-label="Upload files"
-					initial="rest"
-					whileHover="hover"
-				>
-					<HoverIcon animation="attach">
-						<Paperclip size={20} strokeWidth={0.75} aria-hidden />
-					</HoverIcon>
-				</m.button>
-			</ToolTipContainer>
-		</>
+		<ToolTipContainer Tip="Attach File">
+			<div>
+				<input
+					type="file"
+					ref={fileInputRef}
+					onChange={handleChange}
+					className="hidden"
+					multiple
+				/>
+				<AnimateIcon animateOnHover>
+					<button
+						type="button"
+						className="input-button"
+						onClick={handleButtonClick}
+						aria-label="Upload files"
+					>
+						<Paperclip size={20} strokeWidth={0.75} />
+					</button>
+				</AnimateIcon>
+			</div>
+		</ToolTipContainer>
 	);
 };

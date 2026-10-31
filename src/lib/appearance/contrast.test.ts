@@ -14,7 +14,7 @@ describe("contrastWarnings", () => {
 			colors: { light: { foreground: "#eeeeee" }, dark: {} },
 		};
 		const warnings = contrastWarnings(settings, "light");
-		// foreground also feeds card-, popover-, secondary-, accent-, sidebar- and composer-foreground.
+		// foreground also feeds card-, popover-, secondary-, accent-, and sidebar-foreground.
 		expect(warnings.map((w) => `${w.text}/${w.background}`)).toContain(
 			"foreground/background",
 		);

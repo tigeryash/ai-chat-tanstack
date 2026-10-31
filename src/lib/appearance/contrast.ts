@@ -29,7 +29,6 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
 	pair("sidebar-foreground", "sidebar"),
 	pair("sidebar-accent-foreground", "sidebar-accent"),
 	pair("sidebar-primary-foreground", "sidebar-primary"),
-	pair("composer-foreground", "composer"),
 	pair("overlay-foreground", "overlay"),
 	pair("destructive-foreground", "card"),
 	pair("success", "card"),

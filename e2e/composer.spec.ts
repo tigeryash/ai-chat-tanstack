@@ -1,29 +1,12 @@
 import { expect, test } from "./support/fixtures";
 
 // The composer (src/components/chat/input.tsx) is a pill until the message gets long, gains a line
-// break, or has files, then morphs into a card. Screenshots pin both resting states.
+// break, or has files, then morphs into a card. These check how it behaves; composer-design.spec.ts
+// pins how it looks.
 
 test.beforeEach(async ({ page }) => {
 	await page.goto("/e2e/composer");
 	await expect(page.locator("main[data-hydrated='true']")).toBeAttached();
-});
-
-test("is a pill while the message is short", async ({ page }) => {
-	const composer = page.locator("form");
-
-	await expect(composer).toHaveCSS("border-radius", "9999px");
-	await expect(composer).toHaveScreenshot("composer-collapsed.png");
-});
-
-test("becomes a card for a multi-line message", async ({ page }) => {
-	const composer = page.locator("form");
-
-	await page
-		.getByPlaceholder("Ask anything")
-		.fill("First line\nSecond line\nThird line");
-
-	await expect(composer).toHaveCSS("border-radius", "12px");
-	await expect(composer).toHaveScreenshot("composer-expanded.png");
 });
 
 test("Shift+Enter adds a line instead of sending", async ({ page }) => {
@@ -112,19 +95,4 @@ test("every composer control has a name", async ({ page }) => {
 	await expect(
 		page.getByRole("button", { name: "Upload files" }),
 	).toBeVisible();
-});
-
-test.describe("in dark mode", () => {
-	test.use({ colorScheme: "dark" });
-
-	test("takes its colors from the dark tokens", async ({ page }) => {
-		const composer = page.locator("form");
-
-		await expect(composer).toHaveScreenshot("composer-collapsed-dark.png");
-		await page
-			.getByPlaceholder("Ask anything")
-			.fill("First line\nSecond line\nThird line");
-		await expect(composer).toHaveCSS("border-radius", "12px");
-		await expect(composer).toHaveScreenshot("composer-expanded-dark.png");
-	});
 });

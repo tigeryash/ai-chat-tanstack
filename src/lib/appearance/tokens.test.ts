@@ -12,7 +12,6 @@ const NOT_COLORS = new Set([
 	"code-font",
 	"radius",
 	"pane-radius",
-	"composer-shadow",
 ]);
 
 function declaredTokens(): Map<string, { light: string; dark: string }> {

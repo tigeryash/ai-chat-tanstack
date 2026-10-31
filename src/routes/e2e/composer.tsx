@@ -6,8 +6,8 @@ export const Route = createFileRoute("/e2e/composer")({
 	component: ComposerHarness,
 });
 
-// The composer as it sits on /new, minus the signed-in dashboard around it. Submitted text is echoed
-// below so tests can check submit behavior; `data-hydrated` tells them when typing is safe.
+// The composer as it sits on /new (on a pane card), minus the dashboard around it. Submitted text is
+// echoed below so tests can check submit behavior; `data-hydrated` tells them when typing is safe.
 function ComposerHarness() {
 	const [hydrated, setHydrated] = useState(false);
 	const [submitted, setSubmitted] = useState<string[]>([]);
@@ -19,7 +19,7 @@ function ComposerHarness() {
 	return (
 		<main
 			data-hydrated={hydrated}
-			className="flex h-screen flex-col items-center justify-center space-y-8"
+			className="flex h-screen flex-col items-center justify-center space-y-8 bg-card"
 		>
 			<Input
 				onSubmit={async (message) => {
