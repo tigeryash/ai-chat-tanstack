@@ -544,10 +544,11 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   approval and the tab is hidden. Ask for notification permission only when the user first starts something long,
   never on page load. On/off per event type in settings.
   *Status:* replies done in PR #36 (2026-10-29); agent runs and approvals hook into `background-status/activity.ts` in Phase 4.
-- [ ] **3.11 Appearance settings.** Make the look as personal as possible: fonts (UI, reading, code), text size
+- [x] **3.11 Appearance settings.** Make the look as personal as possible: fonts (UI, reading, code), text size
   and density, light/dark/system, and the colors of everything, starting from the 3.0 look as the default theme.
   Every color, font and radius comes from a token, so a setting only overrides tokens (no per-component styling).
   Saved on the device like other settings; presets, plus import/export of a theme.
+  *Status:* done in [#55](https://github.com/tigeryash/ai-chat-tanstack/pull/55) (2026-10-31), except presets.
 
 ## Phase 4: Agent harness
 
