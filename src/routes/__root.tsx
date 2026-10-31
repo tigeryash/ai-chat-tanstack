@@ -5,6 +5,7 @@ import type { QueryClient } from "@tanstack/react-query";
 import {
 	createRootRouteWithContext,
 	HeadContent,
+	ScriptOnce,
 	Scripts,
 	useRouteContext,
 } from "@tanstack/react-router";
@@ -12,9 +13,11 @@ import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { createServerFn } from "@tanstack/react-start";
 import { MotionConfig } from "motion/react";
 import { VercelAnalytics } from "@/components/analytics/vercel-analytics";
+import { AppearanceSync } from "@/components/appearance/appearance-sync";
 import { TooltipProvider } from "@/components/ui/tooltip-provider";
 import { env } from "@/env";
 import { currentViewer } from "@/lib/account";
+import { APPEARANCE_BOOT_SCRIPT } from "@/lib/appearance/boot-script";
 import { authClient } from "@/lib/auth-client";
 import { getToken } from "@/lib/auth-server";
 import { cspHeaders } from "@/lib/security/csp";
@@ -105,13 +108,18 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 			authClient={authClient}
 			initialToken={context.token}
 		>
-			<html lang="en">
+			{/* The appearance script below sets <html>'s class and style before hydration. */}
+			<html lang="en" suppressHydrationWarning>
 				<head>
+					{/* Appearance settings before first paint, so the default theme never flashes (roadmap
+					    3.11). Server-only, carries the CSP nonce, and removes itself before hydration. */}
+					<ScriptOnce>{APPEARANCE_BOOT_SCRIPT}</ScriptOnce>
 					<HeadContent />
 				</head>
 				<body>
 					{/* Hard rule 3: with "Reduce motion" on, Motion makes position, size and layout animations
 					    instant (the composer resizes without animating). Opacity fades still play. */}
+					<AppearanceSync />
 					<MotionConfig reducedMotion="user">
 						{/* Base UI tooltips share their open delay through one provider (0 ms, as before). */}
 						<TooltipProvider>{children}</TooltipProvider>

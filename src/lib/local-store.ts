@@ -10,6 +10,8 @@ export interface LocalStore<T> {
 	read(): T;
 	write(value: T): void;
 	use(): T;
+	/** Calls `listener` after every write, here or in another tab. Returns the unsubscribe. */
+	subscribe(listener: () => void): () => void;
 }
 
 export function createLocalStore<T>(
@@ -68,6 +70,7 @@ export function createLocalStore<T>(
 	return {
 		read,
 		write,
+		subscribe,
 		use: () => useSyncExternalStore(subscribe, read, () => fallback),
 	};
 }
