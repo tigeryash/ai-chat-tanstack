@@ -25,6 +25,22 @@ describe("appearanceSchema", () => {
 		expect(appearanceSchema.safeParse(custom).success).toBe(true);
 	});
 
+	it("drops overrides of retired tokens and keeps the rest", () => {
+		const saved = {
+			...DEFAULT_APPEARANCE,
+			theme: "light",
+			colors: {
+				light: { composer: "#ffffff", background: "#fafafa" },
+				dark: { "composer-foreground": "#000000" },
+			},
+		};
+		expect(appearanceSchema.parse(saved)).toEqual({
+			...DEFAULT_APPEARANCE,
+			theme: "light",
+			colors: { light: { background: "#fafafa" }, dark: {} },
+		});
+	});
+
 	it.each([
 		["an unknown theme", { theme: "sepia" }],
 		["an unknown font", { uiFont: "comic-sans" }],

@@ -18,7 +18,25 @@ export const TEXT_SCALES = [0.875, 0.9375, 1, 1.0625, 1.125, 1.1875, 1.25];
 /** Colors are stored as `#rrggbb`, what `<input type="color">` gives. */
 const hexColor = z.string().regex(HEX_COLOR);
 
-const colorOverrides = z.partialRecord(z.enum(COLOR_TOKEN_NAMES), hexColor);
+// Tokens Settings once offered that are gone: the composer's, since it went back to its own colors
+// (CLAUDE.md hard rule 8). A saved override of one is dropped, so it doesn't reset every other setting.
+const RETIRED_TOKENS = new Set([
+	"composer",
+	"composer-foreground",
+	"composer-border",
+]);
+
+const withoutRetiredTokens = (value: unknown) =>
+	typeof value === "object" && value !== null && !Array.isArray(value)
+		? Object.fromEntries(
+				Object.entries(value).filter(([name]) => !RETIRED_TOKENS.has(name)),
+			)
+		: value;
+
+const colorOverrides = z.preprocess(
+	withoutRetiredTokens,
+	z.partialRecord(z.enum(COLOR_TOKEN_NAMES), hexColor),
+);
 
 export const appearanceSchema = z.object({
 	version: z.literal(1),

@@ -113,6 +113,7 @@ Playwright runs in 4 shards with 2 workers each (4 workers per runner made timin
   class on an element forces it (the auth pages are always `dark`); the `dark:` variant follows the same rule.
   Use token classes (`bg-card`, `text-muted-foreground`, `text-success`, `bg-overlay/70`, `rounded-pane`), never
   palette classes or literal colors: `src/lib/design-tokens.test.ts` fails on them. Need a new color? Add a token.
+  The composer is the one exception (hard rule 8).
   Chat panes are cards (`rounded-pane border bg-card`, in `chat-view.tsx`).
 - **UI**: Tailwind 4, shadcn components on Base UI (`base-vega` style; add more with `bunx shadcn add <name>`,
   then change their `cn` import from `"cn"` to `@/lib/utils`), no Radix. `src/components/ai-elements/` keeps the
@@ -147,6 +148,11 @@ Playwright runs in 4 shards with 2 workers each (4 workers per runner made timin
    `simulateReadableStream` from `ai/test`). The e2e fixture fails any request that leaves the machine.
 7. **Don't hand-edit `node_modules`.** Patches there vanish on reinstall and have broken dev before. If something
    upstream is broken, work around it in our code or config and leave a comment saying why.
+8. **The composer is Yash's design.** No change to how `src/components/chat/input*` or its icons look or animate
+   (buttons, icons, colors, spacing, sizes, motion) without Yash's explicit approval of a mockup or screenshot
+   first, whatever the slice is about. Invisible changes (wiring, accessibility attributes, bug fixes with no visual
+   effect) are fine. Never refresh the composer screenshot baselines without that approval. It keeps its original
+   colors in every theme (no tokens, `.composer-design` in `src/styles.css`); `e2e/composer-design.spec.ts` pins it.
 
 ## Conventions
 
@@ -186,7 +192,6 @@ Playwright runs in 4 shards with 2 workers each (4 workers per runner made timin
 - **Parallel sessions.** Other slices may be in progress in worktrees under `.claude/worktrees/` (Biome ignores
   that folder). Expect small conflicts in `bun.lock`, `convex/schema.ts`, and `docs/ROADMAP.md`. Rebase on
   `origin/main` before opening the PR.
-- Don't change the composer's animations or behavior (`src/components/chat/input*`) unless the slice is about it.
 
 ## Testing
 

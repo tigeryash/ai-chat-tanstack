@@ -38,6 +38,7 @@ at once), then turn its findings into small refactor slices.
   fixed in [#48](https://github.com/tigeryash/ai-chat-tanstack/pull/48)–[#53](https://github.com/tigeryash/ai-chat-tanstack/pull/53)
   (old Convex chat backend retired, leaner first load, fewer re-renders, composer cleanup, knip and lint guards in CI,
   provider registry and a CSP enforce switch).
+  *Composer:* restored to Yash's original look in PR_LINK; hard rule 8 now locks it.
 - [ ] **Q2:** after Milestone 1 (3.1 + 3.2).
 
 ## Owner to-dos (Yash)
@@ -116,6 +117,9 @@ at once), then turn its findings into small refactor slices.
   compare 2–3 real models (say one Anthropic, one OpenAI, one through OpenRouter): send synced, press the composer's
   Stop mid-reply, unsync one pane and send to it alone, then re-sync it and check the "Diverged" badge. Reload and
   check the panes, models and widths come back. e2e uses mock models only.
+- [ ] Composer restore: on the PR's Vercel preview, open `/new` in light and dark and compare the composer with
+  your original (hover the paperclip, Send and voice chat, attach a file, type a few lines). Screenshot tests now
+  lock its look (hard rule 8), so anything off needs your call before it's fixed.
 - [x] After the production-test fixes deploy: on your Mac, Settings → Background status → "Send test
   notification" (Chrome and Helium) and confirm one appears; if not, follow the help it shows. Then, in a fresh
   browser profile (or after clearing site data), save the first OpenRouter key (paste or Connect OpenRouter), go

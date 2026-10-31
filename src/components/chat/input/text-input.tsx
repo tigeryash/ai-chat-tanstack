@@ -1,4 +1,4 @@
-import { m } from "motion/react";
+import { motion } from "motion/react";
 import { useId, useLayoutEffect, useRef, useState } from "react";
 
 type TextInputProps = {
@@ -23,8 +23,8 @@ export const TextInput = ({ input, setInput, onKeyDown }: TextInputProps) => {
 		textarea.style.height = `${newHeight}px`;
 	});
 	return (
-		<m.div layout="position" className="w-full">
-			<m.div
+		<motion.div layout="position" className="w-full">
+			<motion.div
 				initial={false}
 				// The box grows with the text (the composer's resize, hard rule 3 covers it).
 				// react-doctor-disable-next-line react-doctor/no-layout-property-animation
@@ -48,12 +48,12 @@ export const TextInput = ({ input, setInput, onKeyDown }: TextInputProps) => {
 						setInput(e.target.value);
 					}}
 					placeholder="Ask anything"
-					className="resize-none overflow-y-auto 
+					className="resize-none overflow-y-auto
                     rounded px-7 py-1 w-full ring-0  focus:outline-none focus:ring-0 bg-transparent
-                  text-composer-foreground placeholder-muted-foreground max-h-52"
+                  text-black placeholder-black/60 max-h-52"
 					onKeyDown={onKeyDown}
 				/>
-			</m.div>
-		</m.div>
+			</motion.div>
+		</motion.div>
 	);
 };

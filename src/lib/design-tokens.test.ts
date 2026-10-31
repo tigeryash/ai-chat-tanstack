@@ -17,6 +17,11 @@ const ALLOWED = new Set([
 	"src/components/background/scene.tsx",
 	// XSS payloads: `&#106;` is an HTML entity, not a color.
 	"src/routes/e2e/-xss-payloads.ts",
+	// The composer is Yash's design (CLAUDE.md hard rule 8): its original colors in every theme.
+	"src/components/chat/input.tsx",
+	"src/components/chat/input/text-input.tsx",
+	"src/components/chat/input/upload-file.tsx",
+	"src/components/chat/input/web-search-button.tsx",
 ]);
 
 const PALETTE =
