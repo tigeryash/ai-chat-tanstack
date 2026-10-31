@@ -144,6 +144,9 @@ at once), then turn its findings into small refactor slices.
   included, search Vercel's logs (Project → Logs) for `[csp]` lines and tell an agent what you find (none, or the
   directive, blocked origin and page of each). With none, the agent sets `ENFORCE_STRICT_CSP = true` in
   `src/lib/security/csp.ts`; until then the policy that stops an injected script sending a key elsewhere only reports.
+- [ ] After 3.11 is deployed: on `www.highelollms.com`, open Settings → Appearance and make a theme of your own
+  (theme, fonts, text size, an accent, a few Advanced colors). Reload and open a chat: the look should be there
+  from the first frame, with no flash of the default. Export it, Reset all, then import it back.
 - [ ] Vercel Hobby is fine while this is a portfolio piece; move to Pro before charging money. *Still on Hobby
   (2026-10-23).*
 
@@ -554,10 +557,11 @@ at once), then turn its findings into small refactor slices.
   approval and the tab is hidden. Ask for notification permission only when the user first starts something long,
   never on page load. On/off per event type in settings.
   *Status:* replies done in PR #36 (2026-10-29); agent runs and approvals hook into `background-status/activity.ts` in Phase 4.
-- [ ] **3.11 Appearance settings.** Make the look as personal as possible: fonts (UI, reading, code), text size
+- [x] **3.11 Appearance settings.** Make the look as personal as possible: fonts (UI, reading, code), text size
   and density, light/dark/system, and the colors of everything, starting from the 3.0 look as the default theme.
   Every color, font and radius comes from a token, so a setting only overrides tokens (no per-component styling).
   Saved on the device like other settings; presets, plus import/export of a theme.
+  *Status:* done in [#55](https://github.com/tigeryash/ai-chat-tanstack/pull/55) (2026-10-31), except presets.
 
 ## Phase 4: Agent harness
 

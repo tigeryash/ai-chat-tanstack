@@ -1,0 +1,59 @@
+/*
+  Web fonts for Appearance settings (roadmap 3.11, src/lib/appearance/fonts.ts), self-hosted from the
+  @fontsource-variable packages so no font comes from a third-party origin (CSP font-src is 'self').
+  Latin subset only, to keep the stylesheet small; other scripts fall back to the system font. A font
+  file only downloads when a token names its family, and the default theme names none of these.
+*/
+@font-face {
+	font-family: "Geist Variable";
+	font-style: normal;
+	font-display: swap;
+	font-weight: 100 900;
+	src: url("@fontsource-variable/geist/files/geist-latin-wght-normal.woff2")
+		format("woff2-variations");
+}
+
+@font-face {
+	font-family: "Inter Variable";
+	font-style: normal;
+	font-display: swap;
+	font-weight: 100 900;
+	src: url("@fontsource-variable/inter/files/inter-latin-wght-normal.woff2")
+		format("woff2-variations");
+}
+
+@font-face {
+	font-family: "Atkinson Hyperlegible Next Variable";
+	font-style: normal;
+	font-display: swap;
+	font-weight: 200 800;
+	src: url("@fontsource-variable/atkinson-hyperlegible-next/files/atkinson-hyperlegible-next-latin-wght-normal.woff2")
+		format("woff2-variations");
+}
+
+@font-face {
+	font-family: "Source Serif 4 Variable";
+	font-style: normal;
+	font-display: swap;
+	font-weight: 200 900;
+	src: url("@fontsource-variable/source-serif-4/files/source-serif-4-latin-wght-normal.woff2")
+		format("woff2-variations");
+}
+
+@font-face {
+	font-family: "Geist Mono Variable";
+	font-style: normal;
+	font-display: swap;
+	font-weight: 100 900;
+	src: url("@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2")
+		format("woff2-variations");
+}
+
+@font-face {
+	font-family: "JetBrains Mono Variable";
+	font-style: normal;
+	font-display: swap;
+	font-weight: 100 800;
+	src: url("@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2")
+		format("woff2-variations");
+}

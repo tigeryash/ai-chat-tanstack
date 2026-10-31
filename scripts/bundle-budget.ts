@@ -34,11 +34,12 @@ const SERVER_FUNCTION = path.join(OUTPUT, "functions/__server.func");
 
 // Gzipped KB unless the name says minified. Set after slice 1 from what it reached (root 189, /login 229,
 // /new 557, /settings 340, largest chunk 370, scene 897, CSS 23), with a few percent of headroom.
+// /settings raised to 370 by 3.11's Appearance section (it reached 355).
 const BUDGET_KB = {
 	root: 195,
 	login: 240,
 	new: 580,
-	settings: 355,
+	settings: 370,
 	largestEagerChunkMin: 400,
 	sceneChunkMin: 950,
 	css: 24,
