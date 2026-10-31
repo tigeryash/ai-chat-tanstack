@@ -90,6 +90,8 @@ jobs:
     timeout-minutes: 15
     strategy:
       fail-fast: false
+      # Each runner uses Playwright's default of half its cores (2 workers). 4 workers per runner made
+      # timing-sensitive tests flaky.
       matrix:
         shard: [1, 2, 3, 4]
     # Same image as `bun run test:e2e:linux`, so the Linux screenshot baselines match. Keep the tag in
