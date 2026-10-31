@@ -291,7 +291,9 @@ test.describe("after the tab releases idle chats", () => {
 	async function openOtherChats(page: Page) {
 		const body = page.locator("body");
 		for (let i = 0; i < OTHER_CHATS; i++) {
-			await page.getByRole("link", { name: "New chat" }).click();
+			// Exact: an entry still waiting for its title is "New chat" too (the workspace's is
+			// "New chat, 2 panes").
+			await page.getByRole("link", { name: "New chat", exact: true }).click();
 			await expect(page).toHaveURL(/\/new$/);
 			await composer(body).fill(`Other ${i}`);
 			await composer(body).press("Enter");
