@@ -43,77 +43,9 @@ at once), then turn its findings into small refactor slices.
 
 ## Owner to-dos (Yash)
 
-- [x] Buy a domain. Needed for stable auth and email links, and for the separate sandbox subdomain (4.8).
-  *Bought and connected 2026-10-23:* `www.highelollms.com` serves the app (the apex redirects to `www`), prod
-  Convex `SITE_URL` points at it, and the Discord, Google, and GitHub OAuth redirect URLs use it. Sign-in works only
-  from that origin now, not from `ai-chat-tanstack.vercel.app`.
-- [x] Separate dev and prod Convex deployments before Milestone 1 goes live. *Checked 2026-10-23:* the production
-  site talks to a different Convex deployment (`small-marmot-598`) than `.env.local`.
-- [x] Deploy Convex with the app. Vercel's build used to run only `vite build`, so production Convex functions
-  changed only when someone ran `bunx convex deploy`. *Done 2026-10-23 (PR #3):* `vercel.json` runs
-  `scripts/vercel-build.sh`, which runs `convex deploy` around the Vite build only when `VERCEL_ENV=production`, and
-  fails that build if the key is missing. `CONVEX_DEPLOY_KEY` is set in Vercel, Production scope only.
-  *Update 2026-10-23:* the production builds for the PR #3 and PR #4 merges both failed at `convex deploy` with
-  "You do not have permission to perform this operation (deployment:data:view)". convex 1.42's CLI read table
-  sizes when a push drops an index, which a deploy-only key can't do (fixed upstream in 1.46). Now on convex 1.47.
-  The production build for the PR #5 merge (`1591c9e`, 2026-10-23) deployed Convex successfully.
-- [x] Artificial Analysis API key (free tier) for 2.1. *In `.env.local` as `ARTIFICIAL_ANALYSIS_API_KEY`
-  (2026-10-23).* The 2.1 sync runs as a Convex action, so the key also has to be set on each Convex deployment
-  (`bunx convex env set ARTIFICIAL_ANALYSIS_API_KEY …`). *Set on dev and prod 2026-10-26.*
-- [x] A test key for manual and probe testing. `OPENROUTER_API_KEY` in `.env.local` (2026-10-26). It's Yash's
-  own key: use it only for local manual tests and scripts like 2.4a, never with a `VITE_` prefix (that would ship
-  it in the client bundle), and in the app enter it through the 1.1 key settings like any user. Test model:
-  `deepseek/deepseek-v4.1-flash-1017` (about $0.15 / $0.60 per million input / output tokens; the account has
-  $5 of credit). *2026-10-28:* switched from `google/gemma-4-26b-a4b-it:free`, which returned nothing even in
-  OpenRouter's own chat.
-- [x] After roadmap 0.3 is deployed: clear the OAuth tokens already stored on Better Auth `account` rows, once per
-  deployment, with `bunx convex run authMaintenance:clearStoredOAuthTokens` (dev) and the same command with `--prod`.
-  It pages through the rows and schedules itself until done; re-running is harmless. Then sign in with Google,
-  GitHub, and Discord on `www.highelollms.com` and link one of them to an email account, to confirm real providers
-  still work with the token fields empty (tests cover this only against a stubbed GitHub).
-  *Done 2026-10-25:* cleanup run on dev and prod. Google, GitHub, and Discord sign-in work on
-  `www.highelollms.com`. Discord first failed with "invalid OAuth2 redirect_uri": prod's `DISCORD_CLIENT_ID`
-  pointed at a different Discord app than the one with the callback URL. All deployments now use the `ai-chat-2`
-  app (`1386085325612515519`). Linking a provider to an email account wasn't tried against the real providers.
-- [x] After 1.1 is deployed: on `www.highelollms.com`, Settings → API keys → Connect OpenRouter with your account,
-  then "Test key" (e2e fakes OpenRouter, so the real consent page and code exchange are untried).
-  *Done 2026-10-27:* OpenRouter connected on `www.highelollms.com` and the connection test succeeded.
-- [x] After 1.3: check that prod's `activeChatSessions` and `artifacts` tables are empty
-  (`bunx convex data activeChatSessions --prod`, same for `artifacts`). 1.3 dropped them from the schema; Convex
-  keeps any rows but stops validating them, so the deploy is safe either way. Agents can't read prod. Clear them
-  in the dashboard if they have rows. Once 1.2 has moved chat to the browser, decide whether to delete the old test
-  conversations and messages on dev and prod (dev has a handful from LM Studio testing).
-  *Done 2026-10-27:* both tables are empty on prod (`convex data … --prod` and the dashboard).
-- [x] After 1.2 is deployed: on `www.highelollms.com`, open `/new`, open the model picker, search
-  `google/gemma-4-26b-a4b-it:free` and choose "Use … via OpenRouter" (since 2.2), and send a message (a reply
-  should stream; reload `/<chat id>` and it's still there). Locally (`bun run dev`), start LM Studio's server with "Enable CORS" on, pick "Local (LM Studio)" and a
-  loaded model, and check a reasoning model's thinking shows. e2e fakes both.
-  *2026-10-27:* LM Studio with CORS works locally, the picker lists OpenRouter's models, and OpenRouter shows the
-  connected key. The OpenRouter chat itself is still untried: the free Gemma model was rate-limited (peak hour).
-  *Done 2026-10-31:* OpenRouter chats work with `deepseek/deepseek-v4.1-flash-1017`. The catalog has no `:free`
-  variants, so the free Gemma only shows under "Use a model id" when its full id is typed.
-- [x] After 1.4/1.5 are deployed: on `www.highelollms.com`, sign in with email and with one OAuth provider; the
-  sidebar should show "Sign out" (and your Convex user row still gets created), and signing out should leave you on
-  the chat with "Sign in to sync and share". e2e only covers signed-out visitors (its Convex stub has no sessions).
-  *Done 2026-10-31:* sign-in and sign-out work on the live site.
-- [x] After 2.2 is deployed (production builds run `convex deploy`; preview builds use the old `models.list`, so
-  their High Elo view is empty): on `www.highelollms.com`, open the model picker with OpenRouter connected. Check
-  the High Elo list looks right with real scores, a model card's facts and logos, and that a model only a direct
-  key serves (one OpenRouter doesn't list) says "Connect …". e2e uses a seeded catalog.
-  *Done 2026-10-31:* the picker works as expected.
-- [x] After 2.3 is deployed: in Settings → Local models, add LM Studio (CORS on) and click "Test connection",
-  first on `bun run dev` (localhost:3000), then on `www.highelollms.com`. On the live site Chrome should show its
-  local network prompt after our explainer; allow it. Both should list your models and show the "Every website"
-  warning (LM Studio's CORS allows any origin; if you see a green check instead, the CORS check is wrong, so tell
-  an agent). Then pick a model under "Local" in the picker and chat; a reasoning model's thinking should show.
-  e2e only has a stubbed server, and Chrome's prompt never appears on localhost.
-  *Done 2026-10-31:* local models work on the live site.
-- [x] Run the 2.4a parameter probe once (about $0.10 of OpenRouter credit, capped at $0.50): from the main checkout,
-  `bun scripts/probe-params.ts` (dry run, check the plan), then `bun scripts/probe-params.ts --yes`, and commit
-  `src/models/parameter-probe.generated.ts`. 2.4b's settings panel reads it. *Ran 2026-10-29:* 20 models.
-- [x] After the probe-results PR merges: `bunx convex dev --once`, `bunx convex run modelCatalogSync:sync`, then
-  `bun scripts/probe-params.ts --yes --skip-high-elo --model alibaba/qwen3.8-max --model meta/muse-wonder-1.0
-  --model mistral/mistral-large-4` (about a cent) and commit the updated results. *Results committed in the repo-cleanup PR.*
+Only what's still open. When one is done, tick it, add a dated note, and move it to
+[Done owner to-dos](#done-owner-to-dos) at the end of this file.
+
 - [ ] After 2.4b is deployed: on `www.highelollms.com`, open the sliders button next to the model for a few models
   (one Anthropic, one OpenAI, one open-weights model through OpenRouter, and a local one), set each shown
   control to its lowest and highest value, send, and note any error. e2e only checks requests against a fake
@@ -122,18 +54,9 @@ at once), then turn its findings into small refactor slices.
   OpenRouter shows only max tokens, stop sequences, reasoning effort and verbosity (the 2.4a probe found OpenRouter
   rejects temperature, top_p and top_k for it). Still to do: lowest/highest value with a send, plus an OpenAI and an
   open-weights model.
-- [x] After 3.1/3.2 are deployed: on `www.highelollms.com`, open a chat, click "Add pane" (the columns icon) and
-  compare 2–3 real models (say one Anthropic, one OpenAI, one through OpenRouter): send synced, press the composer's
-  Stop mid-reply, unsync one pane and send to it alone, then re-sync it and check the "Diverged" badge. Reload and
-  check the panes, models and widths come back. e2e uses mock models only. *Done 2026-10-31:* panes work.
-- [ ] Composer restore: on the PR's Vercel preview, open `/new` in light and dark and compare the composer with
+- [ ] Composer restore: on `www.highelollms.com`, open `/new` in light and dark and compare the composer with
   your original (hover the paperclip, Send and voice chat, attach a file, type a few lines). Screenshot tests now
   lock its look (hard rule 8), so anything off needs your call before it's fixed.
-- [x] After the production-test fixes deploy: on your Mac, Settings → Background status → "Send test
-  notification" (Chrome and Helium) and confirm one appears; if not, follow the help it shows. Then, in a fresh
-  browser profile (or after clearing site data), save the first OpenRouter key (paste or Connect OpenRouter), go
-  back to a chat without reloading, and check the picker's "Run with" light turns green. *Checked 2026-10-29:*
-  the test notification appears once macOS allows the browser, and a re-added key turns the light green.
 - [ ] For 1.8: in the Vercel dashboard, open the project and turn on **Analytics** (Web Analytics) and **Speed
   Insights** (both free on Hobby), then redeploy. Until then `/_vercel/insights/script.js` and
   `/_vercel/speed-insights/script.js` 404 and nothing is collected. After deploying, load a page, check the Analytics
@@ -669,3 +592,88 @@ This is effectively a small agent harness. Slices below are a draft; 4.0 settles
 - Image generation / editing, video generation.
 - PWA / offline shell.
 - Effect (effect.website). Revisit only if server-side orchestration outgrows AI SDK + Convex actions.
+
+## Done owner to-dos
+
+Finished owner to-dos, oldest first, kept for their notes.
+
+- [x] Buy a domain. Needed for stable auth and email links, and for the separate sandbox subdomain (4.8).
+  *Bought and connected 2026-10-23:* `www.highelollms.com` serves the app (the apex redirects to `www`), prod
+  Convex `SITE_URL` points at it, and the Discord, Google, and GitHub OAuth redirect URLs use it. Sign-in works only
+  from that origin now, not from `ai-chat-tanstack.vercel.app`.
+- [x] Separate dev and prod Convex deployments before Milestone 1 goes live. *Checked 2026-10-23:* the production
+  site talks to a different Convex deployment (`small-marmot-598`) than `.env.local`.
+- [x] Deploy Convex with the app. Vercel's build used to run only `vite build`, so production Convex functions
+  changed only when someone ran `bunx convex deploy`. *Done 2026-10-23 (PR #3):* `vercel.json` runs
+  `scripts/vercel-build.sh`, which runs `convex deploy` around the Vite build only when `VERCEL_ENV=production`, and
+  fails that build if the key is missing. `CONVEX_DEPLOY_KEY` is set in Vercel, Production scope only.
+  *Update 2026-10-23:* the production builds for the PR #3 and PR #4 merges both failed at `convex deploy` with
+  "You do not have permission to perform this operation (deployment:data:view)". convex 1.42's CLI read table
+  sizes when a push drops an index, which a deploy-only key can't do (fixed upstream in 1.46). Now on convex 1.47.
+  The production build for the PR #5 merge (`1591c9e`, 2026-10-23) deployed Convex successfully.
+- [x] Artificial Analysis API key (free tier) for 2.1. *In `.env.local` as `ARTIFICIAL_ANALYSIS_API_KEY`
+  (2026-10-23).* The 2.1 sync runs as a Convex action, so the key also has to be set on each Convex deployment
+  (`bunx convex env set ARTIFICIAL_ANALYSIS_API_KEY …`). *Set on dev and prod 2026-10-26.*
+- [x] A test key for manual and probe testing. `OPENROUTER_API_KEY` in `.env.local` (2026-10-26). It's Yash's
+  own key: use it only for local manual tests and scripts like 2.4a, never with a `VITE_` prefix (that would ship
+  it in the client bundle), and in the app enter it through the 1.1 key settings like any user. Test model:
+  `deepseek/deepseek-v4.1-flash-1017` (about $0.15 / $0.60 per million input / output tokens; the account has
+  $5 of credit). *2026-10-28:* switched from `google/gemma-4-26b-a4b-it:free`, which returned nothing even in
+  OpenRouter's own chat.
+- [x] After roadmap 0.3 is deployed: clear the OAuth tokens already stored on Better Auth `account` rows, once per
+  deployment, with `bunx convex run authMaintenance:clearStoredOAuthTokens` (dev) and the same command with `--prod`.
+  It pages through the rows and schedules itself until done; re-running is harmless. Then sign in with Google,
+  GitHub, and Discord on `www.highelollms.com` and link one of them to an email account, to confirm real providers
+  still work with the token fields empty (tests cover this only against a stubbed GitHub).
+  *Done 2026-10-25:* cleanup run on dev and prod. Google, GitHub, and Discord sign-in work on
+  `www.highelollms.com`. Discord first failed with "invalid OAuth2 redirect_uri": prod's `DISCORD_CLIENT_ID`
+  pointed at a different Discord app than the one with the callback URL. All deployments now use the `ai-chat-2`
+  app (`1386085325612515519`). Linking a provider to an email account wasn't tried against the real providers.
+- [x] After 1.1 is deployed: on `www.highelollms.com`, Settings → API keys → Connect OpenRouter with your account,
+  then "Test key" (e2e fakes OpenRouter, so the real consent page and code exchange are untried).
+  *Done 2026-10-27:* OpenRouter connected on `www.highelollms.com` and the connection test succeeded.
+- [x] After 1.3: check that prod's `activeChatSessions` and `artifacts` tables are empty
+  (`bunx convex data activeChatSessions --prod`, same for `artifacts`). 1.3 dropped them from the schema; Convex
+  keeps any rows but stops validating them, so the deploy is safe either way. Agents can't read prod. Clear them
+  in the dashboard if they have rows. Once 1.2 has moved chat to the browser, decide whether to delete the old test
+  conversations and messages on dev and prod (dev has a handful from LM Studio testing).
+  *Done 2026-10-27:* both tables are empty on prod (`convex data … --prod` and the dashboard).
+- [x] After 1.2 is deployed: on `www.highelollms.com`, open `/new`, open the model picker, search
+  `google/gemma-4-26b-a4b-it:free` and choose "Use … via OpenRouter" (since 2.2), and send a message (a reply
+  should stream; reload `/<chat id>` and it's still there). Locally (`bun run dev`), start LM Studio's server with "Enable CORS" on, pick "Local (LM Studio)" and a
+  loaded model, and check a reasoning model's thinking shows. e2e fakes both.
+  *2026-10-27:* LM Studio with CORS works locally, the picker lists OpenRouter's models, and OpenRouter shows the
+  connected key. The OpenRouter chat itself is still untried: the free Gemma model was rate-limited (peak hour).
+  *Done 2026-10-31:* OpenRouter chats work with `deepseek/deepseek-v4.1-flash-1017`. The catalog has no `:free`
+  variants, so the free Gemma only shows under "Use a model id" when its full id is typed.
+- [x] After 1.4/1.5 are deployed: on `www.highelollms.com`, sign in with email and with one OAuth provider; the
+  sidebar should show "Sign out" (and your Convex user row still gets created), and signing out should leave you on
+  the chat with "Sign in to sync and share". e2e only covers signed-out visitors (its Convex stub has no sessions).
+  *Done 2026-10-31:* sign-in and sign-out work on the live site.
+- [x] After 2.2 is deployed (production builds run `convex deploy`; preview builds use the old `models.list`, so
+  their High Elo view is empty): on `www.highelollms.com`, open the model picker with OpenRouter connected. Check
+  the High Elo list looks right with real scores, a model card's facts and logos, and that a model only a direct
+  key serves (one OpenRouter doesn't list) says "Connect …". e2e uses a seeded catalog.
+  *Done 2026-10-31:* the picker works as expected.
+- [x] After 2.3 is deployed: in Settings → Local models, add LM Studio (CORS on) and click "Test connection",
+  first on `bun run dev` (localhost:3000), then on `www.highelollms.com`. On the live site Chrome should show its
+  local network prompt after our explainer; allow it. Both should list your models and show the "Every website"
+  warning (LM Studio's CORS allows any origin; if you see a green check instead, the CORS check is wrong, so tell
+  an agent). Then pick a model under "Local" in the picker and chat; a reasoning model's thinking should show.
+  e2e only has a stubbed server, and Chrome's prompt never appears on localhost.
+  *Done 2026-10-31:* local models work on the live site.
+- [x] Run the 2.4a parameter probe once (about $0.10 of OpenRouter credit, capped at $0.50): from the main checkout,
+  `bun scripts/probe-params.ts` (dry run, check the plan), then `bun scripts/probe-params.ts --yes`, and commit
+  `src/models/parameter-probe.generated.ts`. 2.4b's settings panel reads it. *Ran 2026-10-29:* 20 models.
+- [x] After the probe-results PR merges: `bunx convex dev --once`, `bunx convex run modelCatalogSync:sync`, then
+  `bun scripts/probe-params.ts --yes --skip-high-elo --model alibaba/qwen3.8-max --model meta/muse-wonder-1.0
+  --model mistral/mistral-large-4` (about a cent) and commit the updated results. *Results committed in the repo-cleanup PR.*
+- [x] After 3.1/3.2 are deployed: on `www.highelollms.com`, open a chat, click "Add pane" (the columns icon) and
+  compare 2–3 real models (say one Anthropic, one OpenAI, one through OpenRouter): send synced, press the composer's
+  Stop mid-reply, unsync one pane and send to it alone, then re-sync it and check the "Diverged" badge. Reload and
+  check the panes, models and widths come back. e2e uses mock models only. *Done 2026-10-31:* panes work.
+- [x] After the production-test fixes deploy: on your Mac, Settings → Background status → "Send test
+  notification" (Chrome and Helium) and confirm one appears; if not, follow the help it shows. Then, in a fresh
+  browser profile (or after clearing site data), save the first OpenRouter key (paste or Connect OpenRouter), go
+  back to a chat without reloading, and check the picker's "Run with" light turns green. *Checked 2026-10-29:*
+  the test notification appears once macOS allows the browser, and a re-added key turns the light green.
