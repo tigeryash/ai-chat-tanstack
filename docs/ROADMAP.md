@@ -39,7 +39,8 @@ at once), then turn its findings into small refactor slices.
   (old Convex chat backend retired, leaner first load, fewer re-renders, composer cleanup, knip and lint guards in CI,
   provider registry and a CSP enforce switch).
   *Composer:* restored to Yash's original look in [#57](https://github.com/tigeryash/ai-chat-tanstack/pull/57); hard rule 8 now locks it.
-- [ ] **Q2:** after Milestone 1 (3.1 + 3.2).
+- [ ] **Q2 (2026-10):** [quality-audit-2026-10-q2.md](./quality-audit-2026-10-q2.md) ([#60](https://github.com/tigeryash/ai-chat-tanstack/pull/60)). Fix slices 1–4
+  before Milestone 2.
 
 ## Owner to-dos (Yash)
 
