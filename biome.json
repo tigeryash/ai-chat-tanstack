@@ -16,7 +16,7 @@
 			"**/vite.config.ts",
 			"**/convex/**/*.ts",
 			"**/.vscode/**/*",
-			"!!**/.claude",
+			"!!.claude",
 			"!**/src/routeTree.gen.ts",
 			"!**/src/models/parameter-probe.generated.ts",
 			"!**/src/styles.css",
@@ -39,7 +39,8 @@
 					"options": {
 						"paths": {
 							"zod": "Import { z } from \"@/lib/zod\": it turns on jitless mode before any schema exists, which the CSP needs.",
-							"zod/v4": "Import { z } from \"@/lib/zod\": it turns on jitless mode before any schema exists, which the CSP needs."
+							"zod/v4": "Import { z } from \"@/lib/zod\": it turns on jitless mode before any schema exists, which the CSP needs.",
+							"@/lib/keys/vault": "Import from \"@/lib/keys\": it is the one entry point to stored keys (hard rule 1)."
 						}
 					}
 				}

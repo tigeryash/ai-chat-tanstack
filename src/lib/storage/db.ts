@@ -4,6 +4,21 @@ import type { Workspace } from "./workspace";
 
 // Chats get their own IndexedDB database. API keys (roadmap 1.1) live elsewhere, so nothing that reads
 // this database, export included, can reach them.
+//
+// Adding a version (slices run in parallel, and Dexie never runs an upgrade() for a version the browser
+// has already passed, so one that lands out of order is silently skipped):
+// 1. Prefer no version. New fields go on existing rows as optional values cleaned on read (like
+//    `settings`). New data that needs a query goes in a new table, not a new index on `chats`.
+// 2. Take the next number when you rebase on main, not when you start. Never reserve one; if main moved,
+//    re-number your block to the end.
+// 3. An upgrade() goes only in a version that changes nothing else, and only for data that must change in
+//    place. Never edit a version block that has shipped.
+// 4. Chat format migrations (format.ts `MIGRATIONS`) follow the same rule: append at rebase time.
+//    Workspaces and other records get their own format number (workspace.ts), never the chat format's.
+// 5. db.test.ts checks versions strictly increase, pins the latest schema (update it in the same commit),
+//    and wants an upgrade test (opening a database at the previous version) for every upgrade().
+// 6. Worktrees share localhost:3000's IndexedDB: a branch at a newer version leaves `highelo-chats`
+//    there, and older code then fails with a VersionError. Delete it in DevTools (Application → IndexedDB).
 export const CHAT_DB_NAME = "highelo-chats";
 
 /** A sidebar row; the messages live in `messages`. */

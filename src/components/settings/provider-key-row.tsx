@@ -3,14 +3,14 @@ import { useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PROVIDERS, type ProviderId } from "@/lib/keys/providers";
-import { type KeyTestResult, testProviderKey } from "@/lib/keys/test-key";
 import {
 	getProviderKey,
 	InvalidKeyError,
 	type KeyMode,
 	type KeySummary,
-} from "@/lib/keys/vault";
+} from "@/lib/keys";
+import { PROVIDERS, type ProviderId } from "@/lib/keys/providers";
+import { type KeyTestResult, testProviderKey } from "@/lib/keys/test-key";
 import { logError } from "@/lib/log";
 import { KeyModeChoice } from "./key-mode-choice";
 
