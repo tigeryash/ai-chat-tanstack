@@ -2,9 +2,10 @@
 
 @import 'tw-animate-css';
 @import './shadcn-tailwind.css';
+@import './styles/fonts.css';
 
 /*
-  Dark mode follows the system until Appearance settings (roadmap 3.11) add a switch. Every color
+  Dark mode follows the system unless Settings → Appearance (roadmap 3.11) picks a side. Every color
   token below is one light-dark() pair, so the browser picks the side from color-scheme: the system's
   by default, or forced by a `dark` / `light` class on <html> (or any subtree, like the auth pages).
   The `dark:` variant matches the same rule.
@@ -22,7 +23,9 @@
 
 /*
   Design tokens (roadmap 3.0b, direction A: minimal and neutral, dark by default, rounded pane cards).
-  Everything the app draws comes from these, so 3.11 overrides tokens only, never component styles:
+  Everything the app draws comes from these, so Appearance settings (3.11, src/lib/appearance/) override
+  tokens only, as custom properties on <html>, never component styles. Color defaults are copied in
+  src/lib/appearance/tokens.ts (a test keeps them in step); add a new color token there too:
   - colors: the custom properties in :root (each a light-dark() pair);
   - fonts: --ui-font, --reading-font (replies), --code-font (code, model ids);
   - text size: --font-size-root scales every rem-based size (text, spacing, radii) at once;

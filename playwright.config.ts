@@ -35,6 +35,7 @@ export default defineConfig<{ enforceStrictCsp: boolean }>({
 				"local-models.spec.ts",
 				"xss.spec.ts",
 				"csp-enforced.spec.ts",
+				"appearance.spec.ts",
 			],
 			use: {
 				...devices["Desktop Chrome"],

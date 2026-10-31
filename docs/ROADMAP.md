@@ -132,6 +132,9 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   included, search Vercel's logs (Project → Logs) for `[csp]` lines and tell an agent what you find (none, or the
   directive, blocked origin and page of each). With none, the agent sets `ENFORCE_STRICT_CSP = true` in
   `src/lib/security/csp.ts`; until then the policy that stops an injected script sending a key elsewhere only reports.
+- [ ] After 3.11 is deployed: on `www.highelollms.com`, open Settings → Appearance and make a theme of your own
+  (theme, fonts, text size, an accent, a few Advanced colors). Reload and open a chat: the look should be there
+  from the first frame, with no flash of the default. Export it, Reset all, then import it back.
 - [ ] Vercel Hobby is fine while this is a portfolio piece; move to Pro before charging money. *Still on Hobby
   (2026-10-23).*
 

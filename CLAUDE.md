@@ -86,6 +86,12 @@ Playwright runs in 4 shards with 2 workers each (4 workers per runner made timin
 - **Background status** (roadmap 3.10, `src/lib/background-status/`): `chat-sessions.ts` reports every chat's
   replying/finished/failed into `activity.ts`, so the hidden-tab title, favicon and notifications cover all open
   chats (and panes). Mounted once as `<BackgroundStatus />` in the `(dashboard)` layout.
+- **Appearance** (roadmap 3.11, `src/lib/appearance/`): Settings → Appearance only overrides tokens, as a
+  `dark` / `light` class and custom properties on `<html>`. `snapshot.ts` turns settings into those;
+  `boot-script.ts` replays the stored snapshot from `<head>` before first paint (via `ScriptOnce`, so it carries
+  the nonce); `<AppearanceSync />` in `__root.tsx` keeps them in step. `tokens.ts` copies the color defaults of
+  `styles.css` (a test fails on drift), so a new color token goes in both. Web fonts are `@fontsource-variable`
+  files declared in `src/styles/fonts.css` (latin only), never a font CDN.
 - **Analytics** (roadmap 1.8, `src/lib/analytics/`): `track()` is the only way to send an event; add new ones to
   the allowlist in `events.ts` (closed-set properties only) and to `docs/data-inventory.md`. Vercel Web Analytics
   and Speed Insights load from `<VercelAnalytics />` in `__root.tsx` in production builds only; dev and e2e record

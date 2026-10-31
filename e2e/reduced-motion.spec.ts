@@ -4,7 +4,8 @@ import { expect, test } from "./support/fixtures";
 // Hard rule 3 (roadmap 0.8): with the OS "Reduce motion" setting on, the composer resizes without
 // animating, the GSAP reveals on the auth pages are instant, and the WebGL background is one still
 // frame. Outside Motion and GSAP, CSS transitions and animations finish instantly (the reduced-motion
-// rule in `styles.css`), the "Thinking..." shimmer is still text, and loading spinners keep turning.
+// rule in `styles.css`), the "Thinking..." shimmer is still text, loading spinners keep turning, and a
+// theme switch in Settings → Appearance doesn't cross-fade.
 // Each check has a full-motion twin, which shows the probe can see motion and that the normal
 // animations still play.
 
@@ -221,6 +222,35 @@ async function looksTheSameAfter(
 	return (await shoot()).equals(before);
 }
 
+// Counts view transitions, which is how Settings → Appearance cross-fades a theme change (roadmap 3.11).
+async function countViewTransitions(page: Page) {
+	await page.addInitScript(() => {
+		const start = document.startViewTransition?.bind(document);
+		if (!start) return;
+		const counted = window as unknown as { __viewTransitions: number };
+		counted.__viewTransitions = 0;
+		document.startViewTransition = ((update) => {
+			counted.__viewTransitions++;
+			return start(update);
+		}) as typeof document.startViewTransition;
+	});
+}
+
+/** Switches the theme to Light in Settings and returns how many view transitions ran. */
+async function viewTransitionsForThemeSwitch(page: Page) {
+	await countViewTransitions(page);
+	await page.goto("/settings");
+	await page
+		.getByRole("region", { name: "Appearance" })
+		.getByRole("radio", { name: "Light", exact: true })
+		.click();
+	await expect(page.locator("html")).toHaveClass("light");
+	return page.evaluate(
+		() =>
+			(window as unknown as { __viewTransitions: number }).__viewTransitions,
+	);
+}
+
 test.describe("with Reduce motion on", () => {
 	test.use({ reducedMotion: "reduce" });
 
@@ -309,6 +339,10 @@ test.describe("with Reduce motion on", () => {
 		expect(await distinctStyleValues(shimmer, "background-position")).toBe(1);
 	});
 
+	test("switching the theme doesn't cross-fade", async ({ page }) => {
+		expect(await viewTransitionsForThemeSwitch(page)).toBe(0);
+	});
+
 	test("loading spinners keep turning", async ({ page }) => {
 		await page.goto("/e2e/loading");
 
@@ -385,6 +419,10 @@ test.describe("with full motion", () => {
 				"background-position",
 			),
 		).toBeGreaterThan(1);
+	});
+
+	test("switching the theme cross-fades", async ({ page }) => {
+		expect(await viewTransitionsForThemeSwitch(page)).toBe(1);
 	});
 
 	test("loading spinners turn", async ({ page }) => {

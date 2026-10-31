@@ -27,7 +27,10 @@ Injections" (arXiv 2506.08837), Google DeepMind's CaMeL (arXiv 2503.18813), and 
 *Where it stands (1.0, 2026-10-25).* The policy is built in `src/lib/security/csp.ts`; the provider list is
 `src/lib/security/provider-origins.ts`, built from each entry's `apiOrigins` in the provider registry
 (`src/models/provider-registry.ts`, quality audit U1) and pinned by `provider-origins.test.ts`. `getRouter` makes a nonce per server render (`ssr.nonce`; Start puts it on
-every script it emits) and the root route's `headers` sends two policies:
+every script it emits) and the root route's `headers` sends two policies. The one inline script is Appearance's
+no-flash script (roadmap 3.11, `src/lib/appearance/boot-script.ts`), emitted with `ScriptOnce` so it carries the
+nonce; it only copies a class and custom properties from localStorage onto `<html>`. Appearance's web fonts are
+self-hosted (`font-src 'self'`):
 - **Enforced:** `object-src 'none'; base-uri 'none'; frame-ancestors 'none'`. These break nothing, so they didn't
   wait. (`frame-ancestors` is ignored in report-only policies, so this is what actually stops framing, with
   `X-Frame-Options: DENY` for older browsers.)
