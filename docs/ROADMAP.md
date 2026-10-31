@@ -84,25 +84,30 @@ at once), then turn its findings into small refactor slices.
   in the dashboard if they have rows. Once 1.2 has moved chat to the browser, decide whether to delete the old test
   conversations and messages on dev and prod (dev has a handful from LM Studio testing).
   *Done 2026-10-27:* both tables are empty on prod (`convex data … --prod` and the dashboard).
-- [ ] After 1.2 is deployed: on `www.highelollms.com`, open `/new`, open the model picker, search
+- [x] After 1.2 is deployed: on `www.highelollms.com`, open `/new`, open the model picker, search
   `google/gemma-4-26b-a4b-it:free` and choose "Use … via OpenRouter" (since 2.2), and send a message (a reply
   should stream; reload `/<chat id>` and it's still there). Locally (`bun run dev`), start LM Studio's server with "Enable CORS" on, pick "Local (LM Studio)" and a
   loaded model, and check a reasoning model's thinking shows. e2e fakes both.
   *2026-10-27:* LM Studio with CORS works locally, the picker lists OpenRouter's models, and OpenRouter shows the
   connected key. The OpenRouter chat itself is still untried: the free Gemma model was rate-limited (peak hour).
-- [ ] After 1.4/1.5 are deployed: on `www.highelollms.com`, sign in with email and with one OAuth provider; the
+  *Done 2026-10-31:* OpenRouter chats work with `deepseek/deepseek-v4.1-flash-1017`. The catalog has no `:free`
+  variants, so the free Gemma only shows under "Use a model id" when its full id is typed.
+- [x] After 1.4/1.5 are deployed: on `www.highelollms.com`, sign in with email and with one OAuth provider; the
   sidebar should show "Sign out" (and your Convex user row still gets created), and signing out should leave you on
   the chat with "Sign in to sync and share". e2e only covers signed-out visitors (its Convex stub has no sessions).
-- [ ] After 2.2 is deployed (production builds run `convex deploy`; preview builds use the old `models.list`, so
+  *Done 2026-10-31:* sign-in and sign-out work on the live site.
+- [x] After 2.2 is deployed (production builds run `convex deploy`; preview builds use the old `models.list`, so
   their High Elo view is empty): on `www.highelollms.com`, open the model picker with OpenRouter connected. Check
   the High Elo list looks right with real scores, a model card's facts and logos, and that a model only a direct
   key serves (one OpenRouter doesn't list) says "Connect …". e2e uses a seeded catalog.
-- [ ] After 2.3 is deployed: in Settings → Local models, add LM Studio (CORS on) and click "Test connection",
+  *Done 2026-10-31:* the picker works as expected.
+- [x] After 2.3 is deployed: in Settings → Local models, add LM Studio (CORS on) and click "Test connection",
   first on `bun run dev` (localhost:3000), then on `www.highelollms.com`. On the live site Chrome should show its
   local network prompt after our explainer; allow it. Both should list your models and show the "Every website"
   warning (LM Studio's CORS allows any origin; if you see a green check instead, the CORS check is wrong, so tell
   an agent). Then pick a model under "Local" in the picker and chat; a reasoning model's thinking should show.
   e2e only has a stubbed server, and Chrome's prompt never appears on localhost.
+  *Done 2026-10-31:* local models work on the live site.
 - [x] Run the 2.4a parameter probe once (about $0.10 of OpenRouter credit, capped at $0.50): from the main checkout,
   `bun scripts/probe-params.ts` (dry run, check the plan), then `bun scripts/probe-params.ts --yes`, and commit
   `src/models/parameter-probe.generated.ts`. 2.4b's settings panel reads it. *Ran 2026-10-29:* 20 models.
@@ -113,10 +118,14 @@ at once), then turn its findings into small refactor slices.
   (one Anthropic, one OpenAI, one open-weights model through OpenRouter, and a local one), set each shown
   control to its lowest and highest value, send, and note any error. e2e only checks requests against a fake
   OpenRouter.
-- [ ] After 3.1/3.2 are deployed: on `www.highelollms.com`, open a chat, click "Add pane" (the columns icon) and
+  *2026-10-31:* the right controls show: the LM Studio model gets the sampling settings; Claude Opus 5.5 via
+  OpenRouter shows only max tokens, stop sequences, reasoning effort and verbosity (the 2.4a probe found OpenRouter
+  rejects temperature, top_p and top_k for it). Still to do: lowest/highest value with a send, plus an OpenAI and an
+  open-weights model.
+- [x] After 3.1/3.2 are deployed: on `www.highelollms.com`, open a chat, click "Add pane" (the columns icon) and
   compare 2–3 real models (say one Anthropic, one OpenAI, one through OpenRouter): send synced, press the composer's
   Stop mid-reply, unsync one pane and send to it alone, then re-sync it and check the "Diverged" badge. Reload and
-  check the panes, models and widths come back. e2e uses mock models only.
+  check the panes, models and widths come back. e2e uses mock models only. *Done 2026-10-31:* panes work.
 - [ ] Composer restore: on the PR's Vercel preview, open `/new` in light and dark and compare the composer with
   your original (hover the paperclip, Send and voice chat, attach a file, type a few lines). Screenshot tests now
   lock its look (hard rule 8), so anything off needs your call before it's fixed.
@@ -130,11 +139,17 @@ at once), then turn its findings into small refactor slices.
   `/_vercel/speed-insights/script.js` 404 and nothing is collected. After deploying, load a page, check the Analytics
   tab shows a visit, and that Vercel's `[csp]` log has no `_vercel` lines. Custom events (`track()`) need Pro; on
   Hobby leave `VITE_ANALYTICS_CUSTOM_EVENTS` unset.
+  *2026-10-31:* Web Analytics turned on; both script paths now return 200 on `www.highelollms.com`. The dashboard's
+  "install `@vercel/analytics`" prompt can be ignored: both packages are already in the app (`src/lib/analytics/vercel.ts`).
+  Still to do: a visit in the Analytics tab, and no `_vercel` lines in the `[csp]` log. A browser sending Global
+  Privacy Control or Do Not Track, or with Settings → Analytics off, records nothing.
 - [ ] After 1.9 is deployed: on `www.highelollms.com`, with two real accounts (say email and GitHub). Signed out,
   make a chat. Sign in as the first: the "chats from before you signed in" question appears; choose Keep, make a
   chat, sign out (it disappears, the signed-out one stays). Sign in as the second: answer the question, and check
   the first account's chat isn't listed and its URL shows "not found". Sign back in as the first: its chat is
   back. Then try "Sign out and remove my chats from this device". e2e uses stubbed sessions, not real sign-ins.
+  *2026-10-31:* with one account, the question appeared after sign-in and signing out hid the account's chats.
+  Still to do: the second account, and "Sign out and remove my chats from this device".
 - [ ] Legal drafts (7.1): create `support@highelollms.com` (free forwarding to your inbox works, e.g. Cloudflare
   Email Routing); the privacy policy and terms already give it as the contact. They name the operator as "the
   developer, an individual based in Ontario"; register a business name or incorporate before charging money, then
