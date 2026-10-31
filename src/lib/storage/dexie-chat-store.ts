@@ -21,6 +21,13 @@ import {
 	upgradeChat,
 	validateMessages,
 } from "./format";
+import {
+	readWorkspace,
+	toWorkspaceSummary,
+	WORKSPACE_FORMAT_VERSION,
+	type WorkspaceSummary,
+	workspaceSchema,
+} from "./workspace";
 
 const DEFAULT_SYSTEM_PROMPT_KEY = "defaultSystemPrompt";
 const systemPromptSchema = z.string().max(MAX_SYSTEM_PROMPT_LENGTH);
@@ -95,6 +102,17 @@ export function createDexieChatStore({
 	const listChats = async () => {
 		const rows = await db.chats.orderBy("updatedAt").reverse().toArray();
 		return rows.map(toSummary);
+	};
+
+	const listWorkspaces = async (): Promise<WorkspaceSummary[]> => {
+		const rows = await db.workspaces.orderBy("updatedAt").reverse().toArray();
+		return rows.flatMap((row) => {
+			try {
+				return [toWorkspaceSummary(readWorkspace(row))];
+			} catch {
+				return [];
+			}
+		});
 	};
 
 	return {
@@ -221,6 +239,46 @@ export function createDexieChatStore({
 					);
 				}
 			});
+		},
+
+		async getWorkspace(id) {
+			const row = await db.workspaces.get(id);
+			return row && readWorkspace(row);
+		},
+
+		async saveWorkspace(workspace) {
+			const timestamp = now();
+			return db.transaction("rw", db.workspaces, async () => {
+				const existing = await db.workspaces.get(workspace.id);
+				if (existing && existing.formatVersion > WORKSPACE_FORMAT_VERSION) {
+					throw new ChatStoreError(
+						"too-new",
+						"This workspace was saved by a newer version of the app.",
+					);
+				}
+				const saved = workspaceSchema.parse({
+					...workspace,
+					createdAt: existing?.createdAt ?? timestamp,
+					updatedAt: timestamp,
+				});
+				await db.workspaces.put({
+					...saved,
+					formatVersion: WORKSPACE_FORMAT_VERSION,
+				});
+				return saved;
+			});
+		},
+
+		watchWorkspaces(onChange, onError) {
+			const subscription = liveQuery(listWorkspaces).subscribe({
+				next: onChange,
+				error: onError,
+			});
+			return () => subscription.unsubscribe();
+		},
+
+		async deleteWorkspace(id) {
+			await db.workspaces.delete(id);
 		},
 	};
 }

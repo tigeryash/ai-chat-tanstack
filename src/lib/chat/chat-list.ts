@@ -4,18 +4,18 @@ import { UNTITLED_CHAT } from "./chat-title";
 // The sidebar's order (roadmap 1.4): pinned chats first, each group newest activity first, filtered
 // by a title search.
 
-export interface ArrangedChats {
-	pinned: ChatSummary[];
-	recent: ChatSummary[];
+export interface ArrangedChats<T extends ChatSummary = ChatSummary> {
+	pinned: T[];
+	recent: T[];
 }
 
 export const displayTitle = (chat: Pick<ChatSummary, "title">) =>
 	chat.title || UNTITLED_CHAT;
 
-export function arrangeChats(
-	chats: readonly ChatSummary[],
+export function arrangeChats<T extends ChatSummary>(
+	chats: readonly T[],
 	query = "",
-): ArrangedChats {
+): ArrangedChats<T> {
 	const needle = query.trim().toLocaleLowerCase();
 	const matches = chats
 		.filter((chat) => displayTitle(chat).toLocaleLowerCase().includes(needle))

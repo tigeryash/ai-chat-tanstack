@@ -1,12 +1,14 @@
 import type { Locator, Page } from "@playwright/test";
+import { E2E_MOCK_MODEL } from "../src/lib/chat/e2e-model";
+import { MODEL_CHOICE_STORAGE_KEY } from "../src/lib/chat/model-selection";
 import { expect, test } from "./support/fixtures";
 
 // Hard rule 3 (roadmap 0.8): with the OS "Reduce motion" setting on, the composer resizes without
 // animating, the GSAP reveals on the auth pages are instant, and the WebGL background is one still
 // frame. Outside Motion and GSAP, CSS transitions and animations finish instantly (the reduced-motion
 // rule in `styles.css`), the "Thinking..." shimmer is still text, loading spinners keep turning, and a
-// theme switch in Settings → Appearance doesn't cross-fade.
-// Each check has a full-motion twin, which shows the probe can see motion and that the normal
+// theme switch in Settings → Appearance doesn't cross-fade. Multi-pane workspaces add and reorder panes
+// instantly. Each check has a full-motion twin, which shows the probe can see motion and that the normal
 // animations still play.
 
 const MULTI_LINE_MESSAGE = "one\ntwo\nthree\nfour";
@@ -222,6 +224,49 @@ async function looksTheSameAfter(
 	return (await shoot()).equals(before);
 }
 
+// Multi-pane workspaces (roadmap 3.1): a two-pane workspace made from /new.
+async function openTwoPanes(page: Page) {
+	await page.addInitScript(
+		([key, model]) =>
+			localStorage.setItem(key, JSON.stringify({ provider: "local", model })),
+		[MODEL_CHOICE_STORAGE_KEY, E2E_MOCK_MODEL],
+	);
+	await page.goto("/new");
+	await page.getByRole("button", { name: "Add pane" }).click();
+	await expect(page).toHaveURL(/\/w\//);
+	await expect(page.locator("[data-pane-motion]")).toHaveCount(2);
+}
+
+// Clicks the control named `name` from inside the page, then records every pane's opacity and transform
+// on each animation frame for about 0.6 s. Returns the frames where some pane was faded or moved.
+async function paneMotionAfterClicking(page: Page, name: string) {
+	return page.evaluate(async (label) => {
+		const target = [
+			...document.querySelectorAll<HTMLElement>("button, [role=menuitem]"),
+		].find(
+			(element) =>
+				element.getAttribute("aria-label") === label ||
+				element.textContent?.trim() === label,
+		);
+		if (!target) throw new Error(`no control named ${label}`);
+		target.click();
+		const moving: string[] = [];
+		for (let frame = 0; frame < 36; frame++) {
+			await new Promise(requestAnimationFrame);
+			for (const pane of document.querySelectorAll("[data-pane-motion]")) {
+				const style = getComputedStyle(pane);
+				const moved = !["none", "matrix(1, 0, 0, 1, 0, 0)"].includes(
+					style.transform,
+				);
+				if (Number(style.opacity) < 1 || moved) {
+					moving.push(`${style.opacity} ${style.transform}`);
+				}
+			}
+		}
+		return moving;
+	}, name);
+}
+
 // Counts view transitions, which is how Settings → Appearance cross-fades a theme change (roadmap 3.11).
 async function countViewTransitions(page: Page) {
 	await page.addInitScript(() => {
@@ -339,6 +384,18 @@ test.describe("with Reduce motion on", () => {
 		expect(await distinctStyleValues(shimmer, "background-position")).toBe(1);
 	});
 
+	test("panes appear and move without animating", async ({ page }) => {
+		await openTwoPanes(page);
+		expect(await paneMotionAfterClicking(page, "Add pane")).toEqual([]);
+		await expect(page.locator("[data-pane-motion]")).toHaveCount(3);
+
+		await page.getByRole("button", { name: "Options for Pane 3" }).click();
+		await expect(
+			page.getByRole("menuitem", { name: "Move left" }),
+		).toBeVisible();
+		expect(await paneMotionAfterClicking(page, "Move left")).toEqual([]);
+	});
+
 	test("switching the theme doesn't cross-fade", async ({ page }) => {
 		expect(await viewTransitionsForThemeSwitch(page)).toBe(0);
 	});
@@ -363,6 +420,22 @@ test.describe("with full motion", () => {
 		const heights = await composerHeightsWhileTyping(page, MULTI_LINE_MESSAGE);
 
 		expect(inBetween(heights).length).toBeGreaterThan(0);
+	});
+
+	test("panes fade in and slide to their new place", async ({ page }) => {
+		await openTwoPanes(page);
+		expect(
+			(await paneMotionAfterClicking(page, "Add pane")).length,
+		).toBeGreaterThan(0);
+		await expect(page.locator("[data-pane-motion]")).toHaveCount(3);
+
+		await page.getByRole("button", { name: "Options for Pane 3" }).click();
+		await expect(
+			page.getByRole("menuitem", { name: "Move left" }),
+		).toBeVisible();
+		expect(
+			(await paneMotionAfterClicking(page, "Move left")).length,
+		).toBeGreaterThan(0);
 	});
 
 	test("login reveals play and the WebGL scene moves", async ({ page }) => {

@@ -1,6 +1,6 @@
 import { type Chat, useChat } from "@ai-sdk/react";
 import type { UIMessage } from "ai";
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect, useRef } from "react";
 import MessagesList from "@/components/chat/chatstuff/messages-list";
 import { Input } from "@/components/chat/input";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import {
 } from "@/lib/chat/model-selection";
 import { logError } from "@/lib/log";
 import type { RequestSettings } from "@/lib/params/request";
+import { type PaneSync, usePaneSyncState } from "@/lib/workspaces/pane-sync";
 
 export interface ChatViewProps {
 	chat: Chat<UIMessage>;
@@ -23,6 +24,10 @@ export interface ChatViewProps {
 	empty?: ReactNode;
 	/** Called right after a message is sent (`/new` moves to the chat's own URL). */
 	onSend?: () => void;
+	/** In a workspace (roadmap 3.2): its sync hub, and whether this pane is synced. */
+	sync?: { hub: PaneSync; synced: boolean };
+	/** How many panes the chat is shown with (for `chat_sent`). */
+	paneCount?: number;
 }
 
 /** At most one render per 50 ms while a reply streams; status changes still land at once. */
@@ -42,6 +47,8 @@ export function ChatView({
 	header,
 	empty,
 	onSend,
+	sync,
+	paneCount = 1,
 }: ChatViewProps) {
 	const { messages, sendMessage, regenerate, stop, status, error } = useChat({
 		chat,
@@ -50,17 +57,29 @@ export function ChatView({
 	const busy = status === "submitted" || status === "streaming";
 	const options = selection && { body: { ...selection, settings } };
 
-	const handleSubmit = async (text: string) => {
+	const send = (text: string) => {
 		if (!options) return;
 		// Not awaited: it resolves when the reply finishes, and the composer clears once this returns.
 		sendMessage({ text }, options).catch(logFailure);
 		track("chat_sent", {
 			providerKind:
 				options.body.provider === LOCAL_PROVIDER ? "local" : "hosted",
+			paneCount,
 			hasAttachment: false,
 		});
 		onSend?.();
 	};
+	// A synced pane joins its workspace's hub, which calls the latest `send` (this pane's own model and
+	// settings) whenever any synced pane sends.
+	const sendRef = useRef(send);
+	useEffect(() => {
+		sendRef.current = send;
+	});
+	const hub = sync?.synced ? sync.hub : undefined;
+	useEffect(
+		() => hub?.join(chat.id, { chat, send: (text) => sendRef.current(text) }),
+		[hub, chat],
+	);
 	const retry = options
 		? () => regenerate(options).catch(logFailure)
 		: undefined;
@@ -108,11 +127,35 @@ export function ChatView({
 					)}
 				</div>
 			)}
-			<Input
-				onSubmit={handleSubmit}
-				isLoading={busy || !options}
-				onStop={busy ? () => stop() : undefined}
-			/>
+			{/* Inset, so the composer doesn't touch a narrow pane's edges. */}
+			<div className="flex w-full justify-center px-3">
+				{hub ? (
+					<SyncedComposer hub={hub} ready={options !== undefined} />
+				) : (
+					<Input
+						onSubmit={async (text) => send(text)}
+						isLoading={busy || !options}
+						onStop={busy ? () => stop() : undefined}
+					/>
+				)}
+			</div>
 		</div>
+	);
+}
+
+/**
+ * A synced pane's composer (decisions 16 and 18): the workspace's shared draft, sending to every synced
+ * pane, and a Stop that stops every synced pane that's replying.
+ */
+function SyncedComposer({ hub, ready }: { hub: PaneSync; ready: boolean }) {
+	const { draft, replying } = usePaneSyncState(hub);
+	return (
+		<Input
+			value={draft}
+			onValueChange={hub.setDraft}
+			onSubmit={async (text) => hub.sendAll(text)}
+			isLoading={replying || !ready}
+			onStop={replying ? hub.stopAll : undefined}
+		/>
 	);
 }

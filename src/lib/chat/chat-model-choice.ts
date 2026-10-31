@@ -47,12 +47,30 @@ export function lastReplyChoice(
 	return undefined;
 }
 
-export function storeChatModelChoice(chatId: string, choice: ModelChoice) {
+function writeChatChoice(chatId: string, choice: ModelChoice) {
 	const others = choices.read().filter(([id]) => id !== chatId);
 	choices.write(
 		[...others, [chatId, choice] as [string, ModelChoice]].slice(-MAX_CHATS),
 	);
+}
+
+export function storeChatModelChoice(chatId: string, choice: ModelChoice) {
+	writeChatChoice(chatId, choice);
 	storeModelChoice(choice);
+}
+
+/**
+ * Keeps a chat on the model it shows now. A chat without a choice of its own follows the last pick in
+ * this browser, which is right for one chat but not for panes side by side (roadmap 3.1): picking a
+ * model in one pane mustn't switch the others.
+ */
+export function holdChatModelChoice(
+	chatId: string,
+	messages: readonly UIMessage[] = [],
+) {
+	if (storedChoice(choices.read(), chatId)) return;
+	const choice = readChatModelChoice(chatId, messages);
+	if (choice) writeChatChoice(chatId, choice);
 }
 
 /** This chat's choice: its own, else its last reply's model, else the last choice in this browser. */

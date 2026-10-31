@@ -1,5 +1,6 @@
 import Dexie, { type DexieOptions, type EntityTable, type Table } from "dexie";
 import type { ChatSettings } from "@/lib/params/settings";
+import type { Workspace } from "./workspace";
 
 // Chats get their own IndexedDB database. API keys (roadmap 1.1) live elsewhere, so nothing that reads
 // this database, export included, can reach them.
@@ -41,10 +42,14 @@ export interface PrefRow {
 	value: unknown;
 }
 
+/** A workspace (roadmap 3.1) in its own format (workspace.ts), checked on read. */
+export type WorkspaceRow = Workspace & { formatVersion: number };
+
 export type ChatDatabase = Dexie & {
 	chats: EntityTable<ChatRow, "id">;
 	messages: Table<MessageRow, [string, number]>;
 	prefs: EntityTable<PrefRow, "key">;
+	workspaces: EntityTable<WorkspaceRow, "id">;
 };
 
 export function openChatDatabase(
@@ -76,6 +81,13 @@ export function openChatDatabase(
 		chats: "id, updatedAt",
 		messages: "[chatId+position]",
 		prefs: "key",
+	});
+	// Roadmap 3.1: multi-pane workspaces.
+	db.version(4).stores({
+		chats: "id, updatedAt",
+		messages: "[chatId+position]",
+		prefs: "key",
+		workspaces: "id, updatedAt",
 	});
 	return db;
 }

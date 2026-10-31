@@ -1,5 +1,6 @@
 import type { UIMessage } from "ai";
 import type { ChatSettings } from "@/lib/params/settings";
+import type { Workspace, WorkspaceSummary } from "./workspace";
 
 // What the app sees of a stored chat. `formatVersion` is a storage detail: chats come out of the store
 // already migrated to the current format (see format.ts).
@@ -72,4 +73,17 @@ export interface ChatStore {
 	deleteChat(chatId: string): Promise<void>;
 	/** Writes whole chats, keeping their timestamps (import today, sync in Phase 6). */
 	putChats(chats: readonly Chat[]): Promise<void>;
+	/** Checked on read; `undefined` if there is no such workspace (roadmap 3.1). */
+	getWorkspace(id: string): Promise<Workspace | undefined>;
+	/** Creates or replaces a workspace, setting `updatedAt` (and `createdAt` when new). */
+	saveWorkspace(
+		workspace: Omit<Workspace, "createdAt" | "updatedAt">,
+	): Promise<Workspace>;
+	/** Like `watchChats`, newest first. Unreadable workspaces are left out. */
+	watchWorkspaces(
+		onChange: (workspaces: WorkspaceSummary[]) => void,
+		onError: (error: unknown) => void,
+	): () => void;
+	/** Deletes the record only; its chats stay. Deleting one that doesn't exist does nothing. */
+	deleteWorkspace(id: string): Promise<void>;
 }
