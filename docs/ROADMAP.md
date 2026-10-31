@@ -528,10 +528,10 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
   *Status:* done in [#45](https://github.com/tigeryash/ai-chat-tanstack/pull/45) (2026-10-30); the `/e2e/design`
   prototypes were removed, their screenshots stay in design-directions.md.
 - [x] **3.1 Pane layout.** 1–4 resizable panes (`react-resizable-panels`), add/remove/reorder with `LayoutGroup`.
-  *Status:* done with 3.2 in PR_LINK (2026-10-31): workspaces at `/w/$id`, one sidebar entry each.
+  *Status:* done with 3.2 in [#56](https://github.com/tigeryash/ai-chat-tanstack/pull/56) (2026-10-31): workspaces at `/w/$id`, one sidebar entry each.
 - [x] **3.2 Synced composers + Stop** (decisions 16 and 18). Per-pane composer with a "Synced" toggle and mirrored
   input, the "diverged" badge, and the Stop behavior.
-  *Status:* done with 3.1 in PR_LINK (2026-10-31).
+  *Status:* done with 3.1 in [#56](https://github.com/tigeryash/ai-chat-tanstack/pull/56) (2026-10-31).
 - [ ] **3.3 Capability-aware attachments** (decision 17).
 - [ ] **3.4 Compare tools.** Per-pane TTFT, tokens/sec, cost; sync scroll; thumbs up/down; "copy settings to all panes".
 - [ ] **3.5 Workspaces.** Save/restore layouts and models; deep link `?models=a,b,c`.
