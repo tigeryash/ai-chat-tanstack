@@ -325,7 +325,12 @@ test.describe("after the tab releases idle chats", () => {
 			await composer(body).press("Enter");
 			await expect(page).toHaveURL(/\/[0-9a-f-]{36}$/);
 			await expect(status(body)).toHaveAttribute("data-chat-status", "ready");
-			await expect(savedEntry(page, `Other ${i}`)).toBeVisible();
+			// Marked active once the chat's own page shows. Until then `/new` is still on screen with
+			// this chat, and clicking New chat right away would keep it there, so the next message would
+			// go into it.
+			await expect(savedEntry(page, `Other ${i}`)).toHaveAttribute(
+				"data-active",
+			);
 		}
 	}
 
@@ -343,7 +348,9 @@ test.describe("after the tab releases idle chats", () => {
 			);
 		}
 
-		await expect(savedEntry(page, "Remember me")).toBeVisible();
+		await expect(savedEntry(page, "Remember me")).toHaveAttribute(
+			"data-active",
+		);
 		await openOtherChats(page);
 		await savedEntry(page, "Remember me").click();
 		await expect(page).toHaveURL(workspaceUrl);
@@ -377,7 +384,9 @@ test.describe("after the tab releases idle chats", () => {
 		const chatUrl = page.url();
 		await expect(status(body)).toHaveAttribute("data-chat-status", "ready");
 
-		await expect(savedEntry(page, "Remember me")).toBeVisible();
+		await expect(savedEntry(page, "Remember me")).toHaveAttribute(
+			"data-active",
+		);
 		await openOtherChats(page);
 		await savedEntry(page, "Remember me").click();
 		await expect(page).toHaveURL(chatUrl);
