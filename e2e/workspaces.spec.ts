@@ -288,17 +288,44 @@ test("screenshot: three panes side by side", async ({ page, context }) => {
 test.describe("after the tab releases idle chats", () => {
 	const OTHER_CHATS = 9;
 
+	/**
+	 * A chat's sidebar entry, once it's saved and named after its first message. Until then it's
+	 * "New chat" (a workspace's "New chat, 2 panes"), which the New chat link would also match.
+	 */
+	const savedEntry = (page: Page, title: string) =>
+		page
+			.getByRole("list", { name: "Recent chats" })
+			.getByRole("link", { name: new RegExp(`^${title}`) });
+
+	/** How many messages the chat has saved in this browser (0 before its first save). */
+	const savedMessages = (page: Page, chatId: string) =>
+		page.evaluate(async (id) => {
+			const db = await new Promise<IDBDatabase>((resolve, reject) => {
+				const open = indexedDB.open("highelo-chats");
+				open.onsuccess = () => resolve(open.result);
+				open.onerror = () => reject(open.error);
+			});
+			const row = await new Promise<{ messageCount?: number } | undefined>(
+				(resolve, reject) => {
+					const request = db.transaction("chats").objectStore("chats").get(id);
+					request.onsuccess = () => resolve(request.result);
+					request.onerror = () => reject(request.error);
+				},
+			);
+			db.close();
+			return row?.messageCount ?? 0;
+		}, chatId);
+
 	async function openOtherChats(page: Page) {
 		const body = page.locator("body");
 		for (let i = 0; i < OTHER_CHATS; i++) {
-			// Exact: an entry still waiting for its title is "New chat" too (the workspace's is
-			// "New chat, 2 panes").
 			await page.getByRole("link", { name: "New chat", exact: true }).click();
 			await expect(page).toHaveURL(/\/new$/);
 			await composer(body).fill(`Other ${i}`);
 			await composer(body).press("Enter");
 			await expect(page).toHaveURL(/\/[0-9a-f-]{36}$/);
 			await expect(status(body)).toHaveAttribute("data-chat-status", "ready");
+			await expect(savedEntry(page, `Other ${i}`)).toBeVisible();
 		}
 	}
 
@@ -316,8 +343,9 @@ test.describe("after the tab releases idle chats", () => {
 			);
 		}
 
+		await expect(savedEntry(page, "Remember me")).toBeVisible();
 		await openOtherChats(page);
-		await page.getByRole("link", { name: /Remember me/ }).click();
+		await savedEntry(page, "Remember me").click();
 		await expect(page).toHaveURL(workspaceUrl);
 		for (const n of [1, 2]) {
 			await expect(pane(page, n).getByText("Remember me")).toBeVisible();
@@ -327,10 +355,8 @@ test.describe("after the tab releases idle chats", () => {
 		await composer(pane(page, 1)).fill("After return");
 		await composer(pane(page, 1)).press("Enter");
 		for (const n of [1, 2]) {
-			await expect(status(pane(page, n))).toHaveAttribute(
-				"data-chat-status",
-				"ready",
-			);
+			const chatId = await pane(page, n).getAttribute("data-pane-id");
+			await expect.poll(() => savedMessages(page, chatId ?? "")).toBe(4);
 		}
 		await page.reload();
 		await expect(panes(page)).toHaveCount(2);
@@ -351,14 +377,16 @@ test.describe("after the tab releases idle chats", () => {
 		const chatUrl = page.url();
 		await expect(status(body)).toHaveAttribute("data-chat-status", "ready");
 
+		await expect(savedEntry(page, "Remember me")).toBeVisible();
 		await openOtherChats(page);
-		await page.getByRole("link", { name: /Remember me/ }).click();
+		await savedEntry(page, "Remember me").click();
 		await expect(page).toHaveURL(chatUrl);
 		await expect(page.getByText("Remember me").last()).toBeVisible();
 
 		await composer(body).fill("After return");
 		await composer(body).press("Enter");
-		await expect(status(body)).toHaveAttribute("data-chat-status", "ready");
+		const chatId = new URL(chatUrl).pathname.slice(1);
+		await expect.poll(() => savedMessages(page, chatId)).toBe(4);
 		await page.reload();
 		await expect(page.getByText(e2eMockReply("alpha"))).toHaveCount(2);
 		await expect(page.locator("main").getByText("Remember me")).toBeVisible();
