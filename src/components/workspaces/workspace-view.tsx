@@ -1,3 +1,5 @@
+import type { Chat } from "@ai-sdk/react";
+import type { UIMessage } from "ai";
 import { LayoutGroup, motion, type Transition } from "motion/react";
 import {
 	Fragment,
@@ -15,7 +17,6 @@ import {
 	ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { openChat } from "@/lib/chat/chat-sessions";
 import { retainChat } from "@/lib/chat/open-chats";
 import { logError } from "@/lib/log";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
@@ -31,6 +32,7 @@ import {
 import { createPaneSync, usePaneSyncState } from "@/lib/workspaces/pane-sync";
 import { addNewPane } from "@/lib/workspaces/workspace-sessions";
 import { PaneActions } from "./pane-actions";
+import { PaneChat } from "./pane-chat";
 import { WorkspaceToolbar } from "./workspace-toolbar";
 
 // A workspace (roadmaps 3.1 and 3.2): up to four chat panes side by side, each with its own model,
@@ -130,9 +132,18 @@ export function WorkspaceView({ initial }: { initial: Workspace }) {
 	};
 	const shown = panes.find((pane) => pane.chatId === shownId) ?? panes[0];
 
-	const renderPane = (pane: WorkspacePane, index: number) => {
+	// A pane's chat is opened by `PaneChat`, never here: see quality audit Q2, W1.
+	const renderPane = (pane: WorkspacePane, index: number) => (
+		<PaneChat chatId={pane.chatId} workspace={workspace}>
+			{({ chat }) => renderOpenPane(pane, index, chat)}
+		</PaneChat>
+	);
+	const renderOpenPane = (
+		pane: WorkspacePane,
+		index: number,
+		chat: Chat<UIMessage>,
+	) => {
 		const label = `Pane ${index + 1}`;
-		const chat = openChat(pane.chatId);
 		return (
 			<section
 				aria-label={label}

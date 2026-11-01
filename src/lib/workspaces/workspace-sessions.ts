@@ -14,12 +14,15 @@ import { addPane, initialPanes } from "./pane-layout";
 // in one pane doesn't move the others. This module loads the chat engine, so routes import it with
 // `import()`.
 
-/** Opens one pane's chat. False when it belongs to another account, so the pane is left out. */
-async function openPaneChat(
-	pane: WorkspacePane,
-	workspace: Workspace,
+/**
+ * Opens one pane's chat: from this tab if it's open, else from the store (also after this tab released
+ * it). False when it belongs to another account, so the pane is left out.
+ */
+export async function openPaneChat(
+	pane: Pick<WorkspacePane, "chatId">,
+	workspace: Pick<Workspace, "ownerId">,
 	viewer: Viewer,
-	store: ChatStore,
+	store: ChatStore = chatStore(),
 ): Promise<boolean> {
 	const open = getOpenChat(pane.chatId);
 	if (open) {
