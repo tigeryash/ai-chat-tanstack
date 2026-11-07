@@ -79,6 +79,13 @@ export interface ChatStore {
 	saveWorkspace(
 		workspace: Omit<Workspace, "createdAt" | "updatedAt">,
 	): Promise<Workspace>;
+	/** Newest first. Unreadable workspaces are left out. */
+	listWorkspaces(): Promise<WorkspaceSummary[]>;
+	/** Like `setOwner`, for workspaces: skips missing ones and doesn't change `updatedAt`. */
+	setWorkspaceOwner(
+		workspaceIds: readonly string[],
+		ownerId: string | null,
+	): Promise<void>;
 	/** Like `watchChats`, newest first. Unreadable workspaces are left out. */
 	watchWorkspaces(
 		onChange: (workspaces: WorkspaceSummary[]) => void,

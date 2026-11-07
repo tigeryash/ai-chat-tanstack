@@ -24,11 +24,12 @@ describe("sidebar entries", () => {
 					updatedAt: 3,
 				},
 			],
+			null,
 		);
 		expect(entries).toEqual([
 			{
 				...chat("a", 9),
-				workspace: { id: "w1", chatIds: ["a", "b", "unsaved"], paneCount: 3 },
+				workspace: { id: "w1", paneCount: 3 },
 			},
 			chat("solo", 5),
 		]);
@@ -42,7 +43,28 @@ describe("sidebar entries", () => {
 				{ id: "old", ownerId: null, chatIds: ["a"], updatedAt: 1 },
 				{ id: "new", ownerId: null, chatIds: ["a"], updatedAt: 2 },
 			],
+			null,
 		);
 		expect(entries.map((entry) => entry.workspace?.id)).toEqual(["new"]);
+	});
+
+	it("counts and leads with only the chats the viewer can see, and hides others' workspaces", () => {
+		const theirs = { ...chat("theirs", 9), ownerId: "user-b" };
+		const entries = sidebarEntries(
+			[theirs, chat("mine", 1), { ...chat("b-solo", 5), ownerId: "user-b" }],
+			[
+				{
+					id: "shared",
+					ownerId: null,
+					chatIds: ["theirs", "mine", "unsaved"],
+					updatedAt: 3,
+				},
+				{ id: "b-only", ownerId: "user-b", chatIds: ["b-solo"], updatedAt: 4 },
+			],
+			null,
+		);
+		expect(entries).toEqual([
+			{ ...chat("mine", 1), workspace: { id: "shared", paneCount: 2 } },
+		]);
 	});
 });

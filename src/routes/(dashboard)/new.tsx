@@ -30,7 +30,7 @@ function NewChat({ ownerId }: { ownerId: string | null }) {
 		<ChatScreen
 			chat={chat}
 			onSend={() => navigate({ to: "/$chatId", params: { chatId: chat.id } })}
-			actions={<AddPaneButton chatId={chat.id} ownerId={ownerId} />}
+			actions={<AddPaneButton chatId={chat.id} />}
 		/>
 	);
 }

@@ -6,21 +6,34 @@ import { chatStore } from "@/lib/storage/app-store";
 import type { ChatStore } from "@/lib/storage/chat-store";
 import { isVisibleTo, type Viewer } from "@/lib/storage/ownership";
 import type { Workspace, WorkspacePane } from "@/lib/storage/workspace";
-import { addPane, initialPanes } from "./pane-layout";
+import {
+	addPane,
+	type HiddenPane,
+	initialPanes,
+	splitHiddenPanes,
+} from "./pane-layout";
 
 // Opening and creating workspaces (roadmap 3.1). Every pane's chat is opened through chat-sessions, so
 // it saves, reports tab status (3.10) and keeps streaming like any chat. A pane whose chat was never
 // saved (no reply yet) opens empty under the same id. Every pane holds its own model choice, so a pick
 // in one pane doesn't move the others. This module loads the chat engine, so routes import it with
 // `import()`.
+//
+// Ownership (roadmap 1.9, quality audit Q2 W2/W4): a pane whose chat belongs to another account is
+// hidden but stays in the record, and a new pane's chat belongs to whoever adds it, like any chat.
+
+/** An opened workspace: the panes to show, plus the hidden ones its saves put back. */
+export interface OpenWorkspace extends Workspace {
+	hiddenPanes: HiddenPane[];
+}
 
 /**
  * Opens one pane's chat: from this tab if it's open, else from the store (also after this tab released
- * it). False when it belongs to another account, so the pane is left out.
+ * it). False when it belongs to another account, so the pane is hidden. A pane never sent from opens
+ * empty, as the viewer's.
  */
 export async function openPaneChat(
 	pane: Pick<WorkspacePane, "chatId">,
-	workspace: Pick<Workspace, "ownerId">,
 	viewer: Viewer,
 	store: ChatStore = chatStore(),
 ): Promise<boolean> {
@@ -35,7 +48,7 @@ export async function openPaneChat(
 	const chat = openChat(pane.chatId, {
 		messages: saved?.messages,
 		store,
-		ownerId: saved?.ownerId ?? workspace.ownerId,
+		ownerId: saved?.ownerId ?? viewer,
 	});
 	holdChatModelChoice(chat.id, chat.messages);
 	return true;
@@ -49,44 +62,52 @@ export async function openWorkspace(
 	id: string,
 	viewer: Viewer,
 	store: ChatStore = chatStore(),
-): Promise<Workspace | undefined> {
+): Promise<OpenWorkspace | undefined> {
 	const workspace = await store.getWorkspace(id);
 	if (!workspace || !isVisibleTo(workspace, viewer)) return undefined;
-	const shown = await Promise.all(
-		workspace.panes.map((pane) => openPaneChat(pane, workspace, viewer, store)),
+	const visible = await Promise.all(
+		workspace.panes.map((pane) => openPaneChat(pane, viewer, store)),
 	);
-	const panes = workspace.panes.filter((_, index) => shown[index]);
-	if (panes.length === 0) return undefined;
-	return { ...workspace, panes };
+	const shownIds = new Set(
+		workspace.panes.flatMap((pane, index) =>
+			visible[index] ? [pane.chatId] : [],
+		),
+	);
+	const { shown, hidden } = splitHiddenPanes(workspace.panes, (pane) =>
+		shownIds.has(pane.chatId),
+	);
+	if (shown.length === 0) return undefined;
+	return { ...workspace, panes: shown, hiddenPanes: hidden };
 }
 
 /**
- * "Add pane" on a single chat: a new workspace with that chat and a new empty one beside it. Returns
- * the workspace's id.
+ * "Add pane" on a single chat: a new workspace with that chat and a new empty one beside it, both the
+ * viewer's, whoever owns the shown chat. Returns the workspace's id.
  */
 export async function createWorkspaceFrom(
 	chatId: string,
-	ownerId: string | null,
+	viewer: Viewer,
 	store: ChatStore = chatStore(),
 ): Promise<string> {
-	const added = openNewChat({ ownerId, store });
+	const added = openNewChat({ ownerId: viewer, store });
 	const shown = getOpenChat(chatId)?.chat;
 	holdChatModelChoice(chatId, shown?.messages);
 	holdChatModelChoice(added.id);
 	const workspace = await store.saveWorkspace({
 		id: crypto.randomUUID(),
-		ownerId,
+		ownerId: viewer,
 		panes: initialPanes([chatId, added.id]),
 	});
 	return workspace.id;
 }
 
-/** Adds a new empty pane, owned like the workspace. Returns the new pane list. */
+/** Adds a new empty pane whose chat is the viewer's, whoever owns the workspace. Returns the new pane list. */
 export function addNewPane(
-	workspace: Pick<Workspace, "panes" | "ownerId">,
+	workspace: Pick<OpenWorkspace, "panes" | "hiddenPanes">,
+	viewer: Viewer,
 	store: ChatStore = chatStore(),
 ): WorkspacePane[] {
-	const added = openNewChat({ ownerId: workspace.ownerId, store });
+	const added = openNewChat({ ownerId: viewer, store });
 	holdChatModelChoice(added.id);
-	return addPane(workspace.panes, added.id);
+	return addPane(workspace.panes, added.id, workspace.hiddenPanes.length);
 }

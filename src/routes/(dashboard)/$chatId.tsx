@@ -63,12 +63,7 @@ function RouteComponent() {
 		<ChatScreen
 			key={chatId}
 			chat={open.chat}
-			actions={
-				<AddPaneButton
-					chatId={chatId}
-					ownerId={open.ownerId ?? viewer ?? null}
-				/>
-			}
+			actions={<AddPaneButton chatId={chatId} />}
 		/>
 	);
 }

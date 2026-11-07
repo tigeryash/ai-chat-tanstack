@@ -66,6 +66,8 @@ export function ChatListItem({
 	const [confirmingDelete, setConfirmingDelete] = useState(false);
 	const title = displayTitle(chat);
 	const { workspace } = chat;
+	// With another account's panes hidden, a workspace can show one pane (quality audit Q2, W3).
+	const severalChats = workspace !== undefined && workspace.paneCount > 1;
 
 	return (
 		<SidebarMenuItem data-chat-id={chat.id}>
@@ -102,12 +104,14 @@ export function ChatListItem({
 					<span className="truncate">{title}</span>
 					{workspace && (
 						<span
-							title={`${workspace.paneCount} panes`}
+							title={panesLabel(workspace.paneCount)}
 							className="ml-auto shrink-0 rounded-sm border px-1 font-mono text-[0.65rem] text-muted-foreground"
 						>
 							<span className="sr-only">, </span>
 							{workspace.paneCount}
-							<span className="sr-only"> panes</span>
+							<span className="sr-only">
+								{workspace.paneCount === 1 ? " pane" : " panes"}
+							</span>
 						</span>
 					)}
 					{noAccount && (
@@ -155,10 +159,10 @@ export function ChatListItem({
 				<AlertDialogContent>
 					<AlertDialogHeader>
 						<AlertDialogTitle>
-							{workspace ? "Delete these chats?" : "Delete this chat?"}
+							{severalChats ? "Delete these chats?" : "Delete this chat?"}
 						</AlertDialogTitle>
 						<AlertDialogDescription>
-							{workspace
+							{severalChats
 								? `“${title}” and the other chats in its ${workspace.paneCount} panes will be deleted from this browser. This can't be undone.`
 								: `“${title}” will be deleted from this browser. This can't be undone.`}
 						</AlertDialogDescription>
@@ -217,4 +221,8 @@ function RenameInput({
 			}}
 		/>
 	);
+}
+
+function panesLabel(count: number): string {
+	return count === 1 ? "1 pane" : `${count} panes`;
 }

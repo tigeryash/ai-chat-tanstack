@@ -111,4 +111,15 @@ describe("workspaces in the chat store", () => {
 		expect(await store.getWorkspace("w1")).toBeUndefined();
 		expect(await store.getChat("a")).toBeDefined();
 	});
+
+	it("lists workspaces newest first and moves them to another owner without reordering", async () => {
+		const { store } = setup();
+		await store.saveWorkspace({ id: "w1", ownerId: null, panes });
+		await store.saveWorkspace({ id: "w2", ownerId: null, panes });
+		await store.setWorkspaceOwner(["w1", "missing"], "user-a");
+		expect(await store.listWorkspaces()).toEqual([
+			{ id: "w2", ownerId: null, chatIds: ["a", "b"], updatedAt: 1001 },
+			{ id: "w1", ownerId: "user-a", chatIds: ["a", "b"], updatedAt: 1000 },
+		]);
+	});
 });

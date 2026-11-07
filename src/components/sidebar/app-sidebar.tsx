@@ -18,14 +18,15 @@ import {
 } from "@/components/ui/sidebar";
 import { useViewer } from "@/lib/account";
 import { arrangeChats } from "@/lib/chat/chat-list";
-import { deleteChat, deleteChats } from "@/lib/chat/open-chats";
+import { deleteChat } from "@/lib/chat/open-chats";
 import { logError } from "@/lib/log";
 import { chatStore } from "@/lib/storage/app-store";
-import { type Viewer, visibleChats } from "@/lib/storage/ownership";
+import type { Viewer } from "@/lib/storage/ownership";
 import {
 	type SidebarEntry,
 	sidebarEntries,
 } from "@/lib/workspaces/sidebar-entries";
+import { deleteWorkspaceAs } from "@/lib/workspaces/workspace-cleanup";
 import { AccountLinks } from "./account-links";
 import { ChatListItem } from "./chat-list-item";
 import { type ChatListState, useChatList } from "./use-chat-list";
@@ -112,12 +113,12 @@ function ChatGroups({
 		entry.workspace
 			? entry.workspace.id === activeWorkspaceId
 			: entry.id === activeChatId;
-	// Deleting a workspace deletes its chats too: they're listed only as the workspace.
+	// Deleting a workspace deletes its chats too (they're listed only as the workspace), but only the
+	// ones this viewer can see (quality audit Q2, W3).
 	const remove = async (entry: SidebarEntry) => {
 		if (isActive(entry)) await navigate({ to: "/new" });
 		if (!entry.workspace) return deleteChat(entry.id);
-		await deleteChats(entry.workspace.chatIds);
-		await chatStore().deleteWorkspace(entry.workspace.id);
+		await deleteWorkspaceAs(entry.workspace.id, viewer);
 	};
 	const actionsFor = (entry: SidebarEntry) => ({
 		onRename: (title: string) => run(chatStore().renameChat(entry.id, title)),
@@ -125,10 +126,7 @@ function ChatGroups({
 		onDelete: () => run(remove(entry)),
 	});
 
-	const visible = sidebarEntries(
-		visibleChats(list.chats, viewer),
-		visibleChats(workspaces, viewer),
-	);
+	const visible = sidebarEntries(list.chats, workspaces, viewer);
 	const { pinned, recent } = arrangeChats(visible, query);
 	const renderGroup = (label: string, chats: SidebarEntry[]) =>
 		chats.length > 0 && (

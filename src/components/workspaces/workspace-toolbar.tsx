@@ -19,6 +19,7 @@ export function WorkspaceToolbar({
 	diverged,
 	saveFailed,
 	onAddPane,
+	hiddenPanes,
 }: {
 	panes: readonly WorkspacePane[];
 	/** The pane shown on a narrow screen; undefined when every pane shows. */
@@ -27,6 +28,8 @@ export function WorkspaceToolbar({
 	diverged: boolean;
 	saveFailed: boolean;
 	onAddPane: () => void;
+	/** Panes of another account's chats the record keeps (roadmap 1.9); they count toward the limit. */
+	hiddenPanes: number;
 }) {
 	return (
 		<div className="flex min-w-0 flex-1 items-center gap-2">
@@ -68,7 +71,7 @@ export function WorkspaceToolbar({
 				<Button
 					variant="ghost"
 					size="sm"
-					disabled={!canAddPane(panes)}
+					disabled={!canAddPane(panes, hiddenPanes)}
 					onClick={onAddPane}
 				>
 					<PlusIcon />

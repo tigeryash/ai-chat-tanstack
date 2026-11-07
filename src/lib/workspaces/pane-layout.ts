@@ -15,13 +15,21 @@ function evenly(panes: Panes): WorkspacePane[] {
 	}));
 }
 
-export function canAddPane(panes: Panes): boolean {
-	return panes.length < MAX_PANES;
+/** `hidden`: panes the record keeps but the viewer can't see (roadmap 1.9); they count toward the limit. */
+export function canAddPane(panes: Panes, hidden = 0): boolean {
+	return panes.length + hidden < MAX_PANES;
 }
 
 /** Adds a synced pane for `chatId` at the end. No change at the limit or for a chat already shown. */
-export function addPane(panes: Panes, chatId: string): WorkspacePane[] {
-	if (!canAddPane(panes) || panes.some((pane) => pane.chatId === chatId)) {
+export function addPane(
+	panes: Panes,
+	chatId: string,
+	hidden = 0,
+): WorkspacePane[] {
+	if (
+		!canAddPane(panes, hidden) ||
+		panes.some((pane) => pane.chatId === chatId)
+	) {
 		return [...panes];
 	}
 	return evenly([...panes, { chatId, size: 0, synced: true }]);
@@ -31,6 +39,15 @@ export function addPane(panes: Panes, chatId: string): WorkspacePane[] {
 export function removePane(panes: Panes, chatId: string): WorkspacePane[] {
 	if (panes.length <= 1) return [...panes];
 	const rest = panes.filter((pane) => pane.chatId !== chatId);
+	return rest.length === panes.length ? [...panes] : evenly(rest);
+}
+
+/** Removes the panes of these chats, evening out the rest. May return no panes. */
+export function removeChats(
+	panes: Panes,
+	chatIds: ReadonlySet<string>,
+): WorkspacePane[] {
+	const rest = panes.filter((pane) => !chatIds.has(pane.chatId));
 	return rest.length === panes.length ? [...panes] : evenly(rest);
 }
 
@@ -84,4 +101,52 @@ export function initialPanes(chatIds: readonly string[]): WorkspacePane[] {
 			.slice(0, MAX_PANES)
 			.map((chatId) => ({ chatId, size: 0, synced: true })),
 	);
+}
+
+/** A pane the viewer can't see (another account's chat, roadmap 1.9) and its place in the saved list. */
+export interface HiddenPane {
+	pane: WorkspacePane;
+	index: number;
+}
+
+function scaled(panes: Panes, total: number): WorkspacePane[] {
+	const sum = panes.reduce((acc, pane) => acc + pane.size, 0);
+	if (sum <= 0)
+		return evenly(panes).map((pane) => ({
+			...pane,
+			size: (pane.size * total) / 100,
+		}));
+	return panes.map((pane) => ({ ...pane, size: (pane.size * total) / sum }));
+}
+
+/**
+ * Splits a saved pane list into the panes to show, widened to fill the row, and the hidden ones, which
+ * the record keeps (quality audit Q2, W2).
+ */
+export function splitHiddenPanes(
+	panes: Panes,
+	isShown: (pane: WorkspacePane) => boolean,
+): { shown: WorkspacePane[]; hidden: HiddenPane[] } {
+	const hidden = panes.flatMap((pane, index) =>
+		isShown(pane) ? [] : [{ pane, index }],
+	);
+	if (hidden.length === 0) return { shown: [...panes], hidden };
+	return { shown: scaled(panes.filter(isShown), 100), hidden };
+}
+
+/**
+ * The pane list to save: the shown panes with the hidden ones back in their places and at their
+ * widths; the shown panes share what's left of the row.
+ */
+export function withHiddenPanes(
+	shown: Panes,
+	hidden: readonly HiddenPane[],
+): WorkspacePane[] {
+	if (hidden.length === 0) return [...shown];
+	const hiddenWidth = hidden.reduce((acc, { pane }) => acc + pane.size, 0);
+	const panes = scaled(shown, Math.max(0, 100 - hiddenWidth));
+	for (const { pane, index } of [...hidden].sort((a, b) => a.index - b.index)) {
+		panes.splice(Math.min(index, panes.length), 0, pane);
+	}
+	return panes;
 }
