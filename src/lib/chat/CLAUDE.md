@@ -1,0 +1,11 @@
+# Chat in the browser
+
+Notes for working in this folder. The root [CLAUDE.md](/CLAUDE.md) (commands, hard rules, conventions, workflow) still applies.
+- **AI SDK 7, chat in the browser** (roadmap 1.2, `src/lib/chat/`). Chat routes (`/new`, `/$chatId`, both
+  `ssr: false`) run `useChat` on `Chat` objects from `chat-sessions.ts`, which outlive a route (so `/new` hands a
+  streaming chat to `/$chatId`) and save to the ChatStore when a reply finishes. `open-chats.ts` tracks them
+  (and releases idle ones past 8; a route showing a chat calls `retainChat`). Never `openChat(id)` in render for a
+  saved chat: a released one comes back empty and its next save wipes the history; use `openSavedChat`.
+  `BrowserChatTransport` runs `streamText` in the page against the provider in each request's `body`
+  (`language-model.ts`; local models get the `<think>` middleware). Tests use `mockChatModel` (`mock-model.ts`) and
+  the `/e2e/chat` pages; `VITE_E2E` builds also map the local model `e2e-mock-model` to it, so e2e can drive `/new`.
