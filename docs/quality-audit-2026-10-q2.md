@@ -90,6 +90,9 @@ that leans on it, **low** = tidy-up. Fix size: S (under an hour), M (one session
   account" answer also moves no-account workspaces; `answerNoAccountPrompt` and `removeAccountChats` in
   `src/lib/chat/chat-ownership.ts` ignore workspaces today, so "remove" leaves records pointing at deleted chats
   (they reopen as empty panes).
+- *Decision (Yash, 2026-11-07):* workspaces follow their chats on every answer. "Add" moves no-account
+  workspaces to the account, "keep" leaves them no-account, "delete" deletes them. Likewise "Sign out and remove
+  my chats from this device" deletes the account's workspaces along with its chats.
 
 **W5 (low) On a phone, every pane mounts twice.** S.
 - File: `src/hooks/use-mobile.ts` (starts `false`, then sets the real value in an effect).
@@ -286,7 +289,7 @@ Each slice lists the files it touches. Slices that share no files can run in par
    *Done when:* the repro (2-pane workspace, 9 other chats, back via the sidebar) shows the history and keeps it
    after a reply and a reload, as an e2e test; no route creates a chat in render.
 2. **Workspace ownership** (W2, W3, W4, plus the ownership e2e). M. **Before Milestone 2, after slice 1** (both
-   touch `workspace-view.tsx`). Needs Yash's one-line answer on W4 (do no-account workspaces move with "add").
+   touch `workspace-view.tsx`). W4 answered 2026-11-07: workspaces follow their chats (see W4).
    Files: `src/lib/workspaces/workspace-sessions.ts` (+ new test), `src/lib/workspaces/sidebar-entries.ts`,
    `src/components/sidebar/app-sidebar.tsx`, `src/components/sidebar/chat-list-item.tsx`,
    `src/components/workspaces/workspace-view.tsx`, `src/components/workspaces/add-pane-button.tsx`,
