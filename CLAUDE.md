@@ -43,67 +43,12 @@ on every PR; the `Playwright` check passes without running e2e when a PR only to
   sign-up, forgot and reset password (signed-in visitors go to `/new`; forms share `auth-form.tsx`). Server routes
   sit in `src/routes/api/` (`/api/auth/$` proxies to Convex, `/api/csp-report` logs CSP violations). There is no
   chat route on our server.
-- **Security baseline** (roadmap 1.0, `src/lib/security/`): `getRouter` makes a CSP nonce per request, the root
-  route's `headers` sends the policy (strict one report-only for now), and `src/start.ts` adds the security headers
-  and Start's server-function CSRF check to every response. A new provider is one entry in
-  `src/models/provider-registry.ts` (its `apiOrigins` feed `provider-origins.ts`); any other third-party origin
-  the browser calls goes in `csp.ts`, or the CSP reports it. `ENFORCE_STRICT_CSP` in `csp.ts` is the enforce switch.
-- **Convex** (`convex/`) is the backend: `schema.ts` (the old chat tables are unused, kept until prod rows are
-  checked), `users` row upsert in `authHelpers.ts`, `_generated/` is generated. Query keys go through
-  `@convex-dev/react-query`. `convex/publicFunctions.test.ts` fails on any public function the app never calls as
-  `api.<module>.<name>`; delete it or allowlist it there with a reason.
-- **Local chats** (roadmap 1.3, `src/lib/storage/`): a `ChatStore` interface over Dexie (IndexedDB database
-  `highelo-chats`; the app's instance is `app-store.ts`). Every stored chat has a `formatVersion` (`format.ts` lists
-  the migrations); export/import are versioned JSON in `export.ts`. Each chat has an `ownerId` (roadmap 1.9): the
-  Better Auth user ID that made it, or null when made signed out. What a viewer may see is `ownership.ts`; the viewer
-  comes from `src/lib/account.ts` (Better Auth's session, not Convex auth). Never list or open chats without it.
-  **Dexie versions** (rules in `db.ts`'s header): prefer none (optional fields, or a new table); take the next
-  number, and append chat format migrations, when you rebase, never earlier; `upgrade()` only in a version that
-  changes nothing else; non-chat records get their own format number; `db.test.ts` pins the schema and wants an
-  upgrade test per `upgrade()`. Worktrees share :3000's IndexedDB: on a `VersionError`, delete `highelo-chats`.
 - **Better Auth 1.6.x** via `@convex-dev/better-auth` (server config `convex/auth.ts`, client
   `src/lib/auth-client.ts`, SSR helpers `src/lib/auth-server.ts`). Email/password plus Google, GitHub, Discord.
-- **AI SDK 7, chat in the browser** (roadmap 1.2, `src/lib/chat/`). Chat routes (`/new`, `/$chatId`, both
-  `ssr: false`) run `useChat` on `Chat` objects from `chat-sessions.ts`, which outlive a route (so `/new` hands a
-  streaming chat to `/$chatId`) and save to the ChatStore when a reply finishes. `open-chats.ts` tracks them
-  (and releases idle ones past 8; a route showing a chat calls `retainChat`). Never `openChat(id)` in render for a
-  saved chat: a released one comes back empty and its next save wipes the history; use `openSavedChat`.
-  `BrowserChatTransport` runs `streamText` in the page against the provider in each request's `body`
-  (`language-model.ts`; local models get the `<think>` middleware). Tests use `mockChatModel` (`mock-model.ts`) and
-  the `/e2e/chat` pages; `VITE_E2E` builds also map the local model `e2e-mock-model` to it, so e2e can drive `/new`.
 - **First load** (quality audit 2026-10, `scripts/bundle-budget.ts`): only chat routes may load the AI SDK, Dexie,
   GSAP or Streamdown. Route `loader`/`beforeLoad`/`validateSearch` code isn't code-split, so anything they import
   statically lands on every page: import chat code there with `import()` (see `$chatId.tsx`). Provider SDKs, GSAP
   (`src/lib/lazy-gsap.ts`) and Streamdown load on first use; brand logos are SVGs in `public/brand-logos/`.
-- **Local models** (roadmap 2.3, `src/lib/local-endpoints/`): endpoints saved in Settings (localStorage, localhost
-  and 127.0.0.1 only, to match `connect-src`); a local `ModelChoice` names its `endpoint` id. Nothing calls one
-  before it's saved and the Local Network Access explainer was clicked through. e2e stubs a server with
-  `context.route` (`e2e/local-models.spec.ts`); note `route.fulfill` adds a matching CORS header when you set none.
-- **Model settings** (roadmap 2.4b, `src/lib/params/`): `registry.ts` defines each setting, `support.ts` decides
-  which a model and host take (2.4a probe "accepted" first, then the catalog's lists from Convex `models.parameters`;
-  unknown means hidden), `mapping.ts` turns them into `streamText` options and strips the rest. Each chat's
-  settings sit on its ChatStore row (`lib/chat/chat-settings.ts`), the shared system prompt in the `prefs` table.
-  The panel is `src/components/params/`. React Compiler trap: a hook called as a method (`store.use()`) or a read
-  of a mutable Map can get memoized; wrap the first in a `use…` function, make the second an immutable snapshot.
-- **Workspaces** (roadmaps 3.1–3.2, `src/lib/workspaces/`, `src/components/workspaces/`): `/w/$workspaceId` shows
-  1–4 panes, each a `ChatScreen` on its own chat, in `react-resizable-panels`. The record (pane chat ids, widths,
-  synced) is the ChatStore's `workspaces` table (`storage/workspace.ts`, its own format version). `pane-sync.ts`
-  is the hub synced panes join: one shared draft (the composer's optional `value`/`onValueChange`), send to all,
-  Stop all, and the "Diverged" check. Panes hold their own model choice (`holdChatModelChoice`), or a pick in one
-  would move the others. The sidebar folds a workspace's chats into one entry (`sidebar-entries.ts`).
-- **Background status** (roadmap 3.10, `src/lib/background-status/`): hidden-tab title, favicon and
-  notifications for every open chat, mounted once as `<BackgroundStatus />` in the `(dashboard)` layout.
-- **Appearance** (roadmap 3.11, `src/lib/appearance/`): only overrides tokens, on `<html>`, replayed before first
-  paint by `boot-script.ts`. A new color token goes in `styles.css` and `tokens.ts`. Fonts are self-hosted
-  (`src/styles/fonts.css`), never a font CDN.
-- **Analytics** (roadmap 1.8, `src/lib/analytics/`): `track()` is the only way to send an event; add new ones to
-  the allowlist in `events.ts` (closed-set properties only) and to `docs/data-inventory.md`. Vercel Web Analytics
-  and Speed Insights load from `<VercelAnalytics />` in `__root.tsx` in production builds only; dev and e2e record
-  events in `window.__highEloAnalytics`. Settings → Analytics (and GPC / Do Not Track) turns everything off.
-- **Models** (roadmap 2.1–2.2): Convex `models` table synced daily (`convex/modelCatalogSync.ts`, curation in
-  `src/models/curation.ts`). The app reads `models.list` / `models.get` over HTTP (`src/lib/models/catalog.ts`), and
-  the e2e Convex stub serves `src/lib/models/catalog.fixtures.ts`. Runnability per user is `runnability.ts`, the
-  picker and model card are in `src/components/models/`, each chat's choice is `src/lib/chat/chat-model-choice.ts`.
 - **Design tokens** (roadmap 3.0b, [design-directions.md](docs/design-directions.md) A): every color, font, radius
   and spacing step comes from `src/styles.css`. Each color token is a `light-dark()` pair that follows the system
   unless a `dark` / `light` class forces it (auth pages are always `dark`; the `dark:` variant agrees). Use token
@@ -118,6 +63,25 @@ on every PR; the `Playwright` check passes without running e2e when a PR only to
   The React Compiler runs through `@rolldown/plugin-babel`, so don't add `useMemo`/`useCallback` for performance.
 - **Env**: client vars are validated in `src/env.ts` (`VITE_` prefix). The server reads `VITE_CONVEX_URL` and
   `VITE_CONVEX_SITE_URL` from `process.env`. Convex's own secrets live in the Convex dashboard, not `.env.local`.
+
+### Area notes
+
+Each feature folder has its own `CLAUDE.md` with its details. It loads when you read files there; **read it
+before changing code that uses that feature from elsewhere**, too.
+
+| Folder | What it covers | Don't miss |
+|---|---|---|
+| `src/lib/storage/` | Local chats (Dexie `ChatStore`), ownership, Dexie version rules | Never list or open chats without the viewer from `ownership.ts` |
+| `src/lib/chat/` | AI SDK chat in the browser, chat sessions, transport | Never `openChat(id)` in render for a saved chat; use `openSavedChat` |
+| `src/lib/workspaces/` | Multi-pane workspaces, pane sync | Panes hold their own model choice |
+| `src/lib/params/` | Per-model settings | React Compiler memoization trap |
+| `src/lib/security/` | CSP, security headers | New third-party origins go in `csp.ts` or the provider registry |
+| `src/lib/models/` | Model catalog, runnability | |
+| `src/lib/local-endpoints/` | LM Studio / Ollama endpoints | localhost and 127.0.0.1 only |
+| `src/lib/analytics/` | `track()` and its allowlist | Hard rule 4 |
+| `src/lib/appearance/`, `src/lib/background-status/` | Theme overrides, hidden-tab status | |
+| `convex/` | Backend, public-function guard, `convex-test` helpers | |
+| `e2e/` | Playwright setup, network/CSP guards, screenshot baselines | Import `test` from `e2e/support/fixtures.ts` |
 
 ## Hard rules
 
@@ -184,28 +148,12 @@ on every PR; the `Playwright` check passes without running e2e when a PR only to
 ## Testing
 
 - **Vitest** config is `vitest.config.ts`, separate from `vite.config.ts` on purpose (the app's plugins hang Vitest).
-- **Convex function tests** use `convex-test` through `convex/test.helpers.ts`: `createConvexTest()` registers the
-  Better Auth component, and `signIn(t, name)` seeds a Better Auth user and session and returns a client acting as
-  them. Files with two dots (`*.test.ts`, `test.helpers.ts`) are never deployed by Convex.
-- **Playwright** (`e2e/`, config `playwright.config.ts`) builds the app with `VITE_E2E=true` and runs it on :4174
-  against `e2e/support/convex-stub.ts`, a local Convex and Better Auth where everyone is signed out unless a test
-  calls `signInAs` (`e2e/support/accounts.ts`) for a Better Auth session (Convex stays signed out). No secrets needed.
-- **Test pages** under `src/routes/e2e/` render components without a session (`/e2e/composer`). They exist in
-  `bun run dev` and in `VITE_E2E` builds, and 404 in normal production builds. Add a page there when a test or a
-  preview needs a component that normally sits behind sign-in.
-- Import `test` and `expect` from `e2e/support/fixtures.ts`, not `@playwright/test`. Its automatic guards fail a
-  test on any request that leaves the machine, any uncaught page error, or any CSP violation (report-only ones
-  too). A test that provokes violations on purpose sets `test.use({ allowCspViolations: true })` and reads the
-  `cspViolations` fixture. XSS payloads for model output live in `src/routes/e2e/-xss-payloads.ts`.
-- **Screenshots**: baselines are per platform (`*-chromium-darwin.png` for local Macs, `*-chromium-linux.png` for
-  CI). After an intentional visual change, refresh both: `bun run test:e2e --update-snapshots` and
-  `bun run test:e2e:linux --update-snapshots`, then look at the new images before committing them.
+- Convex function tests: see `convex/CLAUDE.md`. Playwright, test pages and screenshot baselines: see `e2e/CLAUDE.md`.
 
 ## Gotchas (learned in Phase 0)
 
 - **`biome.json` ignores `.claude` at the repo root only** (`!!.claude`), so the main checkout skips worktrees and a
   worktree checks its own files. A `**/.claude` pattern would also match a worktree's own path and check nothing.
-- **Keep `convex` at 1.46 or newer**; older CLIs need data access the deploy key doesn't have (#5).
 - **Vite 8 uses Node-style CJS interop**: a default import of a CommonJS module is `module.exports`, even with
   `__esModule`. "Element type is invalid … got: object" means a `.default` unwrap (see `shadcn-io/marquee`).
 - **`vite.config.ts` filters out `@tanstack/devtools:event-client-setup`**: in devtools-vite 0.8.1–0.8.5 it reloads
@@ -215,8 +163,6 @@ on every PR; the `Playwright` check passes without running e2e when a PR only to
 - **Import Zod only from `@/lib/zod`** (Biome enforces it). Zod 4 compiles schemas with `new Function`, which the
   CSP forbids, and since 4.6 probes for eval when an object schema is *created*. `src/lib/zod.ts` turns jitless
   mode on before any importer can create a schema, whatever order chunks load in (a "first import" wasn't enough).
-- **Nitro's dev server 404s requests with `Sec-Fetch-Dest: report`** (it treats them as static assets). The
-  `cspReportsInDev` plugin in `vite.config.ts` relabels CSP reports so they reach `/api/csp-report` in dev.
 - **In `__root.tsx`, keep `headers` after `beforeLoad`.** TypeScript infers the route context in key order;
   placed earlier, `beforeLoad`'s return type is lost.
 - **New package versions wait 3 days** (`bunfig.toml` `minimumReleaseAge`). For an urgent fix, pass
