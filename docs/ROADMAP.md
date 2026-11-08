@@ -49,26 +49,6 @@ at once), then turn its findings into small refactor slices.
 Only what's still open. When one is done, tick it, add a dated note, and move it to
 [Done owner to-dos](#done-owner-to-dos) at the end of this file.
 
-- [ ] After 2.4b is deployed: on `www.highelollms.com`, open the sliders button next to the model for a few models
-  (one Anthropic, one OpenAI, one open-weights model through OpenRouter, and a local one), set each shown
-  control to its lowest and highest value, send, and note any error. e2e only checks requests against a fake
-  OpenRouter.
-  *2026-10-31:* the right controls show: the LM Studio model gets the sampling settings; Claude Opus 5.5 via
-  OpenRouter shows only max tokens, stop sequences, reasoning effort and verbosity (the 2.4a probe found OpenRouter
-  rejects temperature, top_p and top_k for it). Still to do: lowest/highest value with a send, plus an OpenAI and an
-  open-weights model.
-- [ ] Composer restore: on `www.highelollms.com`, open `/new` in light and dark and compare the composer with
-  your original (hover the paperclip, Send and voice chat, attach a file, type a few lines). Screenshot tests now
-  lock its look (hard rule 8), so anything off needs your call before it's fixed.
-- [ ] For 1.8: in the Vercel dashboard, open the project and turn on **Analytics** (Web Analytics) and **Speed
-  Insights** (both free on Hobby), then redeploy. Until then `/_vercel/insights/script.js` and
-  `/_vercel/speed-insights/script.js` 404 and nothing is collected. After deploying, load a page, check the Analytics
-  tab shows a visit, and that Vercel's `[csp]` log has no `_vercel` lines. Custom events (`track()`) need Pro; on
-  Hobby leave `VITE_ANALYTICS_CUSTOM_EVENTS` unset.
-  *2026-10-31:* Web Analytics turned on; both script paths now return 200 on `www.highelollms.com`. The dashboard's
-  "install `@vercel/analytics`" prompt can be ignored: both packages are already in the app (`src/lib/analytics/vercel.ts`).
-  Still to do: a visit in the Analytics tab, and no `_vercel` lines in the `[csp]` log. A browser sending Global
-  Privacy Control or Do Not Track, or with Settings → Analytics off, records nothing.
 - [ ] After 1.9 is deployed: on `www.highelollms.com`, with two real accounts (say email and GitHub). Signed out,
   make a chat. Sign in as the first: the "chats from before you signed in" question appears; choose Keep, make a
   chat, sign out (it disappears, the signed-out one stays). Sign in as the second: answer the question, and check
@@ -689,3 +669,30 @@ Finished owner to-dos, oldest first, kept for their notes.
   browser profile (or after clearing site data), save the first OpenRouter key (paste or Connect OpenRouter), go
   back to a chat without reloading, and check the picker's "Run with" light turns green. *Checked 2026-10-29:*
   the test notification appears once macOS allows the browser, and a re-added key turns the light green.
+- [x] After 2.4b is deployed: on `www.highelollms.com`, open the sliders button next to the model for a few models
+  (one Anthropic, one OpenAI, one open-weights model through OpenRouter, and a local one), set each shown
+  control to its lowest and highest value, send, and note any error. e2e only checks requests against a fake
+  OpenRouter.
+  *2026-10-31:* the right controls show: the LM Studio model gets the sampling settings; Claude Opus 5.5 via
+  OpenRouter shows only max tokens, stop sequences, reasoning effort and verbosity (the 2.4a probe found OpenRouter
+  rejects temperature, top_p and top_k for it). Still to do: lowest/highest value with a send, plus an OpenAI and an
+  open-weights model.
+  *2026-11-08:* lowest and highest values sent with a local model and OpenRouter; the sliders changed the output.
+  OpenAI and Anthropic models show no sliders, as the 2.4a probe expects (their newest models reject sampling settings).
+  Top K stays a number box (1–500 is too wide for a slider).
+- [x] Composer restore: on `www.highelollms.com`, open `/new` in light and dark and compare the composer with
+  your original (hover the paperclip, Send and voice chat, attach a file, type a few lines). Screenshot tests now
+  lock its look (hard rule 8), so anything off needs your call before it's fixed.
+  *2026-11-08:* the composer matches the original. In dark mode it stays light (hard rule 8 keeps its colors); Yash
+  wants a dark version, which starts with a mockup for approval.
+- [x] For 1.8: in the Vercel dashboard, open the project and turn on **Analytics** (Web Analytics) and **Speed
+  Insights** (both free on Hobby), then redeploy. Until then `/_vercel/insights/script.js` and
+  `/_vercel/speed-insights/script.js` 404 and nothing is collected. After deploying, load a page, check the Analytics
+  tab shows a visit, and that Vercel's `[csp]` log has no `_vercel` lines. Custom events (`track()`) need Pro; on
+  Hobby leave `VITE_ANALYTICS_CUSTOM_EVENTS` unset.
+  *2026-10-31:* Web Analytics turned on; both script paths now return 200 on `www.highelollms.com`. The dashboard's
+  "install `@vercel/analytics`" prompt can be ignored: both packages are already in the app (`src/lib/analytics/vercel.ts`).
+  Still to do: a visit in the Analytics tab, and no `_vercel` lines in the `[csp]` log. A browser sending Global
+  Privacy Control or Do Not Track, or with Settings → Analytics off, records nothing.
+  *2026-11-08:* the Analytics tab shows visits and Speed Insights reports (RES 35 from the first few visits; re-check
+  after a week). No `[csp]` lines in Vercel's runtime logs (a 30-minute window).
