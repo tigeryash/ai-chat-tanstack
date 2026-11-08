@@ -236,3 +236,78 @@ test("signing out and removing deletes the account's chats here, after a confirm
 	await page.goto(aChat);
 	await expect(notFound(page)).toBeVisible();
 });
+
+test("a workspace never drops or deletes a pane of another account's chat (quality audit Q2, W2–W4)", async ({
+	page,
+	baseURL,
+}) => {
+	test.setTimeout(90_000);
+	const panes = page.locator("section[data-pane-id]");
+	const pane = (n: number) =>
+		page.getByRole("region", { name: `Pane ${n}`, exact: true });
+	const workspaceEntry = page
+		.getByRole("list", { name: "Recent chats" })
+		.getByRole("link", { name: /^Before signing in/ });
+	const send = async (n: number, text: string) => {
+		await pane(n).getByPlaceholder("Ask anything").fill(text);
+		await pane(n).getByPlaceholder("Ask anything").press("Enter");
+		await expect(pane(n).getByText(text)).toBeVisible();
+		for (const each of await panes.all()) {
+			await expect(each.locator("[data-chat-status]")).toHaveAttribute(
+				"data-chat-status",
+				"ready",
+			);
+		}
+	};
+
+	// Signed out: a two-pane workspace with a reply in both.
+	await page.goto("/new");
+	await page.getByRole("button", { name: "Add pane" }).click();
+	await expect(page).toHaveURL(/\/w\/[0-9a-f-]{36}$/);
+	const workspaceUrl = new URL(page.url()).pathname;
+	await expect(panes).toHaveCount(2);
+	await send(1, "Before signing in");
+
+	// Signed in, keeping the no-account chats apart: a third pane is the account's (W4).
+	await signIn(page, baseURL, "user-a", { path: workspaceUrl, prompt: true });
+	await prompt(page)
+		.getByRole("button", { name: "Keep them separate" })
+		.click();
+	await expect(panes).toHaveCount(2);
+	await page.getByRole("button", { name: "Add pane" }).click();
+	await expect(panes).toHaveCount(3);
+	await pane(1).getByRole("switch", { name: "Sync Pane 1" }).click();
+	await pane(2).getByRole("switch", { name: "Sync Pane 2" }).click();
+	await send(3, "Account A only");
+
+	// Signed out, the account's pane is hidden, and a change to the workspace keeps it (W2).
+	await signOut(page);
+	await page.goto(workspaceUrl);
+	await expect(panes).toHaveCount(2);
+	await expect(page.getByText("Account A only")).toHaveCount(0);
+	await expect(workspaceEntry).toContainText("2");
+	await pane(1).getByRole("switch", { name: "Sync Pane 1" }).click();
+	await signIn(page, baseURL, "user-a", { path: workspaceUrl });
+	await expect(panes).toHaveCount(3);
+	await expect(pane(3).getByText("Account A only")).toBeVisible();
+
+	// Signed out, deleting the workspace deletes only the two panes' chats it shows (W3).
+	await signOut(page);
+	await page.goto("/new");
+	await page
+		.getByRole("button", { name: "Options for Before signing in" })
+		.click();
+	await page.getByRole("menuitem", { name: "Delete" }).click();
+	const confirm = page.getByRole("alertdialog");
+	await expect(confirm).toContainText("its 2 panes");
+	await confirm.getByRole("button", { name: "Delete" }).click();
+	await expect(workspaceEntry).toHaveCount(0);
+	await page.goto(workspaceUrl);
+	await expect(notFound(page)).toBeVisible();
+
+	// The account still has its chat, in what's left of the workspace.
+	await signIn(page, baseURL, "user-a", { path: workspaceUrl });
+	await expect(panes).toHaveCount(1);
+	await expect(pane(1).getByText("Account A only")).toBeVisible();
+	await expect(page.getByText("Before signing in")).toHaveCount(0);
+});

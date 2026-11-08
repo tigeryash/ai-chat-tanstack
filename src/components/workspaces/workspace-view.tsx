@@ -17,20 +17,25 @@ import {
 	ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { currentViewer } from "@/lib/account";
 import { retainChat } from "@/lib/chat/open-chats";
 import { logError } from "@/lib/log";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { chatStore } from "@/lib/storage/app-store";
-import type { Workspace, WorkspacePane } from "@/lib/storage/workspace";
+import type { WorkspacePane } from "@/lib/storage/workspace";
 import {
 	layoutOf,
 	movePane,
 	removePane,
 	resizePanes,
 	setPaneSynced,
+	withHiddenPanes,
 } from "@/lib/workspaces/pane-layout";
 import { createPaneSync, usePaneSyncState } from "@/lib/workspaces/pane-sync";
-import { addNewPane } from "@/lib/workspaces/workspace-sessions";
+import {
+	addNewPane,
+	type OpenWorkspace,
+} from "@/lib/workspaces/workspace-sessions";
 import { PaneActions } from "./pane-actions";
 import { PaneChat } from "./pane-chat";
 import { WorkspaceToolbar } from "./workspace-toolbar";
@@ -38,7 +43,8 @@ import { WorkspaceToolbar } from "./workspace-toolbar";
 // A workspace (roadmaps 3.1 and 3.2): up to four chat panes side by side, each with its own model,
 // settings and composer, resizable and reorderable. Synced panes share the draft and send together.
 // Below `md`, one pane shows at a time; the others stay mounted (hidden), so synced sends reach them.
-// Every change is saved to the workspace record, so a reload restores panes, order and widths.
+// Every change is saved to the workspace record, so a reload restores panes, order and widths. Panes of
+// another account's chats aren't shown, and every save puts them back (roadmap 1.9, quality audit W2).
 
 const PANE_MIN_SIZE = "15%";
 /** Panes fade in and slide to their new place. Reduced motion (hard rule 3) makes both instant. */
@@ -100,7 +106,7 @@ function PaneMotion({
 	);
 }
 
-export function WorkspaceView({ initial }: { initial: Workspace }) {
+export function WorkspaceView({ initial }: { initial: OpenWorkspace }) {
 	const [workspace, setWorkspace] = useState(initial);
 	const [hub] = useState(createPaneSync);
 	const { diverged } = usePaneSyncState(hub);
@@ -118,15 +124,15 @@ export function WorkspaceView({ initial }: { initial: Workspace }) {
 			.saveWorkspace({
 				id: workspace.id,
 				ownerId: workspace.ownerId,
-				panes: next,
+				panes: withHiddenPanes(next, workspace.hiddenPanes),
 			})
 			.catch((error) => {
 				logError("Couldn't save the workspace:", error);
 				setSaveFailed(true);
 			});
 	};
-	const addPane = () => {
-		const next = addNewPane(workspace);
+	const addPane = async () => {
+		const next = addNewPane(workspace, await currentViewer());
 		save(next);
 		setShownId(next[next.length - 1]?.chatId);
 	};
@@ -134,7 +140,7 @@ export function WorkspaceView({ initial }: { initial: Workspace }) {
 
 	// A pane's chat is opened by `PaneChat`, never here: see quality audit Q2, W1.
 	const renderPane = (pane: WorkspacePane, index: number) => (
-		<PaneChat chatId={pane.chatId} workspace={workspace}>
+		<PaneChat chatId={pane.chatId}>
 			{({ chat }) => renderOpenPane(pane, index, chat)}
 		</PaneChat>
 	);
@@ -193,7 +199,10 @@ export function WorkspaceView({ initial }: { initial: Workspace }) {
 					onShow={setShownId}
 					diverged={diverged}
 					saveFailed={saveFailed}
-					onAddPane={addPane}
+					onAddPane={() => {
+						addPane().catch((error) => logError("Couldn't add a pane:", error));
+					}}
+					hiddenPanes={workspace.hiddenPanes.length}
 				/>
 			</InHeader>
 			{isMobile ? (

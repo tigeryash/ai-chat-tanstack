@@ -7,7 +7,6 @@ import {
 import { currentViewer } from "@/lib/account";
 import type { OpenChat } from "@/lib/chat/open-chats";
 import { useOpenChat } from "@/lib/chat/use-open-chat";
-import type { Workspace } from "@/lib/storage/workspace";
 import { openPaneChat } from "@/lib/workspaces/workspace-sessions";
 
 /**
@@ -16,15 +15,13 @@ import { openPaneChat } from "@/lib/workspaces/workspace-sessions";
  */
 export function PaneChat({
 	chatId,
-	workspace,
 	children,
 }: {
 	chatId: string;
-	workspace: Pick<Workspace, "ownerId">;
 	children: (open: OpenChat) => ReactNode;
 }) {
 	const state = useOpenChat(chatId, async (id) =>
-		openPaneChat({ chatId: id }, workspace, await currentViewer()),
+		openPaneChat({ chatId: id }, await currentViewer()),
 	);
 	if (state.status === "open") return children(state.open);
 	let message = OPENING_CHAT;

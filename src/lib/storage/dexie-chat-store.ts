@@ -269,6 +269,16 @@ export function createDexieChatStore({
 			});
 		},
 
+		listWorkspaces,
+
+		async setWorkspaceOwner(workspaceIds, ownerId) {
+			checkOwnerId(ownerId);
+			await db.workspaces
+				.where("id")
+				.anyOf([...workspaceIds])
+				.modify({ ownerId });
+		},
+
 		watchWorkspaces(onChange, onError) {
 			const subscription = liveQuery(listWorkspaces).subscribe({
 				next: onChange,
