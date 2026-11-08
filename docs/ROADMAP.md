@@ -589,6 +589,15 @@ This is effectively a small agent harness. Slices below are a draft; 4.0 settles
 - **User settings polish.** Defaults, privacy, notification preferences.
 - **Other "connect an account" options** beyond OpenRouter (verify Hugging Face OAuth for Inference Providers).
 - **Voice model choice** for on-device dictation (5.2).
+- **Business / self-hosted edition** (raised 2026-11-08, revisit after Milestone 2). Pitch: compare open models
+  against the paid ones on a team's own hardware, with data that never leaves it. Open WebUI, LibreChat and
+  AnythingLLM already serve this, so the edge is UI quality and side-by-side comparison. Businesses run models on a
+  shared LAN server (vLLM, Ollama, llama.cpp), which today's localhost-only, browser-direct endpoints can't reach
+  from a hosted HTTPS page (mixed content, Chrome's Local Network Access prompt). Likely needs a self-hosted install
+  (Docker), any OpenAI-compatible endpoint, and admin features (SSO and organizations via Better Auth plugins,
+  allowed endpoints and models, a shared prompt library, audit logs). Until then, write new provider code around
+  generic OpenAI-compatible endpoints rather than special-casing localhost. Before building: talk to 3–5 companies
+  about whether they run local models and what stops them using Open WebUI.
 
 ## Out of scope for now
 
