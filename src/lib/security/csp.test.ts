@@ -106,7 +106,7 @@ describe("createNonce", () => {
 });
 
 describe("parseCspReport", () => {
-	it("keeps only directive, blocked origin and path from a report-uri body", () => {
+	it("keeps only directive, blocked origin and route from a report-uri body", () => {
 		expect(
 			parseCspReport({
 				"csp-report": {
@@ -149,6 +149,39 @@ describe("parseCspReport", () => {
 				disposition: "enforce",
 			},
 		]);
+	});
+
+	it("reduces pages to route patterns and blocked URLs to origins", () => {
+		const one = (documentUri: string, blockedUri: string) =>
+			parseCspReport({
+				"csp-report": {
+					"document-uri": documentUri,
+					"effective-directive": "connect-src",
+					"blocked-uri": blockedUri,
+				},
+			})[0];
+
+		expect(
+			one(
+				"https://app.test/k57abc123?x=1#frag",
+				"https://api.evil.test/v1/keys?k=sk-1",
+			),
+		).toMatchObject({ page: "/[chatId]", blocked: "https://api.evil.test" });
+		expect(one("https://app.test/settings/", "inline")).toMatchObject({
+			page: "/settings",
+			blocked: "inline",
+		});
+		expect(
+			one("https://app.test/a/b/c", "data:image/png;base64,AAAA"),
+		).toMatchObject({
+			page: "/[other]",
+			blocked: "data:",
+		});
+		expect(one("not a url", "::")).toMatchObject({
+			page: "/[unparseable]",
+			blocked: "unparseable",
+			disposition: "report",
+		});
 	});
 
 	it("ignores junk", () => {

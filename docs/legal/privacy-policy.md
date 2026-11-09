@@ -54,7 +54,8 @@ chats from this device" to delete them.
 
 ## What we store on our servers
 
-Our backend is [Convex](https://www.convex.dev). Today it holds account data only.
+Our backend is [Convex](https://www.convex.dev). Today it holds account data, plus the security report counts
+described under [Security reports](#security-reports), which aren't about you.
 
 | Data | Why | Kept for |
 |---|---|---|
@@ -108,8 +109,11 @@ We don't sell your data, and we don't share it for advertising.
 
 ## Security reports
 
-If your browser blocks something our security policy (CSP) doesn't allow, it sends us a report. We log only the
-rule, the blocked origin and the page path, in Vercel's logs, and drop the rest.
+If your browser blocks something our security policy (CSP) doesn't allow, it sends us a report. We keep only the
+rule, the blocked origin (a site name such as `https://example.com`, never a full address) and the kind of page (such
+as "a chat" or "settings", never a chat ID, query or fragment), and drop the rest, including your IP address and
+browser details. These go in Vercel's logs (kept 1 hour) and as a running count per rule, origin and kind of page
+in Convex, deleted 30 days after the last matching report. Nothing in them identifies you.
 
 ## Cookies and local storage
 

@@ -11,4 +11,12 @@ crons.daily(
 	{},
 );
 
+// CSP violation counts (quality audit G1): drop rows not seen for 30 days.
+crons.daily(
+	"delete stale CSP reports",
+	{ hourUTC: 7, minuteUTC: 3 },
+	internal.cspReports.deleteStale,
+	{},
+);
+
 export default crons;

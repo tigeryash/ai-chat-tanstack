@@ -383,4 +383,22 @@ export default defineSchema({
 		lastWarning: v.optional(v.string()),
 		itemCount: v.optional(v.number()),
 	}).index("by_source", ["source"]),
+
+	// ==========================================================================
+	// CSP VIOLATION REPORTS (quality audit G1): aggregate counts, written only by convex/cspReports.ts
+	// ==========================================================================
+
+	cspReports: defineTable({
+		disposition: v.union(v.literal("enforce"), v.literal("report")),
+		directive: v.string(),
+		/** An origin, or a keyword such as `inline` or `eval`. Never a full URL. */
+		blockedOrigin: v.string(),
+		/** A route pattern (`/settings`, `/[chatId]`), never a real path, query or fragment. */
+		page: v.string(),
+		count: v.number(),
+		firstSeen: v.number(),
+		lastSeen: v.number(),
+	})
+		.index("by_key", ["disposition", "directive", "blockedOrigin", "page"])
+		.index("by_lastSeen", ["lastSeen"]),
 });
