@@ -72,12 +72,6 @@ Only what's still open. When one is done, tick it, add a dated note, and move it
   the privacy policy says Convex covers EU/UK transfers in it. (Vercel's DPA covers only Pro, but Vercel is
   certified under the EU-U.S. Data Privacy Framework, which the policy cites instead.) A lawyer's review is worth it before charging
   money. Add `https://www.highelollms.com/privacy` and `/terms` to Google's OAuth consent screen.
-- [ ] After the old Convex chat backend is deleted (quality audit D1): its tables are still in `convex/schema.ts`
-  but nothing reads or writes them. Check prod's row counts for `conversations`, `conversationParticipants`,
-  `messages`, `attachments`, `messagePins` and `usageEvents` (`bunx convex data <table> --prod`, or the dashboard),
-  and Convex file storage (dashboard → Files; old attachment uploads live there). Then say whether to drop the
-  tables (and `users.preferences`) and delete any stored files. *Dev, 2026-10-30:* all six tables and file
-  storage are empty.
 - [ ] Enforce the strict CSP (quality audit G1): after a week of real use of production, signed in and chatting
   included, search Vercel's logs (Project → Logs) for `[csp]` lines and tell an agent what you find (none, or the
   directive, blocked origin and page of each). With none, the agent sets `ENFORCE_STRICT_CSP = true` in
@@ -559,7 +553,7 @@ This is effectively a small agent harness. Slices below are a draft; 4.0 settles
 - [ ] **6.1 Convex `ChatStore` + sync** (decision 11). On sign-in, offer to upload local chats. Keys never sync.
   The old Convex chat backend (`convex/messages.ts`, `conversations.ts`, `attachments.ts`, `branching.ts`,
   `usage.ts`, `messagePins.ts` and their access helpers) was unused after 1.2/1.3 and was deleted (quality audit
-  D1). Restore pieces from git at `58853e2` if useful; its tables wait on the owner to-do above.
+  D1). Restore pieces from git at `58853e2` if useful; its tables were dropped on 2026-11-09.
 - [ ] **6.2 Abuse protection on Convex writes.** Rate limits (`@convex-dev/rate-limiter`) on sync, share
   creation, and invites; captcha on sign-up (Better Auth captcha plugin with Turnstile).
 - [ ] **6.3 Sharing.** Read-only links for chats and workspaces via a server-rendered `/share/$id`, "Fork" into
@@ -712,3 +706,11 @@ Finished owner to-dos, oldest first, kept for their notes.
   lock its look (hard rule 8), so anything off needs your call before it's fixed.
   *Checked 2026-11-09:* matches Yash's original. It never had a dark design; a dark version (and another idea
   Yash has for it) waits for its own slice, with his approval first (hard rule 8).
+- [x] After the old Convex chat backend is deleted (quality audit D1): its tables are still in `convex/schema.ts`
+  but nothing reads or writes them. Check prod's row counts for `conversations`, `conversationParticipants`,
+  `messages`, `attachments`, `messagePins` and `usageEvents` (`bunx convex data <table> --prod`, or the dashboard),
+  and Convex file storage (dashboard → Files; old attachment uploads live there). Then say whether to drop the
+  tables (and `users.preferences`) and delete any stored files. *Dev, 2026-10-30:* all six tables and file
+  storage are empty.
+  *Done 2026-11-09:* prod's six tables and file storage were empty too, and no `users` row had `preferences`.
+  Yash said drop them; the tables and the field left `convex/schema.ts`.
