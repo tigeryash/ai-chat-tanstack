@@ -13,9 +13,9 @@ you can export or delete it.
 
 - **Your API keys stay in your browser.** They're sent only to the AI provider they belong to, never to our
   servers. The one exception is a future, opt-in "durable agent run" (see below).
-- **Your chats are stored on your device.** They reach our servers only if you turn on sync, share a chat, or
+- **Your chats, attachments and saved prompts are stored on your device.** They reach our servers only if you turn on sync, share a chat, or
   join a group chat. None of those features is live yet.
-- **We never see your prompts or replies.** They go from your browser straight to the provider you choose, under
+- **We never see your prompts, files or replies.** They go from your browser straight to the provider you choose, under
   your own account with that provider.
 - **Analytics never include content.** No prompts, replies, file contents, or keys. You can turn analytics
   off in Settings.
@@ -32,6 +32,16 @@ Most of what the app stores never leaves your device. It lives in your browser's
   to them; deleting the chat deletes them. Exports include them.
   Stored in IndexedDB. The app asks your browser to keep this data, but browsers can still clear it: Safari may
   delete it after 7 days without a visit. Exporting your chats is the backstop.
+- **Attachments.** Images (PNG, JPEG, WebP, GIF) and PDFs you attach to a message, up to 20 MB each and 10
+  per message, with their file names and types. The app shrinks images (except GIFs) in your browser before
+  sending them. Stored in IndexedDB with the chat they belong to, and included in chat exports. They're deleted
+  with their chat, or when no message or earlier version of a message refers to them any more.
+- **System prompts.** A chat's own system prompt, if you set one, is stored with the chat and included in exports.
+  The default system prompt for chats without their own is stored in IndexedDB and isn't exported.
+- **Saved prompts.** Prompts you save in the prompt library: each one's name, tags, which account on this device
+  saved it, and every version of its text (up to 200 per prompt) with when it was saved. Stored in IndexedDB,
+  and not included in exports yet. A saved prompt leaves your device only when you apply it to a chat, where it
+  becomes that chat's system prompt.
 - **Workspaces.** Which chats sit side by side, in what order, each pane's width and whether it's synced, and
   which account on this device made it. No messages: those stay with each chat. Stored in IndexedDB, and not
   included in chat exports yet.
@@ -48,9 +58,9 @@ Most of what the app stores never leaves your device. It lives in your browser's
 
 This data stays until you delete it in the app, clear your browser's site data, or your browser evicts it.
 
-**Signing out on a shared device.** The app shows an account's chats only while that account is signed in here,
-but that's hiding, not encryption: the chats stay readable in this browser profile. Use "Sign out and remove my
-chats from this device" to delete them.
+**Signing out on a shared device.** The app shows an account's chats and saved prompts only while that account
+is signed in here, but that's hiding, not encryption: they stay readable in this browser profile. Use "Sign out
+and remove my chats from this device" to delete them (it removes that account's saved prompts too).
 
 ## What we store on our servers
 
@@ -77,8 +87,10 @@ syncing chats across devices, sharing a chat by link, group chats, and durable a
 ## Who receives your data
 
 - **AI providers you connect** (for example OpenAI, Anthropic, Google, OpenRouter, Hugging Face, Vercel AI
-  Gateway). Your prompts, files and API key go **directly from your browser** to the provider you chose, under
-  your own account and that provider's terms and privacy policy. We don't proxy, see or pay for these requests.
+  Gateway). Your prompts, the chat's system prompt, files you attach and your API key go **directly from your
+  browser** to the provider you chose, under your own account and that provider's terms and privacy policy. Each
+  new message sends the conversation so far, so attachments and the system prompt go again with every later
+  message in that chat. We don't proxy, see or pay for these requests.
   What the provider keeps, and whether it trains on your data, is between you and the provider. The app can
   filter to hosts that say they don't train on your prompts, but we rely on what those hosts publish.
 - **Testing a key** sends it once to its own provider to check it works.
@@ -87,7 +99,7 @@ syncing chats across devices, sharing a chat by link, group chats, and durable a
 - **Model status in the picker.** When you open the model picker, your browser fetches public host status (prices,
   uptime, latency) from OpenRouter and Vercel AI Gateway. They see your IP address and which models you looked
   at, but no key or cookies.
-- **Your local model server** (LM Studio, Ollama). Prompts go from your browser to the server on your own
+- **Your local model server** (LM Studio, Ollama). Prompts and attachments go from your browser to the server on your own
   machine (localhost). Nothing is sent there until you add the server in Settings.
 - **Convex** stores the server data listed above.
 - **Vercel** hosts the app. It receives your requests to our pages (IP address, user agent, the page address)
@@ -128,8 +140,9 @@ message content.
 
 ## Exporting and deleting your data
 
-- **Chats:** delete them in the app, or export them as a file (JSON) and import them elsewhere. Exports never
-  include API keys. Clearing your browser's site data for this app deletes everything stored in the browser.
+- **Chats:** delete them in the app, or export them as a file (JSON) and import them elsewhere. Exports include
+  the chat's attachments and system prompt, and never include API keys. Deleting a chat deletes its attachments.
+- **Saved prompts:** delete them in the prompt library. They aren't included in exports yet. Clearing your browser's site data for this app deletes everything stored in the browser.
 - **API keys:** delete them in Settings → API keys. To revoke a key entirely, do it on the provider's site.
 - **Your account:** self-serve account deletion and export are planned. Until then, email us at the address below. We
   delete your account and its server data as soon as we get your request, and always within 30 days.
