@@ -101,7 +101,8 @@ Only what's still open. When one is done, tick it, add a dated note, and move it
    our server, so there are no inference costs, no server timeouts for chat, and no rate limiting needed for chat.
 4. **No login wall.** Chatting needs no account, since keys and chats are local. Signing in is only for cloud
    features (sync, share, invite). This replaces the earlier "anonymous guest session" plan.
-5. **Stay on Better Auth 1.6.x** until `@convex-dev/better-auth` supports 1.7 (current peer range is `<1.7.0`).
+5. **Stay on Better Auth 1.7.x with `@convex-dev/better-auth` 0.13** (peer range `>=1.7.16 <1.8.0`). Move both
+   together once the adapter supports 1.8.
 6. **Security baseline before key handling.** Because keys live in the page, an XSS bug or a malicious dependency
    means stolen keys. The baseline in [security.md](./security.md) ships before the key settings UI.
 
