@@ -36,6 +36,9 @@ Most of what the app stores never leaves your device. It lives in your browser's
   per message, with their file names and types. The app shrinks images (except GIFs) in your browser before
   sending them. Stored in IndexedDB with the chat they belong to, and included in chat exports. They're deleted
   with their chat, or when no message or earlier version of a message refers to them any more.
+  Text and code files (plain text, Markdown, CSV, JSON, YAML, XML, source code and similar), up to 1 MB each, are
+  stored the same way. Your browser reads their contents and sends them to the provider as text inside your
+  message, with the file name.
 - **System prompts.** A chat's own system prompt, if you set one, is stored with the chat and included in exports.
   The default system prompt for chats without their own is stored in IndexedDB and isn't exported.
 - **Saved prompts.** Prompts you save in the prompt library: each one's name, tags, which account on this device
@@ -90,7 +93,7 @@ syncing chats across devices, sharing a chat by link, group chats, and durable a
   Gateway). Your prompts, the chat's system prompt, files you attach and your API key go **directly from your
   browser** to the provider you chose, under your own account and that provider's terms and privacy policy. Each
   new message sends the conversation so far, so attachments and the system prompt go again with every later
-  message in that chat. We don't proxy, see or pay for these requests.
+  message in that chat. Text and code files go as part of your message's text: their name and full contents. We don't proxy, see or pay for these requests.
   What the provider keeps, and whether it trains on your data, is between you and the provider. The app can
   filter to hosts that say they don't train on your prompts, but we rely on what those hosts publish.
 - **Testing a key** sends it once to its own provider to check it works.

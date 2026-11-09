@@ -378,6 +378,13 @@ Only what's still open. When one is done, tick it, add a dated note, and move it
   parts to a mock model; e2e attaches an image, sends it, finds it in the request to the faked provider, and sees
   it after a reload.
   *Status (2026-11-09):* done; per-pane checks for synced panes stay in 3.3. PR: https://github.com/tigeryash/ai-chat-tanstack/pull/91
+- [ ] **1.6b Text and code attachments.** Text, JSON, YAML, XML, CSV, Markdown and code files are read in the page
+  and sent as text parts (file name plus a fenced block), so every model, local ones included, can read them; never
+  refused for what the model reads. Capped at 1 MB each; binary files renamed `.txt` are refused.
+  *Done when:* Vitest covers accepting them by type and extension, the size and UTF-8 refusals, the fenced text
+  the transport sends to a mock model, and the export/import round trip; e2e attaches a code file with no type on a
+  text-only model, finds it as text in the request to the faked provider, sees its chip after a reload, and the
+  composer's file chips baseline passes unchanged with a real text file.
 - [x] **1.7 Edit and branch.** Edit a user message → new branch; switch between siblings.
   *Done when:* Vitest covers the format migration (an old-format fixture loads through it), the branch tree
   operations, and export/import round-tripping branches; e2e edits a message, sees a new reply, switches back to the

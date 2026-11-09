@@ -1,6 +1,9 @@
 // The one check for attachments (roadmap 1.6). The paperclip and drag-and-drop both add files through
 // `useAttachments().add`, which runs this, so they accept and refuse the same files with the same words.
-// Decision 17: files are checked when attached, not at send time.
+// Decision 17: files are checked when attached, not at send time. Text and code files (1.6b) have their own
+// rules in `text-file.ts`.
+
+import { isTextFile, TEXT_FILE_ACCEPT, textFileRefusal } from "./text-file";
 
 export const MAX_ATTACHMENT_SIZE_MB = 20;
 export const MAX_ATTACHMENTS = 10;
@@ -14,7 +17,11 @@ const IMAGE_TYPES = new Set([
 const PDF_TYPE = "application/pdf";
 
 /** For the file picker's `accept`, so it offers only what the check lets through. */
-export const ACCEPTED_FILE_TYPES = [...IMAGE_TYPES, PDF_TYPE].join(",");
+export const ACCEPTED_FILE_TYPES = [
+	...IMAGE_TYPES,
+	PDF_TYPE,
+	TEXT_FILE_ACCEPT,
+].join(",");
 
 /**
  * What the pane's model reads, from the catalog's input modalities. Absent (a local or custom model, or
@@ -48,8 +55,11 @@ export function supportFromModalities(
 
 function refusal(file: File, support?: AttachmentSupport): string | undefined {
 	const image = isImageType(file.type);
+	if (!image && file.type !== PDF_TYPE && isTextFile(file)) {
+		return textFileRefusal(file);
+	}
 	if (!image && file.type !== PDF_TYPE) {
-		return `${file.name} can't be attached. Attach images (PNG, JPEG, WebP, GIF) or PDFs.`;
+		return `${file.name} can't be attached. Attach images (PNG, JPEG, WebP, GIF), PDFs, or text and code files.`;
 	}
 	if (file.size > MAX_ATTACHMENT_SIZE_MB * 1024 * 1024) {
 		return `${file.name} is larger than ${MAX_ATTACHMENT_SIZE_MB} MB.`;

@@ -6,6 +6,7 @@ import {
 	type UIMessage,
 	type UIMessageChunk,
 } from "ai";
+import { textFilesAsText } from "@/lib/attachments/text-file";
 import { hostKey, recordHostResult } from "@/lib/hosts/host-failures";
 import { getProviderKey } from "@/lib/keys";
 import { localEndpointFor } from "@/lib/local-endpoints/endpoints";
@@ -137,7 +138,10 @@ export class BrowserChatTransport implements ChatTransport<UIMessage> {
 
 		try {
 			const model = await this.#resolveModel(selection);
-			const modelMessages = await convertToModelMessages(messages);
+			// Text and code files go as text parts, which every model reads (roadmap 1.6b).
+			const modelMessages = await convertToModelMessages(
+				textFilesAsText(messages),
+			);
 			// Started once the key is read and the messages are converted, so TTFT is the provider's.
 			const clock = createReplyClock(this.#now);
 			const result = streamText({

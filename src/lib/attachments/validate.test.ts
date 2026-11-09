@@ -25,16 +25,33 @@ describe("checkAttachments", () => {
 	it("refuses other types and big files, each with its own reason", () => {
 		const result = checkAttachments([
 			file("app.exe", "application/x-msdownload"),
-			file("notes.txt", "text/plain"),
+			file("song.mp3", "audio/mpeg"),
 			file("big.png", "image/png", 21 * 1024 * 1024),
+			file("big.csv", "text/csv", 2 * 1024 * 1024),
 			png("ok.png"),
 		]);
 		expect(result.accepted.map((f) => f.name)).toEqual(["ok.png"]);
 		expect(result.errors).toEqual([
-			"app.exe can't be attached. Attach images (PNG, JPEG, WebP, GIF) or PDFs.",
-			"notes.txt can't be attached. Attach images (PNG, JPEG, WebP, GIF) or PDFs.",
+			"app.exe can't be attached. Attach images (PNG, JPEG, WebP, GIF), PDFs, or text and code files.",
+			"song.mp3 can't be attached. Attach images (PNG, JPEG, WebP, GIF), PDFs, or text and code files.",
 			"big.png is larger than 20 MB.",
+			"big.csv is larger than 1 MB, the limit for text files.",
 		]);
+	});
+
+	it("accepts text and code files by type or extension, whatever the model reads (1.6b)", () => {
+		const selected = [
+			file("notes.txt", "text/plain"),
+			file("data.json", "application/json"),
+			file("main.ts", "video/mp2t"),
+			file("app.py", ""),
+			file("Dockerfile", ""),
+		];
+		const textOnly = supportFromModalities(["text"]);
+		expect(checkAttachments(selected, { support: textOnly })).toEqual({
+			accepted: selected,
+			errors: [],
+		});
 	});
 
 	it("keeps to the per-message count, counting what's already attached", () => {
