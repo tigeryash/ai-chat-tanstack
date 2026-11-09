@@ -1,6 +1,7 @@
 # Workspaces
 
 Notes for working in this folder. The root [CLAUDE.md](/CLAUDE.md) (commands, hard rules, conventions, workflow) still applies.
+
 - **Workspaces** (roadmaps 3.1–3.2, `src/lib/workspaces/`, `src/components/workspaces/`): `/w/$workspaceId` shows
   1–4 panes, each a `ChatScreen` on its own chat, in `react-resizable-panels`. The record (pane chat ids, widths,
   synced) is the ChatStore's `workspaces` table (`storage/workspace.ts`, its own format version). `pane-sync.ts`
