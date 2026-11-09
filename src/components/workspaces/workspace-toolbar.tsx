@@ -63,6 +63,7 @@ export function WorkspaceToolbar({
 					</Badge>
 				)}
 				<LayoutsMenu current={currentLayout} />
+				{/* Icon-only on a phone, like Layouts, so the pane tabs keep their room. */}
 				<Button
 					variant="ghost"
 					size="sm"
@@ -70,7 +71,7 @@ export function WorkspaceToolbar({
 					onClick={onAddPane}
 				>
 					<PlusIcon />
-					Add pane
+					<span className="max-sm:sr-only">Add pane</span>
 				</Button>
 			</div>
 		</div>
