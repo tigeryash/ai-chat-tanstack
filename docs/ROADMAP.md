@@ -465,6 +465,8 @@ Only what's still open. When one is done, tick it, add a dated note, and move it
   *Done when:* Vitest covers the timing, token and cost totals with mock-model streams and a fake clock, and e2e
   shows each reply's stats and the chat's per-provider total on a fixture chat and on a live mock reply.
   *Status (2026-11-08):* done in [PR #70](https://github.com/tigeryash/ai-chat-tanstack/pull/70). Logic in `src/lib/chat/reply-stats.ts` and `chat-usage.ts`.
+- [ ] **2.5b Quieter reply stats** (Yash, 2026-11-09). A reply's tokens, TTFT and tokens/sec stop showing inline;
+  a "⋯" button on its action row opens them (with the cost and host). Later: a setting for which stats show inline.
 - [ ] **2.6 (Stretch) In-browser models.** WebGPU (transformers.js / WebLLM) and browser built-in AI (e.g. Chrome's
   Prompt API) as extra connection types.
 
