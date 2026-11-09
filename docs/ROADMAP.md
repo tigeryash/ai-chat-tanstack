@@ -495,9 +495,10 @@ Only what's still open. When one is done, tick it, add a dated note, and move it
   *Status:* done with 3.1 in [#56](https://github.com/tigeryash/ai-chat-tanstack/pull/56) (2026-10-31).
 - [ ] **3.3 Capability-aware attachments** (decision 17).
 - [ ] **3.4 Compare tools.** Per-pane TTFT, tokens/sec, cost; sync scroll; thumbs up/down; "copy settings to all panes".
-- [ ] **3.5 Workspaces.** Save/restore layouts and models; deep link `?models=a,b,c`. Done when Vitest covers
+- [x] **3.5 Workspaces.** Save/restore layouts and models; deep link `?models=a,b,c`. Done when Vitest covers
   parsing `?models=` (bad, unknown and too many ids) and saving/restoring layouts, and e2e opens
   `/new?models=a,b` on the fixture catalog and gets those panes, saves the layout, and opens it again after a reload.
+  *Status:* done in [#71](https://github.com/tigeryash/ai-chat-tanstack/pull/71) (2026-11-08); layouts and workspaces in exports are a follow-up.
 - [ ] **3.6 Prompt library** (decision 19). Save, name, tag, search, apply; set per-model defaults; version history
   (every edit is a version, with diff view and restore, and each reply records which prompt version produced it).
   Later: variables (`{{date}}`).
