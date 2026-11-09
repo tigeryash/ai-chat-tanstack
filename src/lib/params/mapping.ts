@@ -11,7 +11,7 @@ import type { ParamSupport } from "./support";
 //   unknown keys of `providerOptions[<provider name>]` into the request body (`top_k`, `min_p`, …).
 // - Anthropic and Google thinking budgets go in their own provider options, also through AI Gateway,
 //   which forwards them to the maker.
-// - OpenAI's verbosity is `textVerbosity` in the `openai` options.
+// - Verbosity is `textVerbosity`, in the `openai` options or OpenRouter's (which sends it as `verbosity`).
 
 type StreamTextOptions = Parameters<typeof streamText>[0];
 export type ProviderOptions = NonNullable<StreamTextOptions["providerOptions"]>;
@@ -88,8 +88,10 @@ function openAiCompatibleExtras(
 		}),
 		// OpenRouter's own reasoning object, the one the probe tested.
 		...(openRouter && reasoning && { reasoning }),
+		// `@ai-sdk/openai-compatible` writes the body's `verbosity` from its own `textVerbosity` option,
+		// after our extras, so a plain `verbosity` key here would be overwritten with undefined.
 		...(openRouter &&
-			values.verbosity !== undefined && { verbosity: values.verbosity }),
+			values.verbosity !== undefined && { textVerbosity: values.verbosity }),
 	};
 }
 
