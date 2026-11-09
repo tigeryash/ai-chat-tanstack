@@ -1,6 +1,7 @@
 # Model settings
 
 Notes for working in this folder. The root [CLAUDE.md](/CLAUDE.md) (commands, hard rules, conventions, workflow) still applies.
+
 - **Model settings** (roadmap 2.4b, `src/lib/params/`): `registry.ts` defines each setting, `support.ts` decides
   which a model and host take (2.4a probe "accepted" first, then the catalog's lists from Convex `models.parameters`;
   unknown means hidden), `mapping.ts` turns them into `streamText` options and strips the rest. Each chat's

@@ -1,6 +1,7 @@
 # Security baseline
 
 Notes for working in this folder. The root [CLAUDE.md](/CLAUDE.md) (commands, hard rules, conventions, workflow) still applies.
+
 - **Security baseline** (roadmap 1.0, `src/lib/security/`): `getRouter` makes a CSP nonce per request, the root
   route's `headers` sends the policy (strict one report-only for now), and `src/start.ts` adds the security headers
   and Start's server-function CSRF check to every response. A new provider is one entry in
