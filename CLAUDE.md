@@ -43,7 +43,7 @@ on every PR; the `Playwright` check passes without running e2e when a PR only to
   sign-up, forgot and reset password (signed-in visitors go to `/new`; forms share `auth-form.tsx`). Server routes
   sit in `src/routes/api/` (`/api/auth/$` proxies to Convex, `/api/csp-report` logs CSP violations). There is no
   chat route on our server.
-- **Better Auth 1.6.x** via `@convex-dev/better-auth` (server config `convex/auth.ts`, client
+- **Better Auth 1.7.x** via `@convex-dev/better-auth` (server config `convex/auth.ts`, client
   `src/lib/auth-client.ts`, SSR helpers `src/lib/auth-server.ts`). Email/password plus Google, GitHub, Discord.
 - **First load** (quality audit 2026-10, `scripts/bundle-budget.ts`): only chat routes may load the AI SDK, Dexie,
   GSAP or Streamdown. Route `loader`/`beforeLoad`/`validateSearch` code isn't code-split, so anything they import
@@ -90,8 +90,8 @@ before changing code that uses that feature from elsewhere**, too.
    provider headers (plus the settings key test in `src/lib/keys/test-key.ts`); read keys only through
    `getProviderKey` from `@/lib/keys`. The single exception is the opt-in durable agent run (decision 25,
    [security.md](docs/security.md)).
-2. **Stay on Better Auth 1.6.x** (decision 5). `@convex-dev/better-auth` 0.12 requires `better-auth <1.7.0`.
-   Don't bump `better-auth` until the adapter supports 1.7.
+2. **Stay on Better Auth 1.7.x with `@convex-dev/better-auth` 0.13** (decision 5). 0.13 requires
+   `better-auth >=1.7.16 <1.8.0`. Move both together, by hand, once the adapter supports 1.8.
 3. **Respect reduced motion** (decision 22). Every animation must honor `prefers-reduced-motion`: Motion through
    `<MotionConfig reducedMotion="user">`, GSAP through `gsap.matchMedia()`, and WebGL renders a single still frame.
    The root `MotionConfig` makes Motion's position, size and layout animations instant (fades still play), and the
@@ -170,8 +170,6 @@ before changing code that uses that feature from elsewhere**, too.
   `__esModule`. "Element type is invalid … got: object" means a `.default` unwrap (see `shadcn-io/marquee`).
 - **`vite.config.ts` filters out `@tanstack/devtools:event-client-setup`**: in devtools-vite 0.8.1–0.8.5 it reloads
   dev about 10 times a second (`bun outdated` touches `package.json`). Keep the filter until upstream fixes it.
-- `src/routes/__root.tsx` has a `@ts-expect-error` for an upstream `@convex-dev/better-auth` `AuthClient` type bug.
-  tsc flags it as unused once upstream fixes it; then delete it.
 - **Import Zod only from `@/lib/zod`** (Biome enforces it). Zod 4 compiles schemas with `new Function`, which the
   CSP forbids, and since 4.6 probes for eval when an object schema is *created*. `src/lib/zod.ts` turns jitless
   mode on before any importer can create a schema, whatever order chunks load in (a "first import" wasn't enough).
