@@ -10,6 +10,7 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useReplyVote, voteOnReply } from "@/lib/chat/chat-votes";
 import {
 	type ReplyStatsSummary,
 	replyStatsSummary,
@@ -21,6 +22,8 @@ import {
 } from "@/lib/chat/reply-summary";
 import { logWarn } from "@/lib/log";
 import { useCatalogModel } from "@/lib/models/catalog";
+import { chatStore } from "@/lib/storage/app-store";
+import type { ReplyVote } from "@/lib/storage/votes";
 import type { MessageUIProps } from "@/types/types";
 
 export type MessageActionsProps = MessageUIProps & {
@@ -28,6 +31,8 @@ export type MessageActionsProps = MessageUIProps & {
 	onRegenerate?: () => void;
 	/** The chat's model now; a reply from another model names its own. */
 	currentModel?: CurrentModel;
+	/** The reply's chat, for its thumbs up/down (roadmap 3.4). No vote buttons without it. */
+	chatId?: string;
 };
 
 // Each item after the first gets a "·" in the gap before it. The separator sits outside the item,
@@ -104,18 +109,62 @@ function ReplyStatsLine({ stats }: { stats: ReplyStatsSummary }) {
 	);
 }
 
+/** Thumbs up/down (roadmap 3.4), saved with the chat on this device. Pressing a vote again clears it. */
+function ReplyVoteButtons({
+	chatId,
+	messageId,
+}: {
+	chatId: string;
+	messageId: string;
+}) {
+	const vote = useReplyVote(chatId, messageId);
+	const toggle = (pressed: ReplyVote) => {
+		voteOnReply(
+			chatId,
+			messageId,
+			vote === pressed ? null : pressed,
+			chatStore(),
+		);
+	};
+	return (
+		<>
+			<Action
+				onClick={() => toggle("up")}
+				tooltip="Good response"
+				aria-pressed={vote === "up"}
+				data-vote={vote === "up" ? "up" : undefined}
+				className={vote === "up" ? "text-foreground" : undefined}
+			>
+				<ThumbsUpIcon
+					className={`size-4 ${vote === "up" ? "fill-current" : ""}`}
+				/>
+			</Action>
+			<Action
+				onClick={() => toggle("down")}
+				tooltip="Bad response"
+				aria-pressed={vote === "down"}
+				data-vote={vote === "down" ? "down" : undefined}
+				className={vote === "down" ? "text-foreground" : undefined}
+			>
+				<ThumbsDownIcon
+					className={`size-4 ${vote === "down" ? "fill-current" : ""}`}
+				/>
+			</Action>
+		</>
+	);
+}
+
 const MessageActions = ({
 	message,
 	onRegenerate,
 	currentModel,
+	chatId,
 }: MessageActionsProps) => {
 	const handleCopy = () => {
 		navigator.clipboard
 			.writeText(textOf(message))
 			.catch((error) => logWarn("Couldn't copy the reply:", error));
 	};
-	const handleThumbsUp = () => {};
-	const handleThumbsDown = () => {};
 	const summary = replySummary(message.metadata, currentModel);
 	const stats = summary && replyStatsSummary(message.metadata);
 	return (
@@ -131,12 +180,7 @@ const MessageActions = ({
 						<RefreshCcwIcon className="size-4" />
 					</Action>
 				)}
-				<Action onClick={handleThumbsUp} tooltip="Good response">
-					<ThumbsUpIcon className="size-4" />
-				</Action>
-				<Action onClick={handleThumbsDown} tooltip="Bad response">
-					<ThumbsDownIcon className="size-4" />
-				</Action>
+				{chatId && <ReplyVoteButtons chatId={chatId} messageId={message.id} />}
 				{summary && (
 					// p-1 keeps the buttons' focus rings inside the clip; -m-1 takes it back off the layout.
 					<div

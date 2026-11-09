@@ -28,6 +28,7 @@ import {
 	validateBranches,
 	validateMessages,
 } from "./format";
+import { chatVotesSchema } from "./votes";
 import {
 	readWorkspace,
 	toWorkspaceSummary,
@@ -197,6 +198,7 @@ export function createDexieChatStore({
 						title: existing?.title ?? "",
 						...(existing?.pinned && { pinned: true }),
 						...(existing?.settings && { settings: existing.settings }),
+						...(existing?.votes && { votes: existing.votes }),
 						ownerId: existing ? (existing.ownerId ?? null) : ownerId,
 						createdAt: existing?.createdAt ?? timestamp,
 						updatedAt: timestamp,
@@ -222,6 +224,12 @@ export function createDexieChatStore({
 			checkChatId(chatId);
 			const clean = chatSettingsSchema.parse(settings);
 			await db.chats.update(chatId, { settings: clean });
+		},
+
+		async setVotes(chatId, votes) {
+			checkChatId(chatId);
+			const clean = chatVotesSchema.parse(votes);
+			await db.chats.update(chatId, { votes: clean });
 		},
 
 		async getDefaultSystemPrompt() {
@@ -283,6 +291,7 @@ export function createDexieChatStore({
 								messageCount: chat.messages.length,
 								...(chat.pinned && { pinned: true }),
 								...(chat.settings && { settings: chat.settings }),
+								...(chat.votes && { votes: chat.votes }),
 								ownerId: chat.ownerId,
 								formatVersion: CHAT_FORMAT_VERSION,
 							},

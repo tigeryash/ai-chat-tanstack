@@ -1,4 +1,5 @@
 import type { UIMessage } from "ai";
+import { formatCost } from "@/lib/models/format";
 import {
 	CHAT_PROVIDER_IDS,
 	type ChatProviderId,
@@ -125,3 +126,11 @@ export function sameChatUsage(a: ChatUsage | null, b: ChatUsage | null) {
 /** Input plus output tokens over a total. */
 export const usageTokens = (totals: UsageTotals) =>
 	totals.inputTokens + totals.outputTokens;
+
+/** "~$0.0123", "$0" for free replies, undefined when no reply had a price. */
+export function costText(totals: UsageTotals, format = formatCost) {
+	if (totals.unpriced === totals.replies) return undefined;
+	const amount = format(totals.cost);
+	const mark = totals.costEstimated && !amount?.startsWith("<") ? "~" : "";
+	return `${mark}${amount}`;
+}

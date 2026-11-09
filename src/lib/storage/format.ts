@@ -12,6 +12,7 @@ import { ChatStoreError, issuesOf } from "./errors";
 import { v0ToV1 } from "./migrations/v0-to-v1";
 import { v1ToV2 } from "./migrations/v1-to-v2";
 import { v2ToV3 } from "./migrations/v2-to-v3";
+import { cleanVotes } from "./votes";
 
 // Stored chats are versioned (roadmap decision 10). `MIGRATIONS[n]` is a pure function that turns a
 // format-n chat into a format-(n+1) chat, so the current format is the length of the list. Loading a
@@ -58,6 +59,8 @@ const currentChat = z.object({
 	ownerId: ownerIdSchema,
 	// Optional, so older chats read without a migration. Bad values are dropped, not the chat.
 	settings: z.unknown().optional(),
+	// Roadmap 3.4, optional like `settings`; bad entries are dropped, not the chat.
+	votes: z.unknown().optional(),
 	messages: z.array(z.unknown()),
 	// Format 3 (roadmap 1.7). Optional, so a chat written without any (a test, `putChats`) still reads.
 	branches: branchesSchema.optional(),
@@ -137,13 +140,21 @@ export async function upgradeChat(raw: unknown): Promise<Chat> {
 			issues: issuesOf(parsed.error),
 		});
 	}
-	const { formatVersion: _, settings, branches, ...fields } = parsed.data;
+	const {
+		formatVersion: _,
+		settings,
+		votes,
+		branches,
+		...fields
+	} = parsed.data;
+	const cleanedVotes = cleanVotes(votes);
 	const messages = await validateMessages(fields.messages, fields.id);
 	const valid =
 		branches && (await validateBranches(branches, messages, fields.id));
 	return {
 		...fields,
 		...(settings !== undefined && { settings: cleanSettings(settings) }),
+		...(cleanedVotes && { votes: cleanedVotes }),
 		messages,
 		...(hasBranches(valid) && { branches: valid }),
 	};

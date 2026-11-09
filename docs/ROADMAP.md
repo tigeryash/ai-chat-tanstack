@@ -490,7 +490,8 @@ Only what's still open. When one is done, tick it, add a dated note, and move it
   input, the "diverged" badge, and the Stop behavior.
   *Status:* done with 3.1 in [#56](https://github.com/tigeryash/ai-chat-tanstack/pull/56) (2026-10-31).
 - [ ] **3.3 Capability-aware attachments** (decision 17).
-- [ ] **3.4 Compare tools.** Per-pane TTFT, tokens/sec, cost; sync scroll; thumbs up/down; "copy settings to all panes".
+- [x] **3.4 Compare tools.** Per-pane TTFT, tokens/sec, cost; sync scroll; thumbs up/down; "copy settings to all panes".
+  *Status (2026-11-09):* done in PR_LINK.
 - [x] **3.5 Workspaces.** Save/restore layouts and models; deep link `?models=a,b,c`. Done when Vitest covers
   parsing `?models=` (bad, unknown and too many ids) and saving/restoring layouts, and e2e opens
   `/new?models=a,b` on the fixture catalog and gets those panes, saves the layout, and opens it again after a reload.

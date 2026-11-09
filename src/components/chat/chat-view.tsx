@@ -139,6 +139,7 @@ export function ChatView({
 				) : (
 					<MessagesList
 						messages={messages}
+						chatId={chat.id}
 						// The selection itself (kept by value upstream), so finished messages keep their props.
 						currentModel={selection}
 						onRegenerate={

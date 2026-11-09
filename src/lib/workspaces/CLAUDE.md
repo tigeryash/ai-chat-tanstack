@@ -18,3 +18,7 @@ Notes for working in this folder. The root [CLAUDE.md](/CLAUDE.md) (commands, ha
   dropped and counted in `/w/$id?missing=n`. Saved layouts (`saved-layouts.ts`, localStorage) keep pane models,
   widths and sync, never chat ids; opening one makes a new workspace. Neither changes the default for new chats
   (`setChatModelChoice`, not `storeChatModelChoice`).
+- **Compare tools** (roadmap 3.4): each pane's stats line (`pane-stats.ts`, latest reply's TTFT and tok/s plus the
+  chat's cost, built on `readReplyStats` / `chatUsage`) sits under its header, never on replies. Sync scroll
+  (`sync-scroll.ts`) matches panes by scroll proportion, for this visit only. "Copy settings to all panes"
+  (`copy-settings.ts`) copies params and system prompt, never the model. Votes are `lib/chat/chat-votes.ts`.

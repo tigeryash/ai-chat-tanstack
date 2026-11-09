@@ -3,6 +3,7 @@ import type { UIMessage } from "ai";
 import {
 	ArrowLeftIcon,
 	ArrowRightIcon,
+	CopyIcon,
 	MoreHorizontalIcon,
 	SquareIcon,
 	XIcon,
@@ -30,6 +31,8 @@ export interface PaneActionsProps {
 	onMoveRight?: () => void;
 	/** Undefined for the last pane. */
 	onClose?: () => void;
+	/** Gives the other panes this pane's settings (roadmap 3.4). Undefined with one pane. */
+	onCopySettings?: () => void;
 }
 
 /**
@@ -44,6 +47,7 @@ export function PaneActions({
 	onMoveLeft,
 	onMoveRight,
 	onClose,
+	onCopySettings,
 }: PaneActionsProps) {
 	const switchId = useId();
 	const status = useChatStatus(chat);
@@ -80,7 +84,7 @@ export function PaneActions({
 					<SquareIcon />
 				</Button>
 			)}
-			{(onMoveLeft || onMoveRight) && (
+			{(onMoveLeft || onMoveRight || onCopySettings) && (
 				<DropdownMenu>
 					<DropdownMenuTrigger
 						render={
@@ -102,6 +106,12 @@ export function PaneActions({
 							<ArrowRightIcon />
 							Move right
 						</DropdownMenuItem>
+						{onCopySettings && (
+							<DropdownMenuItem onClick={onCopySettings}>
+								<CopyIcon />
+								Copy settings to all panes
+							</DropdownMenuItem>
+						)}
 					</DropdownMenuContent>
 				</DropdownMenu>
 			)}

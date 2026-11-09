@@ -49,6 +49,7 @@ function toStoredChat(chat: Chat): StoredChat {
 		...(chat.pinned && { pinned: true }),
 		ownerId: chat.ownerId,
 		...(chat.settings && { settings: chat.settings }),
+		...(chat.votes && { votes: chat.votes }),
 		messages: chat.messages,
 		...(chat.branches && { branches: chat.branches }),
 	};
