@@ -173,15 +173,15 @@ test("Auto picks a connected host, and the reply says which host answered", asyn
 
 	await send(page, "Hi there");
 	await expect(page.getByText("Hello via Fireworks.")).toBeVisible();
-	// The footer: route and a rounded cost; the model is the header's, so only the tooltip names it.
-	const footer = page.getByRole("button", {
-		name: /^via OpenRouter → Fireworks · \$0\.0002\. /,
-	});
-	await expect(footer).toHaveText("via OpenRouter → Fireworks · $0.0002");
-	await footer.hover();
-	await expect(
-		page.getByText(`${MODEL} · OpenRouter · via Fireworks · $0.00021`),
-	).toBeVisible();
+	// The route and exact cost sit behind the reply's ⋯ button (roadmap 2.5b).
+	await page.getByRole("button", { name: "Reply details" }).click();
+	await expect(page.locator("[data-reply-detail]").nth(1)).toHaveText(
+		"HostOpenRouter → Fireworks",
+	);
+	await expect(page.locator("[data-reply-detail]").nth(2)).toHaveText(
+		"Cost$0.00021",
+	);
+	await page.keyboard.press("Escape");
 
 	// Auto leaves the upstream to OpenRouter (its default, most reliable, routing).
 	expect(providers.completions).toHaveLength(1);
@@ -253,15 +253,20 @@ test("switching to a direct key sends the request to that origin only", async ({
 	await expect(
 		page.getByRole("button", { name: "Host: via Fireworks" }),
 	).toBeVisible();
+	// The radio menu stays open after a pick; close it so it can't cover the reply's ⋯ button.
+	await page.keyboard.press("Escape");
 
 	await send(page, "Hi there");
 	await expect(page.getByText("Hello from Fireworks direct.")).toBeVisible();
 	// No bill from Fireworks: the cost is estimated from its live prices.
-	await expect(
-		page.getByRole("button", {
-			name: `via Fireworks · <$0.0001. ${FIREWORKS_MODEL} · Fireworks · ~$0.0000034 (estimated from list prices)`,
-		}),
-	).toBeVisible();
+	await page.getByRole("button", { name: "Reply details" }).click();
+	await expect(page.locator("[data-reply-detail]").nth(1)).toHaveText(
+		"HostFireworks",
+	);
+	await expect(page.locator("[data-reply-detail]").nth(2)).toHaveText(
+		"Cost~$0.0000034 (estimated from list prices)",
+	);
+	await page.keyboard.press("Escape");
 	expect(providers.completions.map((completion) => completion.origin)).toEqual([
 		"https://api.fireworks.ai",
 	]);

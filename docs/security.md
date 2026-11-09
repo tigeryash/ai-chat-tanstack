@@ -106,7 +106,7 @@ memory instead; `e2e/analytics.spec.ts` loads stand-in scripts from the same pat
 
 **Dependencies (1.0).** `bunfig.toml` sets `minimumReleaseAge` to 3 days, `trustedDependencies` is an empty list
 (this also turns off Bun's built-in trust list; esbuild works without its postinstall), and
-`.github/dependabot.yml` opens grouped weekly PRs with a matching cooldown, skipping `better-auth` 1.7+ and
+`.github/dependabot.yml` opens grouped weekly PRs with a matching cooldown, skipping `better-auth` 1.8+, `@convex-dev/better-auth` 0.14+ and
 `@playwright/test` (bumped by hand with the CI image).
 
 ## API keys (roadmap 1.1)

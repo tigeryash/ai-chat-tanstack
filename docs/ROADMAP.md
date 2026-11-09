@@ -101,7 +101,8 @@ Only what's still open. When one is done, tick it, add a dated note, and move it
    our server, so there are no inference costs, no server timeouts for chat, and no rate limiting needed for chat.
 4. **No login wall.** Chatting needs no account, since keys and chats are local. Signing in is only for cloud
    features (sync, share, invite). This replaces the earlier "anonymous guest session" plan.
-5. **Stay on Better Auth 1.6.x** until `@convex-dev/better-auth` supports 1.7 (current peer range is `<1.7.0`).
+5. **Stay on Better Auth 1.7.x with `@convex-dev/better-auth` 0.13** (peer range `>=1.7.16 <1.8.0`). Move both
+   together once the adapter supports 1.8.
 6. **Security baseline before key handling.** Because keys live in the page, an XSS bug or a malicious dependency
    means stolen keys. The baseline in [security.md](./security.md) ships before the key settings UI.
 
@@ -463,8 +464,9 @@ Only what's still open. When one is done, tick it, add a dated note, and move it
   *Done when:* Vitest covers the timing, token and cost totals with mock-model streams and a fake clock, and e2e
   shows each reply's stats and the chat's per-provider total on a fixture chat and on a live mock reply.
   *Status (2026-11-08):* done in [PR #70](https://github.com/tigeryash/ai-chat-tanstack/pull/70). Logic in `src/lib/chat/reply-stats.ts` and `chat-usage.ts`.
-- [ ] **2.5b Quieter reply stats** (Yash, 2026-11-09). A reply's tokens, TTFT and tokens/sec stop showing inline;
+- [x] **2.5b Quieter reply stats** (Yash, 2026-11-09). A reply's tokens, TTFT and tokens/sec stop showing inline;
   a "⋯" button on its action row opens them (with the cost and host). Later: a setting for which stats show inline.
+  *Status (2026-11-09):* the "⋯" popover is done in [PR #85](https://github.com/tigeryash/ai-chat-tanstack/pull/85); the inline-stats setting is still to do.
 - [ ] **2.6 (Stretch) In-browser models.** WebGPU (transformers.js / WebLLM) and browser built-in AI (e.g. Chrome's
   Prompt API) as extra connection types.
 
