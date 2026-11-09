@@ -54,6 +54,11 @@ function writeChatChoice(chatId: string, choice: ModelChoice) {
 	);
 }
 
+/** Gives a chat a model without making it the default for new chats (a deep link or layout, roadmap 3.5). */
+export function setChatModelChoice(chatId: string, choice: ModelChoice) {
+	writeChatChoice(chatId, choice);
+}
+
 export function storeChatModelChoice(chatId: string, choice: ModelChoice) {
 	writeChatChoice(chatId, choice);
 	storeModelChoice(choice);

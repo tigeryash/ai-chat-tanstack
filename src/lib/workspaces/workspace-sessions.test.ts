@@ -1,11 +1,14 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
+import { readChatModelChoice } from "@/lib/chat/chat-model-choice";
+import { readModelChoice } from "@/lib/chat/model-selection";
 import { peekOpenChat } from "@/lib/chat/open-chats";
 import { createDexieChatStore } from "@/lib/storage/dexie-chat-store";
 import { openTestDatabase, textMessage } from "@/lib/storage/test-support";
 import {
 	addNewPane,
 	createWorkspaceFrom,
+	createWorkspaceWith,
 	openPaneChat,
 	openWorkspace,
 } from "./workspace-sessions";
@@ -87,5 +90,48 @@ describe("workspace sessions", () => {
 		const added = workspace?.panes[1]?.chatId ?? "";
 		expect(peekOpenChat(added)?.ownerId).toBe("user-a");
 		expect((await store.getChat(solo))?.ownerId).toBeNull();
+	});
+
+	it("restores a layout as a new workspace: fresh chats on its models, widths and sync", async () => {
+		const store = freshStore();
+		const before = readModelChoice();
+		const opus = {
+			provider: "openrouter",
+			model: "anthropic/claude-opus-5.5",
+			gatewayId: "anthropic/claude-opus-5.5",
+		} as const;
+		const gpt = { provider: "openai", model: "gpt-5.5" } as const;
+		const workspaceId = await createWorkspaceWith(
+			[
+				{ model: opus, size: 30, synced: true },
+				{ model: gpt, size: 30, synced: false },
+			],
+			"user-a",
+			store,
+		);
+		const workspace = await store.getWorkspace(workspaceId);
+		expect(workspace?.ownerId).toBe("user-a");
+		expect(
+			workspace?.panes.map(({ size, synced }) => ({ size, synced })),
+		).toEqual([
+			{ size: 50, synced: true },
+			{ size: 50, synced: false },
+		]);
+		const [first, second] = workspace?.panes ?? [];
+		expect(readChatModelChoice(first?.chatId ?? "")).toEqual(opus);
+		expect(readChatModelChoice(second?.chatId ?? "")).toEqual(gpt);
+		expect(peekOpenChat(first?.chatId ?? "")?.ownerId).toBe("user-a");
+		// A link or layout doesn't change the default for new chats.
+		expect(readModelChoice()).toEqual(before);
+	});
+
+	it("opens at most four panes from a layout, evenly when it has no widths", async () => {
+		const store = freshStore();
+		const seeds = Array.from({ length: 6 }, () => ({ model: null }));
+		const workspace = await store.getWorkspace(
+			await createWorkspaceWith(seeds, null, store),
+		);
+		expect(workspace?.panes.map((pane) => pane.size)).toEqual([25, 25, 25, 25]);
+		await expect(createWorkspaceWith([], null, store)).rejects.toThrow();
 	});
 });

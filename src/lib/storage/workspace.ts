@@ -3,8 +3,8 @@ import { ChatStoreError, issuesOf } from "./errors";
 import { chatIdSchema, ownerIdSchema } from "./format";
 
 // A workspace (roadmap 3.1): several chats side by side, one per pane. The record only lists its panes
-// (chat id, width, synced); each pane's messages, model and settings stay with its chat. Naming, saved
-// layouts and deep links are roadmap 3.5. Workspaces have a format of their own, separate from chats',
+// (chat id, width, synced); each pane's messages, model and settings stay with its chat. Saved layouts
+// and deep links (roadmap 3.5) live in `src/lib/workspaces/`. Workspaces have a format of their own, separate from chats',
 // so adding them needed no chat migration. When the record's shape changes, bump
 // WORKSPACE_FORMAT_VERSION and migrate in `readWorkspace`.
 

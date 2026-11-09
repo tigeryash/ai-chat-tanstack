@@ -1,15 +1,24 @@
-import { holdChatModelChoice } from "@/lib/chat/chat-model-choice";
+import {
+	holdChatModelChoice,
+	setChatModelChoice,
+} from "@/lib/chat/chat-model-choice";
 import { openChat, openNewChat } from "@/lib/chat/chat-sessions";
 import { loadChatSettings } from "@/lib/chat/chat-settings";
+import type { ModelChoice } from "@/lib/chat/model-selection";
 import { getOpenChat } from "@/lib/chat/open-chats";
 import { chatStore } from "@/lib/storage/app-store";
 import type { ChatStore } from "@/lib/storage/chat-store";
 import { isVisibleTo, type Viewer } from "@/lib/storage/ownership";
-import type { Workspace, WorkspacePane } from "@/lib/storage/workspace";
+import {
+	MAX_PANES,
+	type Workspace,
+	type WorkspacePane,
+} from "@/lib/storage/workspace";
 import {
 	addPane,
 	type HiddenPane,
 	initialPanes,
+	restoredPanes,
 	splitHiddenPanes,
 } from "./pane-layout";
 
@@ -110,4 +119,42 @@ export function addNewPane(
 	const added = openNewChat({ ownerId: viewer, store });
 	holdChatModelChoice(added.id);
 	return addPane(workspace.panes, added.id, workspace.hiddenPanes.length);
+}
+
+/** A pane to start a workspace with: its model (null for the default), and optionally its width and sync. */
+export interface PaneSeed {
+	model: ModelChoice | null;
+	size?: number;
+	synced?: boolean;
+}
+
+/**
+ * A new workspace with a new empty chat per pane, each on its own model (roadmap 3.5: a deep link or a
+ * saved layout). Every chat and the workspace are the viewer's. A pane without a model holds the
+ * default for new chats. Picking these models doesn't change that default. Returns the workspace's id.
+ */
+export async function createWorkspaceWith(
+	seeds: readonly PaneSeed[],
+	viewer: Viewer,
+	store: ChatStore = chatStore(),
+): Promise<string> {
+	const kept = seeds.slice(0, MAX_PANES);
+	if (kept.length === 0) throw new Error("A workspace needs a pane.");
+	const evenSize = 100 / kept.length;
+	const panes = kept.map((seed) => {
+		const chat = openNewChat({ ownerId: viewer, store });
+		if (seed.model) setChatModelChoice(chat.id, seed.model);
+		else holdChatModelChoice(chat.id);
+		return {
+			chatId: chat.id,
+			size: seed.size ?? evenSize,
+			synced: seed.synced ?? true,
+		};
+	});
+	const workspace = await store.saveWorkspace({
+		id: crypto.randomUUID(),
+		ownerId: viewer,
+		panes: restoredPanes(panes),
+	});
+	return workspace.id;
 }
