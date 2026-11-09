@@ -5,6 +5,7 @@ import { logError } from "@/lib/log";
 import { chatStore } from "@/lib/storage/app-store";
 import type { ChatStore } from "@/lib/storage/chat-store";
 import { isVisibleTo, type Viewer } from "@/lib/storage/ownership";
+import { forgetChatBranches } from "./chat-branches";
 import { forgetChatSettings } from "./chat-settings";
 
 // Open chats in this tab, by chat id. A chat keeps streaming while the person moves between routes
@@ -103,6 +104,7 @@ export function closeChat(id: string): void {
 	openChats.delete(id);
 	notify();
 	forgetChatSettings(id);
+	forgetChatBranches(id);
 	setReplying(id, false);
 	open.chat
 		.stop()

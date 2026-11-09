@@ -1,5 +1,6 @@
 import type { UIMessage } from "ai";
 import type { ChatSettings } from "@/lib/params/settings";
+import type { ChatBranches } from "./branches";
 import type { Workspace, WorkspaceSummary } from "./workspace";
 
 // What the app sees of a stored chat. `formatVersion` is a storage detail: chats come out of the store
@@ -20,7 +21,10 @@ export interface Chat {
 	ownerId: string | null;
 	/** The settings panel's values and system prompt (roadmap 2.4b). Absent: never set. */
 	settings?: ChatSettings;
+	/** The path shown: the latest version of each edited message, unless another was picked. */
 	messages: UIMessage[];
+	/** The other versions of edited messages and their replies (roadmap 1.7). Absent: none. */
+	branches?: ChatBranches;
 }
 
 /** One sidebar row. Reading it never loads or migrates the chat's messages. */
@@ -44,11 +48,14 @@ export interface ChatStore {
 	/**
 	 * Replaces the chat's messages, creating the chat if it's new. A new chat belongs to `ownerId`; an
 	 * existing one keeps its owner. Call `requestPersistentStorage()` when `created` is true (decision 9).
+	 * `branches` replaces the chat's (roadmap 1.7); leave it out to keep the stored ones. Either way,
+	 * branches the new path no longer reaches are dropped.
 	 */
 	saveMessages(
 		chatId: string,
 		messages: readonly UIMessage[],
 		ownerId: string | null,
+		branches?: ChatBranches,
 	): Promise<{ created: boolean }>;
 	/** Doesn't change `updatedAt`, so a rename doesn't reorder the sidebar. */
 	renameChat(chatId: string, title: string): Promise<void>;

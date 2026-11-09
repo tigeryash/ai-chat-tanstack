@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { EMPTY_BRANCHES, editAt } from "./branches";
 import type { Chat, ChatStore } from "./chat-store";
 import { createDexieChatStore } from "./dexie-chat-store";
 import { ChatStoreError } from "./errors";
@@ -26,6 +27,33 @@ function exportFile(chats: unknown[], exportVersion = 1) {
 }
 
 describe("export and import", () => {
+	it("round-trips a chat's branches", async () => {
+		const store = freshStore();
+		const original = [
+			textMessage("m1", "user", "hello"),
+			textMessage("m2", "assistant", "hi"),
+		];
+		const edit = editAt(
+			original,
+			EMPTY_BRANCHES,
+			0,
+			textMessage("m1b", "user", "hey"),
+		);
+		const path = [...edit.path, textMessage("m2b", "assistant", "hey")];
+		await store.saveMessages("c1", path, null, edit.branches);
+		const before = await everything(store);
+
+		const exported = await exportChats(store, null);
+		expect(JSON.parse(exported.json).chats[0]).toMatchObject({
+			formatVersion: CHAT_FORMAT_VERSION,
+			branches: edit.branches,
+		});
+		const wiped = freshStore("branches-after-wipe");
+		await importChats(wiped, exported.json, null);
+		expect(await everything(wiped)).toEqual(before);
+		expect(before[0]?.branches).toEqual(edit.branches);
+	});
+
 	it("export → wipe → import restores everything", async () => {
 		const store = freshStore();
 		await store.saveMessages(

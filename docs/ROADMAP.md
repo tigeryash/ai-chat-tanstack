@@ -49,14 +49,6 @@ at once), then turn its findings into small refactor slices.
 Only what's still open. When one is done, tick it, add a dated note, and move it to
 [Done owner to-dos](#done-owner-to-dos) at the end of this file.
 
-- [ ] After 2.4b is deployed: on `www.highelollms.com`, open the sliders button next to the model for a few models
-  (one Anthropic, one OpenAI, one open-weights model through OpenRouter, and a local one), set each shown
-  control to its lowest and highest value, send, and note any error. e2e only checks requests against a fake
-  OpenRouter.
-  *2026-10-31:* the right controls show: the LM Studio model gets the sampling settings; Claude Opus 5.5 via
-  OpenRouter shows only max tokens, stop sequences, reasoning effort and verbosity (the 2.4a probe found OpenRouter
-  rejects temperature, top_p and top_k for it). Still to do: lowest/highest value with a send, plus an OpenAI and an
-  open-weights model.
 - [ ] Composer restore: on `www.highelollms.com`, open `/new` in light and dark and compare the composer with
   your original (hover the paperclip, Send and voice chat, attach a file, type a few lines). Screenshot tests now
   lock its look (hard rule 8), so anything off needs your call before it's fixed.
@@ -395,7 +387,11 @@ Only what's still open. When one is done, tick it, add a dated note, and move it
   sync and share" or Sign out. PR: https://github.com/tigeryash/ai-chat-tanstack/pull/29
 - [ ] **1.6 Attachments that send.** Images/PDFs as `file` parts where supported; blobs in IndexedDB; unified
   drag-drop and paperclip validation; revoke object URLs.
-- [ ] **1.7 Edit and branch.** Edit a user message → new branch; switch between siblings.
+- [x] **1.7 Edit and branch.** Edit a user message → new branch; switch between siblings.
+  *Done when:* Vitest covers the format migration (an old-format fixture loads through it), the branch tree
+  operations, and export/import round-tripping branches; e2e edits a message, sees a new reply, switches back to the
+  original sibling, and both survive a reload.
+  *Status (2026-11-09):* done; regenerating into a branch is a possible follow-up. PR: https://github.com/tigeryash/ai-chat-tanstack/pull/73
 - [x] **1.8 Analytics foundation** (decision 23). A `track()` wrapper with an allowlist of event names and
   properties; cookieless page analytics and Web Vitals (Vercel Web Analytics and Speed Insights, free on Hobby); an
   opt-out in Settings that also honors Do Not Track / Global Privacy Control. From here on, each slice lists the
@@ -507,7 +503,10 @@ Only what's still open. When one is done, tick it, add a dated note, and move it
   Later: variables (`{{date}}`).
 - [ ] **3.7 Blind mode** *(deferred; revisit with monetization)*. Hide model names, pick the better answer, reveal.
   Votes stay local and feed a personal leaderboard. Runs on the user's keys.
-- [ ] **3.8 Mobile.** Panes become swipeable tabs below `md`.
+- [x] **3.8 Mobile.** Panes become swipeable tabs below `md`. Done when, at a 390px viewport, a 3-pane workspace
+  shows one pane with tabs (WAI-ARIA roles, one tab stop, arrows/Home/End); swipes and tab taps switch panes; a
+  sent prompt still goes to every synced pane; desktop screenshot baselines are unchanged and mobile ones added.
+  *Status:* done in [#72](https://github.com/tigeryash/ai-chat-tanstack/pull/72) (2026-11-08).
 - [ ] **3.9 Insights.** Local dashboard: spend per provider, latency per model, blind-mode win rates, most-used prompts.
 - [x] **3.10 Status in the tab and notifications.** The tab title and favicon reflect status (e.g. "● 2 replying",
   "✓ Done") while the tab is in the background. Browser notifications when a reply or agent run finishes or needs
@@ -695,3 +694,17 @@ Finished owner to-dos, oldest first, kept for their notes.
   browser profile (or after clearing site data), save the first OpenRouter key (paste or Connect OpenRouter), go
   back to a chat without reloading, and check the picker's "Run with" light turns green. *Checked 2026-10-29:*
   the test notification appears once macOS allows the browser, and a re-added key turns the light green.
+- [x] After 2.4b is deployed: on `www.highelollms.com`, open the sliders button next to the model for a few models
+  (one Anthropic, one OpenAI, one open-weights model through OpenRouter, and a local one), set each shown
+  control to its lowest and highest value, send, and note any error. e2e only checks requests against a fake
+  OpenRouter.
+  *2026-10-31:* the right controls show: the LM Studio model gets the sampling settings; Claude Opus 5.5 via
+  OpenRouter shows only max tokens, stop sequences, reasoning effort and verbosity (the 2.4a probe found OpenRouter
+  rejects temperature, top_p and top_k for it). Still to do: lowest/highest value with a send, plus an OpenAI and an
+  open-weights model.
+  *Done 2026-11-09 (agent, preview browser, Yash's OpenRouter key and LM Studio):* Claude Opus 5.5, GPT-6.1 Sol,
+  DeepSeek V4.1 Flash (open weights) and LM Studio's `google/gemma-4-26b-a4b`, every shown control at its lowest
+  and highest value, one send each: every request returned 200. The sliders reach their exact min and max from
+  either end of the track and the number boxes follow. Found: verbosity is never in the request body (Opus and
+  GPT, low and high), although `src/lib/params/mapping.ts` adds it for OpenRouter; LM Studio's embedding model
+  shows in the picker as a chat model; "Thought for 1 seconds"; a stopped reply loses its cost in the footer.

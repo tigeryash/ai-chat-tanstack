@@ -7,7 +7,12 @@ import {
 	PaperclipIcon,
 	XIcon,
 } from "lucide-react";
-import type { ComponentProps, HTMLAttributes, ReactElement } from "react";
+import type {
+	ComponentProps,
+	HTMLAttributes,
+	ReactElement,
+	ReactNode,
+} from "react";
 import { createContext, memo, useContext, useEffect, useState } from "react";
 import {
 	SafeMarkdown,
@@ -53,11 +58,18 @@ export const Message = ({ className, from, ...props }: MessageProps) => (
 	</MessageFromContext.Provider>
 );
 
-export type MessageContentProps = HTMLAttributes<HTMLDivElement>;
+export type MessageContentProps = HTMLAttributes<HTMLDivElement> & {
+	/**
+	 * A user message only: drawn inside the bubble's box (which is `relative`) but outside its clipped
+	 * content, for controls overlaid beside the bubble that take no space of their own.
+	 */
+	bubbleAside?: ReactNode;
+};
 
 export const MessageContent = ({
 	children,
 	className,
+	bubbleAside,
 	...props
 }: MessageContentProps) => {
 	const from = useContext(MessageFromContext);
@@ -67,6 +79,7 @@ export const MessageContent = ({
 			{from === "user" ? (
 				<Bubble align="end" variant="muted">
 					<BubbleContent>{children}</BubbleContent>
+					{bubbleAside}
 				</Bubble>
 			) : (
 				children

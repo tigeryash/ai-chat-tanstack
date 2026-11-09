@@ -2,17 +2,17 @@ import { PlusIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { WorkspacePane } from "@/lib/storage/workspace";
-import { cn } from "@/lib/utils";
 import { canAddPane } from "@/lib/workspaces/pane-layout";
 import type { LayoutPane } from "@/lib/workspaces/saved-layouts";
 import { LayoutsMenu } from "./layouts-menu";
+import { PaneTabs } from "./pane-tabs";
 
 const DIVERGED_HINT =
 	"Synced panes have different histories, so their replies aren't like for like. Sending again doesn't share history between panes.";
 
 /**
- * Above a workspace's panes: the pane switcher on narrow screens (roadmap 3.1; 3.8 polishes it), the
- * "Diverged" badge (decision 16), saved layouts (3.5), and Add pane.
+ * Above a workspace's panes: the pane tabs on narrow screens (roadmap 3.8), the "Diverged" badge
+ * (decision 16), saved layouts (3.5), and Add pane.
  */
 export function WorkspaceToolbar({
 	panes,
@@ -42,28 +42,7 @@ export function WorkspaceToolbar({
 	return (
 		<div className="flex min-w-0 flex-1 items-center gap-2">
 			{shownId !== undefined && (
-				<div
-					role="tablist"
-					aria-label="Panes"
-					className="flex min-w-0 gap-1 overflow-x-auto"
-				>
-					{panes.map((pane, index) => (
-						<button
-							key={pane.chatId}
-							type="button"
-							role="tab"
-							aria-selected={pane.chatId === shownId}
-							aria-controls={`pane-${pane.chatId}`}
-							onClick={() => onShow(pane.chatId)}
-							className={cn(
-								"rounded-md px-2.5 py-1 text-muted-foreground text-sm",
-								pane.chatId === shownId && "bg-muted text-foreground",
-							)}
-						>
-							Pane {index + 1}
-						</button>
-					))}
-				</div>
+				<PaneTabs panes={panes} shownId={shownId} onShow={onShow} />
 			)}
 			<div className="ml-auto flex items-center gap-2">
 				{saveFailed && (

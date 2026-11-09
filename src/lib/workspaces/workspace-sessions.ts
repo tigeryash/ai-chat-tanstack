@@ -1,3 +1,4 @@
+import { loadChatBranches } from "@/lib/chat/chat-branches";
 import {
 	holdChatModelChoice,
 	setChatModelChoice,
@@ -53,7 +54,10 @@ export async function openPaneChat(
 	}
 	const saved = await store.getChat(pane.chatId);
 	if (saved && !isVisibleTo(saved, viewer)) return false;
-	if (saved) loadChatSettings(saved.id, saved.settings);
+	if (saved) {
+		loadChatSettings(saved.id, saved.settings);
+		loadChatBranches(saved.id, saved.branches);
+	}
 	const chat = openChat(pane.chatId, {
 		messages: saved?.messages,
 		store,
