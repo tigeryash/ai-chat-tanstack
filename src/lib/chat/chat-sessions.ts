@@ -10,6 +10,7 @@ import type { ChatStore } from "@/lib/storage/chat-store";
 import { isVisibleTo, type Viewer } from "@/lib/storage/ownership";
 import { requestPersistentStorage } from "@/lib/storage/persistence";
 import { BrowserChatTransport } from "./browser-transport";
+import { chatBranchesOf, loadChatBranches } from "./chat-branches";
 import { chatSettingsOf, loadChatSettings } from "./chat-settings";
 import { titleFromMessages } from "./chat-title";
 import { resolveAppModel } from "./e2e-model";
@@ -41,7 +42,13 @@ export async function saveChat(
 ): Promise<void> {
 	if (messages.length === 0) return;
 	try {
-		const { created } = await store.saveMessages(chatId, messages, ownerId);
+		// Branches this tab never loaded are left as stored (roadmap 1.7).
+		const { created } = await store.saveMessages(
+			chatId,
+			messages,
+			ownerId,
+			chatBranchesOf(chatId),
+		);
 		if (!created) return;
 		// Settings changed before the first reply had nowhere to go until now (roadmap 2.4b).
 		const settings = chatSettingsOf(chatId);
@@ -107,6 +114,7 @@ export async function openSavedChat(
 	const saved = await store.getChat(id);
 	if (!saved || !isVisibleTo(saved, viewer)) return false;
 	loadChatSettings(id, saved.settings);
+	loadChatBranches(id, saved.branches);
 	openChat(id, { messages: saved.messages, store, ownerId: saved.ownerId });
 	return true;
 }

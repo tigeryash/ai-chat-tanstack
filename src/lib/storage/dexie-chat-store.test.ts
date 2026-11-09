@@ -1,6 +1,7 @@
 import Dexie from "dexie";
 import { IDBFactory, IDBKeyRange } from "fake-indexeddb";
 import { describe, expect, it, vi } from "vitest";
+import { EMPTY_BRANCHES, editAt } from "./branches";
 import { openChatDatabase } from "./db";
 import { createDexieChatStore } from "./dexie-chat-store";
 import { ChatStoreError } from "./errors";
@@ -19,6 +20,64 @@ const hello = [
 ];
 
 describe("DexieChatStore", () => {
+	it("saves branches with the chat, keeps them when a save leaves them out, and deletes them with it", async () => {
+		const { db, store } = setup();
+		const edit = editAt(
+			hello,
+			EMPTY_BRANCHES,
+			0,
+			textMessage("m1b", "user", "hey"),
+		);
+		const path = [
+			...edit.path,
+			textMessage("m2b", "assistant", "hey yourself"),
+		];
+		await store.saveMessages("c1", path, null, edit.branches);
+		expect(await store.getChat("c1")).toMatchObject({
+			messages: path,
+			branches: edit.branches,
+		});
+		expect((await store.listChats())[0]?.messageCount).toBe(2);
+
+		// A save without branches (a tab that never loaded them) keeps the stored ones.
+		const longer = [...path, textMessage("m3", "user", "more")];
+		await store.saveMessages("c1", longer, null);
+		expect((await store.getChat("c1"))?.branches).toEqual(edit.branches);
+
+		// A path that no longer reaches them drops them.
+		await store.saveMessages("c1", [textMessage("x", "user", "new")], null);
+		expect(await store.getChat("c1")).not.toHaveProperty("branches");
+		expect(await db.branches.count()).toBe(0);
+
+		await store.saveMessages("c1", path, null, edit.branches);
+		await store.deleteChat("c1");
+		expect(await db.branches.count()).toBe(0);
+	});
+
+	it("reads a format 2 chat as one with no branches, and saves it as format 3", async () => {
+		const { db, store } = setup();
+		await db.chats.put({
+			id: "old",
+			title: "Old",
+			createdAt: 1,
+			updatedAt: 2,
+			messageCount: 1,
+			ownerId: null,
+			formatVersion: 2,
+		});
+		await db.messages.put({ chatId: "old", position: 0, message: hello[0] });
+		expect(await store.getChat("old")).toEqual({
+			id: "old",
+			title: "Old",
+			createdAt: 1,
+			updatedAt: 2,
+			ownerId: null,
+			messages: [hello[0]],
+		});
+		await store.saveMessages("old", hello, null);
+		expect((await db.chats.get("old"))?.formatVersion).toBe(3);
+	});
+
 	it("creates a chat on first save and reads it back", async () => {
 		const { store } = setup();
 
@@ -293,8 +352,9 @@ describe("DexieChatStore", () => {
 
 		const db = openChatDatabase("upgrade-test", { indexedDB, IDBKeyRange });
 		const store = createDexieChatStore({ db });
+		// Dexie's version 2 upgrade moves rows to format 2; later formats migrate when read.
 		expect(await db.chats.get("c1")).toMatchObject({
-			formatVersion: CHAT_FORMAT_VERSION,
+			formatVersion: 2,
 			ownerId: null,
 		});
 		expect(await store.listChats()).toEqual([

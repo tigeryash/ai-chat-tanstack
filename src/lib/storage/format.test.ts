@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { ChatStoreError } from "./errors";
 import v0Chat from "./fixtures/chat-v0.json";
 import v1Chat from "./fixtures/chat-v1.json";
+import v2Chat from "./fixtures/chat-v2.json";
 import { CHAT_FORMAT_VERSION, MAX_TITLE_LENGTH, upgradeChat } from "./format";
 
 async function rejection(promise: Promise<unknown>): Promise<ChatStoreError> {
@@ -107,6 +108,50 @@ describe("upgradeChat", () => {
 	it("loads a v1 chat (before owners) as a no-account chat", async () => {
 		const { formatVersion: _, ...chat } = v1Chat;
 		expect(await upgradeChat(v1Chat)).toEqual({ ...chat, ownerId: null });
+	});
+
+	it("loads a v2 chat (before branches) as a chat with none", async () => {
+		const { formatVersion: _, ...chat } = v2Chat;
+		const upgraded = await upgradeChat(v2Chat);
+		expect(upgraded).toEqual(chat);
+		expect(upgraded).not.toHaveProperty("branches");
+	});
+
+	it("reads a current chat's branches, checking their messages", async () => {
+		const branches = {
+			forks: [{ parentId: null, childIds: ["m0", "m1"], activeId: "m1" }],
+			messages: [
+				{
+					parentId: null,
+					message: {
+						id: "m0",
+						role: "user",
+						parts: [{ type: "text", text: "old" }],
+					},
+				},
+			],
+		};
+		expect(await upgradeChat({ ...currentChat, branches })).toMatchObject({
+			branches,
+		});
+		const bad = {
+			...branches,
+			messages: [
+				{ parentId: null, message: { id: "m0", role: "user", parts: 1 } },
+			],
+		};
+		expect(
+			(await rejection(upgradeChat({ ...currentChat, branches: bad }))).code,
+		).toBe("invalid-chat");
+		// Branches the path doesn't reach are dropped, not kept forever.
+		const orphan = {
+			...branches,
+			forks: [],
+			messages: [{ ...branches.messages[0], parentId: "gone" }],
+		};
+		expect(
+			await upgradeChat({ ...currentChat, branches: orphan }),
+		).not.toHaveProperty("branches");
 	});
 
 	it("needs an owner on a current chat: an account's user ID or null", async () => {
