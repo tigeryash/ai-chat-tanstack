@@ -49,17 +49,6 @@ at once), then turn its findings into small refactor slices.
 Only what's still open. When one is done, tick it, add a dated note, and move it to
 [Done owner to-dos](#done-owner-to-dos) at the end of this file.
 
-- [ ] For 1.8: in the Vercel dashboard, open the project and turn on **Analytics** (Web Analytics) and **Speed
-  Insights** (both free on Hobby), then redeploy. Until then `/_vercel/insights/script.js` and
-  `/_vercel/speed-insights/script.js` 404 and nothing is collected. After deploying, load a page, check the Analytics
-  tab shows a visit, and that Vercel's `[csp]` log has no `_vercel` lines. Custom events (`track()`) need Pro; on
-  Hobby leave `VITE_ANALYTICS_CUSTOM_EVENTS` unset.
-  *2026-10-31:* Web Analytics turned on; both script paths now return 200 on `www.highelollms.com`. The dashboard's
-  "install `@vercel/analytics`" prompt can be ignored: both packages are already in the app (`src/lib/analytics/vercel.ts`).
-  Still to do: a visit in the Analytics tab, and no `_vercel` lines in the `[csp]` log. A browser sending Global
-  Privacy Control or Do Not Track, or with Settings → Analytics off, records nothing.
-  *2026-11-09:* the Analytics tab shows visits (15 visitors, 30 page views over 7 days). Still to do: the `[csp]`
-  check, which waits on the CSP to-do below (Hobby keeps runtime logs for 1 hour).
 - [ ] Legal drafts (7.1): create `support@highelollms.com` (free forwarding to your inbox works, e.g. Cloudflare
   Email Routing); the privacy policy and terms already give it as the contact. They name the operator as "the
   developer, an individual based in Ontario"; register a business name or incorporate before charging money, then
@@ -71,15 +60,16 @@ Only what's still open. When one is done, tick it, add a dated note, and move it
   counts as executing the EU/UK Standard Contractual Clauses, so nothing to sign. The privacy and terms URLs are on
   Google's consent screen and Discord's app; GitHub OAuth apps have no field for them. Still to do: the support
   address, and the business name and lawyer's review before charging money.
-- [ ] Enforce the strict CSP (quality audit G1): after a week of real use of production, signed in and chatting
-  included, search Vercel's logs (Project → Logs) for `[csp]` lines and tell an agent what you find (none, or the
-  directive, blocked origin and page of each). With none, the agent sets `ENFORCE_STRICT_CSP = true` in
-  `src/lib/security/csp.ts`; until then the policy that stops an injected script sending a key elsewhere only reports.
-  Reports are now counted in Convex for 30 days: an agent reads them with `bunx convex run --prod cspReports:list`.
-  The week starts when the CSP report store PR deploys with its secret set. To set it, run once (same value both
-  places): `openssl rand -hex 32`, then `bunx convex env set CSP_REPORT_SECRET <value> --prod` and
-  `vercel env add CSP_REPORT_SECRET production` (or Vercel → Settings → Environment Variables, Production only),
-  and redeploy. Until both are set, reports only reach the 1-hour Vercel log.
+- [ ] Enforce the strict CSP (quality audit G1): until then the policy that stops an injected script sending a key
+  elsewhere only reports. Every violation the browser reports reaches `/api/csp-report`, which forwards it, cut down
+  to directive, blocked origin and page, to the Convex `cspReports` table (counts only, kept 30 days;
+  `convex/cspReports.ts`). `CSP_REPORT_SECRET` is set in Convex prod and Vercel Production, so nothing to set up.
+  Just use production for a week, signed in and chatting included. On or after **2026-11-16**, ask an agent to run
+  `bunx convex run --prod cspReports:list` and read the rows. With none from real use (and none for `_vercel`
+  origins, which also closes the 1.8 check), the agent sets `ENFORCE_STRICT_CSP = true` in
+  `src/lib/security/csp.ts`; otherwise it fixes or allows each directive and blocked origin first.
+  *2026-11-09:* the report store went live in [#83](https://github.com/tigeryash/ai-chat-tanstack/pull/83). One row
+  so far, from a pipeline test: `img-src` blocking `https://agent-pipeline-test.invalid` on `/settings`. Ignore it.
 - [ ] After 3.11 is deployed: on `www.highelollms.com`, open Settings → Appearance and make a theme of your own
   (theme, fonts, text size, an accent, a few Advanced colors). Reload and open a chat: the look should be there
   from the first frame, with no flash of the default. Export it, Reset all, then import it back.
@@ -731,3 +721,16 @@ Finished owner to-dos, oldest first, kept for their notes.
   storage are empty.
   *Done 2026-11-09:* prod's six tables and file storage were empty too, and no `users` row had `preferences`.
   Yash said drop them; the tables and the field left `convex/schema.ts`.
+- [x] For 1.8: in the Vercel dashboard, open the project and turn on **Analytics** (Web Analytics) and **Speed
+  Insights** (both free on Hobby), then redeploy. Until then `/_vercel/insights/script.js` and
+  `/_vercel/speed-insights/script.js` 404 and nothing is collected. After deploying, load a page, check the Analytics
+  tab shows a visit, and that Vercel's `[csp]` log has no `_vercel` lines. Custom events (`track()`) need Pro; on
+  Hobby leave `VITE_ANALYTICS_CUSTOM_EVENTS` unset.
+  *2026-10-31:* Web Analytics turned on; both script paths now return 200 on `www.highelollms.com`. The dashboard's
+  "install `@vercel/analytics`" prompt can be ignored: both packages are already in the app (`src/lib/analytics/vercel.ts`).
+  Still to do: a visit in the Analytics tab, and no `_vercel` lines in the `[csp]` log. A browser sending Global
+  Privacy Control or Do Not Track, or with Settings → Analytics off, records nothing.
+  *2026-11-09:* the Analytics tab shows visits (15 visitors, 30 page views over 7 days). Still to do: the `[csp]`
+  check, which waits on the CSP to-do below (Hobby keeps runtime logs for 1 hour).
+  *2026-11-09:* closed here; its last check (no `_vercel` CSP reports) moved into the strict CSP to-do, which reads
+  the Convex report store instead of Vercel's 1-hour logs.
