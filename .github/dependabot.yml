@@ -19,6 +19,9 @@ updates:
       # Hard rule 2: @convex-dev/better-auth 0.12 requires better-auth <1.7.0.
       - dependency-name: better-auth
         versions: [">=1.7.0"]
+      # 0.13 requires better-auth >=1.7.16; move both together, by hand.
+      - dependency-name: "@convex-dev/better-auth"
+        versions: [">=0.13.0"]
       # Pinned: 5.x needs @lobehub/ui@5 and antd@6 (CLAUDE.md, Gotchas).
       - dependency-name: "@lobehub/icons"
         update-types: [version-update:semver-major]
