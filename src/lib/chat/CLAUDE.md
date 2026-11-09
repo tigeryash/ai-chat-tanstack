@@ -11,6 +11,6 @@ Notes for working in this folder. The root [CLAUDE.md](/CLAUDE.md) (commands, ha
   the `/e2e/chat` pages; `VITE_E2E` builds also map the local model `e2e-mock-model` to it, so e2e can drive `/new`.
 - **Reply metadata** (`ReplyMetadata` in `browser-transport.ts`): model, host and cost (`reply-host.ts`, 2.2b),
   tokens, TTFT and tokens/sec (`reply-stats.ts`, 2.5; timed in the page from the request). Saved and imported
-  chats are untrusted, so read it back through `replySummary` / `readReplyStats`; `chat-usage.ts` totals a chat.
-  Under a reply only the route and cost show; the "⋯" popover lists everything from `replyDetails`
-  (`reply-details.ts`, 2.5b), which builds on both.
+  chats are untrusted, so read it back through `replyDetails` / `readReplyStats`; `chat-usage.ts` totals a chat.
+  Nothing shows inline under a reply; the "⋯" popover lists model, host, cost, tokens and timings from
+  `replyDetails` (`reply-details.ts`, 2.5b).

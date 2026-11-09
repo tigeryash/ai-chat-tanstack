@@ -24,11 +24,12 @@ function detailRows(page: Page) {
 test("a reply's tokens and timings sit behind its ⋯ button, with the host and cost", async ({
 	page,
 }) => {
-	// Roadmap 2.5b: nothing but the route and cost shows inline.
+	// Roadmap 2.5b: nothing shows inline; it's all behind ⋯.
 	const footers = page.locator("[data-slot='message-footer']");
 	await expect(footers).toHaveCount(3);
 	await expect(footers.first()).not.toContainText("tokens");
 	await expect(footers.first()).not.toContainText("TTFT");
+	await expect(footers.first()).not.toContainText("via");
 	await expect(page.locator("[data-usage='reply']")).toHaveCount(0);
 
 	const more = page.getByRole("button", { name: "Reply details" });

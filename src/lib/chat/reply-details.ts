@@ -4,12 +4,12 @@ import {
 	formatSpeed,
 } from "@/lib/models/format";
 import type { ReplyMetadata } from "./browser-transport";
+import { LOCAL_PROVIDER, providerName } from "./model-selection";
 import { readReplyStats, totalTokens } from "./reply-stats";
-import { hostName } from "./reply-summary";
 
 // Everything recorded about one reply (roadmap 2.5b), for the "⋯" popover on its action row: the
-// model, host and cost from 2.2b and the tokens and timings from 2.5. The line under a reply keeps
-// only the route and cost; the numbers live here.
+// model, host and cost from 2.2b and the tokens and timings from 2.5. Nothing shows inline under a
+// reply; it all lives here.
 
 export interface ReplyDetail {
 	label: string;
@@ -17,6 +17,10 @@ export interface ReplyDetail {
 }
 
 const COUNT = new Intl.NumberFormat("en");
+
+function hostName(provider: ReplyMetadata["provider"]): string {
+	return provider === LOCAL_PROVIDER ? "Local" : providerName(provider);
+}
 
 function costValue(reply: Partial<ReplyMetadata>): string {
 	const exact = formatCostExact(

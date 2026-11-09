@@ -7,7 +7,6 @@ import {
 	ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
 import { MessageScrollerItem } from "@/components/ui/message-scroller";
-import type { CurrentModel } from "@/lib/chat/reply-summary";
 import { type ChatBranches, siblingsAt } from "@/lib/storage/branches";
 import MessageUI from "./message-ui";
 
@@ -17,8 +16,6 @@ type MessagesListProps = {
 	messages: Message[];
 	/** Regenerates the last reply. Leave unset while a reply is streaming. */
 	onRegenerate?: (messageId: string) => void;
-	/** The chat's model now, so replies from another model can say which. */
-	currentModel?: CurrentModel;
 	/** Other versions of edited messages (roadmap 1.7). */
 	branches?: ChatBranches;
 	/** Sends a new version of a user message. Leave unset while a reply is streaming. */
@@ -28,12 +25,11 @@ type MessagesListProps = {
 };
 
 // Memoized so a streaming reply re-renders only its own row: the SDK replaces just the message that
-// changed, so finished ones keep their identity (and `currentModel` is kept by value upstream).
+// changed, so finished ones keep their identity.
 const MessageRow = memo(function MessageRow({
 	message,
 	index,
 	onRegenerate,
-	currentModel,
 	versionIds,
 	onEdit,
 	onSwitch,
@@ -41,7 +37,6 @@ const MessageRow = memo(function MessageRow({
 	message: Message;
 	index: number;
 	onRegenerate?: () => void;
-	currentModel?: CurrentModel;
 	versionIds?: readonly string[];
 	onEdit?: (messageId: string, text: string) => void;
 	onSwitch?: (index: number, versionId: string) => void;
@@ -56,7 +51,6 @@ const MessageRow = memo(function MessageRow({
 			<MessageUI
 				message={message}
 				onRegenerate={onRegenerate}
-				currentModel={currentModel}
 				branching={
 					message.role === "user"
 						? {
@@ -74,7 +68,6 @@ const MessageRow = memo(function MessageRow({
 const MessagesList = ({
 	messages,
 	onRegenerate,
-	currentModel,
 	branches,
 	onEdit,
 	onSwitch,
@@ -94,7 +87,6 @@ const MessagesList = ({
 							message={message}
 							index={index}
 							onRegenerate={message === last ? regenerate : undefined}
-							currentModel={currentModel}
 							// The fork's own list, so its identity holds while a reply streams.
 							versionIds={
 								branches &&
