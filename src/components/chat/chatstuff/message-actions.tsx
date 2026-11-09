@@ -105,8 +105,9 @@ const MessageActions = ({
 	const stats = summary && replyStatsSummary(message.metadata);
 	return (
 		message.role === "assistant" && (
-			// Wraps in a narrow pane rather than overflowing it once the stats are on the line.
-			<Actions className="flex-wrap gap-y-1">
+			// Wraps in a narrow pane rather than overflowing it once the stats are on the line. No side
+			// padding and -ml-2 (the icon buttons' own inset) line the copy icon up with the reply text.
+			<Actions className="-ml-2 flex-wrap gap-y-1 px-0">
 				<Action onClick={handleCopy} tooltip="Copy to clipboard">
 					<CopyIcon className="size-4" />
 				</Action>
