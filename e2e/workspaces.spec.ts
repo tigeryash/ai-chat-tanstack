@@ -277,6 +277,10 @@ test("screenshot: three panes side by side", async ({ page, context }) => {
 		).toBeVisible();
 	}
 	await page.mouse.move(0, 0);
+	// Usage and timings (roadmap 2.5) vary run to run; e2e/usage.spec.ts covers them.
+	await page.addStyleTag({
+		content: "[data-usage] { display: none !important; }",
+	});
 	await expect(
 		page.locator("main, [data-slot=sidebar-inset]").first(),
 	).toHaveScreenshot("workspace-three-panes.png");
