@@ -10,3 +10,7 @@ Notes for working in this folder. The root [CLAUDE.md](/CLAUDE.md) (commands, ha
   number, and append chat format migrations, when you rebase, never earlier; `upgrade()` only in a version that
   changes nothing else; non-chat records get their own format number; `db.test.ts` pins the schema and wants an
   upgrade test per `upgrade()`. Worktrees share :3000's IndexedDB: on a `VersionError`, delete `highelo-chats`.
+- **Branches** (roadmap 1.7, `branches.ts`): `Chat.messages` is only the path shown; other versions of edited
+  messages and their replies are `Chat.branches` (forks plus off-path messages), stored in the `branches` table and
+  absent when a chat has none. `saveMessages` without `branches` keeps the stored ones, so code that never loaded
+  them can't wipe them. Open chats keep theirs in `src/lib/chat/chat-branches.ts`.

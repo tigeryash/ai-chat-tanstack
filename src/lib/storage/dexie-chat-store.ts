@@ -5,6 +5,12 @@ import {
 	MAX_SYSTEM_PROMPT_LENGTH,
 } from "@/lib/params/settings";
 import { z } from "@/lib/zod";
+import {
+	branchesSchema,
+	type ChatBranches,
+	hasBranches,
+	normalizeBranches,
+} from "./branches";
 import type { Chat, ChatStore, ChatSummary } from "./chat-store";
 import {
 	type ChatDatabase,
@@ -19,6 +25,7 @@ import {
 	normalizeTitle,
 	ownerIdSchema,
 	upgradeChat,
+	validateBranches,
 	validateMessages,
 } from "./format";
 import {
@@ -68,7 +75,11 @@ async function writeChat(
 	db: ChatDatabase,
 	row: ChatRow,
 	messages: readonly UIMessage[],
+	branches: ChatBranches | undefined,
 ): Promise<void> {
+	if (hasBranches(branches))
+		await db.branches.put({ chatId: row.id, branches });
+	else await db.branches.delete(row.id);
 	await messagesOf(db, row.id).delete();
 	await db.messages.bulkPut(
 		messages.map((message, position) => ({
@@ -91,6 +102,19 @@ async function updateRow(
 			chatId,
 		});
 	}
+}
+
+/** The stored branches, cut down to what `path` still reaches. A row that doesn't parse is dropped. */
+async function storedBranches(
+	db: ChatDatabase,
+	chatId: string,
+	path: readonly UIMessage[],
+): Promise<ChatBranches | undefined> {
+	const row = await db.branches.get(chatId);
+	const parsed = branchesSchema.safeParse(row?.branches);
+	if (!parsed.success) return undefined;
+	// Checked against AI SDK's schema when they were written.
+	return normalizeBranches(path, parsed.data as ChatBranches);
 }
 
 // Validation is async (AI SDK), and a Dexie transaction commits as soon as it awaits anything that
@@ -128,20 +152,34 @@ export function createDexieChatStore({
 		},
 
 		async getChat(id) {
-			const raw = await db.transaction("r", db.chats, db.messages, async () => {
-				const row = await db.chats.get(id);
-				if (!row) return undefined;
-				const rows = await messagesOf(db, id).toArray();
-				return { ...row, messages: rows.map((entry) => entry.message) };
-			});
+			const raw = await db.transaction(
+				"r",
+				db.chats,
+				db.messages,
+				db.branches,
+				async () => {
+					const row = await db.chats.get(id);
+					if (!row) return undefined;
+					const rows = await messagesOf(db, id).toArray();
+					const branchRow = await db.branches.get(id);
+					return {
+						...row,
+						messages: rows.map((entry) => entry.message),
+						...(branchRow && { branches: branchRow.branches }),
+					};
+				},
+			);
 			return raw && upgradeChat(raw);
 		},
 
-		async saveMessages(chatId, messages, ownerId) {
+		async saveMessages(chatId, messages, ownerId, branches) {
 			checkChatId(chatId);
 			checkOwnerId(ownerId);
 			const valid = await validateMessages(messages, chatId);
-			return db.transaction("rw", db.chats, db.messages, async () => {
+			const validBranches =
+				branches && (await validateBranches(branches, valid, chatId));
+			const tables = [db.chats, db.messages, db.branches];
+			return db.transaction("rw", tables, async () => {
 				const existing = await db.chats.get(chatId);
 				// Overwriting would throw away whatever the newer format added.
 				if (existing && existing.formatVersion > CHAT_FORMAT_VERSION) {
@@ -166,6 +204,7 @@ export function createDexieChatStore({
 						formatVersion: CHAT_FORMAT_VERSION,
 					},
 					valid,
+					validBranches ?? (await storedBranches(db, chatId, valid)),
 				);
 				return { created: !existing };
 			});
@@ -207,10 +246,17 @@ export function createDexieChatStore({
 		},
 
 		async deleteChat(chatId) {
-			await db.transaction("rw", db.chats, db.messages, async () => {
-				await messagesOf(db, chatId).delete();
-				await db.chats.delete(chatId);
-			});
+			await db.transaction(
+				"rw",
+				db.chats,
+				db.messages,
+				db.branches,
+				async () => {
+					await db.branches.delete(chatId);
+					await messagesOf(db, chatId).delete();
+					await db.chats.delete(chatId);
+				},
+			);
 		},
 
 		async putChats(chats: readonly Chat[]) {
@@ -220,25 +266,32 @@ export function createDexieChatStore({
 					upgradeChat({ ...chat, formatVersion: CHAT_FORMAT_VERSION }),
 				),
 			);
-			await db.transaction("rw", db.chats, db.messages, async () => {
-				for (const chat of valid) {
-					await writeChat(
-						db,
-						{
-							id: chat.id,
-							title: chat.title,
-							createdAt: chat.createdAt,
-							updatedAt: chat.updatedAt,
-							messageCount: chat.messages.length,
-							...(chat.pinned && { pinned: true }),
-							...(chat.settings && { settings: chat.settings }),
-							ownerId: chat.ownerId,
-							formatVersion: CHAT_FORMAT_VERSION,
-						},
-						chat.messages,
-					);
-				}
-			});
+			await db.transaction(
+				"rw",
+				db.chats,
+				db.messages,
+				db.branches,
+				async () => {
+					for (const chat of valid) {
+						await writeChat(
+							db,
+							{
+								id: chat.id,
+								title: chat.title,
+								createdAt: chat.createdAt,
+								updatedAt: chat.updatedAt,
+								messageCount: chat.messages.length,
+								...(chat.pinned && { pinned: true }),
+								...(chat.settings && { settings: chat.settings }),
+								ownerId: chat.ownerId,
+								formatVersion: CHAT_FORMAT_VERSION,
+							},
+							chat.messages,
+							chat.branches,
+						);
+					}
+				},
+			);
 		},
 
 		async getWorkspace(id) {

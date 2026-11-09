@@ -1,10 +1,17 @@
 import type { UIMessage } from "ai";
 import { cleanSettings } from "@/lib/params/settings";
 import { z } from "@/lib/zod";
+import {
+	branchesSchema,
+	type ChatBranches,
+	hasBranches,
+	normalizeBranches,
+} from "./branches";
 import type { Chat } from "./chat-store";
 import { ChatStoreError, issuesOf } from "./errors";
 import { v0ToV1 } from "./migrations/v0-to-v1";
 import { v1ToV2 } from "./migrations/v1-to-v2";
+import { v2ToV3 } from "./migrations/v2-to-v3";
 
 // Stored chats are versioned (roadmap decision 10). `MIGRATIONS[n]` is a pure function that turns a
 // format-n chat into a format-(n+1) chat, so the current format is the length of the list. Loading a
@@ -16,7 +23,11 @@ import { v1ToV2 } from "./migrations/v1-to-v2";
 // The store's `chats` rows (id, title, createdAt, updatedAt, messageCount, pinned, ownerId) are read without
 // migrating, for the sidebar. A migration that changes one of those also needs a Dexie `version().upgrade()`
 // in db.ts (v1ToV2 has one).
-const MIGRATIONS: readonly ((chat: unknown) => unknown)[] = [v0ToV1, v1ToV2];
+const MIGRATIONS: readonly ((chat: unknown) => unknown)[] = [
+	v0ToV1,
+	v1ToV2,
+	v2ToV3,
+];
 
 export const CHAT_FORMAT_VERSION = MIGRATIONS.length;
 
@@ -48,6 +59,8 @@ const currentChat = z.object({
 	// Optional, so older chats read without a migration. Bad values are dropped, not the chat.
 	settings: z.unknown().optional(),
 	messages: z.array(z.unknown()),
+	// Format 3 (roadmap 1.7). Optional, so a chat written without any (a test, `putChats`) still reads.
+	branches: branchesSchema.optional(),
 });
 
 function chatIdOf(raw: unknown): string | undefined {
@@ -124,10 +137,36 @@ export async function upgradeChat(raw: unknown): Promise<Chat> {
 			issues: issuesOf(parsed.error),
 		});
 	}
-	const { formatVersion: _, settings, ...fields } = parsed.data;
+	const { formatVersion: _, settings, branches, ...fields } = parsed.data;
+	const messages = await validateMessages(fields.messages, fields.id);
+	const valid =
+		branches && (await validateBranches(branches, messages, fields.id));
 	return {
 		...fields,
 		...(settings !== undefined && { settings: cleanSettings(settings) }),
-		messages: await validateMessages(fields.messages, fields.id),
+		messages,
+		...(hasBranches(valid) && { branches: valid }),
 	};
+}
+
+/**
+ * Checks off-path messages like the path's, then drops whatever the path no longer reaches. Absent
+ * from a chat when it has no branches, so a chat that never forked reads as before.
+ */
+export async function validateBranches(
+	branches: z.infer<typeof branchesSchema>,
+	path: readonly UIMessage[],
+	chatId?: string,
+): Promise<ChatBranches> {
+	const messages = await validateMessages(
+		branches.messages.map((entry) => entry.message),
+		chatId,
+	);
+	return normalizeBranches(path, {
+		forks: branches.forks,
+		messages: branches.messages.map((entry, i) => ({
+			parentId: entry.parentId,
+			message: messages[i] as UIMessage,
+		})),
+	});
 }

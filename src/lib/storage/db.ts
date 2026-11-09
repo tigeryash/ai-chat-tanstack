@@ -51,6 +51,16 @@ export interface MessageRow {
 	message: unknown;
 }
 
+/**
+ * A chat's branches (roadmap 1.7): other versions of edited messages, and their replies. Their own
+ * table, so listing chats never reads them. One row per chat that has any.
+ */
+export interface BranchRow {
+	chatId: string;
+	/** `ChatBranches` (branches.ts) in the chat's format. Typed loosely, like `MessageRow.message`. */
+	branches: unknown;
+}
+
 /** App-wide values that hold content, so they stay out of localStorage (the shared system prompt). */
 export interface PrefRow {
 	key: string;
@@ -65,6 +75,7 @@ export type ChatDatabase = Dexie & {
 	messages: Table<MessageRow, [string, number]>;
 	prefs: EntityTable<PrefRow, "key">;
 	workspaces: EntityTable<WorkspaceRow, "id">;
+	branches: EntityTable<BranchRow, "chatId">;
 };
 
 export function openChatDatabase(
@@ -103,6 +114,14 @@ export function openChatDatabase(
 		messages: "[chatId+position]",
 		prefs: "key",
 		workspaces: "id, updatedAt",
+	});
+	// Roadmap 1.7: edit and branch. Chats from before have no row here, which reads as no branches.
+	db.version(5).stores({
+		chats: "id, updatedAt",
+		messages: "[chatId+position]",
+		prefs: "key",
+		workspaces: "id, updatedAt",
+		branches: "chatId",
 	});
 	return db;
 }

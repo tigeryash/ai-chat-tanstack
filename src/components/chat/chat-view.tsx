@@ -1,10 +1,12 @@
 import { type Chat, useChat } from "@ai-sdk/react";
 import type { UIMessage } from "ai";
-import { type ReactNode, useEffect, useRef } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import MessagesList from "@/components/chat/chatstuff/messages-list";
 import { Input } from "@/components/chat/input";
 import { Button } from "@/components/ui/button";
 import { track } from "@/lib/analytics/track";
+import { editMessage, switchBranch } from "@/lib/chat/branching";
+import { useChatBranches } from "@/lib/chat/chat-branches";
 import {
 	LOCAL_PROVIDER,
 	type ModelSelection,
@@ -57,16 +59,17 @@ export function ChatView({
 	const busy = status === "submitted" || status === "streaming";
 	const options = selection && { body: { ...selection, settings } };
 
+	const trackSent = (provider: string) =>
+		track("chat_sent", {
+			providerKind: provider === LOCAL_PROVIDER ? "local" : "hosted",
+			paneCount,
+			hasAttachment: false,
+		});
 	const send = (text: string) => {
 		if (!options) return;
 		// Not awaited: it resolves when the reply finishes, and the composer clears once this returns.
 		sendMessage({ text }, options).catch(logFailure);
-		track("chat_sent", {
-			providerKind:
-				options.body.provider === LOCAL_PROVIDER ? "local" : "hosted",
-			paneCount,
-			hasAttachment: false,
-		});
+		trackSent(options.body.provider);
 		onSend?.();
 	};
 	// A synced pane joins its workspace's hub, which calls the latest `send` (this pane's own model and
@@ -80,6 +83,39 @@ export function ChatView({
 		() => hub?.join(chat.id, { chat, send: (text) => sendRef.current(text) }),
 		[hub, chat],
 	);
+	const branches = useChatBranches(chat.id);
+	// Roadmap 1.7: only while idle, like Regenerate, so a branch never moves under a streaming reply.
+	// The handlers go through a ref, so the message rows keep their props (and don't re-render) when a
+	// reply starts or ends; the buttons hide themselves while one streams.
+	const branching = {
+		edit:
+			busy || !options
+				? undefined
+				: (messageId: string, text: string) => {
+						editMessage(chat, messageId, text, options).catch(logFailure);
+						// An edit is a send, so it counts as `chat_sent`.
+						trackSent(options.body.provider);
+					},
+		switchVersion: busy
+			? undefined
+			: (index: number, versionId: string) => {
+					switchBranch(chat, index, versionId).catch((error: unknown) =>
+						logError("Couldn't switch versions:", error),
+					);
+				},
+	};
+	const branchingRef = useRef(branching);
+	useEffect(() => {
+		branchingRef.current = branching;
+	});
+	// Made once: the React Compiler doesn't keep these closures stable in this component (chat-screen's
+	// render-count test caught the person's message re-rendering with every streamed chunk).
+	const [{ edit, switchVersion }] = useState(() => ({
+		edit: (messageId: string, text: string) =>
+			branchingRef.current.edit?.(messageId, text),
+		switchVersion: (index: number, versionId: string) =>
+			branchingRef.current.switchVersion?.(index, versionId),
+	}));
 	const retry = options
 		? () => regenerate(options).catch(logFailure)
 		: undefined;
@@ -111,6 +147,9 @@ export function ChatView({
 								: (messageId) =>
 										regenerate({ messageId, ...options }).catch(logFailure)
 						}
+						branches={branches}
+						onEdit={options ? edit : undefined}
+						onSwitch={switchVersion}
 					/>
 				)}
 			</div>

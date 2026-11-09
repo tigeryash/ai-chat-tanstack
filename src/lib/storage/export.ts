@@ -50,6 +50,7 @@ function toStoredChat(chat: Chat): StoredChat {
 		ownerId: chat.ownerId,
 		...(chat.settings && { settings: chat.settings }),
 		messages: chat.messages,
+		...(chat.branches && { branches: chat.branches }),
 	};
 }
 

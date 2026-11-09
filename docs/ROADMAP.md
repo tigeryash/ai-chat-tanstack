@@ -387,7 +387,11 @@ Only what's still open. When one is done, tick it, add a dated note, and move it
   sync and share" or Sign out. PR: https://github.com/tigeryash/ai-chat-tanstack/pull/29
 - [ ] **1.6 Attachments that send.** Images/PDFs as `file` parts where supported; blobs in IndexedDB; unified
   drag-drop and paperclip validation; revoke object URLs.
-- [ ] **1.7 Edit and branch.** Edit a user message → new branch; switch between siblings.
+- [x] **1.7 Edit and branch.** Edit a user message → new branch; switch between siblings.
+  *Done when:* Vitest covers the format migration (an old-format fixture loads through it), the branch tree
+  operations, and export/import round-tripping branches; e2e edits a message, sees a new reply, switches back to the
+  original sibling, and both survive a reload.
+  *Status (2026-11-09):* done; regenerating into a branch is a possible follow-up. PR: https://github.com/tigeryash/ai-chat-tanstack/pull/73
 - [x] **1.8 Analytics foundation** (decision 23). A `track()` wrapper with an allowlist of event names and
   properties; cookieless page analytics and Web Vitals (Vercel Web Analytics and Speed Insights, free on Hobby); an
   opt-out in Settings that also honors Do Not Track / Global Privacy Control. From here on, each slice lists the
