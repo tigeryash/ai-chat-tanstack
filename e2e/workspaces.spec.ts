@@ -334,6 +334,10 @@ test.describe("on a phone", () => {
 		await composer(pane(page, 1)).press("Enter");
 		await expect(pane(page, 1).getByText(e2eMockReply("alpha"))).toBeVisible();
 		await composer(pane(page, 1)).blur();
+		// Usage and timings (roadmap 2.5) vary run to run; e2e/usage.spec.ts covers them.
+		await page.addStyleTag({
+			content: "[data-usage] { display: none !important; }",
+		});
 		await expect(page).toHaveScreenshot("workspace-phone.png");
 	});
 });
