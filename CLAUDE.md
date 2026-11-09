@@ -24,8 +24,8 @@ or Convex writes, and keep [docs/data-inventory.md](docs/data-inventory.md) curr
 | `bun run test` | Vitest unit tests (`src/**/*.test.ts(x)`, `convex/**/*.test.ts`, `scripts/**/*.test.ts`). |
 | `bun run verify` | typecheck + Biome + Vitest. Run before every commit you hand over. |
 | `bunx knip@6.44.0` | Unused files, dependencies and exports (`knip.json`); delete them, or tag an export an open PR needs `/** @public */` with the PR. Pinned, not in `package.json`. CI runs it. Unused Convex functions are `convex/publicFunctions.test.ts`'s job. |
-| `bun run test:e2e` | Playwright against a production build (macOS screenshot baselines when run on a Mac). |
-| `bun run test:e2e:linux` | Playwright inside CI's Linux image via Docker. Add `--update-snapshots` to refresh Linux baselines. |
+| `bun run test:e2e` | Playwright against a production build (macOS screenshot baselines when run on a Mac). `E2E_PORT=<n>` picks the port (default 4174); see Parallel sessions. |
+| `bun run test:e2e:linux` | Playwright inside CI's Linux image via Docker. Add `--update-snapshots` to refresh Linux baselines; see `e2e/CLAUDE.md` for running it on a Mac. |
 | `bun scripts/bundle-budget.ts` | After `bun run build` (add `--sourcemap` for the package check): gzipped route preloads vs the budget. CI runs it. |
 
 The **pre-commit hook** (`.husky/pre-commit`) runs Biome on staged files and the type check. Don't bypass it with
@@ -139,11 +139,23 @@ before changing code that uses that feature from elsewhere**, too.
 - **Owner tasks go in the roadmap.** Anything only Yash can do (accounts, keys, real-device or real-email checks)
   also goes under "Owner to-dos" in `docs/ROADMAP.md`.
 - **Data changes reach the legal drafts.** A slice that changes what data is collected, stored, or shared updates
-  `docs/data-inventory.md` and flags `docs/legal/` (privacy policy, terms) in its PR's "Needs Yash".
+  `docs/data-inventory.md` and the matching lines of `docs/legal/privacy-policy.md` (and `terms.md` if it applies)
+  in the same PR, and lists the wording under "Needs Yash" for review.
 - **Stay in scope.** Fix what blocks your slice. Propose anything else you find as a follow-up instead of doing it.
-- **Parallel sessions.** Other slices may be in progress in worktrees under `.claude/worktrees/` (Biome ignores
-  that folder). Expect small conflicts in `bun.lock`, `convex/schema.ts`, and `docs/ROADMAP.md`. Rebase on
-  `origin/main` before opening the PR.
+- **Parallel sessions.** Other slices may be in progress in worktrees under `.claude/worktrees/` or
+  `~/.t3/worktrees/` (Biome ignores `.claude`). Expect small conflicts in `bun.lock`, `convex/schema.ts`,
+  `docs/ROADMAP.md` and screenshot baselines. Rebase on `origin/main` before opening the PR. While running:
+  - **Own ports.** Run Playwright with `E2E_PORT=<free port>` (e.g. 4200 + a number you pick; the Convex stub
+    takes the next one). Never `E2E_REUSE_SERVER=1` in a parallel session: it reuses whatever already listens,
+    possibly another worktree's build.
+  - **One e2e run at a time per worktree.** Host and Docker runs share the build output and break each other.
+  - **Finish before ending your turn.** Don't end it while a test run or build is still going; wait for it, then
+    commit, push and open the PR. Report the PR URL, head SHA and check state last.
+  - **Check a PR is open before pushing to it.** Yash merges fast; pushing to a merged PR's deleted branch
+    re-creates it. Check with `gh pr view <n> --json state`.
+- **Screenshots and merge order.** PRs that change the same baseline (`workspace-three-panes`, `workspace-phone`)
+  conflict: the one merged second merges `origin/main` and regenerates its baselines (Linux and macOS). Say in the
+  PR which baselines it changes, so the coordinator can order merges.
 
 ## Testing
 
