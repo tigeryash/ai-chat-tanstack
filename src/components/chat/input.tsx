@@ -7,6 +7,7 @@ import type { FileUIPart } from "ai";
 import { Square } from "lucide-react";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import { useState } from "react";
+import type { AttachedFileInfo } from "@/lib/attachments/capability";
 import { toFilePart } from "@/lib/attachments/file-object";
 import { useAttachments } from "@/lib/attachments/use-attachments";
 import type { AttachmentSupport } from "@/lib/attachments/validate";
@@ -33,6 +34,8 @@ type InputProps = {
 	attachmentSupport?: AttachmentSupport;
 	/** Why attached files were refused, shown outside the composer; [] clears it. */
 	onAttachmentErrors?: (errors: string[]) => void;
+	/** What's attached (names and types), so synced panes can check it against their models (roadmap 3.3). */
+	onAttachmentsChange?: (files: AttachedFileInfo[]) => void;
 };
 
 export const Input = ({
@@ -43,6 +46,7 @@ export const Input = ({
 	onValueChange,
 	attachmentSupport,
 	onAttachmentErrors,
+	onAttachmentsChange,
 }: InputProps) => {
 	const [ownInput, setOwnInput] = useState("");
 	const input = value ?? ownInput;
@@ -51,6 +55,7 @@ export const Input = ({
 	const attachments = useAttachments({
 		support: attachmentSupport,
 		onErrors: onAttachmentErrors,
+		onChange: onAttachmentsChange,
 	});
 	const hasFiles = attachments.files.length > 0;
 

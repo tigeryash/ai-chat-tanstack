@@ -31,7 +31,10 @@ function sse(text: string): string {
 }
 
 async function fakeOpenRouter(page: Page) {
-	const completions: { messages: { role: string; content: unknown }[] }[] = [];
+	const completions: {
+		model: string;
+		messages: { role: string; content: unknown }[];
+	}[] = [];
 	await page.route("https://openrouter.ai/api/v1/chat/completions", (route) => {
 		const request = route.request();
 		if (request.method() === "OPTIONS") {
@@ -178,4 +181,89 @@ test("a binary file named .txt is refused when attached (1.6b)", async ({
 		page.getByRole("alert", { name: "Attachments not added" }),
 	).toContainText("fake.txt isn't a UTF-8 text file, so it wasn't attached.");
 	await expect(page.getByText("fake.txt", { exact: true })).toHaveCount(0);
+});
+
+// Roadmap 3.3 (decision 17): two synced panes, one on a model that reads images (Opus) and one that
+// doesn't (DeepSeek). Attaching an image warns in the DeepSeek pane, outside the composer, and each
+// pane's request carries only what its model reads; "Skip this pane" leaves that pane out of a send.
+test("synced panes each get only the files their model reads, with a note in the pane that can't", async ({
+	page,
+}) => {
+	const completions = await fakeOpenRouter(page);
+	await connectOpenRouter(page);
+	await page.goto(
+		"/new?models=anthropic/claude-opus-5.5,deepseek/deepseek-v4.1-flash",
+	);
+	const opus = page.getByRole("region", { name: "Pane 1", exact: true });
+	const deepseek = page.getByRole("region", { name: "Pane 2", exact: true });
+	await expect(
+		deepseek.getByRole("button", { name: /^Model: / }),
+	).toContainText("DeepSeek");
+	const note = (pane: typeof opus) =>
+		pane.getByRole("status", { name: "Attachments this model can't read" });
+
+	// A text file (1.6b) is read by every model, so it goes to both panes and the note doesn't name it.
+	await opus.locator("input[type=file]").setInputFiles([
+		{ name: "red.png", mimeType: "image/png", buffer: PNG },
+		{
+			name: "notes.md",
+			mimeType: "text/markdown",
+			buffer: Buffer.from("# Notes\n"),
+		},
+	]);
+	await expect(opus.getByText("red.png")).toBeVisible();
+	await expect(
+		opus.getByRole("button", { name: "Remove notes.md" }),
+	).toBeAttached();
+	await expect(note(deepseek)).toHaveText(
+		/This model can't read red\.png, so this pane gets the message without it\./,
+	);
+	await expect(note(opus)).toHaveCount(0);
+	await expect(
+		note(deepseek).getByRole("button", { name: "Send text only" }),
+	).toHaveAttribute("aria-pressed", "true");
+
+	const box = opus.getByPlaceholder("Ask anything");
+	await box.fill("What colour is this?");
+	await box.press("Enter");
+	await expect(opus.getByText("A red square.")).toBeVisible();
+	await expect(deepseek.getByText("A red square.")).toBeVisible();
+	await expect(note(deepseek)).toHaveCount(0);
+
+	const userContent = (model: RegExp) =>
+		completions
+			.filter((c) => model.test(c.model))
+			.map((c) => c.messages.find((m) => m.role === "user")?.content);
+	expect(completions).toHaveLength(2);
+	const notesPart = {
+		type: "text",
+		text: expect.stringContaining("File: notes.md"),
+	};
+	const prompt = { type: "text", text: "What colour is this?" };
+	expect(userContent(/opus/)).toEqual([
+		[
+			{
+				type: "image_url",
+				image_url: { url: expect.stringMatching(/^data:image\/png;base64,/) },
+			},
+			notesPart,
+			prompt,
+		],
+	]);
+	expect(userContent(/deepseek/)).toEqual([[notesPart, prompt]]);
+
+	// Skipping the pane: the next send with an image reaches Opus only.
+	await opus
+		.locator("input[type=file]")
+		.setInputFiles({ name: "red.png", mimeType: "image/png", buffer: PNG });
+	await note(deepseek).getByRole("button", { name: "Skip this pane" }).click();
+	await expect(note(deepseek)).toHaveText(
+		/This model can't read red\.png, so this pane won't get the message\./,
+	);
+	await box.fill("And now?");
+	await box.press("Enter");
+	await expect.poll(() => completions.length).toBe(3);
+	await expect(opus.getByText("And now?")).toBeVisible();
+	await expect(deepseek.getByText("And now?")).toHaveCount(0);
+	expect(completions[2]?.model).toMatch(/opus/);
 });

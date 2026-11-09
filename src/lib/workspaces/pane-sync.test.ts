@@ -121,4 +121,86 @@ describe("pane sync", () => {
 		sync.sendAll("x", files);
 		expect(second).toHaveBeenCalledWith("x", files);
 	});
+
+	describe("attachments per pane (roadmap 3.3, decision 17)", () => {
+		const png = {
+			type: "file" as const,
+			mediaType: "image/png",
+			url: "data:,",
+		};
+		const notes = {
+			type: "file" as const,
+			mediaType: "text/plain",
+			url: "data:,",
+		};
+		const twoPanes = () => {
+			const sync = createPaneSync();
+			const reads = vi.fn();
+			const textOnly = vi.fn();
+			sync.join("reads", {
+				chat: fakeChat(),
+				send: reads,
+				support: () => ({ images: true, pdfs: true }),
+			});
+			sync.join("text", {
+				chat: fakeChat(),
+				send: textOnly,
+				support: () => ({ images: false, pdfs: false }),
+			});
+			return { sync, reads, textOnly };
+		};
+
+		it("sends each pane only the files its model reads", () => {
+			const { sync, reads, textOnly } = twoPanes();
+			sync.sendAll("Describe", [png, notes]);
+			expect(reads).toHaveBeenCalledWith("Describe", [png, notes]);
+			expect(textOnly).toHaveBeenCalledWith("Describe", [notes]);
+		});
+
+		it("sends a text or code file (1.6b) to every pane, an image only to the one that reads it", () => {
+			const { sync, reads, textOnly } = twoPanes();
+			// `.ts` files can come in as video/mp2t; only image and PDF types ever depend on the model.
+			const code = { ...notes, mediaType: "video/mp2t", filename: "a.ts" };
+			sync.sendAll("Review", [png, notes, code]);
+			expect(reads).toHaveBeenCalledWith("Review", [png, notes, code]);
+			expect(textOnly).toHaveBeenCalledWith("Review", [notes, code]);
+		});
+
+		it("leaves out a pane whose person chose to skip it, for that send only", () => {
+			const { sync, reads, textOnly } = twoPanes();
+			sync.setAttachments("reads", [
+				{ name: "red.png", mediaType: "image/png" },
+			]);
+			sync.setSkipped("text", true);
+			expect(sync.getState().skipped).toEqual(["text"]);
+			sync.sendAll("Describe", [png]);
+			expect(reads).toHaveBeenCalledOnce();
+			expect(textOnly).not.toHaveBeenCalled();
+			expect(sync.getState().skipped).toEqual([]);
+		});
+
+		it("shares what every synced composer has attached, and forgets it when they clear", () => {
+			const { sync } = twoPanes();
+			const onChange = vi.fn();
+			sync.subscribe(onChange);
+			const red = { name: "red.png", mediaType: "image/png" };
+			sync.setAttachments("reads", [red]);
+			sync.setAttachments("reads", [{ ...red }]);
+			expect(onChange).toHaveBeenCalledOnce();
+			expect(sync.getState().attachments).toEqual([red]);
+
+			sync.setSkipped("text", true);
+			sync.setAttachments("reads", []);
+			expect(sync.getState()).toMatchObject({ attachments: [], skipped: [] });
+		});
+
+		it("drops a pane's attachments and choice when it leaves", () => {
+			const sync = createPaneSync();
+			const leave = sync.join("a", { chat: fakeChat(), send: vi.fn() });
+			sync.setAttachments("a", [{ name: "red.png", mediaType: "image/png" }]);
+			sync.setSkipped("a", true);
+			leave();
+			expect(sync.getState()).toMatchObject({ attachments: [], skipped: [] });
+		});
+	});
 });

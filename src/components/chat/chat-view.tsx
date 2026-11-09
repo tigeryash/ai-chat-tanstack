@@ -4,6 +4,7 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 import MessagesList from "@/components/chat/chatstuff/messages-list";
 import { Input } from "@/components/chat/input";
 import { Button } from "@/components/ui/button";
+import { PaneAttachmentNotice } from "@/components/workspaces/pane-attachment-notice";
 import { track } from "@/lib/analytics/track";
 import type { AttachmentSupport } from "@/lib/attachments/validate";
 import { editMessage, switchBranch } from "@/lib/chat/branching";
@@ -80,10 +81,12 @@ export function ChatView({
 		onSend?.();
 	};
 	// A synced pane joins its workspace's hub, which calls the latest `send` (this pane's own model and
-	// settings) whenever any synced pane sends.
+	// settings) whenever any synced pane sends, with only the files this pane's model reads (roadmap 3.3).
 	const sendRef = useRef(send);
+	const supportRef = useRef(attachmentSupport);
 	useEffect(() => {
 		sendRef.current = send;
+		supportRef.current = attachmentSupport;
 	});
 	const hub = sync?.synced ? sync.hub : undefined;
 	useEffect(
@@ -91,6 +94,7 @@ export function ChatView({
 			hub?.join(chat.id, {
 				chat,
 				send: (text, files) => sendRef.current(text, files),
+				support: () => supportRef.current,
 			}),
 		[hub, chat],
 	);
@@ -196,13 +200,21 @@ export function ChatView({
 					</Button>
 				</div>
 			)}
+			{hub && (
+				<PaneAttachmentNotice
+					hub={hub}
+					paneId={chat.id}
+					support={attachmentSupport}
+				/>
+			)}
 			{/* Inset, so the composer doesn't touch a narrow pane's edges. */}
 			<div className="flex w-full justify-center px-3">
 				{hub ? (
-					// Synced panes may run models that read different files: checking each one's model is
-					// roadmap 3.3, so a synced composer only checks type, size and count.
+					// Synced panes may run models that read different files, so a synced composer only checks
+					// type, size and count; each pane checks its own model (PaneAttachmentNotice, roadmap 3.3).
 					<SyncedComposer
 						hub={hub}
+						paneId={chat.id}
 						ready={options !== undefined}
 						onAttachmentErrors={setAttachmentErrors}
 					/>
@@ -226,10 +238,12 @@ export function ChatView({
  */
 function SyncedComposer({
 	hub,
+	paneId,
 	ready,
 	onAttachmentErrors,
 }: {
 	hub: PaneSync;
+	paneId: string;
 	ready: boolean;
 	onAttachmentErrors: (errors: string[]) => void;
 }) {
@@ -239,6 +253,7 @@ function SyncedComposer({
 			value={draft}
 			onValueChange={hub.setDraft}
 			onAttachmentErrors={onAttachmentErrors}
+			onAttachmentsChange={(files) => hub.setAttachments(paneId, files)}
 			onSubmit={async (text, files) => hub.sendAll(text, files)}
 			isLoading={replying || !ready}
 			onStop={replying ? hub.stopAll : undefined}

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { logError } from "@/lib/log";
+import type { AttachedFileInfo } from "./capability";
 import { type FileObject, revokePreview, toFileObject } from "./file-object";
 import { processAttachment } from "./process";
 import { AttachmentRefusal } from "./text-file";
@@ -10,6 +11,8 @@ export interface UseAttachmentsOptions {
 	support?: AttachmentSupport;
 	/** Gets the reasons files were refused (user-facing, no contents), or [] once a pick is all fine. */
 	onErrors?: (errors: string[]) => void;
+	/** Gets the attached files' names and types (never contents) whenever the list changes. */
+	onChange?: (files: AttachedFileInfo[]) => void;
 }
 
 /**
@@ -20,8 +23,22 @@ export interface UseAttachmentsOptions {
 export function useAttachments({
 	support,
 	onErrors,
+	onChange,
 }: UseAttachmentsOptions = {}) {
 	const [files, setFiles] = useState<FileObject[]>([]);
+	// Synced panes (roadmap 3.3) check what's attached against each pane's model before the send.
+	const onChangeRef = useRef(onChange);
+	useEffect(() => {
+		onChangeRef.current = onChange;
+	});
+	useEffect(() => {
+		onChangeRef.current?.(
+			files.map((f) => ({
+				name: f.file.name,
+				mediaType: f.file.type || f.type,
+			})),
+		);
+	}, [files]);
 	// Every attachment whose preview is still alive, so unmount can revoke the ones never removed.
 	const live = useRef(new Map<string, FileObject>());
 	// Reads still running, so a send can wait for them.

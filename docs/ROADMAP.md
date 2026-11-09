@@ -494,7 +494,14 @@ Only what's still open. When one is done, tick it, add a dated note, and move it
 - [x] **3.2 Synced composers + Stop** (decisions 16 and 18). Per-pane composer with a "Synced" toggle and mirrored
   input, the "diverged" badge, and the Stop behavior.
   *Status:* done with 3.1 in [#56](https://github.com/tigeryash/ai-chat-tanstack/pull/56) (2026-10-31).
-- [ ] **3.3 Capability-aware attachments** (decision 17).
+- [x] **3.3 Capability-aware attachments** (decision 17). A file attached in a synced composer is checked against
+  every synced pane's model (catalog input modalities; unknown for local and custom models, so the provider
+  decides); a pane that can't read it says so in the pane, outside the composer, and sends text only or skips.
+  *Done when:* Vitest covers the per-pane decision (what each model reads, text only, skip, text files never
+  left out) and the hub sending each pane only its files; e2e attaches an image in two synced panes on fixture
+  models (one reads images, one doesn't), sees the note in the right pane, finds the image only in that model's
+  request to the faked provider, and skips the other pane on a second send.
+  *Status (2026-11-09):* done; decision 17's "send extracted text" for PDFs was skipped by Yash on 2026-11-09. PR: https://github.com/tigeryash/ai-chat-tanstack/pull/93
 - [x] **3.4 Compare tools.** Per-pane TTFT, tokens/sec, cost; sync scroll; thumbs up/down; "copy settings to all panes".
   *Status (2026-11-09):* done in [PR #87](https://github.com/tigeryash/ai-chat-tanstack/pull/87).
 - [x] **3.5 Workspaces.** Save/restore layouts and models; deep link `?models=a,b,c`. Done when Vitest covers
