@@ -1,5 +1,6 @@
 import Dexie, { type DexieOptions, type EntityTable, type Table } from "dexie";
 import type { ChatSettings } from "@/lib/params/settings";
+import type { Prompt } from "@/lib/prompts/prompt";
 import type { ChatVotes } from "./votes";
 import type { Workspace } from "./workspace";
 
@@ -73,12 +74,16 @@ export interface PrefRow {
 /** A workspace (roadmap 3.1) in its own format (workspace.ts), checked on read. */
 export type WorkspaceRow = Workspace & { formatVersion: number };
 
+/** A saved prompt (roadmap 3.6) in its own format (`src/lib/prompts/prompt.ts`), checked on read. */
+export type PromptRow = Prompt & { formatVersion: number };
+
 export type ChatDatabase = Dexie & {
 	chats: EntityTable<ChatRow, "id">;
 	messages: Table<MessageRow, [string, number]>;
 	prefs: EntityTable<PrefRow, "key">;
 	workspaces: EntityTable<WorkspaceRow, "id">;
 	branches: EntityTable<BranchRow, "chatId">;
+	prompts: EntityTable<PromptRow, "id">;
 };
 
 export function openChatDatabase(
@@ -125,6 +130,15 @@ export function openChatDatabase(
 		prefs: "key",
 		workspaces: "id, updatedAt",
 		branches: "chatId",
+	});
+	// Roadmap 3.6: the prompt library. A new table, so older databases need no upgrade.
+	db.version(6).stores({
+		chats: "id, updatedAt",
+		messages: "[chatId+position]",
+		prefs: "key",
+		workspaces: "id, updatedAt",
+		branches: "chatId",
+		prompts: "id, updatedAt",
 	});
 	return db;
 }

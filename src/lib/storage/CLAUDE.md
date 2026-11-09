@@ -17,3 +17,5 @@ Notes for working in this folder. The root [CLAUDE.md](/CLAUDE.md) (commands, ha
   them can't wipe them. Open chats keep theirs in `src/lib/chat/chat-branches.ts`.
 - **Votes** (roadmap 3.4, `votes.ts`): thumbs up/down by reply message id on the chat row (`votes`), optional and
   cleaned on read like `settings`; `saveMessages` keeps them. Open chats keep theirs in `src/lib/chat/chat-votes.ts`.
+- **Prompts** (roadmap 3.6a): the `prompts` table (Dexie version 6) belongs to `src/lib/prompts/`, with its own
+  format number; read it through `prompt-store.ts`, not this folder's ChatStore.

@@ -1,5 +1,6 @@
 import { SlidersHorizontalIcon } from "lucide-react";
 import { useId, useState } from "react";
+import { ApplyPrompt } from "@/components/prompts/apply-prompt";
 import { Button } from "@/components/ui/button";
 import {
 	Sheet,
@@ -10,6 +11,7 @@ import {
 	SheetTrigger,
 } from "@/components/ui/sheet";
 import { type ParamValues, withParam } from "@/lib/params/settings";
+import { applyPrompt } from "@/lib/prompts/apply";
 import { ParamControl } from "./param-controls";
 import type { ChatParams } from "./use-chat-params";
 
@@ -76,6 +78,11 @@ function SystemPrompt({ params }: { params: ChatParams }) {
 					? "Empty: this chat uses your default prompt."
 					: "This chat's own prompt. Clear it to use your default."}
 			</p>
+			<ApplyPrompt
+				onApply={(prompt) =>
+					params.update(applyPrompt(params.settings, prompt))
+				}
+			/>
 			<Button
 				variant="link"
 				size="sm"

@@ -488,9 +488,14 @@ Only what's still open. When one is done, tick it, add a dated note, and move it
   parsing `?models=` (bad, unknown and too many ids) and saving/restoring layouts, and e2e opens
   `/new?models=a,b` on the fixture catalog and gets those panes, saves the layout, and opens it again after a reload.
   *Status:* done in [#71](https://github.com/tigeryash/ai-chat-tanstack/pull/71) (2026-11-08); layouts and workspaces in exports are a follow-up.
-- [ ] **3.6 Prompt library** (decision 19). Save, name, tag, search, apply; set per-model defaults; version history
-  (every edit is a version, with diff view and restore, and each reply records which prompt version produced it).
-  Later: variables (`{{date}}`).
+- [x] **3.6a Prompt library** (decision 19). Save, name, tag, search, apply; version history (every edit is a
+  version, with diff view and restore). Split from 3.6b to keep each PR reviewable.
+  *Done when:* Vitest covers the store, versioning, diff and apply, and e2e saves a prompt, edits it, restores the
+  old version from the diff view, applies it to a chat from Model settings and sees both after a reload.
+  *Status (2026-11-09):* done in [PR #90](https://github.com/tigeryash/ai-chat-tanstack/pull/90). Logic in `src/lib/prompts/`, page at `/prompts`.
+- [ ] **3.6b Prompt defaults and provenance** (decision 19). Per-model default prompts (pane override → model
+  default → shared prompt), and each reply records which prompt version produced it. Later: variables
+  (`{{date}}`), and prompts in exports.
 - [ ] **3.7 Blind mode** *(deferred; revisit with monetization)*. Hide model names, pick the better answer, reveal.
   Votes stay local and feed a personal leaderboard. Runs on the user's keys.
 - [x] **3.8 Mobile.** Panes become swipeable tabs below `md`. Done when, at a 390px viewport, a 3-pane workspace

@@ -1,4 +1,5 @@
 import { createLocalStore } from "@/lib/local-store";
+import { type PromptStore, promptStore } from "@/lib/prompts/prompt-store";
 import { chatStore } from "@/lib/storage/app-store";
 import type { ChatStore } from "@/lib/storage/chat-store";
 import { chatsOwnedBy, noAccountChats } from "@/lib/storage/ownership";
@@ -12,7 +13,7 @@ import { deleteChats, setChatOwner } from "./open-chats";
 // What happens to chats on this device when people sign in and out (roadmap 1.9). After sign-in, an
 // account is asked once per browser what to do with the chats made signed out. Signing out hides the
 // account's chats, or removes them from this browser if the person asks. Workspaces follow their chats
-// on every answer (Yash, 2026-11-07; quality audit Q2, W4).
+// on every answer (Yash, 2026-11-07; quality audit Q2, W4), and so do saved prompts (roadmap 3.6).
 
 /** User IDs of the accounts that answered the question in this browser. Holds no chat content. */
 export const NO_ACCOUNT_PROMPT_KEY = "highelo-no-account-chats-answered";
@@ -40,19 +41,25 @@ export async function answerNoAccountPrompt(
 	choice: NoAccountChoice,
 	userId: string,
 	store: ChatStore = chatStore(),
+	prompts: PromptStore = promptStore(),
 ): Promise<void> {
 	if (choice !== "keep") {
 		const ids = noAccountChats(await store.listChats()).map((chat) => chat.id);
 		const workspaceIds = noAccountChats(await store.listWorkspaces()).map(
 			(workspace) => workspace.id,
 		);
+		const promptIds = noAccountChats(await prompts.listPrompts()).map(
+			(prompt) => prompt.id,
+		);
 		if (choice === "add") {
 			await setChatOwner(ids, userId, store);
 			await store.setWorkspaceOwner(workspaceIds, userId);
+			await prompts.setPromptOwner(promptIds, userId);
 		} else {
 			for (const id of workspaceIds) await deleteWorkspaceAs(id, null, store);
 			await deleteChats(ids, store);
 			await dropDeletedPanes(ids, store);
+			for (const id of promptIds) await prompts.deletePrompt(id);
 		}
 	}
 	const others = answered.read().filter((id) => id !== userId);
@@ -60,12 +67,13 @@ export async function answerNoAccountPrompt(
 }
 
 /**
- * Deletes the account's chats and workspaces from this browser, leaving chats made signed out alone
- * (in an account's workspace, they stay as chats of their own).
+ * Deletes the account's chats, workspaces and saved prompts from this browser, leaving those made
+ * signed out alone (in an account's workspace, they stay as chats of their own).
  */
 export async function removeAccountChats(
 	userId: string,
 	store: ChatStore = chatStore(),
+	prompts: PromptStore = promptStore(),
 ): Promise<void> {
 	const owned = chatsOwnedBy(await store.listChats(), userId).map(
 		(chat) => chat.id,
@@ -74,4 +82,6 @@ export async function removeAccountChats(
 	const workspaces = chatsOwnedBy(await store.listWorkspaces(), userId);
 	for (const { id } of workspaces) await store.deleteWorkspace(id);
 	await dropDeletedPanes(owned, store);
+	const ownPrompts = chatsOwnedBy(await prompts.listPrompts(), userId);
+	for (const { id } of ownPrompts) await prompts.deletePrompt(id);
 }

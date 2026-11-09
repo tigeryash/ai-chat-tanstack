@@ -75,6 +75,7 @@ before changing code that uses that feature from elsewhere**, too.
 | `src/lib/chat/` | AI SDK chat in the browser, chat sessions, transport | Never `openChat(id)` in render for a saved chat; use `openSavedChat` |
 | `src/lib/workspaces/` | Multi-pane workspaces, pane sync | Panes hold their own model choice |
 | `src/lib/params/` | Per-model settings | React Compiler memoization trap |
+| `src/lib/prompts/` | Prompt library, versions, diff, apply | Prompt text is content (hard rule 4) |
 | `src/lib/security/` | CSP, security headers | New third-party origins go in `csp.ts` or the provider registry |
 | `src/lib/models/` | Model catalog, runnability | |
 | `src/lib/local-endpoints/` | LM Studio / Ollama endpoints | localhost and 127.0.0.1 only |

@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from "vitest";
+import { createDexiePromptStore } from "@/lib/prompts/prompt-store";
 import { createDexieChatStore } from "@/lib/storage/dexie-chat-store";
 import { openTestDatabase, textMessage } from "@/lib/storage/test-support";
 import { initialPanes } from "@/lib/workspaces/pane-layout";
@@ -8,7 +9,19 @@ import { answerNoAccountPrompt, removeAccountChats } from "./chat-ownership";
 // Workspaces follow their chats on every answer (Yash, 2026-11-07; quality audit Q2, W4).
 
 async function setup() {
-	const store = createDexieChatStore({ db: openTestDatabase() });
+	const db = openTestDatabase();
+	const store = createDexieChatStore({ db });
+	const prompts = createDexiePromptStore({ db });
+	for (const ownerId of [null, "user-a", "user-b"]) {
+		await prompts.createPrompt({
+			name: `By ${ownerId}`,
+			tags: [],
+			text: "Be brief.",
+			ownerId,
+		});
+	}
+	const promptOwners = async () =>
+		(await prompts.listPrompts()).map((prompt) => prompt.ownerId).sort();
 	const chats = {
 		solo: null,
 		a1: null,
@@ -34,29 +47,32 @@ async function setup() {
 		Object.fromEntries(
 			(await store.listChats()).map((chat) => [chat.id, chat.ownerId]),
 		);
-	return { store, owners };
+	return { store, owners, prompts, promptOwners };
 }
 
 beforeEach(() => localStorage.clear());
 
 describe("chat ownership with workspaces", () => {
 	it('"add" moves no-account workspaces to the account with their chats', async () => {
-		const { store, owners } = await setup();
-		await answerNoAccountPrompt("add", "user-a", store);
+		const { store, owners, prompts, promptOwners } = await setup();
+		await answerNoAccountPrompt("add", "user-a", store, prompts);
 		expect((await store.getWorkspace("no-account"))?.ownerId).toBe("user-a");
 		expect(await owners()).toMatchObject({ a1: "user-a", other: "user-b" });
+		expect(await promptOwners()).toEqual(["user-a", "user-a", "user-b"]);
 	});
 
 	it('"keep" leaves them', async () => {
-		const { store } = await setup();
-		await answerNoAccountPrompt("keep", "user-a", store);
+		const { store, prompts, promptOwners } = await setup();
+		await answerNoAccountPrompt("keep", "user-a", store, prompts);
 		expect((await store.getWorkspace("no-account"))?.ownerId).toBeNull();
+		expect(await promptOwners()).toEqual([null, "user-a", "user-b"]);
 	});
 
 	it('"delete" deletes them, keeping panes of an account\'s chats', async () => {
-		const { store, owners } = await setup();
-		await answerNoAccountPrompt("delete", "user-a", store);
+		const { store, owners, prompts, promptOwners } = await setup();
+		await answerNoAccountPrompt("delete", "user-a", store, prompts);
 		expect(await owners()).toEqual({ mine: "user-a", other: "user-b" });
+		expect(await promptOwners()).toEqual(["user-a", "user-b"]);
 		expect((await store.getWorkspace("no-account"))?.panes).toEqual([
 			{ chatId: "other", size: 100, synced: true },
 		]);
@@ -67,13 +83,14 @@ describe("chat ownership with workspaces", () => {
 	});
 
 	it("removing the account's chats deletes its workspaces and their panes elsewhere", async () => {
-		const { store, owners } = await setup();
+		const { store, owners, prompts, promptOwners } = await setup();
 		await store.saveWorkspace({
 			id: "mixed",
 			ownerId: null,
 			panes: initialPanes(["mine", "a1"]),
 		});
-		await removeAccountChats("user-a", store);
+		await removeAccountChats("user-a", store, prompts);
+		expect(await promptOwners()).toEqual([null, "user-b"]);
 		expect(await store.getWorkspace("account")).toBeUndefined();
 		expect(await owners()).not.toHaveProperty("mine");
 		expect(await owners()).toHaveProperty("solo", null);
