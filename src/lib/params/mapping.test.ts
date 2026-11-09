@@ -41,7 +41,7 @@ describe("toCallParams", () => {
 				min_p: 0.05,
 				repetition_penalty: 1.1,
 				reasoning: { effort: "high" },
-				verbosity: "low",
+				textVerbosity: "low",
 			},
 		});
 	});
