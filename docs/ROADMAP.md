@@ -49,14 +49,6 @@ at once), then turn its findings into small refactor slices.
 Only what's still open. When one is done, tick it, add a dated note, and move it to
 [Done owner to-dos](#done-owner-to-dos) at the end of this file.
 
-- [ ] After 2.4b is deployed: on `www.highelollms.com`, open the sliders button next to the model for a few models
-  (one Anthropic, one OpenAI, one open-weights model through OpenRouter, and a local one), set each shown
-  control to its lowest and highest value, send, and note any error. e2e only checks requests against a fake
-  OpenRouter.
-  *2026-10-31:* the right controls show: the LM Studio model gets the sampling settings; Claude Opus 5.5 via
-  OpenRouter shows only max tokens, stop sequences, reasoning effort and verbosity (the 2.4a probe found OpenRouter
-  rejects temperature, top_p and top_k for it). Still to do: lowest/highest value with a send, plus an OpenAI and an
-  open-weights model.
 - [ ] Composer restore: on `www.highelollms.com`, open `/new` in light and dark and compare the composer with
   your original (hover the paperclip, Send and voice chat, attach a file, type a few lines). Screenshot tests now
   lock its look (hard rule 8), so anything off needs your call before it's fixed.
@@ -692,3 +684,17 @@ Finished owner to-dos, oldest first, kept for their notes.
   browser profile (or after clearing site data), save the first OpenRouter key (paste or Connect OpenRouter), go
   back to a chat without reloading, and check the picker's "Run with" light turns green. *Checked 2026-10-29:*
   the test notification appears once macOS allows the browser, and a re-added key turns the light green.
+- [x] After 2.4b is deployed: on `www.highelollms.com`, open the sliders button next to the model for a few models
+  (one Anthropic, one OpenAI, one open-weights model through OpenRouter, and a local one), set each shown
+  control to its lowest and highest value, send, and note any error. e2e only checks requests against a fake
+  OpenRouter.
+  *2026-10-31:* the right controls show: the LM Studio model gets the sampling settings; Claude Opus 5.5 via
+  OpenRouter shows only max tokens, stop sequences, reasoning effort and verbosity (the 2.4a probe found OpenRouter
+  rejects temperature, top_p and top_k for it). Still to do: lowest/highest value with a send, plus an OpenAI and an
+  open-weights model.
+  *Done 2026-11-09 (agent, preview browser, Yash's OpenRouter key and LM Studio):* Claude Opus 5.5, GPT-6.1 Sol,
+  DeepSeek V4.1 Flash (open weights) and LM Studio's `google/gemma-4-26b-a4b`, every shown control at its lowest
+  and highest value, one send each: every request returned 200. The sliders reach their exact min and max from
+  either end of the track and the number boxes follow. Found: verbosity is never in the request body (Opus and
+  GPT, low and high), although `src/lib/params/mapping.ts` adds it for OpenRouter; LM Studio's embedding model
+  shows in the picker as a chat model; "Thought for 1 seconds"; a stopped reply loses its cost in the footer.
