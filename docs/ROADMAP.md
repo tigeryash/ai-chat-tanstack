@@ -58,13 +58,8 @@ Only what's still open. When one is done, tick it, add a dated note, and move it
   "install `@vercel/analytics`" prompt can be ignored: both packages are already in the app (`src/lib/analytics/vercel.ts`).
   Still to do: a visit in the Analytics tab, and no `_vercel` lines in the `[csp]` log. A browser sending Global
   Privacy Control or Do Not Track, or with Settings → Analytics off, records nothing.
-- [ ] After 1.9 is deployed: on `www.highelollms.com`, with two real accounts (say email and GitHub). Signed out,
-  make a chat. Sign in as the first: the "chats from before you signed in" question appears; choose Keep, make a
-  chat, sign out (it disappears, the signed-out one stays). Sign in as the second: answer the question, and check
-  the first account's chat isn't listed and its URL shows "not found". Sign back in as the first: its chat is
-  back. Then try "Sign out and remove my chats from this device". e2e uses stubbed sessions, not real sign-ins.
-  *2026-10-31:* with one account, the question appeared after sign-in and signing out hid the account's chats.
-  Still to do: the second account, and "Sign out and remove my chats from this device".
+  *2026-11-09:* the Analytics tab shows visits (15 visitors, 30 page views over 7 days). Still to do: the `[csp]`
+  check, which waits on the CSP to-do below (Hobby keeps runtime logs for 1 hour).
 - [ ] Legal drafts (7.1): create `support@highelollms.com` (free forwarding to your inbox works, e.g. Cloudflare
   Email Routing); the privacy policy and terms already give it as the contact. They name the operator as "the
   developer, an individual based in Ontario"; register a business name or incorporate before charging money, then
@@ -72,6 +67,10 @@ Only what's still open. When one is done, tick it, add a dated note, and move it
   the privacy policy says Convex covers EU/UK transfers in it. (Vercel's DPA covers only Pro, but Vercel is
   certified under the EU-U.S. Data Privacy Framework, which the policy cites instead.) A lawyer's review is worth it before charging
   money. Add `https://www.highelollms.com/privacy` and `/terms` to Google's OAuth consent screen.
+  *2026-11-09:* Convex's DPA is automatic: it "forms part of" the customer agreement, and executing that agreement
+  counts as executing the EU/UK Standard Contractual Clauses, so nothing to sign. The privacy and terms URLs are on
+  Google's consent screen and Discord's app; GitHub OAuth apps have no field for them. Still to do: the support
+  address, and the business name and lawyer's review before charging money.
 - [ ] Enforce the strict CSP (quality audit G1): after a week of real use of production, signed in and chatting
   included, search Vercel's logs (Project → Logs) for `[csp]` lines and tell an agent what you find (none, or the
   directive, blocked origin and page of each). With none, the agent sets `ENFORCE_STRICT_CSP = true` in
@@ -706,6 +705,16 @@ Finished owner to-dos, oldest first, kept for their notes.
   lock its look (hard rule 8), so anything off needs your call before it's fixed.
   *Checked 2026-11-09:* matches Yash's original. It never had a dark design; a dark version (and another idea
   Yash has for it) waits for its own slice, with his approval first (hard rule 8).
+- [x] After 1.9 is deployed: on `www.highelollms.com`, with two real accounts (say email and GitHub). Signed out,
+  make a chat. Sign in as the first: the "chats from before you signed in" question appears; choose Keep, make a
+  chat, sign out (it disappears, the signed-out one stays). Sign in as the second: answer the question, and check
+  the first account's chat isn't listed and its URL shows "not found". Sign back in as the first: its chat is
+  back. Then try "Sign out and remove my chats from this device". e2e uses stubbed sessions, not real sign-ins.
+  *2026-10-31:* with one account, the question appeared after sign-in and signing out hid the account's chats.
+  Still to do: the second account, and "Sign out and remove my chats from this device".
+  *Done 2026-11-09:* with an email account and a Google account, signed-out chat kept, the email account's chat
+  hidden from the Google account (its URL "not found") and back on signing in again, and "Sign out and remove my
+  chats from this device" left the sidebar empty.
 - [x] After the old Convex chat backend is deleted (quality audit D1): its tables are still in `convex/schema.ts`
   but nothing reads or writes them. Check prod's row counts for `conversations`, `conversationParticipants`,
   `messages`, `attachments`, `messagePins` and `usageEvents` (`bunx convex data <table> --prod`, or the dashboard),
