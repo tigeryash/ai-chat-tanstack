@@ -16,6 +16,8 @@ import { openTestDatabase, textMessage, tickingClock } from "./test-support";
 const PNG =
 	"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgYGD4DwABBAEAwS2OUAAAAABJRU5ErkJggg==";
 const PDF = "data:application/pdf;base64,JVBERi0xLjQK";
+// A text file (roadmap 1.6b): "hi\n", stored like any other attachment.
+const TXT = "data:text/plain;base64,aGkK";
 
 function withFiles(id: string, ...urls: string[]): UIMessage {
 	return {
@@ -134,14 +136,15 @@ describe("DexieChatStore attachments", () => {
 
 	it("exports files inline and imports them back into the table", async () => {
 		const { store } = setup();
-		const messages = [withFiles("m1", PNG)];
+		const messages = [withFiles("m1", PNG, TXT)];
 		await store.saveMessages("c1", messages, null);
 		const exported = await exportChats(store, null);
 		expect(exported.json).toContain(PNG);
+		expect(exported.json).toContain(TXT);
 
 		const other = setup();
 		await importChats(other.store, exported.json, null);
-		expect(await other.db.attachments.count()).toBe(1);
+		expect(await other.db.attachments.count()).toBe(2);
 		expect((await other.store.getChat("c1"))?.messages).toEqual(messages);
 	});
 });

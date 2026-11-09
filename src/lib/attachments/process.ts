@@ -1,13 +1,18 @@
 import { logError } from "@/lib/log";
 import { isImage, readAsDataUrl } from "./file-object";
+import { isTextFile, readTextFile } from "./text-file";
 
 /**
- * Shrinks images and reads the file as a data URL. browser-image-compression is loaded on the
+ * Shrinks images, checks text files are text (1.6b), and reads the file as a data URL. browser-image-compression is loaded on the
  * first attach, so it stays out of every chat's first load.
  */
 export async function processAttachment(
 	file: File,
 ): Promise<{ file: File; base64: string }> {
+	if (!isImage(file) && file.type !== "application/pdf" && isTextFile(file)) {
+		const text = await readTextFile(file);
+		return { file: text, base64: await readAsDataUrl(text) };
+	}
 	// GIFs skip it: compressing would flatten an animation to one frame.
 	const processed =
 		isImage(file) && file.type !== "image/gif"

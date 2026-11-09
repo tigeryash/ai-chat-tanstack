@@ -2,13 +2,18 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { toFileObject, toFilePart } from "./file-object";
+import { AttachmentRefusal } from "./text-file";
 import { useAttachments } from "./use-attachments";
 
 vi.mock("./process", () => ({
-	processAttachment: async (file: File) => ({
-		file,
-		base64: "data:;base64,",
-	}),
+	processAttachment: async (file: File) => {
+		if (file.name === "binary.txt") {
+			throw new AttachmentRefusal(
+				"binary.txt isn't a UTF-8 text file, so it wasn't attached.",
+			);
+		}
+		return { file, base64: "data:;base64," };
+	},
 }));
 
 let created = 0;
@@ -50,7 +55,7 @@ describe("useAttachments", () => {
 
 		expect(result.current.files).toHaveLength(1);
 		expect(onErrors).toHaveBeenCalledWith([
-			"app.exe can't be attached. Attach images (PNG, JPEG, WebP, GIF) or PDFs.",
+			"app.exe can't be attached. Attach images (PNG, JPEG, WebP, GIF), PDFs, or text and code files.",
 		]);
 		await waitFor(() =>
 			expect(result.current.files[0]?.isProcessing).toBe(false),
@@ -74,6 +79,20 @@ describe("useAttachments", () => {
 		expect(result.current.files).toEqual([]);
 		expect(onErrors).toHaveBeenCalledWith([
 			"This model can't read images, so a.png wasn't attached.",
+		]);
+	});
+
+	it("drops a file that turns out not to be text, with the reason (1.6b)", async () => {
+		const onErrors = vi.fn();
+		const { result } = renderHook(() => useAttachments({ onErrors }));
+		await act(() =>
+			result.current.add([
+				new File(["x"], "binary.txt", { type: "text/plain" }),
+			]),
+		);
+		expect(result.current.files).toEqual([]);
+		expect(onErrors).toHaveBeenLastCalledWith([
+			"binary.txt isn't a UTF-8 text file, so it wasn't attached.",
 		]);
 	});
 

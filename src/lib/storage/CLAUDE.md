@@ -24,4 +24,5 @@ Notes for working in this folder. The root [CLAUDE.md](/CLAUDE.md) (commands, ha
   `attachment:<chatId>/<messageId>/<index>`. `writeChat` swaps them out and deletes files nothing points to;
   `getChat` swaps them back (a missing one is dropped), so exports carry the files. `deleteChat` deletes them, so
   anything that removes chats through the ChatStore (sign-out removal included) removes their files. Never log or
-  `track()` their contents.
+  `track()` their contents. Text and code files (1.6b) are stored the same way; only the transport turns them into
+  text parts (`src/lib/attachments/text-file.ts`).

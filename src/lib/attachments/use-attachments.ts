@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { logError } from "@/lib/log";
 import { type FileObject, revokePreview, toFileObject } from "./file-object";
 import { processAttachment } from "./process";
+import { AttachmentRefusal } from "./text-file";
 import { type AttachmentSupport, checkAttachments } from "./validate";
 
 export interface UseAttachmentsOptions {
@@ -56,8 +57,13 @@ export function useAttachments({
 			live.current.set(attachment.id, done);
 			setFiles((prev) => prev.map((f) => (f.id === attachment.id ? done : f)));
 		} catch (error) {
-			logError("Reading an attachment failed", error);
 			drop(attachment.id);
+			// A refusal (not text) is the file, not a fault, so it isn't logged.
+			if (error instanceof AttachmentRefusal) {
+				onErrors?.([error.message]);
+				return;
+			}
+			logError("Reading an attachment failed", error);
 			onErrors?.([`${attachment.file.name} couldn't be read.`]);
 		}
 	};

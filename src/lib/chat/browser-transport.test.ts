@@ -225,6 +225,42 @@ describe("BrowserChatTransport settings (roadmap 2.4b)", () => {
 		]);
 	});
 
+	it("sends attached text and code files as text parts, so any model reads them (roadmap 1.6b)", async () => {
+		const { model, calls } = recordingModel();
+		await collect(
+			await new BrowserChatTransport(async () => model).sendMessages({
+				trigger: "submit-message",
+				chatId: "c1",
+				messageId: undefined,
+				abortSignal: undefined,
+				body: SELECTION,
+				messages: [
+					{
+						id: "u1",
+						role: "user",
+						parts: [
+							{
+								type: "file",
+								mediaType: "text/plain",
+								filename: "main.ts",
+								url: `data:text/plain;base64,${btoa("const a = 1;")}`,
+							},
+							{ type: "text", text: "Review this" },
+						],
+					},
+				],
+			}),
+		);
+		const [options] = calls();
+		expect(options?.prompt[0]?.content).toEqual([
+			expect.objectContaining({
+				type: "text",
+				text: "File: main.ts\n```ts\nconst a = 1;\n```",
+			}),
+			expect.objectContaining({ type: "text", text: "Review this" }),
+		]);
+	});
+
 	it("sends no settings when the body has none or bad ones", async () => {
 		const { model, calls } = recordingModel();
 		const transport = new BrowserChatTransport(async () => model);
