@@ -12,3 +12,5 @@ Notes for working in this folder. The root [CLAUDE.md](/CLAUDE.md) (commands, ha
 - **Reply metadata** (`ReplyMetadata` in `browser-transport.ts`): model, host and cost (`reply-host.ts`, 2.2b),
   tokens, TTFT and tokens/sec (`reply-stats.ts`, 2.5; timed in the page from the request). Saved and imported
   chats are untrusted, so read it back through `replySummary` / `readReplyStats`; `chat-usage.ts` totals a chat.
+  Under a reply only the route and cost show; the "⋯" popover lists everything from `replyDetails`
+  (`reply-details.ts`, 2.5b), which builds on both.

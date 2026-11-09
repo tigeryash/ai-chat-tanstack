@@ -1,7 +1,7 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "./support/fixtures";
 
-// Roadmap 2.5: tokens, TTFT, tokens/sec and cost per reply, and the chat's total per provider, from a
+// Roadmap 2.5 and 2.5b: tokens, TTFT, tokens/sec and cost per reply (behind its ⋯ button), and the chat's total per provider, from a
 // fixture chat's saved metadata (/e2e/usage, src/lib/chat/usage.fixtures.ts).
 
 test.beforeEach(async ({ page }) => {
@@ -9,21 +9,49 @@ test.beforeEach(async ({ page }) => {
 	await expect(page.locator("main[data-hydrated='true']")).toBeAttached();
 });
 
-test("each reply shows its tokens, TTFT and speed, with the split on hover", async ({
+/** The rows of the open "⋯" popover, as "Label: value". */
+function detailRows(page: Page) {
+	return page
+		.locator("[data-usage='reply'] [data-reply-detail]")
+		.evaluateAll((rows) =>
+			rows.map(
+				(row) =>
+					`${row.querySelector("dt")?.textContent}: ${row.querySelector("dd")?.textContent}`,
+			),
+		);
+}
+
+test("a reply's tokens and timings sit behind its ⋯ button, with the host and cost", async ({
 	page,
 }) => {
-	const stats = page.locator("[data-usage='reply']");
-	const items = (n: number) => stats.nth(n).locator("[data-usage-item]");
-	await expect(stats).toHaveCount(3);
-	await expect(items(0)).toHaveText(["1.5K tokens", "TTFT 420 ms", "52 tok/s"]);
-	await expect(items(1)).toHaveText(["1.8K tokens", "TTFT 1.8 s", "120 tok/s"]);
-	await expect(items(2)).toHaveText(["2.1K tokens", "TTFT 95 ms"]);
-	await stats.first().hover();
-	await expect(
-		page.getByText(
-			"1,200 input + 340 output (90 reasoning) tokens · 420 ms to first token · 52 tok/s after it",
-		),
-	).toBeVisible();
+	// Roadmap 2.5b: nothing but the route and cost shows inline.
+	const footers = page.locator("[data-slot='message-footer']");
+	await expect(footers).toHaveCount(3);
+	await expect(footers.first()).not.toContainText("tokens");
+	await expect(footers.first()).not.toContainText("TTFT");
+	await expect(page.locator("[data-usage='reply']")).toHaveCount(0);
+
+	const more = page.getByRole("button", { name: "Reply details" });
+	await expect(more).toHaveCount(3);
+	await more.first().click();
+	await expect(page.getByText("Reply details", { exact: true })).toBeVisible();
+	expect(await detailRows(page)).toEqual([
+		"Model: deepseek/deepseek-v4.1-flash",
+		"Host: OpenRouter → DeepInfra",
+		"Cost: $0.0042",
+		"Tokens: 1,540",
+		"Input: 1,200",
+		"Output: 340 (90 reasoning)",
+		"Time to first token: 420 ms",
+		"Speed: 52 tok/s",
+	]);
+	await page.keyboard.press("Escape");
+	await expect(page.locator("[data-usage='reply']")).toHaveCount(0);
+
+	await more.nth(1).click();
+	await expect
+		.poll(() => detailRows(page))
+		.toContain("Cost: ~$0.0011 (estimated from list prices)");
 });
 
 test("the header shows the chat's cost, and the popover splits it by provider", async ({
@@ -43,57 +71,29 @@ test("the header shows the chat's cost, and the popover splits it by provider", 
 	await expect(page.getByText(/1 reply had no price/)).toBeVisible();
 });
 
-/**
- * Every "·" separator under the replies (a `::before` that sits outside its item), with whether its item
- * starts a wrapped line and whether the overflow clip lets the separator show.
- */
-function separators(page: Page) {
-	return page.locator("[data-slot='message-footer']").evaluateAll((footers) =>
-		footers.flatMap((footer) =>
-			[...footer.querySelectorAll<HTMLElement>("*")].flatMap((item) => {
-				const before = getComputedStyle(item, "::before");
-				if (before.content !== '"·"') return [];
-				let clip = item.parentElement;
-				while (clip && getComputedStyle(clip).overflow !== "hidden") {
-					clip = clip.parentElement;
-				}
-				if (!clip) throw new Error("A separator has no clipping parent");
-				const left = item.getBoundingClientRect().left;
-				const sepRight = left - Number.parseFloat(before.marginRight);
-				const sepLeft = sepRight - Number.parseFloat(before.width);
-				const siblings = [...(item.parentElement?.children ?? [])];
-				const lineStart = Math.min(
-					...siblings.map((el) => el.getBoundingClientRect().left),
-				);
-				return [
-					{
-						text: item.textContent,
-						startsLine: Math.abs(left - lineStart) < 1,
-						shows: sepLeft >= clip.getBoundingClientRect().left,
-					},
-				];
-			}),
-		),
-	);
-}
-
 test.describe("on a phone", () => {
 	test.use({ viewport: { width: 390, height: 844 } });
 
-	test("stats wrap between items, never inside one, and a line never starts with a separator", async ({
+	test("the ⋯ button opens a reply's details from the keyboard", async ({
 		page,
 	}) => {
-		const items = page.locator("[data-usage-item]");
-		await expect(items).toHaveCount(8);
-		for (const item of await items.all()) {
-			const lines = await item.evaluate((el) => el.getClientRects().length);
-			expect(lines).toBe(1);
-		}
-		const seps = await separators(page);
-		// At this width the stats move under the "via …" line, so some separators start a line.
-		expect(seps.some((sep) => sep.startsLine)).toBe(true);
-		for (const sep of seps)
-			expect(sep, sep.text ?? "").toEqual({ ...sep, shows: !sep.startsLine });
+		const more = page.getByRole("button", { name: "Reply details" }).last();
+		await more.focus();
+		await page.keyboard.press("Enter");
+		await expect
+			.poll(() => detailRows(page))
+			.toEqual([
+				"Model: qwen3-8b",
+				"Host: Local",
+				"Cost: No price",
+				"Tokens: 2,050",
+				"Input: 1,900",
+				"Output: 150",
+				"Time to first token: 95 ms",
+			]);
+		// The popover stays inside the phone's width.
+		const box = await page.locator("[data-usage='reply']").boundingBox();
+		expect(box && box.x >= 0 && box.x + box.width <= 390).toBe(true);
 	});
 
 	test("the header keeps only an icon for the chat's usage, which still opens the breakdown", async ({

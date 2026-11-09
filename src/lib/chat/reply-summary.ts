@@ -25,7 +25,7 @@ export interface ReplySummary {
 	details: string;
 }
 
-function hostName(provider: ReplyMetadata["provider"]): string {
+export function hostName(provider: ReplyMetadata["provider"]): string {
 	return provider === LOCAL_PROVIDER ? "Local" : providerName(provider);
 }
 
