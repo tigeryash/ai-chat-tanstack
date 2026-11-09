@@ -130,12 +130,13 @@ describe("chat database versions", () => {
 			]),
 		);
 		expect({ version: db.verno, schema }).toEqual({
-			version: 5,
+			version: 6,
 			schema: {
 				branches: ["chatId"],
 				chats: ["id", "updatedAt"],
 				messages: ["[chatId+position]"],
 				prefs: ["key"],
+				prompts: ["id", "updatedAt"],
 				workspaces: ["id", "updatedAt"],
 			},
 		});

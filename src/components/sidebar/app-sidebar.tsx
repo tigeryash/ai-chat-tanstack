@@ -1,5 +1,5 @@
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
-import { SquarePenIcon } from "lucide-react";
+import { LibraryBigIcon, SquarePenIcon } from "lucide-react";
 import { useState } from "react";
 import {
 	Sidebar,
@@ -55,6 +55,16 @@ export function AppSidebar() {
 						>
 							<SquarePenIcon />
 							New chat
+						</SidebarMenuButton>
+					</SidebarMenuItem>
+					<SidebarMenuItem>
+						<SidebarMenuButton
+							render={
+								<Link to="/prompts" onClick={() => setOpenMobile(false)} />
+							}
+						>
+							<LibraryBigIcon />
+							Prompts
 						</SidebarMenuButton>
 					</SidebarMenuItem>
 				</SidebarMenu>

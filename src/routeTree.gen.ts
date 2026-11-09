@@ -21,6 +21,7 @@ import { Route as authResetPasswordRouteImport } from './routes/(auth)/reset-pas
 import { Route as authSignupRouteImport } from './routes/(auth)/signup'
 import { Route as dashboardChatIdRouteImport } from './routes/(dashboard)/$chatId'
 import { Route as dashboardNewRouteImport } from './routes/(dashboard)/new'
+import { Route as dashboardPromptsRouteImport } from './routes/(dashboard)/prompts'
 import { Route as dashboardSettingsRouteImport } from './routes/(dashboard)/settings'
 import { Route as ApiCspReportRouteImport } from './routes/api/csp-report'
 import { Route as E2eAnalyticsRouteImport } from './routes/e2e/analytics'
@@ -93,6 +94,11 @@ const dashboardChatIdRoute = dashboardChatIdRouteImport.update({
 const dashboardNewRoute = dashboardNewRouteImport.update({
   id: '/new',
   path: '/new',
+  getParentRoute: () => dashboardRouteRoute,
+} as any)
+const dashboardPromptsRoute = dashboardPromptsRouteImport.update({
+  id: '/prompts',
+  path: '/prompts',
   getParentRoute: () => dashboardRouteRoute,
 } as any)
 const dashboardSettingsRoute = dashboardSettingsRouteImport.update({
@@ -182,6 +188,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof authSignupRoute
   '/$chatId': typeof dashboardChatIdRoute
   '/new': typeof dashboardNewRoute
+  '/prompts': typeof dashboardPromptsRoute
   '/settings': typeof dashboardSettingsRoute
   '/api/csp-report': typeof ApiCspReportRoute
   '/e2e/analytics': typeof E2eAnalyticsRoute
@@ -209,6 +216,7 @@ export interface FileRoutesByTo {
   '/signup': typeof authSignupRoute
   '/$chatId': typeof dashboardChatIdRoute
   '/new': typeof dashboardNewRoute
+  '/prompts': typeof dashboardPromptsRoute
   '/settings': typeof dashboardSettingsRoute
   '/api/csp-report': typeof ApiCspReportRoute
   '/e2e/analytics': typeof E2eAnalyticsRoute
@@ -239,6 +247,7 @@ export interface FileRoutesById {
   '/(auth)/signup': typeof authSignupRoute
   '/(dashboard)/$chatId': typeof dashboardChatIdRoute
   '/(dashboard)/new': typeof dashboardNewRoute
+  '/(dashboard)/prompts': typeof dashboardPromptsRoute
   '/(dashboard)/settings': typeof dashboardSettingsRoute
   '/api/csp-report': typeof ApiCspReportRoute
   '/e2e/analytics': typeof E2eAnalyticsRoute
@@ -268,6 +277,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/$chatId'
     | '/new'
+    | '/prompts'
     | '/settings'
     | '/api/csp-report'
     | '/e2e/analytics'
@@ -295,6 +305,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/$chatId'
     | '/new'
+    | '/prompts'
     | '/settings'
     | '/api/csp-report'
     | '/e2e/analytics'
@@ -324,6 +335,7 @@ export interface FileRouteTypes {
     | '/(auth)/signup'
     | '/(dashboard)/$chatId'
     | '/(dashboard)/new'
+    | '/(dashboard)/prompts'
     | '/(dashboard)/settings'
     | '/api/csp-report'
     | '/e2e/analytics'
@@ -436,6 +448,13 @@ declare module '@tanstack/react-router' {
       path: '/new'
       fullPath: '/new'
       preLoaderRoute: typeof dashboardNewRouteImport
+      parentRoute: typeof dashboardRouteRoute
+    }
+    '/(dashboard)/prompts': {
+      id: '/(dashboard)/prompts'
+      path: '/prompts'
+      fullPath: '/prompts'
+      preLoaderRoute: typeof dashboardPromptsRouteImport
       parentRoute: typeof dashboardRouteRoute
     }
     '/(dashboard)/settings': {
@@ -567,6 +586,7 @@ const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
 interface dashboardRouteRouteChildren {
   dashboardChatIdRoute: typeof dashboardChatIdRoute
   dashboardNewRoute: typeof dashboardNewRoute
+  dashboardPromptsRoute: typeof dashboardPromptsRoute
   dashboardSettingsRoute: typeof dashboardSettingsRoute
   dashboardWWorkspaceIdRoute: typeof dashboardWWorkspaceIdRoute
 }
@@ -574,6 +594,7 @@ interface dashboardRouteRouteChildren {
 const dashboardRouteRouteChildren: dashboardRouteRouteChildren = {
   dashboardChatIdRoute: dashboardChatIdRoute,
   dashboardNewRoute: dashboardNewRoute,
+  dashboardPromptsRoute: dashboardPromptsRoute,
   dashboardSettingsRoute: dashboardSettingsRoute,
   dashboardWWorkspaceIdRoute: dashboardWWorkspaceIdRoute,
 }
