@@ -12,6 +12,7 @@ import type * as auth from "../auth.js";
 import type * as authHelpers from "../authHelpers.js";
 import type * as authMaintenance from "../authMaintenance.js";
 import type * as crons from "../crons.js";
+import type * as cspReports from "../cspReports.js";
 import type * as email from "../email.js";
 import type * as emailGuard from "../emailGuard.js";
 import type * as http from "../http.js";
@@ -47,6 +48,7 @@ declare const fullApi: ApiFromModules<{
   authHelpers: typeof authHelpers;
   authMaintenance: typeof authMaintenance;
   crons: typeof crons;
+  cspReports: typeof cspReports;
   email: typeof email;
   emailGuard: typeof emailGuard;
   http: typeof http;

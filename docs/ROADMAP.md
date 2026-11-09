@@ -75,6 +75,11 @@ Only what's still open. When one is done, tick it, add a dated note, and move it
   included, search Vercel's logs (Project → Logs) for `[csp]` lines and tell an agent what you find (none, or the
   directive, blocked origin and page of each). With none, the agent sets `ENFORCE_STRICT_CSP = true` in
   `src/lib/security/csp.ts`; until then the policy that stops an injected script sending a key elsewhere only reports.
+  Reports are now counted in Convex for 30 days: an agent reads them with `bunx convex run --prod cspReports:list`.
+  The week starts when the CSP report store PR deploys with its secret set. To set it, run once (same value both
+  places): `openssl rand -hex 32`, then `bunx convex env set CSP_REPORT_SECRET <value> --prod` and
+  `vercel env add CSP_REPORT_SECRET production` (or Vercel → Settings → Environment Variables, Production only),
+  and redeploy. Until both are set, reports only reach the 1-hour Vercel log.
 - [ ] After 3.11 is deployed: on `www.highelollms.com`, open Settings → Appearance and make a theme of your own
   (theme, fonts, text size, an accent, a few Advanced colors). Reload and open a chat: the look should be there
   from the first frame, with no flash of the default. Export it, Reset all, then import it back.

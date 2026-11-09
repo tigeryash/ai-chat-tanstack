@@ -1,19 +1,23 @@
+import { pageRoute } from "@/lib/analytics/page-url";
 import { z } from "@/lib/zod";
 
 // Parses what browsers POST to the CSP report endpoint into one short summary per violation. The
 // policy uses `report-uri` (`{ "csp-report": {...} }`, application/csp-report); Reporting API batches
 // (`[{ type: "csp-violation", body: {...} }]`) are read too, for when it moves to `report-to`.
-// Only the directive, the blocked origin, and the page path are kept: a report's `script-sample`
-// and full URLs can quote page content, which never goes in logs (hard rule 4).
+// Only the directive, the blocked origin, and the page's route pattern (`/settings`, `/[chatId]`) are
+// kept: a report's `script-sample` and full URLs can quote page content, which never goes in logs or
+// storage (hard rule 4).
 
 export const MAX_CSP_REPORT_BYTES = 64 * 1024;
 const MAX_VIOLATIONS_PER_REQUEST = 20;
 
 export interface CspViolation {
 	directive: string;
+	/** An origin, or a keyword such as `inline` or `eval`. */
 	blocked: string;
+	/** A route pattern from `pageRoute`, never the real path. */
 	page: string;
-	disposition: string;
+	disposition: "enforce" | "report";
 }
 
 const text = z.string().max(4096).optional();
@@ -78,7 +82,7 @@ function summarize(raw: {
 	return {
 		directive: (raw.directive ?? "unknown").split(" ")[0] ?? "unknown",
 		blocked: blockedSource(raw.blocked),
-		page: pathOf(raw.page),
+		page: routeOf(raw.page),
 		disposition: raw.disposition === "enforce" ? "enforce" : "report",
 	};
 }
@@ -95,12 +99,12 @@ function blockedSource(blocked: string | undefined): string {
 	}
 }
 
-/** Only the path: a query string can hold a reset token or a search. */
-function pathOf(page: string | undefined): string {
-	if (!page) return "unknown";
+/** Only the route: a query string can hold a reset token, and a path can hold a chat id. */
+function routeOf(page: string | undefined): string {
+	if (!page) return "/[unknown]";
 	try {
-		return new URL(page).pathname;
+		return pageRoute(new URL(page).pathname);
 	} catch {
-		return "unparseable";
+		return "/[unparseable]";
 	}
 }

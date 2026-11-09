@@ -37,14 +37,18 @@ self-hosted (`font-src 'self'`):
 - **Report-only:** the full strict policy. `style-src` allows `'unsafe-inline'` because React, Motion and GSAP set
   `style` attributes, which nonces can't cover. `img-src` is `'self' data: blob:`, so no remote images at all.
 - Reports go to `report-uri /api/csp-report`, which logs one `[csp]` line per violation (directive, blocked
-  origin, page path; no query strings or script samples). No `report-to`: when it's present Chrome ignores
+  origin, route pattern such as `/[chatId]`; no query strings or script samples) and forwards the same fields to
+  Convex's `/csp-report` HTTP action (`convex/cspReports.ts`). That action needs `Authorization: Bearer
+  CSP_REPORT_SECRET` (set on the Convex prod deployment and Vercel Production), checks every field is already reduced,
+  and upserts a count per key (at most 500 rows, 20 violations a request); a daily cron deletes rows unseen for 30
+  days. No public function writes it. Read it with `bunx convex run --prod cspReports:list`. No `report-to`: when it's present Chrome ignores
   `report-uri` and queues reports in the Reporting API, which never delivered in testing.
 - Every Playwright test fails on any CSP violation, report-only ones included (`e2e/support/fixtures.ts`), so the
   report stays clean in normal use.
 - **To enforce:** set `ENFORCE_STRICT_CSP = true` in `csp.ts` (quality audit G1, off as of 2026-10-30). It sends
   the strict policy as `Content-Security-Policy` and keeps a report-only copy (new directives get trialled there
-  first; until then each violation is reported twice, once per `disposition`). Flip it once Vercel's logs show no
-  `[csp]` lines after a week of real use, signed-in chat included (Owner to-do in the roadmap). The Playwright
+  first; until then each violation is reported twice, once per `disposition`). Flip it once `cspReports:list` (or Vercel's logs) shows no
+  violations after a week of real use, signed-in chat included (Owner to-do in the roadmap). The Playwright
   project `csp-enforced` already runs the chat, key, local-model and XSS specs with the strict policy enforced
   (in `VITE_E2E` builds an e2e-only cookie makes `src/start.ts` enforce it; `e2e/csp-enforced.spec.ts` checks it
   blocks), so the flip needs no test changes.
