@@ -94,6 +94,27 @@ describe("BrowserChatTransport", () => {
 	});
 });
 
+describe("BrowserChatTransport usage (roadmap 2.5)", () => {
+	it("records the reply's tokens, TTFT and tokens/sec on its metadata", async () => {
+		let tick = 0;
+		const now = () => (tick += 100);
+		const transport = new BrowserChatTransport(
+			async () => mockChatModel({ reasoning: ["hmm"], text: ["Hel", "lo"] }),
+			now,
+		);
+		const chunks = await collect(await send(transport, SELECTION));
+		const finish = chunks.find((chunk) => chunk.type === "finish");
+		// Started at 100, first token (the reasoning) at 200, finished at 300: 5 tokens in 0.1 s.
+		expect(finish).toMatchObject({
+			messageMetadata: {
+				usage: { inputTokens: 3, outputTokens: 5 },
+				ttftMs: 100,
+				tokensPerSecond: 50,
+			},
+		});
+	});
+});
+
 describe("resolveProviderModel", () => {
 	it("asks for a key in Settings when there isn't one", async () => {
 		await expect(resolveProviderModel(SELECTION)).rejects.toThrow(

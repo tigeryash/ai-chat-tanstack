@@ -469,6 +469,8 @@ Only what's still open. When one is done, tick it, add a dated note, and move it
   against real models is an owner to-do.
 - [ ] **2.5 Usage and cost display.** Tokens, TTFT, tokens/sec, and estimated cost per message, chat, and provider,
   from catalog pricing. It's the user's money, so make it visible.
+  *Done when:* Vitest covers the timing, token and cost totals with mock-model streams and a fake clock, and e2e
+  shows each reply's stats and the chat's per-provider total on a fixture chat and on a live mock reply.
 - [ ] **2.6 (Stretch) In-browser models.** WebGPU (transformers.js / WebLLM) and browser built-in AI (e.g. Chrome's
   Prompt API) as extra connection types.
 

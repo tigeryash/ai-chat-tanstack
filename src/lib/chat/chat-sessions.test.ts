@@ -49,7 +49,11 @@ describe("chat sessions", () => {
 				expect.objectContaining({ type: "text", text: "Hi there" }),
 			]),
 		);
-		expect(saved.messages[1].metadata).toEqual(SELECTION);
+		// The reply keeps its model, and its usage (roadmap 2.5).
+		expect(saved.messages[1].metadata).toMatchObject({
+			...SELECTION,
+			usage: { inputTokens: 3, outputTokens: 5 },
+		});
 		expect(openChat(chat.id)).toBe(chat);
 	});
 

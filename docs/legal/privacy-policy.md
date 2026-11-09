@@ -27,7 +27,7 @@ Most of what the app stores never leaves your device. It lives in your browser's
 (IndexedDB, localStorage and sessionStorage), and anyone with access to your browser profile can read it.
 
 - **Chats.** Titles, messages (text, reasoning, files, tool calls and results), which model and host answered
-  each reply and its cost, timestamps, whether a chat is pinned, and which account on this device made it.
+  each reply, its cost, token counts and speed, timestamps, whether a chat is pinned, and which account on this device made it.
   Stored in IndexedDB. The app asks your browser to keep this data, but browsers can still clear it: Safari may
   delete it after 7 days without a visit. Exporting your chats is the backstop.
 - **API keys.** "This session only" keeps a key in the tab's memory until you reload or close the tab.

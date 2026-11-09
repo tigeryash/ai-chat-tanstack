@@ -26,6 +26,7 @@ import {
 	providerName,
 } from "./model-selection";
 import { type ReplyHost, replyHostOf } from "./reply-host";
+import { createReplyClock, type ReplyStats } from "./reply-stats";
 import { routingOptions } from "./routing-options";
 
 // The chat engine's transport (roadmap decision 7): `useChat` hands it the messages, and it runs
@@ -36,9 +37,10 @@ import { routingOptions } from "./routing-options";
 
 /**
  * Saved on each reply, so a chat shows which model wrote what, which host answered (roadmap 2.2b)
- * and what it cost. Every field after `gatewayId` is optional, so older replies still read.
+ * what it cost, and its tokens, TTFT and tokens/sec (roadmap 2.5). Every field after `gatewayId` is
+ * optional, so older replies still read.
  */
-export interface ReplyMetadata extends ReplyHost {
+export interface ReplyMetadata extends ReplyHost, ReplyStats {
 	provider: ModelSelection["provider"];
 	model: string;
 	/** The catalog model, when it was picked from the catalog. */
@@ -95,10 +97,15 @@ function parseSelection(body: object | undefined): ModelSelection {
 
 export class BrowserChatTransport implements ChatTransport<UIMessage> {
 	readonly #resolveModel: ResolveModel;
+	readonly #now: (() => number) | undefined;
 
-	/** `resolveModel` swaps in a mock model for tests. */
-	constructor(resolveModel: ResolveModel = resolveProviderModel) {
+	/** `resolveModel` swaps in a mock model for tests, and `now` a clock for timing replies. */
+	constructor(
+		resolveModel: ResolveModel = resolveProviderModel,
+		now?: () => number,
+	) {
 		this.#resolveModel = resolveModel;
+		this.#now = now;
 	}
 
 	async sendMessages({
@@ -129,11 +136,15 @@ export class BrowserChatTransport implements ChatTransport<UIMessage> {
 		};
 
 		try {
+			const model = await this.#resolveModel(selection);
+			const modelMessages = await convertToModelMessages(messages);
+			// Started once the key is read and the messages are converted, so TTFT is the provider's.
+			const clock = createReplyClock(this.#now);
 			const result = streamText({
-				model: await this.#resolveModel(selection),
+				model,
 				...call.settings,
 				...(systemPrompt !== undefined && { system: systemPrompt }),
-				messages: await convertToModelMessages(messages),
+				messages: modelMessages,
 				providerOptions: mergeProviderOptions(
 					routingOptions(selection),
 					call.providerOptions,
@@ -145,6 +156,8 @@ export class BrowserChatTransport implements ChatTransport<UIMessage> {
 				sendSources: true,
 				onError,
 				messageMetadata: ({ part }): Partial<ReplyMetadata> | undefined => {
+					const stats = clock(part);
+					if (stats) return stats;
 					if (part.type === "start") {
 						return {
 							provider: selection.provider,
