@@ -10,6 +10,7 @@ import { RemovedModelBanner } from "@/components/models/removed-model-banner";
 import { useChatModel } from "@/components/models/use-chat-model";
 import { SettingsPanel } from "@/components/params/settings-panel";
 import { useChatParams } from "@/components/params/use-chat-params";
+import { supportFromModalities } from "@/lib/attachments/validate";
 import { storeChatModelChoice } from "@/lib/chat/chat-model-choice";
 import { LOCAL_PROVIDER } from "@/lib/chat/model-selection";
 import { useLocalEndpointFor } from "@/lib/local-endpoints/endpoints";
@@ -72,6 +73,7 @@ export function ChatScreen({
 			empty={empty}
 			sync={sync}
 			paneCount={paneCount}
+			attachmentSupport={supportFromModalities(chosenModel?.inputModalities)}
 			header={
 				<>
 					{/* A narrow pane (roadmap 3.1) leaves out "via host" so the model name has room. */}

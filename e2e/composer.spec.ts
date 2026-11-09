@@ -76,7 +76,7 @@ test("files dropped on the composer are attached", async ({ page }) => {
 	const dataTransfer = await page.evaluateHandle(() => {
 		const transfer = new DataTransfer();
 		transfer.items.add(
-			new File(["hello"], "notes.txt", { type: "text/plain" }),
+			new File(["%PDF-1.4"], "notes.pdf", { type: "application/pdf" }),
 		);
 		return transfer;
 	});
@@ -84,7 +84,7 @@ test("files dropped on the composer are attached", async ({ page }) => {
 	await page.locator("form").dispatchEvent("drop", { dataTransfer });
 
 	await expect(
-		page.getByRole("button", { name: "Remove notes.txt" }),
+		page.getByRole("button", { name: "Remove notes.pdf" }),
 	).toBeAttached();
 });
 

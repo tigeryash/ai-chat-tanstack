@@ -19,3 +19,9 @@ Notes for working in this folder. The root [CLAUDE.md](/CLAUDE.md) (commands, ha
   cleaned on read like `settings`; `saveMessages` keeps them. Open chats keep theirs in `src/lib/chat/chat-votes.ts`.
 - **Prompts** (roadmap 3.6a): the `prompts` table (Dexie version 6) belongs to `src/lib/prompts/`, with its own
   format number; read it through `prompt-store.ts`, not this folder's ChatStore.
+- **Attachments** (roadmap 1.6, `attachments.ts`): in the app a file part's `url` is a data URL; in IndexedDB the
+  bytes sit in the `attachments` table (Dexie version 7) and the stored part says
+  `attachment:<chatId>/<messageId>/<index>`. `writeChat` swaps them out and deletes files nothing points to;
+  `getChat` swaps them back (a missing one is dropped), so exports carry the files. `deleteChat` deletes them, so
+  anything that removes chats through the ChatStore (sign-out removal included) removes their files. Never log or
+  `track()` their contents.

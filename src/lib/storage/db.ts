@@ -1,6 +1,7 @@
 import Dexie, { type DexieOptions, type EntityTable, type Table } from "dexie";
 import type { ChatSettings } from "@/lib/params/settings";
 import type { Prompt } from "@/lib/prompts/prompt";
+import type { AttachmentRow } from "./attachments";
 import type { ChatVotes } from "./votes";
 import type { Workspace } from "./workspace";
 
@@ -84,6 +85,7 @@ export type ChatDatabase = Dexie & {
 	workspaces: EntityTable<WorkspaceRow, "id">;
 	branches: EntityTable<BranchRow, "chatId">;
 	prompts: EntityTable<PromptRow, "id">;
+	attachments: EntityTable<AttachmentRow, "id">;
 };
 
 export function openChatDatabase(
@@ -139,6 +141,16 @@ export function openChatDatabase(
 		workspaces: "id, updatedAt",
 		branches: "chatId",
 		prompts: "id, updatedAt",
+	});
+	// Roadmap 1.6: attached files' bytes (attachments.ts). A new table, so no upgrade: older chats have none.
+	db.version(7).stores({
+		chats: "id, updatedAt",
+		messages: "[chatId+position]",
+		prefs: "key",
+		workspaces: "id, updatedAt",
+		branches: "chatId",
+		prompts: "id, updatedAt",
+		attachments: "id, chatId",
 	});
 	return db;
 }

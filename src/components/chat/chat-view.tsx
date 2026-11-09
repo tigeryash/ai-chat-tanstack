@@ -1,10 +1,11 @@
 import { type Chat, useChat } from "@ai-sdk/react";
-import type { UIMessage } from "ai";
+import type { FileUIPart, UIMessage } from "ai";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import MessagesList from "@/components/chat/chatstuff/messages-list";
 import { Input } from "@/components/chat/input";
 import { Button } from "@/components/ui/button";
 import { track } from "@/lib/analytics/track";
+import type { AttachmentSupport } from "@/lib/attachments/validate";
 import { editMessage, switchBranch } from "@/lib/chat/branching";
 import { useChatBranches } from "@/lib/chat/chat-branches";
 import {
@@ -30,6 +31,8 @@ export interface ChatViewProps {
 	sync?: { hub: PaneSync; synced: boolean };
 	/** How many panes the chat is shown with (for `chat_sent`). */
 	paneCount?: number;
+	/** What the model reads (roadmap 1.6). Absent: unknown, so any accepted file can be attached. */
+	attachmentSupport?: AttachmentSupport;
 }
 
 /** At most one render per 50 ms while a reply streams; status changes still land at once. */
@@ -51,6 +54,7 @@ export function ChatView({
 	onSend,
 	sync,
 	paneCount = 1,
+	attachmentSupport,
 }: ChatViewProps) {
 	const { messages, sendMessage, regenerate, stop, status, error } = useChat({
 		chat,
@@ -58,18 +62,21 @@ export function ChatView({
 	});
 	const busy = status === "submitted" || status === "streaming";
 	const options = selection && { body: { ...selection, settings } };
+	// Why attached files were refused (roadmap 1.6). Shown above the composer, not in it (hard rule 8).
+	const [attachmentErrors, setAttachmentErrors] = useState<string[]>([]);
 
-	const trackSent = (provider: string) =>
+	const trackSent = (provider: string, hasAttachment = false) =>
 		track("chat_sent", {
 			providerKind: provider === LOCAL_PROVIDER ? "local" : "hosted",
 			paneCount,
-			hasAttachment: false,
+			hasAttachment,
 		});
-	const send = (text: string) => {
+	const send = (text: string, files: FileUIPart[] = []) => {
 		if (!options) return;
+		setAttachmentErrors([]);
 		// Not awaited: it resolves when the reply finishes, and the composer clears once this returns.
-		sendMessage({ text }, options).catch(logFailure);
-		trackSent(options.body.provider);
+		sendMessage({ text, files }, options).catch(logFailure);
+		trackSent(options.body.provider, files.length > 0);
 		onSend?.();
 	};
 	// A synced pane joins its workspace's hub, which calls the latest `send` (this pane's own model and
@@ -80,7 +87,11 @@ export function ChatView({
 	});
 	const hub = sync?.synced ? sync.hub : undefined;
 	useEffect(
-		() => hub?.join(chat.id, { chat, send: (text) => sendRef.current(text) }),
+		() =>
+			hub?.join(chat.id, {
+				chat,
+				send: (text, files) => sendRef.current(text, files),
+			}),
 		[hub, chat],
 	);
 	const branches = useChatBranches(chat.id);
@@ -165,15 +176,43 @@ export function ChatView({
 					)}
 				</div>
 			)}
+			{attachmentErrors.length > 0 && (
+				<div
+					role="alert"
+					aria-label="Attachments not added"
+					className="mb-3 flex w-full max-w-3xl items-start gap-3 rounded-md border border-destructive/40 px-3 py-2 text-sm text-destructive"
+				>
+					<ul className="flex-1">
+						{attachmentErrors.map((message) => (
+							<li key={message}>{message}</li>
+						))}
+					</ul>
+					<Button
+						size="sm"
+						variant="outline"
+						onClick={() => setAttachmentErrors([])}
+					>
+						Dismiss
+					</Button>
+				</div>
+			)}
 			{/* Inset, so the composer doesn't touch a narrow pane's edges. */}
 			<div className="flex w-full justify-center px-3">
 				{hub ? (
-					<SyncedComposer hub={hub} ready={options !== undefined} />
+					// Synced panes may run models that read different files: checking each one's model is
+					// roadmap 3.3, so a synced composer only checks type, size and count.
+					<SyncedComposer
+						hub={hub}
+						ready={options !== undefined}
+						onAttachmentErrors={setAttachmentErrors}
+					/>
 				) : (
 					<Input
-						onSubmit={async (text) => send(text)}
+						onSubmit={async (text, files) => send(text, files)}
 						isLoading={busy || !options}
 						onStop={busy ? () => stop() : undefined}
+						attachmentSupport={attachmentSupport}
+						onAttachmentErrors={setAttachmentErrors}
 					/>
 				)}
 			</div>
@@ -185,13 +224,22 @@ export function ChatView({
  * A synced pane's composer (decisions 16 and 18): the workspace's shared draft, sending to every synced
  * pane, and a Stop that stops every synced pane that's replying.
  */
-function SyncedComposer({ hub, ready }: { hub: PaneSync; ready: boolean }) {
+function SyncedComposer({
+	hub,
+	ready,
+	onAttachmentErrors,
+}: {
+	hub: PaneSync;
+	ready: boolean;
+	onAttachmentErrors: (errors: string[]) => void;
+}) {
 	const { draft, replying } = usePaneSyncState(hub);
 	return (
 		<Input
 			value={draft}
 			onValueChange={hub.setDraft}
-			onSubmit={async (text) => hub.sendAll(text)}
+			onAttachmentErrors={onAttachmentErrors}
+			onSubmit={async (text, files) => hub.sendAll(text, files)}
 			isLoading={replying || !ready}
 			onStop={replying ? hub.stopAll : undefined}
 		/>

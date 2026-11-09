@@ -130,8 +130,9 @@ describe("chat database versions", () => {
 			]),
 		);
 		expect({ version: db.verno, schema }).toEqual({
-			version: 6,
+			version: 7,
 			schema: {
+				attachments: ["id", "chatId"],
 				branches: ["chatId"],
 				chats: ["id", "updatedAt"],
 				messages: ["[chatId+position]"],
@@ -156,6 +157,55 @@ describe("chat database versions", () => {
 			.filter((entry) => entry.hasUpgrade)
 			.map((entry) => entry.version);
 		expect(Object.keys(UPGRADE_TESTS).map(Number)).toEqual(withUpgrade);
+	});
+
+	it("opens a version 6 database at version 7 with its chats and prompts, and no attachments", async () => {
+		// Roadmap 1.6 adds a table and no upgrade(): what a browser already has must still read.
+		const indexedDB = new IDBFactory();
+		const old = openAtVersion("added-attachments", indexedDB, 6);
+		const prompt = {
+			id: "p1",
+			ownerId: null,
+			name: "Reviewer",
+			tags: ["code"],
+			versions: [{ version: 1, text: "Review this.", createdAt: 1 }],
+			createdAt: 1,
+			updatedAt: 1,
+			formatVersion: 1,
+		};
+		await old.table("prompts").put(prompt);
+		await old.table("chats").put({
+			id: "c1",
+			title: "Before attachments",
+			createdAt: 1,
+			updatedAt: 2,
+			messageCount: 1,
+			formatVersion: 2,
+			ownerId: null,
+		});
+		await old.table("messages").put({
+			chatId: "c1",
+			position: 0,
+			message: {
+				id: "m1",
+				role: "user",
+				parts: [{ type: "text", text: "Hi" }],
+			},
+		});
+		old.close();
+
+		const db = openChatDatabase("added-attachments", {
+			indexedDB,
+			IDBKeyRange,
+		});
+		expect(await db.chats.get("c1")).toMatchObject({
+			title: "Before attachments",
+		});
+		expect(await db.messages.count()).toBe(1);
+		expect(await db.prompts.get("p1")).toEqual(prompt);
+		expect(await db.attachments.count()).toBe(0);
+		expect(db.verno).toBe(7);
+		db.close();
 	});
 
 	for (const [version, run] of Object.entries(UPGRADE_TESTS)) {

@@ -1,5 +1,5 @@
 import type { Chat } from "@ai-sdk/react";
-import type { UIMessage } from "ai";
+import type { FileUIPart, UIMessage } from "ai";
 import { useSyncExternalStore } from "react";
 import { logError } from "@/lib/log";
 
@@ -18,8 +18,8 @@ export interface SyncedPane {
 		| "~registerStatusCallback"
 		| "~registerMessagesCallback"
 	>;
-	/** Sends `text` from this pane, to its own model. */
-	send: (text: string) => void;
+	/** Sends `text` (and any attachments, roadmap 1.6) from this pane, to its own model. */
+	send: (text: string, files?: FileUIPart[]) => void;
 }
 
 export interface PaneSyncState {
@@ -37,7 +37,7 @@ export interface PaneSync {
 	setDraft(draft: string): void;
 	/** Joins a pane, until the returned function is called. Joining again replaces its entry. */
 	join(paneId: string, pane: SyncedPane): () => void;
-	sendAll(text: string): void;
+	sendAll(text: string, files?: FileUIPart[]): void;
 	stopAll(): void;
 }
 
@@ -109,8 +109,8 @@ export function createPaneSync(): PaneSync {
 				recompute();
 			};
 		},
-		sendAll(text) {
-			for (const { pane } of panes.values()) pane.send(text);
+		sendAll(text, files) {
+			for (const { pane } of panes.values()) pane.send(text, files);
 		},
 		stopAll() {
 			for (const { pane } of panes.values()) {

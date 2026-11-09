@@ -371,8 +371,13 @@ Only what's still open. When one is done, tick it, add a dated note, and move it
   Not yet tried against a real deployment with Brevo.
   *Status (2026-10-27):* chat, settings and keys work signed out; `/` opens `/new`; the sidebar offers "Sign in to
   sync and share" or Sign out. PR: https://github.com/tigeryash/ai-chat-tanstack/pull/29
-- [ ] **1.6 Attachments that send.** Images/PDFs as `file` parts where supported; blobs in IndexedDB; unified
+- [x] **1.6 Attachments that send.** Images/PDFs as `file` parts where supported; blobs in IndexedDB; unified
   drag-drop and paperclip validation; revoke object URLs.
+  *Done when:* Vitest covers the one validation path (type, size, count, what the model reads), the storage
+  round trip (bytes in their own table, back as data URLs, export/import, cleanup) and the transport sending file
+  parts to a mock model; e2e attaches an image, sends it, finds it in the request to the faked provider, and sees
+  it after a reload.
+  *Status (2026-11-09):* done; per-pane checks for synced panes stay in 3.3. PR: PR_URL
 - [x] **1.7 Edit and branch.** Edit a user message → new branch; switch between siblings.
   *Done when:* Vitest covers the format migration (an old-format fixture loads through it), the branch tree
   operations, and export/import round-tripping branches; e2e edits a message, sees a new reply, switches back to the

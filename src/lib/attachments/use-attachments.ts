@@ -1,22 +1,30 @@
 import { useEffect, useRef, useState } from "react";
 import { logError } from "@/lib/log";
-import {
-	type FileObject,
-	isAllowedFile,
-	revokePreview,
-	toFileObject,
-} from "./file-object";
+import { type FileObject, revokePreview, toFileObject } from "./file-object";
 import { processAttachment } from "./process";
+import { type AttachmentSupport, checkAttachments } from "./validate";
+
+export interface UseAttachmentsOptions {
+	/** What the model reads; absent means unknown, so only type, size and count are checked. */
+	support?: AttachmentSupport;
+	/** Gets the reasons files were refused (user-facing, no contents), or [] once a pick is all fine. */
+	onErrors?: (errors: string[]) => void;
+}
 
 /**
  * The composer's attachments. Paperclip and drag-and-drop both add through `add`, so they get the
- * same checks. Each image preview is an object URL, revoked when its attachment is removed or the
- * composer unmounts.
+ * same checks (`checkAttachments`). Each image preview is an object URL, revoked when its attachment
+ * is removed, when the composer sends (`clear`), or when the composer unmounts.
  */
-export function useAttachments() {
+export function useAttachments({
+	support,
+	onErrors,
+}: UseAttachmentsOptions = {}) {
 	const [files, setFiles] = useState<FileObject[]>([]);
 	// Every attachment whose preview is still alive, so unmount can revoke the ones never removed.
 	const live = useRef(new Map<string, FileObject>());
+	// Reads still running, so a send can wait for them.
+	const pending = useRef(new Set<Promise<void>>());
 
 	useEffect(() => {
 		const attached = live.current;
@@ -33,27 +41,56 @@ export function useAttachments() {
 		setFiles((prev) => prev.filter((f) => f.id !== id));
 	};
 
-	const process = async (pending: FileObject) => {
+	const clear = () => {
+		for (const file of live.current.values()) revokePreview(file);
+		live.current.clear();
+		setFiles([]);
+	};
+
+	const process = async (attachment: FileObject) => {
 		try {
-			const { file, base64 } = await processAttachment(pending.file);
-			setFiles((prev) =>
-				prev.map((f) =>
-					f.id === pending.id ? { ...f, file, base64, isProcessing: false } : f,
-				),
-			);
+			const { file, base64 } = await processAttachment(attachment.file);
+			// Removed while it was read: its preview is already revoked.
+			if (!live.current.has(attachment.id)) return;
+			const done = { ...attachment, file, base64, isProcessing: false };
+			live.current.set(attachment.id, done);
+			setFiles((prev) => prev.map((f) => (f.id === attachment.id ? done : f)));
 		} catch (error) {
 			logError("Reading an attachment failed", error);
-			drop(pending.id);
+			drop(attachment.id);
+			onErrors?.([`${attachment.file.name} couldn't be read.`]);
 		}
 	};
 
 	const add = async (selected: File[]) => {
-		const added = selected.filter(isAllowedFile).map(toFileObject);
+		const { accepted, errors } = checkAttachments(selected, {
+			attached: live.current.size,
+			support,
+		});
+		onErrors?.(errors);
+		const added = accepted.map(toFileObject);
 		if (added.length === 0) return;
 		for (const file of added) live.current.set(file.id, file);
 		setFiles((prev) => [...prev, ...added]);
-		await Promise.all(added.map(process));
+		const reads = added.map((file) => {
+			const read = process(file).finally(() => pending.current.delete(read));
+			pending.current.add(read);
+			return read;
+		});
+		await Promise.all(reads);
 	};
 
-	return { files, add, remove: drop };
+	/** Waits for every attachment to be read, then gives the ones still attached. */
+	const settled = async (): Promise<FileObject[]> => {
+		while (pending.current.size > 0) await Promise.all(pending.current);
+		return [...live.current.values()];
+	};
+
+	return {
+		files,
+		add,
+		remove: drop,
+		clear,
+		settled,
+	};
 }

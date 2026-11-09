@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { AnimateIcon } from "@/components/animate-ui/icons/icon";
 import { Paperclip } from "@/components/animate-ui/icons/paperclip";
 import type { FileObject } from "@/lib/attachments/file-object";
+import { ACCEPTED_FILE_TYPES } from "@/lib/attachments/validate";
 import { ToolTipContainer } from "./tooltip-container";
 
 export const Files = ({
@@ -162,6 +163,7 @@ export const FileInput = ({ onAdd }: { onAdd: (files: File[]) => void }) => {
 					ref={fileInputRef}
 					onChange={handleChange}
 					className="hidden"
+					accept={ACCEPTED_FILE_TYPES}
 					multiple
 				/>
 				<AnimateIcon animateOnHover>

@@ -22,7 +22,7 @@ const ENDPOINT_KINDS = [
 ] as const satisfies readonly EndpointKind[];
 
 export const EVENT_SCHEMAS = {
-	/** A message was sent. Pane count comes with multi-pane chats (Phase 3); attachments with 1.6. */
+	/** A message was sent. Pane count comes with multi-pane chats (Phase 3); hasAttachment is true when it carried a file (1.6). */
 	chat_sent: z.object({
 		providerKind: z.enum(["hosted", "local"]),
 		paneCount: z.number().int().min(1).max(16).optional(),
