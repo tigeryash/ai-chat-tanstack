@@ -15,7 +15,7 @@ const answer = (id: string, text: string, metadata: object): UIMessage => ({
 	metadata,
 });
 
-export const USAGE_FIXTURE_MODEL = "deepseek/deepseek-v4.1-flash";
+const USAGE_FIXTURE_MODEL = "deepseek/deepseek-v4.1-flash";
 
 export const USAGE_FIXTURE_MESSAGES: UIMessage[] = [
 	question("u1", "First question"),

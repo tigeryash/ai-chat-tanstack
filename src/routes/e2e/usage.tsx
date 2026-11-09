@@ -3,10 +3,7 @@ import { useEffect, useState } from "react";
 import { ChatUsageSummary } from "@/components/chat/chat-usage";
 import MessagesList from "@/components/chat/chatstuff/messages-list";
 import { chatUsage } from "@/lib/chat/chat-usage";
-import {
-	USAGE_FIXTURE_MESSAGES,
-	USAGE_FIXTURE_MODEL,
-} from "@/lib/chat/usage.fixtures";
+import { USAGE_FIXTURE_MESSAGES } from "@/lib/chat/usage.fixtures";
 
 export const Route = createFileRoute("/e2e/usage")({
 	component: UsageHarness,
@@ -26,13 +23,7 @@ function UsageHarness() {
 			<div className="@container/header flex justify-end border-b px-3 py-2">
 				{usage && <ChatUsageSummary usage={usage} />}
 			</div>
-			<MessagesList
-				messages={USAGE_FIXTURE_MESSAGES}
-				currentModel={{
-					model: USAGE_FIXTURE_MODEL,
-					gatewayId: USAGE_FIXTURE_MODEL,
-				}}
-			/>
+			<MessagesList messages={USAGE_FIXTURE_MESSAGES} />
 		</main>
 	);
 }

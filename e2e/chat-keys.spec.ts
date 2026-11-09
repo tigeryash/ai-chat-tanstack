@@ -115,10 +115,15 @@ test("a chat through OpenRouter sends the key only to OpenRouter", async ({
 	await expect(thought).toHaveAttribute("aria-expanded", "false");
 	await thought.click();
 	await expect(page.getByText("Considering a greeting.")).toBeVisible();
-	// The footer names the route; the model is the header's, so it's only in the details.
-	await expect(
-		page.getByRole("button", { name: `via OpenRouter. ${MODEL} · OpenRouter` }),
-	).toBeVisible();
+	// The reply's model and host sit behind its ⋯ button (roadmap 2.5b).
+	await page.getByRole("button", { name: "Reply details" }).click();
+	await expect(page.locator("[data-reply-detail]").first()).toHaveText(
+		`Model${MODEL}`,
+	);
+	await expect(page.locator("[data-reply-detail]").nth(1)).toHaveText(
+		"HostOpenRouter",
+	);
+	await page.keyboard.press("Escape");
 
 	expect(openRouter.completions).toEqual([
 		expect.objectContaining({
