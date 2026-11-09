@@ -465,7 +465,7 @@ Only what's still open. When one is done, tick it, add a dated note, and move it
   *Status (2026-11-08):* done in [PR #70](https://github.com/tigeryash/ai-chat-tanstack/pull/70). Logic in `src/lib/chat/reply-stats.ts` and `chat-usage.ts`.
 - [x] **2.5b Quieter reply stats** (Yash, 2026-11-09). A reply's tokens, TTFT and tokens/sec stop showing inline;
   a "⋯" button on its action row opens them (with the cost and host). Later: a setting for which stats show inline.
-  *Status (2026-11-09):* the "⋯" popover is done in PR_LINK; the inline-stats setting is still to do.
+  *Status (2026-11-09):* the "⋯" popover is done in [PR #85](https://github.com/tigeryash/ai-chat-tanstack/pull/85); the inline-stats setting is still to do.
 - [ ] **2.6 (Stretch) In-browser models.** WebGPU (transformers.js / WebLLM) and browser built-in AI (e.g. Chrome's
   Prompt API) as extra connection types.
 
