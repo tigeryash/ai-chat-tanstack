@@ -3,9 +3,11 @@ import { useState } from "react";
 import { Action, Actions } from "@/components/ai-elements/actions";
 import { Button } from "@/components/ui/button";
 import { MAX_EDIT_LENGTH } from "@/lib/chat/branching";
+import { cn } from "@/lib/utils";
 
 // Edit and branch (roadmap 1.7), on the person's own messages: Edit opens the message in place (never
-// the composer, hard rule 8), and "‹ 2/3 ›" switches between its versions. Both hide while the chat's
+// the composer, hard rule 8), and "‹ 2/3 ›" switches between its versions. Neither adds height to a
+// message that was never edited (the pencil is overlaid beside the bubble). Both hide while the chat's
 // reply streams (`data-chat-status` on the pane), by CSS, so a reply starting or ending doesn't
 // re-render the person's messages.
 
@@ -73,6 +75,55 @@ export function VersionSwitcher({
 	);
 }
 
+/** Hidden while the chat's reply streams (`data-chat-status` on the pane), by CSS: see the header. */
+const HIDE_WHILE_BUSY =
+	"in-data-[chat-status=streaming]:invisible in-data-[chat-status=submitted]:invisible";
+
+function EditAction({
+	onStartEdit,
+	className,
+}: {
+	onStartEdit: () => void;
+	className?: string;
+}) {
+	return (
+		<Action
+			onClick={onStartEdit}
+			tooltip="Edit message"
+			// Shown on hover or keyboard focus, and always where there's no hover (touch).
+			className={cn(
+				"opacity-0 focus-visible:opacity-100 group-hover/message:opacity-100 [@media(hover:none)]:opacity-100",
+				HIDE_WHILE_BUSY,
+				className,
+			)}
+		>
+			<PencilIcon className="size-4" />
+		</Action>
+	);
+}
+
+/**
+ * Goes inside the bubble's box (`MessageContent`'s `bubbleAside`). A message with one version gets
+ * only the pencil, overlaid to the bubble's left, so it adds no height between the message and its
+ * reply. A message with versions gets the row below instead.
+ */
+export function UserMessageEditOverlay({
+	onStartEdit,
+	versionIds,
+}: {
+	onStartEdit?: () => void;
+	versionIds?: readonly string[];
+}) {
+	if (!onStartEdit || versionIds) return null;
+	return (
+		<EditAction
+			onStartEdit={onStartEdit}
+			className="absolute top-1/2 right-full mr-1 -translate-y-1/2"
+		/>
+	);
+}
+
+/** Under a message with more than one version: the switcher, and Edit beside it. */
 export function UserMessageActions({
 	messageId,
 	onStartEdit,
@@ -82,26 +133,15 @@ export function UserMessageActions({
 	messageId: string;
 	onStartEdit?: () => void;
 } & Omit<UserMessageBranching, "onEdit">) {
-	if (!onStartEdit && !versionIds) return null;
+	if (!versionIds) return null;
 	return (
-		<Actions className="in-data-[chat-status=streaming]:invisible in-data-[chat-status=submitted]:invisible">
-			{versionIds && (
-				<VersionSwitcher
-					messageId={messageId}
-					versionIds={versionIds}
-					onSwitch={onSwitch}
-				/>
-			)}
-			{onStartEdit && (
-				<Action
-					onClick={onStartEdit}
-					tooltip="Edit message"
-					// Shown on hover or keyboard focus, and always where there's no hover (touch).
-					className="opacity-0 focus-visible:opacity-100 group-hover/message:opacity-100 [@media(hover:none)]:opacity-100"
-				>
-					<PencilIcon className="size-4" />
-				</Action>
-			)}
+		<Actions className={HIDE_WHILE_BUSY}>
+			<VersionSwitcher
+				messageId={messageId}
+				versionIds={versionIds}
+				onSwitch={onSwitch}
+			/>
+			{onStartEdit && <EditAction onStartEdit={onStartEdit} />}
 		</Actions>
 	);
 }

@@ -13,6 +13,7 @@ import {
 	textOf,
 	UserMessageActions,
 	type UserMessageBranching,
+	UserMessageEditOverlay,
 } from "./user-message-actions";
 
 type Props = MessageUIProps &
@@ -25,6 +26,7 @@ const partKey = (messageId: string, index: number) => `${messageId}-${index}`;
 const MessageUI = ({ message, branching, ...actions }: Props) => {
 	const [editing, setEditing] = useState(false);
 	const onEdit = branching?.onEdit;
+	const startEdit = onEdit && (() => setEditing(true));
 	if (editing && onEdit) {
 		return (
 			<Message from={message.role}>
@@ -43,7 +45,16 @@ const MessageUI = ({ message, branching, ...actions }: Props) => {
 		<Message from={message.role}>
 			<div>
 				<ReasoningUI message={message} />
-				<MessageContent>
+				<MessageContent
+					bubbleAside={
+						message.role === "user" && (
+							<UserMessageEditOverlay
+								onStartEdit={startEdit}
+								versionIds={branching?.versionIds}
+							/>
+						)
+					}
+				>
 					{message.parts.map((part, index) => (
 						<MessagePart
 							key={partKey(message.id, index)}
@@ -57,7 +68,7 @@ const MessageUI = ({ message, branching, ...actions }: Props) => {
 			{message.role === "user" ? (
 				<UserMessageActions
 					messageId={message.id}
-					onStartEdit={onEdit && (() => setEditing(true))}
+					onStartEdit={startEdit}
 					versionIds={branching?.versionIds}
 					onSwitch={branching?.onSwitch}
 				/>
