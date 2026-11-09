@@ -49,9 +49,6 @@ at once), then turn its findings into small refactor slices.
 Only what's still open. When one is done, tick it, add a dated note, and move it to
 [Done owner to-dos](#done-owner-to-dos) at the end of this file.
 
-- [ ] Composer restore: on `www.highelollms.com`, open `/new` in light and dark and compare the composer with
-  your original (hover the paperclip, Send and voice chat, attach a file, type a few lines). Screenshot tests now
-  lock its look (hard rule 8), so anything off needs your call before it's fixed.
 - [ ] For 1.8: in the Vercel dashboard, open the project and turn on **Analytics** (Web Analytics) and **Speed
   Insights** (both free on Hobby), then redeploy. Until then `/_vercel/insights/script.js` and
   `/_vercel/speed-insights/script.js` 404 and nothing is collected. After deploying, load a page, check the Analytics
@@ -496,7 +493,10 @@ Only what's still open. When one is done, tick it, add a dated note, and move it
   *Status:* done with 3.1 in [#56](https://github.com/tigeryash/ai-chat-tanstack/pull/56) (2026-10-31).
 - [ ] **3.3 Capability-aware attachments** (decision 17).
 - [ ] **3.4 Compare tools.** Per-pane TTFT, tokens/sec, cost; sync scroll; thumbs up/down; "copy settings to all panes".
-- [ ] **3.5 Workspaces.** Save/restore layouts and models; deep link `?models=a,b,c`.
+- [x] **3.5 Workspaces.** Save/restore layouts and models; deep link `?models=a,b,c`. Done when Vitest covers
+  parsing `?models=` (bad, unknown and too many ids) and saving/restoring layouts, and e2e opens
+  `/new?models=a,b` on the fixture catalog and gets those panes, saves the layout, and opens it again after a reload.
+  *Status:* done in [#71](https://github.com/tigeryash/ai-chat-tanstack/pull/71) (2026-11-08); layouts and workspaces in exports are a follow-up.
 - [ ] **3.6 Prompt library** (decision 19). Save, name, tag, search, apply; set per-model defaults; version history
   (every edit is a version, with diff view and restore, and each reply records which prompt version produced it).
   Later: variables (`{{date}}`).
@@ -707,3 +707,8 @@ Finished owner to-dos, oldest first, kept for their notes.
   either end of the track and the number boxes follow. Found: verbosity is never in the request body (Opus and
   GPT, low and high), although `src/lib/params/mapping.ts` adds it for OpenRouter; LM Studio's embedding model
   shows in the picker as a chat model; "Thought for 1 seconds"; a stopped reply loses its cost in the footer.
+- [x] Composer restore: on `www.highelollms.com`, open `/new` in light and dark and compare the composer with
+  your original (hover the paperclip, Send and voice chat, attach a file, type a few lines). Screenshot tests now
+  lock its look (hard rule 8), so anything off needs your call before it's fixed.
+  *Checked 2026-11-09:* matches Yash's original. It never had a dark design; a dark version (and another idea
+  Yash has for it) waits for its own slice, with his approval first (hard rule 8).

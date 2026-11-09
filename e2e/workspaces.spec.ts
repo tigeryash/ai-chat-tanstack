@@ -342,6 +342,11 @@ test.describe("on a phone", () => {
 		await expect(name).toHaveText(e2eMockModel("alpha"));
 		const shown = await name.evaluate((el) => el.clientWidth / el.scrollWidth);
 		expect(shown).toBeGreaterThan(0.35);
+		// Three tabs fit beside the header's buttons without the tab row scrolling (none cut off).
+		const tabRow = page.getByRole("tablist", { name: "Panes" });
+		expect(
+			await tabRow.evaluate((row) => row.scrollWidth <= row.clientWidth),
+		).toBe(true);
 		// Usage and timings (roadmap 2.5) vary run to run; e2e/usage.spec.ts covers them.
 		await page.addStyleTag({
 			content: "[data-usage] { display: none !important; }",

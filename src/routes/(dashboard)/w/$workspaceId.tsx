@@ -3,12 +3,26 @@ import { useEffect } from "react";
 import { WorkspaceView } from "@/components/workspaces/workspace-view";
 import { currentViewer, useViewer } from "@/lib/account";
 import { isVisibleTo } from "@/lib/storage/ownership";
+import { MAX_LINK_PANES } from "@/lib/workspaces/model-link";
+import { z } from "@/lib/zod";
+
+/** `missing`: how many models the deep link that opened this workspace named but the catalog doesn't. */
+const searchSchema = z.object({
+	missing: z
+		.number()
+		.int()
+		.min(1)
+		.max(MAX_LINK_PANES)
+		.optional()
+		.catch(undefined),
+});
 
 // A multi-pane workspace stored in this browser (roadmap 3.1). Like a chat, it renders in the browser
 // only, and another account's workspace is treated as missing (roadmap 1.9). The loader imports the
 // chat engine with `import()`, since loaders aren't code-split (quality audit P1).
 export const Route = createFileRoute("/(dashboard)/w/$workspaceId")({
 	ssr: false,
+	validateSearch: searchSchema,
 	// Runs again on every visit, before the view renders (not in the background, the default for stale
 	// data), so the view starts from the saved pane list with every pane's chat open: this tab may have
 	// released them since (quality audit Q2, W1). The view keeps its own copy once open, so a reload
@@ -30,6 +44,7 @@ export const Route = createFileRoute("/(dashboard)/w/$workspaceId")({
 
 function RouteComponent() {
 	const workspace = Route.useLoaderData();
+	const { missing } = Route.useSearch();
 	const navigate = useNavigate();
 	const viewer = useViewer();
 	// After signing out, leave instead of showing a workspace this viewer can't see.
@@ -39,5 +54,11 @@ function RouteComponent() {
 	}, [hidden, navigate]);
 
 	if (hidden) return null;
-	return <WorkspaceView key={workspace.id} initial={workspace} />;
+	return (
+		<WorkspaceView
+			key={workspace.id}
+			initial={workspace}
+			missingModels={missing}
+		/>
+	);
 }
