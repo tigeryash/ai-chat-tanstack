@@ -103,6 +103,23 @@ export function initialPanes(chatIds: readonly string[]): WorkspacePane[] {
 	);
 }
 
+/**
+ * A restored layout's panes (roadmap 3.5): the chats given with the saved widths and Synced switches,
+ * the widths scaled to fill the row (equal when they add up to nothing).
+ */
+export function restoredPanes(
+	panes: readonly { chatId: string; size: number; synced: boolean }[],
+): WorkspacePane[] {
+	return scaled(
+		panes.slice(0, MAX_PANES).map(({ chatId, size, synced }) => ({
+			chatId,
+			size: Number.isFinite(size) ? Math.max(0, size) : 0,
+			synced,
+		})),
+		100,
+	);
+}
+
 /** A pane the viewer can't see (another account's chat, roadmap 1.9) and its place in the saved list. */
 export interface HiddenPane {
 	pane: WorkspacePane;

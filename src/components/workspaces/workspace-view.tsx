@@ -18,7 +18,8 @@ import {
 } from "@/components/ui/resizable";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { currentViewer } from "@/lib/account";
-import { retainChat } from "@/lib/chat/open-chats";
+import { readChatModelChoice } from "@/lib/chat/chat-model-choice";
+import { peekOpenChat, retainChat } from "@/lib/chat/open-chats";
 import { logError } from "@/lib/log";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { chatStore } from "@/lib/storage/app-store";
@@ -32,6 +33,7 @@ import {
 	withHiddenPanes,
 } from "@/lib/workspaces/pane-layout";
 import { createPaneSync, usePaneSyncState } from "@/lib/workspaces/pane-sync";
+import type { LayoutPane } from "@/lib/workspaces/saved-layouts";
 import {
 	addNewPane,
 	type OpenWorkspace,
@@ -107,7 +109,26 @@ function PaneMotion({
 	);
 }
 
-export function WorkspaceView({ initial }: { initial: OpenWorkspace }) {
+/** The shown panes as a layout to save (roadmap 3.5): each pane's model, width and Synced switch. */
+function layoutOfPanes(panes: readonly WorkspacePane[]): LayoutPane[] {
+	return panes.map((pane) => ({
+		model: readChatModelChoice(
+			pane.chatId,
+			peekOpenChat(pane.chatId)?.chat.messages,
+		),
+		size: pane.size,
+		synced: pane.synced,
+	}));
+}
+
+export function WorkspaceView({
+	initial,
+	missingModels,
+}: {
+	initial: OpenWorkspace;
+	/** Models a deep link named that the catalog doesn't list (roadmap 3.5). */
+	missingModels?: number;
+}) {
 	const [workspace, setWorkspace] = useState(initial);
 	const [hub] = useState(createPaneSync);
 	const { diverged } = usePaneSyncState(hub);
@@ -204,6 +225,8 @@ export function WorkspaceView({ initial }: { initial: OpenWorkspace }) {
 						addPane().catch((error) => logError("Couldn't add a pane:", error));
 					}}
 					hiddenPanes={workspace.hiddenPanes.length}
+					currentLayout={() => layoutOfPanes(panes)}
+					missingModels={missingModels}
 				/>
 			</InHeader>
 			{isMobile ? (
