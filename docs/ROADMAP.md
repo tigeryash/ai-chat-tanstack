@@ -67,12 +67,17 @@ Only what's still open. When one is done, tick it, add a dated note, and move it
   the privacy policy says Convex covers EU/UK transfers in it. (Vercel's DPA covers only Pro, but Vercel is
   certified under the EU-U.S. Data Privacy Framework, which the policy cites instead.) A lawyer's review is worth it before charging
   money. Add `https://www.highelollms.com/privacy` and `/terms` to Google's OAuth consent screen.
+  *2026-11-09:* Convex's DPA is automatic: it "forms part of" the customer agreement, and executing that agreement
+  counts as executing the EU/UK Standard Contractual Clauses, so nothing to sign. The privacy and terms URLs are on
+  Google's consent screen and Discord's app; GitHub OAuth apps have no field for them. Still to do: the support
+  address, and the business name and lawyer's review before charging money.
 - [ ] After the old Convex chat backend is deleted (quality audit D1): its tables are still in `convex/schema.ts`
   but nothing reads or writes them. Check prod's row counts for `conversations`, `conversationParticipants`,
   `messages`, `attachments`, `messagePins` and `usageEvents` (`bunx convex data <table> --prod`, or the dashboard),
   and Convex file storage (dashboard → Files; old attachment uploads live there). Then say whether to drop the
   tables (and `users.preferences`) and delete any stored files. *Dev, 2026-10-30:* all six tables and file
-  storage are empty.
+  storage are empty. *Prod, 2026-11-09:* all six tables and file storage are empty too, and no `users` row
+  has `preferences`. Waiting on Yash's yes to drop them.
 - [ ] Enforce the strict CSP (quality audit G1): after a week of real use of production, signed in and chatting
   included, search Vercel's logs (Project → Logs) for `[csp]` lines and tell an agent what you find (none, or the
   directive, blocked origin and page of each). With none, the agent sets `ENFORCE_STRICT_CSP = true` in
