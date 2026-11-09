@@ -36,13 +36,14 @@ import {
 	addNewPane,
 	type OpenWorkspace,
 } from "@/lib/workspaces/workspace-sessions";
+import { MobilePanes } from "./mobile-panes";
 import { PaneActions } from "./pane-actions";
 import { PaneChat } from "./pane-chat";
 import { WorkspaceToolbar } from "./workspace-toolbar";
 
 // A workspace (roadmaps 3.1 and 3.2): up to four chat panes side by side, each with its own model,
 // settings and composer, resizable and reorderable. Synced panes share the draft and send together.
-// Below `md`, one pane shows at a time; the others stay mounted (hidden), so synced sends reach them.
+// Below `md`, one pane shows at a time, picked by tab or swipe (roadmap 3.8, `mobile-panes.tsx`).
 // Every change is saved to the workspace record, so a reload restores panes, order and widths. Panes of
 // another account's chats aren't shown, and every save puts them back (roadmap 1.9, quality audit W2).
 
@@ -206,17 +207,12 @@ export function WorkspaceView({ initial }: { initial: OpenWorkspace }) {
 				/>
 			</InHeader>
 			{isMobile ? (
-				panes.map((pane, index) => (
-					<div
-						key={pane.chatId}
-						id={`pane-${pane.chatId}`}
-						role="tabpanel"
-						hidden={pane !== shown}
-						className="min-h-0 flex-1"
-					>
-						{renderPane(pane, index)}
-					</div>
-				))
+				<MobilePanes
+					panes={panes}
+					shownId={shown?.chatId}
+					onShow={setShownId}
+					renderPane={renderPane}
+				/>
 			) : (
 				<DesktopPanes
 					panes={panes}
