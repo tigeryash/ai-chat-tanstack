@@ -56,8 +56,8 @@ describe("pane sync", () => {
 		);
 		leave[2]?.();
 		sync.sendAll("Compare");
-		expect(sends[0]).toHaveBeenCalledWith("Compare");
-		expect(sends[1]).toHaveBeenCalledWith("Compare");
+		expect(sends[0]).toHaveBeenCalledWith("Compare", undefined);
+		expect(sends[1]).toHaveBeenCalledWith("Compare", undefined);
 		expect(sends[2]).not.toHaveBeenCalled();
 	});
 
@@ -115,7 +115,10 @@ describe("pane sync", () => {
 		sync.join("a", { chat: fakeChat(), send: second });
 		expect(first.listeners()).toBe(0);
 		leaveFirst();
-		sync.sendAll("x");
-		expect(second).toHaveBeenCalledWith("x");
+		const files = [
+			{ type: "file" as const, mediaType: "image/png", url: "data:," },
+		];
+		sync.sendAll("x", files);
+		expect(second).toHaveBeenCalledWith("x", files);
 	});
 });

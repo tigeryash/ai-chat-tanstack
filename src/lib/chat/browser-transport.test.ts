@@ -173,6 +173,58 @@ describe("BrowserChatTransport settings (roadmap 2.4b)", () => {
 		});
 	});
 
+	it("sends attached images and PDFs to the model as file parts (roadmap 1.6)", async () => {
+		const { model, calls } = recordingModel();
+		const png = "data:image/png;base64,iVBORw0KGgo=";
+		const pdf = "data:application/pdf;base64,JVBERi0xLjQK";
+		await collect(
+			await new BrowserChatTransport(async () => model).sendMessages({
+				trigger: "submit-message",
+				chatId: "c1",
+				messageId: undefined,
+				abortSignal: undefined,
+				body: SELECTION,
+				messages: [
+					{
+						id: "u1",
+						role: "user",
+						parts: [
+							{
+								type: "file",
+								mediaType: "image/png",
+								filename: "a.png",
+								url: png,
+							},
+							{
+								type: "file",
+								mediaType: "application/pdf",
+								filename: "b.pdf",
+								url: pdf,
+							},
+							{ type: "text", text: "What's this?" },
+						],
+					},
+				],
+			}),
+		);
+		const [options] = calls();
+		const content = options?.prompt[0]?.content;
+		expect(options?.prompt[0]?.role).toBe("user");
+		expect(content).toEqual([
+			expect.objectContaining({
+				type: "file",
+				mediaType: "image/png",
+				filename: "a.png",
+			}),
+			expect.objectContaining({
+				type: "file",
+				mediaType: "application/pdf",
+				filename: "b.pdf",
+			}),
+			expect.objectContaining({ type: "text", text: "What's this?" }),
+		]);
+	});
+
 	it("sends no settings when the body has none or bad ones", async () => {
 		const { model, calls } = recordingModel();
 		const transport = new BrowserChatTransport(async () => model);

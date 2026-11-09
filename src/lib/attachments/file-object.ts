@@ -1,4 +1,6 @@
-/** A file the user attached in the composer. Attachments don't send yet (roadmap 1.6). */
+import type { FileUIPart } from "ai";
+
+/** A file the user attached in the composer (roadmap 1.6). `validate.ts` decides which files get here. */
 export type FileObject = {
 	id: string;
 	file: File;
@@ -10,30 +12,8 @@ export type FileObject = {
 	isProcessing: boolean;
 };
 
-export const MAX_ATTACHMENT_SIZE_MB = 20;
-
-const ALLOWED_TYPES = new Set([
-	"image/jpeg",
-	"image/png",
-	"image/webp",
-	"application/pdf",
-	"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-	"text/plain",
-	"text/csv",
-	"text/javascript",
-	"text/typescript",
-]);
-
-// Browsers report no type (or a guessed one) for source files, so these go by extension.
-const ALLOWED_EXTENSIONS = /\.(ts|tsx|js|jsx|py|cpp|h)$/;
-
 export function isImage(file: File): boolean {
 	return file.type.startsWith("image/");
-}
-
-export function isAllowedFile(file: File): boolean {
-	if (file.size > MAX_ATTACHMENT_SIZE_MB * 1024 * 1024) return false;
-	return ALLOWED_TYPES.has(file.type) || ALLOWED_EXTENSIONS.test(file.name);
 }
 
 /** The attachment as shown while it is being processed. */
@@ -61,4 +41,14 @@ export function readAsDataUrl(file: Blob): Promise<string> {
 		reader.onerror = () => reject(reader.error);
 		reader.readAsDataURL(file);
 	});
+}
+
+/** The AI SDK `file` part a processed attachment sends as. */
+export function toFilePart(file: FileObject): FileUIPart {
+	return {
+		type: "file",
+		mediaType: file.file.type || file.type,
+		filename: file.file.name,
+		url: file.base64,
+	};
 }

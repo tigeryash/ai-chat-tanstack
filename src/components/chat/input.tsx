@@ -3,10 +3,13 @@
 // mockup or screenshot first. e2e/composer-design.spec.ts pins the look; never refresh its baselines
 // without that approval.
 
+import type { FileUIPart } from "ai";
 import { Square } from "lucide-react";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import { useState } from "react";
+import { toFilePart } from "@/lib/attachments/file-object";
 import { useAttachments } from "@/lib/attachments/use-attachments";
+import type { AttachmentSupport } from "@/lib/attachments/validate";
 import { AnimateIcon } from "../animate-ui/icons/icon";
 import { Send } from "../animate-ui/icons/send";
 import { DeepResearch } from "./input/deep-research-button";
@@ -18,13 +21,18 @@ import { VoiceInput } from "./input/voice-input-button";
 import { WebSearch } from "./input/web-search-button";
 
 type InputProps = {
-	onSubmit?: (input: string) => Promise<void>;
+	/** Sends the text with the attachments as AI SDK `file` parts (roadmap 1.6). */
+	onSubmit?: (input: string, files: FileUIPart[]) => Promise<void>;
 	isLoading?: boolean;
 	/** While a reply streams: shows a Stop button in place of Send. */
 	onStop?: () => void;
 	/** A draft kept outside, so synced panes share one (roadmap 3.2). Without it, the composer keeps its own. */
 	value?: string;
 	onValueChange?: (value: string) => void;
+	/** What the model reads, so attaching refuses what it can't (decision 17). Absent: unknown. */
+	attachmentSupport?: AttachmentSupport;
+	/** Why attached files were refused, shown outside the composer; [] clears it. */
+	onAttachmentErrors?: (errors: string[]) => void;
 };
 
 export const Input = ({
@@ -33,12 +41,17 @@ export const Input = ({
 	onStop,
 	value,
 	onValueChange,
+	attachmentSupport,
+	onAttachmentErrors,
 }: InputProps) => {
 	const [ownInput, setOwnInput] = useState("");
 	const input = value ?? ownInput;
 	const setInput = onValueChange ?? setOwnInput;
 	const [webSearchEnabled, setWebSearchEnabled] = useState(false);
-	const attachments = useAttachments();
+	const attachments = useAttachments({
+		support: attachmentSupport,
+		onErrors: onAttachmentErrors,
+	});
 	const hasFiles = attachments.files.length > 0;
 
 	const isExpanded = hasFiles || input.includes("\n") || input.length > 120;
@@ -47,10 +60,13 @@ export const Input = ({
 		e.preventDefault();
 		const trimmedInput = input.trim();
 		if (!trimmedInput || isLoading) return;
+		// An image may still be shrinking: the send waits for it rather than going without it.
+		const files = await attachments.settled();
 
-		await onSubmit?.(trimmedInput);
+		await onSubmit?.(trimmedInput, files.map(toFilePart));
 
 		setInput("");
+		attachments.clear();
 	};
 	const handleKeyDown = (e: React.KeyboardEvent) => {
 		if (e.key === "Enter" && !e.shiftKey) {

@@ -118,9 +118,11 @@ for (const scheme of ["light", "dark"] as const) {
 			await openComposer(page);
 			await page.locator('input[type="file"]').setInputFiles([
 				PIXEL,
+				// Roadmap 1.6 attaches only images and PDFs. A PDF named notes.txt draws the same chip as the
+				// text file this baseline was made with, so the pinned design didn't need new screenshots.
 				{
 					name: "notes.txt",
-					mimeType: "text/plain",
+					mimeType: "application/pdf",
 					buffer: Buffer.from("hi"),
 				},
 			]);

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { isAllowedFile, toFileObject } from "./file-object";
+import { toFileObject, toFilePart } from "./file-object";
 import { useAttachments } from "./use-attachments";
 
 vi.mock("./process", () => ({
@@ -41,28 +41,50 @@ describe("toFileObject", () => {
 	});
 });
 
-describe("isAllowedFile", () => {
-	it("accepts listed types and source files, rejects others and big files", () => {
-		expect(isAllowedFile(image())).toBe(true);
-		expect(isAllowedFile(new File(["x"], "main.py"))).toBe(true);
-		expect(isAllowedFile(new File(["x"], "app.exe"))).toBe(false);
-		const big = new File(["x"], "big.png", { type: "image/png" });
-		Object.defineProperty(big, "size", { value: 21 * 1024 * 1024 });
-		expect(isAllowedFile(big)).toBe(false);
-	});
-});
-
 describe("useAttachments", () => {
-	it("adds files, then marks them processed", async () => {
-		const { result } = renderHook(() => useAttachments());
+	it("adds files through the shared check, reports refusals, then marks them processed", async () => {
+		const onErrors = vi.fn();
+		const { result } = renderHook(() => useAttachments({ onErrors }));
 
 		await act(() => result.current.add([image(), new File(["x"], "app.exe")]));
 
 		expect(result.current.files).toHaveLength(1);
+		expect(onErrors).toHaveBeenCalledWith([
+			"app.exe can't be attached. Attach images (PNG, JPEG, WebP, GIF) or PDFs.",
+		]);
 		await waitFor(() =>
-			expect(result.current.files[0].isProcessing).toBe(false),
+			expect(result.current.files[0]?.isProcessing).toBe(false),
 		);
+		expect(await result.current.settled()).toEqual(result.current.files);
 		expect(result.current.files[0].base64).toBe("data:;base64,");
+		expect(toFilePart(result.current.files[0])).toEqual({
+			type: "file",
+			mediaType: "image/png",
+			filename: "a.png",
+			url: "data:;base64,",
+		});
+	});
+
+	it("refuses files the model can't read", async () => {
+		const onErrors = vi.fn();
+		const { result } = renderHook(() =>
+			useAttachments({ support: { images: false, pdfs: true }, onErrors }),
+		);
+		await act(() => result.current.add([image()]));
+		expect(result.current.files).toEqual([]);
+		expect(onErrors).toHaveBeenCalledWith([
+			"This model can't read images, so a.png wasn't attached.",
+		]);
+	});
+
+	it("clears every attachment and revokes their previews after a send", async () => {
+		const { result } = renderHook(() => useAttachments());
+		await act(() => result.current.add([image("a.png"), image("b.png")]));
+
+		act(() => result.current.clear());
+
+		expect(result.current.files).toEqual([]);
+		expect(revokeObjectURL).toHaveBeenCalledTimes(2);
 	});
 
 	it("revokes a preview when its file is removed", async () => {

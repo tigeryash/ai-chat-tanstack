@@ -6,6 +6,12 @@ import {
 } from "@/lib/params/settings";
 import { z } from "@/lib/zod";
 import {
+	type AttachmentRow,
+	dehydrateAttachments,
+	hydrateAttachments,
+	referencedAttachments,
+} from "./attachments";
+import {
 	branchesSchema,
 	type ChatBranches,
 	hasBranches,
@@ -72,12 +78,46 @@ function toSummary(row: ChatRow): ChatSummary {
 	};
 }
 
+/**
+ * Writes the files the chat came with that aren't stored yet, and deletes the ones nothing points to
+ * any more (roadmap 1.6). Files already stored are never rewritten.
+ */
+async function writeAttachments(
+	db: ChatDatabase,
+	chatId: string,
+	rows: readonly AttachmentRow[],
+	referenced: ReadonlySet<string>,
+): Promise<void> {
+	const stored = new Set(
+		await db.attachments.where("chatId").equals(chatId).primaryKeys(),
+	);
+	await db.attachments.bulkDelete(
+		[...stored].filter((id) => !referenced.has(id)),
+	);
+	await db.attachments.bulkPut(
+		rows.filter((row) => referenced.has(row.id) && !stored.has(row.id)),
+	);
+}
+
+/** Messages and branches go in with data-URL files swapped for references (attachments.ts). */
 async function writeChat(
 	db: ChatDatabase,
 	row: ChatRow,
-	messages: readonly UIMessage[],
-	branches: ChatBranches | undefined,
+	plainMessages: readonly UIMessage[],
+	plainBranches: ChatBranches | undefined,
 ): Promise<void> {
+	const { messages, branches, rows } = dehydrateAttachments(
+		row.id,
+		plainMessages,
+		plainBranches,
+	);
+	const kept = hasBranches(branches) ? branches : undefined;
+	await writeAttachments(
+		db,
+		row.id,
+		rows,
+		referencedAttachments(messages, kept),
+	);
 	if (hasBranches(branches))
 		await db.branches.put({ chatId: row.id, branches });
 	else await db.branches.delete(row.id);
@@ -153,24 +193,30 @@ export function createDexieChatStore({
 		},
 
 		async getChat(id) {
-			const raw = await db.transaction(
+			const read = await db.transaction(
 				"r",
-				db.chats,
-				db.messages,
-				db.branches,
+				[db.chats, db.messages, db.branches, db.attachments],
 				async () => {
 					const row = await db.chats.get(id);
 					if (!row) return undefined;
 					const rows = await messagesOf(db, id).toArray();
 					const branchRow = await db.branches.get(id);
+					const files = await db.attachments
+						.where("chatId")
+						.equals(id)
+						.toArray();
 					return {
-						...row,
-						messages: rows.map((entry) => entry.message),
-						...(branchRow && { branches: branchRow.branches }),
+						raw: {
+							...row,
+							messages: rows.map((entry) => entry.message),
+							...(branchRow && { branches: branchRow.branches }),
+						},
+						files,
 					};
 				},
 			);
-			return raw && upgradeChat(raw);
+			if (!read) return undefined;
+			return hydrateAttachments(await upgradeChat(read.raw), read.files);
 		},
 
 		async saveMessages(chatId, messages, ownerId, branches) {
@@ -179,7 +225,7 @@ export function createDexieChatStore({
 			const valid = await validateMessages(messages, chatId);
 			const validBranches =
 				branches && (await validateBranches(branches, valid, chatId));
-			const tables = [db.chats, db.messages, db.branches];
+			const tables = [db.chats, db.messages, db.branches, db.attachments];
 			return db.transaction("rw", tables, async () => {
 				const existing = await db.chats.get(chatId);
 				// Overwriting would throw away whatever the newer format added.
@@ -256,10 +302,9 @@ export function createDexieChatStore({
 		async deleteChat(chatId) {
 			await db.transaction(
 				"rw",
-				db.chats,
-				db.messages,
-				db.branches,
+				[db.chats, db.messages, db.branches, db.attachments],
 				async () => {
+					await db.attachments.where("chatId").equals(chatId).delete();
 					await db.branches.delete(chatId);
 					await messagesOf(db, chatId).delete();
 					await db.chats.delete(chatId);
@@ -276,9 +321,7 @@ export function createDexieChatStore({
 			);
 			await db.transaction(
 				"rw",
-				db.chats,
-				db.messages,
-				db.branches,
+				[db.chats, db.messages, db.branches, db.attachments],
 				async () => {
 					for (const chat of valid) {
 						await writeChat(

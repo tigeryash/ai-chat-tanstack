@@ -8,7 +8,11 @@ import { isImage, readAsDataUrl } from "./file-object";
 export async function processAttachment(
 	file: File,
 ): Promise<{ file: File; base64: string }> {
-	const processed = isImage(file) ? await compressImage(file) : file;
+	// GIFs skip it: compressing would flatten an animation to one frame.
+	const processed =
+		isImage(file) && file.type !== "image/gif"
+			? await compressImage(file)
+			: file;
 	return { file: processed, base64: await readAsDataUrl(processed) };
 }
 
