@@ -234,33 +234,111 @@ test("the composer's Stop stops every synced pane; a pane's own Stop only that p
 	);
 });
 
-test.describe("on a narrow screen", () => {
-	test.use({ viewport: { width: 600, height: 800 } });
+/** A one-finger swipe across the shown pane, through Chromium's touch input (roadmap 3.8). */
+async function swipe(page: Page, direction: "left" | "right") {
+	const box = await page.locator("[data-pane-swipe]").boundingBox();
+	if (!box) throw new Error("No pane area to swipe on");
+	const y = box.y + box.height / 3;
+	const [from, to] =
+		direction === "left"
+			? [box.x + box.width * 0.8, box.x + box.width * 0.2]
+			: [box.x + box.width * 0.2, box.x + box.width * 0.8];
+	const cdp = await page.context().newCDPSession(page);
+	const touch = (type: "touchStart" | "touchMove" | "touchEnd", x: number) =>
+		cdp.send("Input.dispatchTouchEvent", {
+			type,
+			touchPoints: type === "touchEnd" ? [] : [{ x, y }],
+		});
+	await touch("touchStart", from);
+	for (let step = 1; step <= 5; step++) {
+		await touch("touchMove", from + ((to - from) * step) / 5);
+	}
+	await touch("touchEnd", to);
+	await cdp.detach();
+}
 
-	test("one pane shows at a time, with a switcher", async ({
+// Roadmap 3.8: below `md`, panes become tabs that a tap, a swipe or the keyboard switches.
+test.describe("on a phone", () => {
+	test.use({ viewport: { width: 390, height: 844 }, hasTouch: true });
+
+	test("one pane shows at a time; tabs, swipes and arrow keys switch panes", async ({
 		page,
 		context,
 	}) => {
 		await setUp(context, page, e2eMockModel("alpha"));
-		await openWorkspace(page, 2);
-		const tabs = page.getByRole("tablist", { name: "Panes" }).getByRole("tab");
-		await expect(tabs).toHaveText(["Pane 1", "Pane 2"]);
-		await expect(pane(page, 1)).toBeVisible();
-		await expect(pane(page, 2)).toBeHidden();
+		await openWorkspace(page, 3);
+		const tablist = page.getByRole("tablist", { name: "Panes" });
+		const tabs = tablist.getByRole("tab");
+		const tab = (n: number) => tablist.getByRole("tab", { name: `Pane ${n}` });
+		const shows = async (n: number) => {
+			await expect(tab(n)).toHaveAttribute("aria-selected", "true");
+			for (const other of [1, 2, 3]) {
+				if (other === n) await expect(pane(page, other)).toBeVisible();
+				else await expect(pane(page, other)).toBeHidden();
+			}
+			await expect(
+				page.getByRole("tabpanel", { name: `Pane ${n}` }),
+			).toBeVisible();
+		};
+		await expect(tabs).toHaveText(["Pane 1", "Pane 2", "Pane 3"]);
+		// Adding a pane shows it.
+		await shows(3);
 
-		// A synced send also reaches the hidden pane.
-		await composer(pane(page, 1)).fill("Hi both");
+		// A tap switches panes.
+		await tab(1).tap();
+		await shows(1);
+
+		// A synced send also reaches the hidden panes.
+		await composer(pane(page, 1)).fill("Hi all");
 		await composer(pane(page, 1)).press("Enter");
 		await expect(pane(page, 1).getByText(e2eMockReply("alpha"))).toBeVisible();
-		await tabs.last().click();
-		await expect(pane(page, 1)).toBeHidden();
-		await expect(pane(page, 2).getByText(e2eMockReply("alpha"))).toBeVisible();
 
-		// Adding a pane shows it.
-		await page.getByRole("button", { name: "Add pane" }).click();
-		await expect(tabs).toHaveCount(3);
-		await expect(pane(page, 3)).toBeVisible();
-		await expect(pane(page, 2)).toBeHidden();
+		// Swiping left shows the next pane, right the previous; neither goes past the ends.
+		await swipe(page, "right");
+		await shows(1);
+		await swipe(page, "left");
+		await shows(2);
+		await expect(pane(page, 2).getByText(e2eMockReply("alpha"))).toBeVisible();
+		await swipe(page, "left");
+		await shows(3);
+		await expect(pane(page, 3).getByText(e2eMockReply("alpha"))).toBeVisible();
+		await swipe(page, "left");
+		await shows(3);
+		await swipe(page, "right");
+		await shows(2);
+
+		// The keyboard: one tab stop, arrows move (and wrap), Home and End jump.
+		await expect(tab(2)).toHaveAttribute("tabindex", "0");
+		await expect(tab(1)).toHaveAttribute("tabindex", "-1");
+		await tab(2).focus();
+		await page.keyboard.press("ArrowRight");
+		await shows(3);
+		await expect(tab(3)).toBeFocused();
+		await page.keyboard.press("ArrowRight");
+		await shows(1);
+		await page.keyboard.press("End");
+		await shows(3);
+		await page.keyboard.press("Home");
+		await shows(1);
+		await expect(tab(1)).toBeFocused();
+	});
+
+	test("screenshot: a three-pane workspace on a phone", async ({
+		page,
+		context,
+	}) => {
+		await setUp(context, page, e2eMockModel("alpha"));
+		await openWorkspace(page, 3);
+		await page.getByRole("tab", { name: "Pane 1" }).tap();
+		await composer(pane(page, 1)).fill("Compare these");
+		await composer(pane(page, 1)).press("Enter");
+		await expect(pane(page, 1).getByText(e2eMockReply("alpha"))).toBeVisible();
+		await composer(pane(page, 1)).blur();
+		// Usage and timings (roadmap 2.5) vary run to run; e2e/usage.spec.ts covers them.
+		await page.addStyleTag({
+			content: "[data-usage] { display: none !important; }",
+		});
+		await expect(page).toHaveScreenshot("workspace-phone.png");
 	});
 });
 
