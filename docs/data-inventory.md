@@ -62,7 +62,7 @@ Promises the design already makes. Changing one of these is a product decision, 
 | Local model endpoints (name, server type, a localhost / 127.0.0.1 base URL, and whether you hid its CORS warning); local chats' model choices point at an endpoint by id | Your browser's localStorage (`highelo-local-endpoints`). No key, no chat content | Nobody else | Until you remove them or clear site data | Since 2.3 (2026-10-29) |
 | Which accounts answered "You have N chats from before you signed in" (their Better Auth user IDs, up to 50) | Your browser's localStorage (`highelo-no-account-chats-answered`). No chat content | Nobody else; anyone with access to this browser profile | Until you clear site data | Since 1.9 (2026-10-29) |
 | Whether you've read the local network access explainer | Your browser's localStorage (`highelo-local-network-explained`) | Nobody else | Until you clear site data | Since 2.3 (2026-10-29) |
-| Prompt library and versions | Your browser; Convex if synced | You | Until you delete them | Planned (3.6) |
+| Synced prompt library (prompts and their versions) | Convex, if you turn on sync | You | Until you delete them or turn off sync | Idea only (6.5, deferred). On-device prompts: see "Saved prompts" above |
 | Settings and preferences (theme, default model, notification choices) | Your browser. (The unused Convex `users.preferences` field was dropped on 2026-11-09) | You | Until changed or you clear site data | Partly today |
 | Synced chats | Convex | You (and group members) | Until you delete them or turn off sync | Planned (6.1) |
 | Shared chat snapshots | Convex | Anyone with the link | Until you unshare | Planned (6.3); the old sharing backend was deleted unused on 2026-10-30 |

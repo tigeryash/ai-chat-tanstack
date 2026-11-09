@@ -2,7 +2,7 @@
 
 > **Draft. Not legal advice: have a lawyer review before public launch.** These terms are revised as features land.
 
-Last updated: 2026-10-30
+Last updated: 2026-11-09
 
 These terms are an agreement between you and the developer of High Elo LLMs, an individual based in Ontario,
 Canada ("we", "us") about your use of High Elo LLMs at www.highelollms.com ("the app"). By using the app you agree to
@@ -61,7 +61,11 @@ other important decisions without checking it. You're responsible for how you us
 ## Your content
 
 You own the content you put into the app and, as between you and us, the output you receive (subject to your
-provider's terms). Chats are stored on your device. If you use a feature that stores content on our servers (sync,
+provider's terms). Chats, the files you attach and your saved prompts are stored on your device.
+
+You're responsible for what you send to a provider, including files you attach and saved prompts you apply to a
+chat. Only send what you have the right to share, and keep in mind that the provider receives it under its own
+terms and privacy policy. If you use a feature that stores content on our servers (sync,
 sharing, group chats), you give us permission to store and transmit it only to run that feature.
 
 You're responsible for keeping your own backups. Browsers can delete site data, so export chats you want to keep.
