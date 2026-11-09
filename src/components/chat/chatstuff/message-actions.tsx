@@ -30,6 +30,13 @@ export type MessageActionsProps = MessageUIProps & {
 	currentModel?: CurrentModel;
 };
 
+// Each item after the first gets a "·" in the gap before it. The separator sits outside the item,
+// so the group's overflow clip hides it when the item starts a line: a wrapped line never opens with
+// "·". The gap is three monospace characters, the width " · " had as text.
+const SEPARATED =
+	"relative before:absolute before:right-full before:mr-[1ch] before:content-['·'] first:before:content-none";
+const SEPARATED_GROUP = "flex flex-wrap gap-x-[3ch] overflow-hidden";
+
 function textOf(message: MessageUIProps["message"]): string {
 	return message.parts
 		.flatMap((part) => (part.type === "text" ? [part.text] : []))
@@ -50,7 +57,7 @@ function ReplyLine({ summary }: { summary: ReplySummary }) {
 					<button
 						type="button"
 						aria-label={`${text}. ${summary.details}`}
-						className="ml-2 rounded font-mono text-muted-foreground text-xs outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+						className="rounded text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
 					/>
 				}
 			>
@@ -65,22 +72,30 @@ function ReplyLine({ summary }: { summary: ReplySummary }) {
 
 /** "1.5K tokens · TTFT 420 ms · 52 tok/s" (roadmap 2.5), with the input/output split in the tooltip. */
 function ReplyStatsLine({ stats }: { stats: ReplyStatsSummary }) {
-	const text = [stats.tokens, stats.ttft, stats.speed]
-		.filter(Boolean)
-		.join(" · ");
+	const items = [stats.tokens, stats.ttft, stats.speed].filter(
+		(item) => typeof item === "string" && item.length > 0,
+	);
+	const text = items.join(" · ");
 	return (
 		<Tooltip>
 			<TooltipTrigger
 				render={
 					<button
 						type="button"
-						data-usage="reply"
 						aria-label={`${text}. ${stats.details}`}
-						className="ml-1 rounded font-mono text-muted-foreground text-xs outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+						className={`${SEPARATED_GROUP} min-w-0 rounded text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50`}
 					/>
 				}
 			>
-				· {text}
+				{items.map((item) => (
+					<span
+						key={item}
+						data-usage-item
+						className={`${SEPARATED} whitespace-nowrap`}
+					>
+						{item}
+					</span>
+				))}
 			</TooltipTrigger>
 			<TooltipContent>
 				<p>{stats.details}</p>
@@ -122,8 +137,21 @@ const MessageActions = ({
 				<Action onClick={handleThumbsDown} tooltip="Bad response">
 					<ThumbsDownIcon className="size-4" />
 				</Action>
-				{summary && <ReplyLine summary={summary} />}
-				{stats && <ReplyStatsLine stats={stats} />}
+				{summary && (
+					// p-1 keeps the buttons' focus rings inside the clip; -m-1 takes it back off the layout.
+					<div
+						className={`${SEPARATED_GROUP} -my-1 -mr-1 ml-1 min-w-0 p-1 font-mono text-muted-foreground text-xs`}
+					>
+						<div className={SEPARATED}>
+							<ReplyLine summary={summary} />
+						</div>
+						{stats && (
+							<div data-usage="reply" className={`${SEPARATED} flex min-w-0`}>
+								<ReplyStatsLine stats={stats} />
+							</div>
+						)}
+					</div>
+				)}
 			</Actions>
 		)
 	);

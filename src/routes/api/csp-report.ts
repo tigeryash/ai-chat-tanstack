@@ -4,21 +4,25 @@ import {
 	MAX_CSP_REPORT_BYTES,
 	parseCspReport,
 } from "@/lib/security/csp-report";
+import { storeCspViolations } from "@/lib/security/csp-report-store";
 
 // Browsers POST CSP violations here (the policy's report-uri). Each one is logged as a single `[csp]`
-// line in the server log (Vercel's function logs in production). Nothing is stored, and the reply
-// never says whether a report was accepted.
+// line in the server log (Vercel's function logs in production) and counted in Convex
+// (`storeCspViolations`; directive, blocked origin and route only). The reply never says whether a
+// report was accepted.
 export const Route = createFileRoute("/api/csp-report")({
 	server: {
 		handlers: {
 			POST: async ({ request }) => {
 				const body = await readCappedText(request);
 				if (body !== null) {
-					for (const violation of parseCspReport(safeJson(body))) {
+					const violations = parseCspReport(safeJson(body));
+					for (const violation of violations) {
 						logWarn(
 							`[csp] ${violation.disposition} ${violation.directive} blocked ${violation.blocked} on ${violation.page}`,
 						);
 					}
+					await storeCspViolations(violations);
 				}
 				return new Response(null, { status: 204 });
 			},

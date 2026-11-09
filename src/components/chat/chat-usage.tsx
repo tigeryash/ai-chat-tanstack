@@ -1,5 +1,6 @@
 import type { Chat } from "@ai-sdk/react";
 import type { UIMessage } from "ai";
+import { ReceiptTextIcon } from "lucide-react";
 import {
 	Popover,
 	PopoverContent,
@@ -67,10 +68,17 @@ export function ChatUsageSummary({ usage }: { usage: ChatUsage }) {
 			<PopoverTrigger
 				data-usage="chat"
 				aria-label={`This chat: ${[cost, tokens].filter(Boolean).join(", ")}. Usage by provider`}
-				className="shrink-0 rounded px-1.5 py-0.5 font-mono text-muted-foreground text-xs outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50"
+				className="flex shrink-0 items-center rounded px-1.5 py-0.5 font-mono text-muted-foreground text-xs outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50"
 			>
-				{cost ?? tokens}
-				{cost && <span className="@md/header:inline hidden"> · {tokens}</span>}
+				{/* A narrow header (a phone, or one of several desktop panes) gives the model name the room
+				    and keeps only an icon here; the popover still opens from it. */}
+				<ReceiptTextIcon aria-hidden className="@sm/header:hidden size-4" />
+				<span data-usage-total className="@sm/header:inline hidden">
+					{cost ?? tokens}
+					{cost && (
+						<span className="@md/header:inline hidden"> · {tokens}</span>
+					)}
+				</span>
 			</PopoverTrigger>
 			<PopoverContent align="end" className="w-auto max-w-sm gap-2 text-xs">
 				<p className="font-medium text-sm">This chat's usage</p>

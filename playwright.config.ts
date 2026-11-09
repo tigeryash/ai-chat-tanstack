@@ -1,8 +1,12 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const isCI = !!process.env.CI;
-const APP_PORT = 4174;
-const CONVEX_STUB_PORT = 4175;
+// Parallel worktrees each need their own ports: set E2E_PORT (the app; the Convex stub takes the next
+// port). A server already on the port is reused only with E2E_REUSE_SERVER=1, because silently reusing
+// another worktree's server tests that worktree's build.
+const APP_PORT = Number(process.env.E2E_PORT ?? 4174);
+const CONVEX_STUB_PORT = APP_PORT + 1;
+const reuseExistingServer = !isCI && process.env.E2E_REUSE_SERVER === "1";
 const convexStubUrl = `http://127.0.0.1:${CONVEX_STUB_PORT}`;
 
 export default defineConfig<{ enforceStrictCsp: boolean }>({
@@ -49,7 +53,7 @@ export default defineConfig<{ enforceStrictCsp: boolean }>({
 			command: "bun e2e/support/convex-stub.ts",
 			url: `${convexStubUrl}/api/auth/get-session`,
 			env: { CONVEX_STUB_PORT: String(CONVEX_STUB_PORT) },
-			reuseExistingServer: !isCI,
+			reuseExistingServer,
 		},
 		{
 			// A production build with the /e2e harness pages switched on (VITE_E2E), served by `vite preview`.
@@ -61,7 +65,7 @@ export default defineConfig<{ enforceStrictCsp: boolean }>({
 				VITE_CONVEX_SITE_URL: convexStubUrl,
 			},
 			timeout: 180_000,
-			reuseExistingServer: !isCI,
+			reuseExistingServer,
 		},
 	],
 });

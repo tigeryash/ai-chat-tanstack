@@ -334,6 +334,23 @@ test.describe("on a phone", () => {
 		await composer(pane(page, 1)).press("Enter");
 		await expect(pane(page, 1).getByText(e2eMockReply("alpha"))).toBeVisible();
 		await composer(pane(page, 1)).blur();
+		// The header's usage figure shrinks to an icon, so the model name keeps room to be read.
+		await expect(pane(page, 1).locator("[data-usage='chat']")).toBeVisible();
+		const name = pane(page, 1)
+			.getByRole("button", { name: /^Model: / })
+			.locator(".truncate");
+		await expect(name).toHaveText(e2eMockModel("alpha"));
+		const shown = await name.evaluate((el) => el.clientWidth / el.scrollWidth);
+		expect(shown).toBeGreaterThan(0.35);
+		// Three tabs fit beside the header's buttons without the tab row scrolling (none cut off).
+		const tabRow = page.getByRole("tablist", { name: "Panes" });
+		expect(
+			await tabRow.evaluate((row) => row.scrollWidth <= row.clientWidth),
+		).toBe(true);
+		// Usage and timings (roadmap 2.5) vary run to run; e2e/usage.spec.ts covers them.
+		await page.addStyleTag({
+			content: "[data-usage] { display: none !important; }",
+		});
 		await expect(page).toHaveScreenshot("workspace-phone.png");
 	});
 });

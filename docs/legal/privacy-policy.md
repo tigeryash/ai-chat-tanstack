@@ -2,7 +2,7 @@
 
 > **Draft. Not legal advice: have a lawyer review before public launch.** This draft is built from the project's data inventory and is revised as features land.
 
-Last updated: 2026-10-30
+Last updated: 2026-11-09
 
 High Elo LLMs ("the app", "we", "us") is an independent, non-commercial project run by its developer, an individual based in Ontario,
 Canada. You can reach us at support@highelollms.com.
@@ -28,8 +28,15 @@ Most of what the app stores never leaves your device. It lives in your browser's
 
 - **Chats.** Titles, messages (text, reasoning, files, tool calls and results), which model and host answered
   each reply, its cost, token counts and speed, timestamps, whether a chat is pinned, and which account on this device made it.
+  When you edit a message, the earlier versions and the replies they had are kept too, so you can switch back
+  to them; deleting the chat deletes them. Exports include them.
   Stored in IndexedDB. The app asks your browser to keep this data, but browsers can still clear it: Safari may
   delete it after 7 days without a visit. Exporting your chats is the backstop.
+- **Workspaces.** Which chats sit side by side, in what order, each pane's width and whether it's synced, and
+  which account on this device made it. No messages: those stay with each chat. Stored in IndexedDB, and not
+  included in chat exports yet.
+- **Saved layouts.** A name you give, and for each pane its model and host choice, width and sync switch. No
+  chats, messages or keys. Up to 20, stored in localStorage and shared by every account in this browser.
 - **API keys.** "This session only" keeps a key in the tab's memory until you reload or close the tab.
   "Remember on this device" stores it in IndexedDB, encrypted with a key your browser won't let any script
   export, with the last 4 characters visible so you can recognize it. This protects against someone copying
@@ -47,7 +54,8 @@ chats from this device" to delete them.
 
 ## What we store on our servers
 
-Our backend is [Convex](https://www.convex.dev). Today it holds account data only.
+Our backend is [Convex](https://www.convex.dev). Today it holds account data, plus the security report counts
+described under [Security reports](#security-reports), which aren't about you.
 
 | Data | Why | Kept for |
 |---|---|---|
@@ -83,7 +91,9 @@ syncing chats across devices, sharing a chat by link, group chats, and durable a
   machine (localhost). Nothing is sent there until you add the server in Settings.
 - **Convex** stores the server data listed above.
 - **Vercel** hosts the app. It receives your requests to our pages (IP address, user agent, the page address)
-  and keeps request logs for 1 hour. No keys or prompts pass through it.
+  and keeps request logs for 1 hour. No keys or prompts pass through it. A model link (`/new?models=…`) puts
+  the model names in the page address, so they reach these logs, your browser history, and anyone you share
+  the link with. Model links never contain keys, prompts, chats or local models.
 - **Brevo** sends our verification and password-reset emails, so it receives your email address and the
   message.
 - **Google, GitHub and Discord**, if you sign in with them. They take part in the sign-in and share your name,
@@ -99,8 +109,11 @@ We don't sell your data, and we don't share it for advertising.
 
 ## Security reports
 
-If your browser blocks something our security policy (CSP) doesn't allow, it sends us a report. We log only the
-rule, the blocked origin and the page path, in Vercel's logs, and drop the rest.
+If your browser blocks something our security policy (CSP) doesn't allow, it sends us a report. We keep only the
+rule, the blocked origin (a site name such as `https://example.com`, never a full address) and the kind of page (such
+as "a chat" or "settings", never a chat ID, query or fragment), and drop the rest, including your IP address and
+browser details. These go in Vercel's logs (kept 1 hour) and as a running count per rule, origin and kind of page
+in Convex, deleted 30 days after the last matching report. Nothing in them identifies you.
 
 ## Cookies and local storage
 
