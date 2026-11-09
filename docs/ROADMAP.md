@@ -467,10 +467,11 @@ Only what's still open. When one is done, tick it, add a dated note, and move it
   *Done when:* switching models shows/hides the right controls and no supported model errors across any control's range.
   *Status (2026-10-30):* registry, panel and transport mapping in [#47](https://github.com/tigeryash/ai-chat-tanstack/pull/47); checking each control's full range
   against real models is an owner to-do.
-- [ ] **2.5 Usage and cost display.** Tokens, TTFT, tokens/sec, and estimated cost per message, chat, and provider,
+- [x] **2.5 Usage and cost display.** Tokens, TTFT, tokens/sec, and estimated cost per message, chat, and provider,
   from catalog pricing. It's the user's money, so make it visible.
   *Done when:* Vitest covers the timing, token and cost totals with mock-model streams and a fake clock, and e2e
   shows each reply's stats and the chat's per-provider total on a fixture chat and on a live mock reply.
+  *Status (2026-11-08):* done in [PR #70](https://github.com/tigeryash/ai-chat-tanstack/pull/70). Logic in `src/lib/chat/reply-stats.ts` and `chat-usage.ts`.
 - [ ] **2.6 (Stretch) In-browser models.** WebGPU (transformers.js / WebLLM) and browser built-in AI (e.g. Chrome's
   Prompt API) as extra connection types.
 
