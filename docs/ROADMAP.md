@@ -71,12 +71,6 @@ Only what's still open. When one is done, tick it, add a dated note, and move it
   counts as executing the EU/UK Standard Contractual Clauses, so nothing to sign. The privacy and terms URLs are on
   Google's consent screen and Discord's app; GitHub OAuth apps have no field for them. Still to do: the support
   address, and the business name and lawyer's review before charging money.
-- [ ] After the old Convex chat backend is deleted (quality audit D1): its tables are still in `convex/schema.ts`
-  but nothing reads or writes them. Check prod's row counts for `conversations`, `conversationParticipants`,
-  `messages`, `attachments`, `messagePins` and `usageEvents` (`bunx convex data <table> --prod`, or the dashboard),
-  and Convex file storage (dashboard → Files; old attachment uploads live there). Then say whether to drop the
-  tables (and `users.preferences`) and delete any stored files. *Dev, 2026-10-30:* all six tables and file
-  storage are empty.
 - [ ] Enforce the strict CSP (quality audit G1): after a week of real use of production, signed in and chatting
   included, search Vercel's logs (Project → Logs) for `[csp]` lines and tell an agent what you find (none, or the
   directive, blocked origin and page of each). With none, the agent sets `ENFORCE_STRICT_CSP = true` in
@@ -558,7 +552,7 @@ This is effectively a small agent harness. Slices below are a draft; 4.0 settles
 - [ ] **6.1 Convex `ChatStore` + sync** (decision 11). On sign-in, offer to upload local chats. Keys never sync.
   The old Convex chat backend (`convex/messages.ts`, `conversations.ts`, `attachments.ts`, `branching.ts`,
   `usage.ts`, `messagePins.ts` and their access helpers) was unused after 1.2/1.3 and was deleted (quality audit
-  D1). Restore pieces from git at `58853e2` if useful; its tables wait on the owner to-do above.
+  D1). Restore pieces from git at `58853e2` if useful; its tables were dropped on 2026-11-09.
 - [ ] **6.2 Abuse protection on Convex writes.** Rate limits (`@convex-dev/rate-limiter`) on sync, share
   creation, and invites; captcha on sign-up (Better Auth captcha plugin with Turnstile).
 - [ ] **6.3 Sharing.** Read-only links for chats and workspaces via a server-rendered `/share/$id`, "Fork" into
@@ -721,3 +715,11 @@ Finished owner to-dos, oldest first, kept for their notes.
   *Done 2026-11-09:* with an email account and a Google account, signed-out chat kept, the email account's chat
   hidden from the Google account (its URL "not found") and back on signing in again, and "Sign out and remove my
   chats from this device" left the sidebar empty.
+- [x] After the old Convex chat backend is deleted (quality audit D1): its tables are still in `convex/schema.ts`
+  but nothing reads or writes them. Check prod's row counts for `conversations`, `conversationParticipants`,
+  `messages`, `attachments`, `messagePins` and `usageEvents` (`bunx convex data <table> --prod`, or the dashboard),
+  and Convex file storage (dashboard → Files; old attachment uploads live there). Then say whether to drop the
+  tables (and `users.preferences`) and delete any stored files. *Dev, 2026-10-30:* all six tables and file
+  storage are empty.
+  *Done 2026-11-09:* prod's six tables and file storage were empty too, and no `users` row had `preferences`.
+  Yash said drop them; the tables and the field left `convex/schema.ts`.

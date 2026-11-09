@@ -268,7 +268,8 @@ The industry consensus: **you cannot filter your way out of prompt injection; yo
   `convex/publicFunctions.test.ts` fails on any public query, mutation or action that `src/` and `e2e/` never call
   as `api.<module>.<name>`, unless it's allowlisted there with a reason. Delete functions the app stops using.
 - The old chat backend (messages, conversations, group chats, sharing, attachments with `generateUploadUrl`,
-  branching, usage, pins) was deleted unused on 2026-10-30 (quality audit D1). Restore from git at `58853e2`. Its
+  branching, usage, pins) was deleted unused on 2026-10-30 and its tables dropped on 2026-11-09 (quality audit D1).
+  Restore from git at `58853e2`. Its
   mutations checked membership and authorship, so clients couldn't write `streaming` partials, other users'
   messages, or usage records (audit items 1–3); anything restored for 6.1 or 6.3 keeps those checks and gets 6.2's
   rate limits.
