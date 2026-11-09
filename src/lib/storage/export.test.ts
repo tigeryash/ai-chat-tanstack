@@ -74,8 +74,12 @@ describe("export and import", () => {
 			params: { temperature: 0.5 },
 			systemPrompt: "Be brief.",
 		});
+		await store.setVotes("c1", { m2: "up" });
 		const before = await everything(store);
 		expect(before.find((chat) => chat.id === "c2")?.settings).toBeDefined();
+		expect(before.find((chat) => chat.id === "c1")?.votes).toEqual({
+			m2: "up",
+		});
 
 		const exported = await exportChats(store, null);
 		expect(exported).toMatchObject({ chatCount: 2, unreadableChatIds: [] });

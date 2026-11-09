@@ -15,3 +15,5 @@ Notes for working in this folder. The root [CLAUDE.md](/CLAUDE.md) (commands, ha
   messages and their replies are `Chat.branches` (forks plus off-path messages), stored in the `branches` table and
   absent when a chat has none. `saveMessages` without `branches` keeps the stored ones, so code that never loaded
   them can't wipe them. Open chats keep theirs in `src/lib/chat/chat-branches.ts`.
+- **Votes** (roadmap 3.4, `votes.ts`): thumbs up/down by reply message id on the chat row (`votes`), optional and
+  cleaned on read like `settings`; `saveMessages` keeps them. Open chats keep theirs in `src/lib/chat/chat-votes.ts`.

@@ -22,6 +22,8 @@ type MessagesListProps = {
 	onEdit?: (messageId: string, text: string) => void;
 	/** Shows another version of the message at `index`. Leave unset while a reply is streaming. */
 	onSwitch?: (index: number, versionId: string) => void;
+	/** The chat's id, for the replies' thumbs up/down (roadmap 3.4). */
+	chatId?: string;
 };
 
 // Memoized so a streaming reply re-renders only its own row: the SDK replaces just the message that
@@ -33,7 +35,9 @@ const MessageRow = memo(function MessageRow({
 	versionIds,
 	onEdit,
 	onSwitch,
+	chatId,
 }: {
+	chatId?: string;
 	message: Message;
 	index: number;
 	onRegenerate?: () => void;
@@ -51,6 +55,7 @@ const MessageRow = memo(function MessageRow({
 			<MessageUI
 				message={message}
 				onRegenerate={onRegenerate}
+				chatId={chatId}
 				branching={
 					message.role === "user"
 						? {
@@ -71,6 +76,7 @@ const MessagesList = ({
 	branches,
 	onEdit,
 	onSwitch,
+	chatId,
 }: MessagesListProps) => {
 	const last = messages.at(-1);
 	const regenerate =
@@ -86,6 +92,7 @@ const MessagesList = ({
 							key={message.id}
 							message={message}
 							index={index}
+							chatId={chatId}
 							onRegenerate={message === last ? regenerate : undefined}
 							// The fork's own list, so its identity holds while a reply streams.
 							versionIds={

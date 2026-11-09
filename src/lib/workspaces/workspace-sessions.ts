@@ -5,6 +5,7 @@ import {
 } from "@/lib/chat/chat-model-choice";
 import { openChat, openNewChat } from "@/lib/chat/chat-sessions";
 import { loadChatSettings } from "@/lib/chat/chat-settings";
+import { loadChatVotes } from "@/lib/chat/chat-votes";
 import type { ModelChoice } from "@/lib/chat/model-selection";
 import { getOpenChat } from "@/lib/chat/open-chats";
 import { chatStore } from "@/lib/storage/app-store";
@@ -56,6 +57,7 @@ export async function openPaneChat(
 	if (saved && !isVisibleTo(saved, viewer)) return false;
 	if (saved) {
 		loadChatSettings(saved.id, saved.settings);
+		loadChatVotes(saved.id, saved.votes);
 		loadChatBranches(saved.id, saved.branches);
 	}
 	const chat = openChat(pane.chatId, {

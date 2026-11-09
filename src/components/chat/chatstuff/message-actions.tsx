@@ -12,13 +12,18 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
+import { useReplyVote, voteOnReply } from "@/lib/chat/chat-votes";
 import { type ReplyDetail, replyDetails } from "@/lib/chat/reply-details";
 import { logWarn } from "@/lib/log";
+import { chatStore } from "@/lib/storage/app-store";
+import type { ReplyVote } from "@/lib/storage/votes";
 import type { MessageUIProps } from "@/types/types";
 
 export type MessageActionsProps = MessageUIProps & {
 	/** Set on the reply that can be regenerated (the last one, once it has finished). */
 	onRegenerate?: () => void;
+	/** The reply's chat, for its thumbs up/down (roadmap 3.4). No vote buttons without it. */
+	chatId?: string;
 };
 
 function textOf(message: MessageUIProps["message"]): string {
@@ -61,14 +66,61 @@ function ReplyDetailsButton({ details }: { details: ReplyDetail[] }) {
 	);
 }
 
-const MessageActions = ({ message, onRegenerate }: MessageActionsProps) => {
+/** Thumbs up/down (roadmap 3.4), saved with the chat on this device. Pressing a vote again clears it. */
+function ReplyVoteButtons({
+	chatId,
+	messageId,
+}: {
+	chatId: string;
+	messageId: string;
+}) {
+	const vote = useReplyVote(chatId, messageId);
+	const toggle = (pressed: ReplyVote) => {
+		voteOnReply(
+			chatId,
+			messageId,
+			vote === pressed ? null : pressed,
+			chatStore(),
+		);
+	};
+	return (
+		<>
+			<Action
+				onClick={() => toggle("up")}
+				tooltip="Good response"
+				aria-pressed={vote === "up"}
+				data-vote={vote === "up" ? "up" : undefined}
+				className={vote === "up" ? "text-foreground" : undefined}
+			>
+				<ThumbsUpIcon
+					className={`size-4 ${vote === "up" ? "fill-current" : ""}`}
+				/>
+			</Action>
+			<Action
+				onClick={() => toggle("down")}
+				tooltip="Bad response"
+				aria-pressed={vote === "down"}
+				data-vote={vote === "down" ? "down" : undefined}
+				className={vote === "down" ? "text-foreground" : undefined}
+			>
+				<ThumbsDownIcon
+					className={`size-4 ${vote === "down" ? "fill-current" : ""}`}
+				/>
+			</Action>
+		</>
+	);
+}
+
+const MessageActions = ({
+	message,
+	onRegenerate,
+	chatId,
+}: MessageActionsProps) => {
 	const handleCopy = () => {
 		navigator.clipboard
 			.writeText(textOf(message))
 			.catch((error) => logWarn("Couldn't copy the reply:", error));
 	};
-	const handleThumbsUp = () => {};
-	const handleThumbsDown = () => {};
 	const details = replyDetails(message.metadata);
 	return (
 		message.role === "assistant" && (
@@ -83,12 +135,7 @@ const MessageActions = ({ message, onRegenerate }: MessageActionsProps) => {
 						<RefreshCcwIcon className="size-4" />
 					</Action>
 				)}
-				<Action onClick={handleThumbsUp} tooltip="Good response">
-					<ThumbsUpIcon className="size-4" />
-				</Action>
-				<Action onClick={handleThumbsDown} tooltip="Bad response">
-					<ThumbsDownIcon className="size-4" />
-				</Action>
+				{chatId && <ReplyVoteButtons chatId={chatId} messageId={message.id} />}
 				{details && <ReplyDetailsButton details={details} />}
 			</Actions>
 		)

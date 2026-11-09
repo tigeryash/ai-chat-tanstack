@@ -1,6 +1,8 @@
 import { PlusIcon } from "lucide-react";
+import { useId } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import type { WorkspacePane } from "@/lib/storage/workspace";
 import { canAddPane } from "@/lib/workspaces/pane-layout";
 import type { LayoutPane } from "@/lib/workspaces/saved-layouts";
@@ -24,6 +26,7 @@ export function WorkspaceToolbar({
 	hiddenPanes,
 	currentLayout,
 	missingModels = 0,
+	syncScroll,
 }: {
 	panes: readonly WorkspacePane[];
 	/** The pane shown on a narrow screen; undefined when every pane shows. */
@@ -38,7 +41,10 @@ export function WorkspaceToolbar({
 	currentLayout: () => LayoutPane[];
 	/** Models a deep link named that the catalog doesn't list (roadmap 3.5). */
 	missingModels?: number;
+	/** The sync scroll switch (roadmap 3.4); undefined when one pane shows. */
+	syncScroll?: { on: boolean; onChange: (on: boolean) => void };
 }) {
+	const syncScrollId = useId();
 	return (
 		<div className="flex min-w-0 flex-1 items-center gap-2">
 			{shownId !== undefined && (
@@ -61,6 +67,21 @@ export function WorkspaceToolbar({
 					<Badge variant="outline" role="status" title={DIVERGED_HINT}>
 						Diverged
 					</Badge>
+				)}
+				{syncScroll && (
+					<label
+						htmlFor={syncScrollId}
+						title="Scrolling one pane scrolls the others to the same place"
+						className="flex items-center gap-1.5 text-muted-foreground text-xs"
+					>
+						<Switch
+							id={syncScrollId}
+							size="sm"
+							checked={syncScroll.on}
+							onCheckedChange={syncScroll.onChange}
+						/>
+						Sync scroll
+					</label>
 				)}
 				<LayoutsMenu current={currentLayout} />
 				{/* Icon-only on a phone, like Layouts, so the pane tabs keep their room. */}

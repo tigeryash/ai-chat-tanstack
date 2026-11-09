@@ -9,24 +9,17 @@ import {
 import {
 	type ChatUsage,
 	chatUsage,
+	costText,
 	sameChatUsage,
 	type UsageTotals,
 	usageTokens,
 } from "@/lib/chat/chat-usage";
 import { formatTokenCount } from "@/lib/chat/reply-stats";
 import { useChatMessagesValue } from "@/lib/chat/use-chat-messages-value";
-import { formatCost, formatCostExact } from "@/lib/models/format";
+import { formatCostExact } from "@/lib/models/format";
 
 // A chat's running total in its header (roadmap 2.5): what it has cost so far, and per provider in the
 // popover. It's the user's money, so the cost leads.
-
-/** "~$0.0123", "$0" for free replies, undefined when no reply had a price. */
-function costText(totals: UsageTotals, format = formatCost) {
-	if (totals.unpriced === totals.replies) return undefined;
-	const amount = format(totals.cost);
-	const mark = totals.costEstimated && !amount?.startsWith("<") ? "~" : "";
-	return `${mark}${amount}`;
-}
 
 const tokensText = (totals: UsageTotals) =>
 	`${formatTokenCount(usageTokens(totals))} tokens`;

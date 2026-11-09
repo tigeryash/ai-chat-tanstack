@@ -24,6 +24,7 @@ import { logError } from "@/lib/log";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { chatStore } from "@/lib/storage/app-store";
 import type { WorkspacePane } from "@/lib/storage/workspace";
+import { copySettingsToPanes } from "@/lib/workspaces/copy-settings";
 import {
 	layoutOf,
 	movePane,
@@ -34,6 +35,7 @@ import {
 } from "@/lib/workspaces/pane-layout";
 import { createPaneSync, usePaneSyncState } from "@/lib/workspaces/pane-sync";
 import type { LayoutPane } from "@/lib/workspaces/saved-layouts";
+import { useSyncScroll } from "@/lib/workspaces/sync-scroll";
 import {
 	addNewPane,
 	type OpenWorkspace,
@@ -41,6 +43,7 @@ import {
 import { MobilePanes } from "./mobile-panes";
 import { PaneActions } from "./pane-actions";
 import { PaneChat } from "./pane-chat";
+import { PaneStatsLine } from "./pane-stats";
 import { WorkspaceToolbar } from "./workspace-toolbar";
 
 // A workspace (roadmaps 3.1 and 3.2): up to four chat panes side by side, each with its own model,
@@ -138,6 +141,9 @@ export function WorkspaceView({
 	const reduced = usePrefersReducedMotion();
 	const { panes } = workspace;
 	useRetainPanes(panes);
+	const [syncScroll, setSyncScroll] = useState(false);
+	const panesRef = useRef<HTMLDivElement>(null);
+	useSyncScroll(panesRef, syncScroll && !isMobile);
 
 	const save = (next: WorkspacePane[]) => {
 		setWorkspace({ ...workspace, panes: next });
@@ -182,6 +188,7 @@ export function WorkspaceView({
 					chat={chat}
 					sync={{ hub, synced: pane.synced }}
 					paneCount={panes.length}
+					subheader={<PaneStatsLine chat={chat} label={label} />}
 					actions={
 						<PaneActions
 							chat={chat}
@@ -200,6 +207,16 @@ export function WorkspaceView({
 									? () => save(movePane(panes, pane.chatId, 1))
 									: undefined
 							}
+							onCopySettings={
+								panes.length > 1
+									? () =>
+											copySettingsToPanes(
+												pane.chatId,
+												panes.map((other) => other.chatId),
+												chatStore(),
+											)
+									: undefined
+							}
 							onClose={
 								panes.length > 1
 									? () => save(removePane(panes, pane.chatId))
@@ -213,7 +230,7 @@ export function WorkspaceView({
 	};
 
 	return (
-		<div className="flex h-full min-h-0 flex-col">
+		<div ref={panesRef} className="flex h-full min-h-0 flex-col">
 			<InHeader>
 				<WorkspaceToolbar
 					panes={panes}
@@ -227,6 +244,11 @@ export function WorkspaceView({
 					hiddenPanes={workspace.hiddenPanes.length}
 					currentLayout={() => layoutOfPanes(panes)}
 					missingModels={missingModels}
+					syncScroll={
+						isMobile || panes.length < 2
+							? undefined
+							: { on: syncScroll, onChange: setSyncScroll }
+					}
 				/>
 			</InHeader>
 			{isMobile ? (

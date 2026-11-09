@@ -13,6 +13,7 @@ import { BrowserChatTransport } from "./browser-transport";
 import { chatBranchesOf, loadChatBranches } from "./chat-branches";
 import { chatSettingsOf, loadChatSettings } from "./chat-settings";
 import { titleFromMessages } from "./chat-title";
+import { chatVotesOf, loadChatVotes } from "./chat-votes";
 import { resolveAppModel } from "./e2e-model";
 import { addOpenChat, getOpenChat, peekOpenChat } from "./open-chats";
 
@@ -53,6 +54,9 @@ export async function saveChat(
 		// Settings changed before the first reply had nowhere to go until now (roadmap 2.4b).
 		const settings = chatSettingsOf(chatId);
 		if (settings) await store.setSettings(chatId, settings);
+		// Likewise votes on the first reply before it was saved (roadmap 3.4).
+		const votes = chatVotesOf(chatId);
+		if (votes) await store.setVotes(chatId, votes);
 		const title = titleFromMessages(messages);
 		if (title) await store.renameChat(chatId, title);
 		await requestPersistentStorage();
@@ -114,6 +118,7 @@ export async function openSavedChat(
 	const saved = await store.getChat(id);
 	if (!saved || !isVisibleTo(saved, viewer)) return false;
 	loadChatSettings(id, saved.settings);
+	loadChatVotes(id, saved.votes);
 	loadChatBranches(id, saved.branches);
 	openChat(id, { messages: saved.messages, store, ownerId: saved.ownerId });
 	return true;

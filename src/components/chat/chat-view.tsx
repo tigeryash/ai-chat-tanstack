@@ -139,6 +139,7 @@ export function ChatView({
 				) : (
 					<MessagesList
 						messages={messages}
+						chatId={chat.id}
 						onRegenerate={
 							busy || !options
 								? undefined

@@ -395,6 +395,30 @@ describe("DexieChatStore", () => {
 		).rejects.toThrow();
 	});
 
+	it("keeps a chat's votes across saves, and only for a saved chat (roadmap 3.4)", async () => {
+		const { store } = setup();
+		await store.setVotes("c1", { m1: "up" });
+		await store.saveMessages("c1", hello, null);
+		expect((await store.getChat("c1"))?.votes).toBeUndefined();
+
+		await store.setVotes("c1", { m1: "up", m2: "down" });
+		await store.saveMessages("c1", hello, null);
+		expect((await store.getChat("c1"))?.votes).toEqual({
+			m1: "up",
+			m2: "down",
+		});
+		await expect(
+			store.setVotes("c1", { m1: "sideways" } as never),
+		).rejects.toThrow();
+	});
+
+	it("drops bad votes on read instead of failing the chat", async () => {
+		const { db, store } = setup();
+		await store.saveMessages("c1", hello, null);
+		await db.chats.update("c1", { votes: { m1: "up", m2: 7 } as never });
+		expect((await store.getChat("c1"))?.votes).toEqual({ m1: "up" });
+	});
+
 	it("drops bad settings on read instead of failing the chat", async () => {
 		const { db, store } = setup();
 		await store.saveMessages("c1", hello, null);

@@ -1,5 +1,6 @@
 import Dexie, { type DexieOptions, type EntityTable, type Table } from "dexie";
 import type { ChatSettings } from "@/lib/params/settings";
+import type { ChatVotes } from "./votes";
 import type { Workspace } from "./workspace";
 
 // Chats get their own IndexedDB database. API keys (roadmap 1.1) live elsewhere, so nothing that reads
@@ -40,6 +41,8 @@ export interface ChatRow {
 	 * Optional and cleaned on read, so it needed no format migration.
 	 */
 	settings?: ChatSettings;
+	/** Thumbs up/down by reply message id (roadmap 3.4). Optional and cleaned on read, like `settings`. */
+	votes?: ChatVotes;
 	/** The chat's format (format.ts), not Dexie's schema version below. */
 	formatVersion: number;
 }

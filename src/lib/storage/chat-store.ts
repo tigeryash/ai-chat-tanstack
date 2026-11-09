@@ -1,6 +1,7 @@
 import type { UIMessage } from "ai";
 import type { ChatSettings } from "@/lib/params/settings";
 import type { ChatBranches } from "./branches";
+import type { ChatVotes } from "./votes";
 import type { Workspace, WorkspaceSummary } from "./workspace";
 
 // What the app sees of a stored chat. `formatVersion` is a storage detail: chats come out of the store
@@ -21,6 +22,8 @@ export interface Chat {
 	ownerId: string | null;
 	/** The settings panel's values and system prompt (roadmap 2.4b). Absent: never set. */
 	settings?: ChatSettings;
+	/** Thumbs up/down by reply message id (roadmap 3.4). Absent: none. */
+	votes?: ChatVotes;
 	/** The path shown: the latest version of each edited message, unless another was picked. */
 	messages: UIMessage[];
 	/** The other versions of edited messages and their replies (roadmap 1.7). Absent: none. */
@@ -63,6 +66,8 @@ export interface ChatStore {
 	setPinned(chatId: string, pinned: boolean): Promise<void>;
 	/** Replaces the chat's settings. Does nothing for a chat that isn't saved, nor to `updatedAt`. */
 	setSettings(chatId: string, settings: ChatSettings): Promise<void>;
+	/** Replaces the chat's votes (roadmap 3.4). Like `setSettings`: nothing for an unsaved chat. */
+	setVotes(chatId: string, votes: ChatVotes): Promise<void>;
 	/** The shared system prompt (decision 19), "" when none. */
 	getDefaultSystemPrompt(): Promise<string>;
 	setDefaultSystemPrompt(prompt: string): Promise<void>;

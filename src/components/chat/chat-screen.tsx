@@ -22,12 +22,15 @@ export function ChatScreen({
 	chat,
 	onSend,
 	actions,
+	subheader,
 	sync,
 	paneCount,
 }: {
 	chat: Chat<UIMessage>;
 	onSend?: () => void;
 	actions?: ReactNode;
+	/** Under the header row: a pane's compare stats (roadmap 3.4). */
+	subheader?: ReactNode;
 } & Pick<ChatViewProps, "sync" | "paneCount">) {
 	// No `useChat` here: the header shouldn't re-render per streamed chunk. ChatView subscribes.
 	const model = useChatModel(chat);
@@ -111,6 +114,7 @@ export function ChatScreen({
 							<div className="flex shrink-0 items-center gap-1">{actions}</div>
 						)}
 					</div>
+					{subheader}
 					{chosenModel?.status === "removed" && (
 						<RemovedModelBanner
 							model={chosenModel}

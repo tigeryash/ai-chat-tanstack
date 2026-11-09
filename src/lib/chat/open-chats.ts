@@ -7,6 +7,7 @@ import type { ChatStore } from "@/lib/storage/chat-store";
 import { isVisibleTo, type Viewer } from "@/lib/storage/ownership";
 import { forgetChatBranches } from "./chat-branches";
 import { forgetChatSettings } from "./chat-settings";
+import { forgetChatVotes } from "./chat-votes";
 
 // Open chats in this tab, by chat id. A chat keeps streaming while the person moves between routes
 // (`/new` hands its chat to `/$chatId` mid-reply), so the `Chat` objects live here, not in a component.
@@ -104,6 +105,7 @@ export function closeChat(id: string): void {
 	openChats.delete(id);
 	notify();
 	forgetChatSettings(id);
+	forgetChatVotes(id);
 	forgetChatBranches(id);
 	setReplying(id, false);
 	open.chat
