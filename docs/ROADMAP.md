@@ -377,7 +377,7 @@ Only what's still open. When one is done, tick it, add a dated note, and move it
   round trip (bytes in their own table, back as data URLs, export/import, cleanup) and the transport sending file
   parts to a mock model; e2e attaches an image, sends it, finds it in the request to the faked provider, and sees
   it after a reload.
-  *Status (2026-11-09):* done; per-pane checks for synced panes stay in 3.3. PR: PR_URL
+  *Status (2026-11-09):* done; per-pane checks for synced panes stay in 3.3. PR: https://github.com/tigeryash/ai-chat-tanstack/pull/91
 - [x] **1.7 Edit and branch.** Edit a user message → new branch; switch between siblings.
   *Done when:* Vitest covers the format migration (an old-format fixture loads through it), the branch tree
   operations, and export/import round-tripping branches; e2e edits a message, sees a new reply, switches back to the
