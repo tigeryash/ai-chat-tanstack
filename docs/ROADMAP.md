@@ -500,7 +500,10 @@ Only what's still open. When one is done, tick it, add a dated note, and move it
   Later: variables (`{{date}}`).
 - [ ] **3.7 Blind mode** *(deferred; revisit with monetization)*. Hide model names, pick the better answer, reveal.
   Votes stay local and feed a personal leaderboard. Runs on the user's keys.
-- [ ] **3.8 Mobile.** Panes become swipeable tabs below `md`.
+- [x] **3.8 Mobile.** Panes become swipeable tabs below `md`. Done when, at a 390px viewport, a 3-pane workspace
+  shows one pane with tabs (WAI-ARIA roles, one tab stop, arrows/Home/End); swipes and tab taps switch panes; a
+  sent prompt still goes to every synced pane; desktop screenshot baselines are unchanged and mobile ones added.
+  *Status:* done in [#72](https://github.com/tigeryash/ai-chat-tanstack/pull/72) (2026-11-08).
 - [ ] **3.9 Insights.** Local dashboard: spend per provider, latency per model, blind-mode win rates, most-used prompts.
 - [x] **3.10 Status in the tab and notifications.** The tab title and favicon reflect status (e.g. "● 2 replying",
   "✓ Done") while the tab is in the background. Browser notifications when a reply or agent run finishes or needs
