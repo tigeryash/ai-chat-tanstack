@@ -1,6 +1,7 @@
 import type { Chat } from "@ai-sdk/react";
 import type { UIMessage } from "ai";
 import type { ReactNode } from "react";
+import { ChatUsageButton } from "@/components/chat/chat-usage";
 import { ChatView, type ChatViewProps } from "@/components/chat/chat-view";
 import { HostSwitcher } from "@/components/models/host-switcher";
 import { LocalModelCard, ModelCard } from "@/components/models/model-card";
@@ -105,6 +106,7 @@ export function ChatScreen({
 								/>
 							)}
 						</div>
+						<ChatUsageButton chat={chat} />
 						{actions && (
 							<div className="flex shrink-0 items-center gap-1">{actions}</div>
 						)}

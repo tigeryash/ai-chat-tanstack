@@ -11,6 +11,10 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
+	type ReplyStatsSummary,
+	replyStatsSummary,
+} from "@/lib/chat/reply-stats";
+import {
 	type CurrentModel,
 	type ReplySummary,
 	replySummary,
@@ -59,6 +63,32 @@ function ReplyLine({ summary }: { summary: ReplySummary }) {
 	);
 }
 
+/** "1.5K tokens · TTFT 420 ms · 52 tok/s" (roadmap 2.5), with the input/output split in the tooltip. */
+function ReplyStatsLine({ stats }: { stats: ReplyStatsSummary }) {
+	const text = [stats.tokens, stats.ttft, stats.speed]
+		.filter(Boolean)
+		.join(" · ");
+	return (
+		<Tooltip>
+			<TooltipTrigger
+				render={
+					<button
+						type="button"
+						data-usage="reply"
+						aria-label={`${text}. ${stats.details}`}
+						className="ml-1 rounded font-mono text-muted-foreground text-xs outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+					/>
+				}
+			>
+				· {text}
+			</TooltipTrigger>
+			<TooltipContent>
+				<p>{stats.details}</p>
+			</TooltipContent>
+		</Tooltip>
+	);
+}
+
 const MessageActions = ({
 	message,
 	onRegenerate,
@@ -72,9 +102,12 @@ const MessageActions = ({
 	const handleThumbsUp = () => {};
 	const handleThumbsDown = () => {};
 	const summary = replySummary(message.metadata, currentModel);
+	const stats = summary && replyStatsSummary(message.metadata);
 	return (
 		message.role === "assistant" && (
-			<Actions>
+			// Wraps in a narrow pane rather than overflowing it once the stats are on the line. No side
+			// padding and -ml-2 (the icon buttons' own inset) line the copy icon up with the reply text.
+			<Actions className="-ml-2 flex-wrap gap-y-1 px-0">
 				<Action onClick={handleCopy} tooltip="Copy to clipboard">
 					<CopyIcon className="size-4" />
 				</Action>
@@ -90,6 +123,7 @@ const MessageActions = ({
 					<ThumbsDownIcon className="size-4" />
 				</Action>
 				{summary && <ReplyLine summary={summary} />}
+				{stats && <ReplyStatsLine stats={stats} />}
 			</Actions>
 		)
 	);

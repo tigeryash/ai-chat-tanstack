@@ -42,12 +42,17 @@ test("a reply streams in, reasoning first and live, then saves locally", async (
 	await expect(status(page)).toHaveAttribute("data-chat-status", "ready");
 	await expect(page.getByText(/Thought for/)).toBeVisible();
 	await expect(page.getByRole("button", { name: "Stop" })).toHaveCount(0);
+	// Its usage and speed, measured in the page (roadmap 2.5); the mock model reports 3 + 5 tokens.
+	await expect(page.locator("[data-usage='reply']")).toHaveText(
+		/^· 8 tokens · TTFT \d+(\.\d)? (ms|s) · \d+ tok\/s$/,
+	);
 
 	// Saved in IndexedDB when the reply finished: a fresh page load reopens it.
 	const chatId = await page.locator("main").getAttribute("data-chat-id");
 	await open(page, `?chat=${chatId}`);
 	await expect(page.getByText("Hello mock")).toBeVisible();
 	await expect(reply(page)).toContainText(replyText);
+	await expect(page.locator("[data-usage='reply']")).toContainText("8 tokens");
 });
 
 test("Stop ends the reply where it is, keeps it, and allows a new message", async ({
