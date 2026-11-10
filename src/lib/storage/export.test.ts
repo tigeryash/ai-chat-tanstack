@@ -1,9 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { EMPTY_BRANCHES, editAt } from "./branches";
+import { EMPTY_BRANCHES, editAt, regenerateAt } from "./branches";
 import type { Chat, ChatStore } from "./chat-store";
 import { createDexieChatStore } from "./dexie-chat-store";
 import { ChatStoreError } from "./errors";
-import { CHAT_EXPORT_FORMAT, exportChats, importChats } from "./export";
+import {
+	CHAT_EXPORT_FORMAT,
+	CHAT_EXPORT_VERSION,
+	exportChats,
+	importChats,
+} from "./export";
 import v0Chat from "./fixtures/chat-v0.json";
 import { CHAT_FORMAT_VERSION } from "./format";
 import { openTestDatabase, textMessage, tickingClock } from "./test-support";
@@ -54,6 +59,24 @@ describe("export and import", () => {
 		expect(before[0]?.branches).toEqual(edit.branches);
 	});
 
+	it("round-trips regenerated replies (roadmap R4)", async () => {
+		const store = freshStore();
+		const original = [
+			textMessage("m1", "user", "hello"),
+			textMessage("m2", "assistant", "hi"),
+		];
+		const regenerated = regenerateAt(original, EMPTY_BRANCHES, 1, "m2b");
+		const path = [...regenerated.path, textMessage("m2b", "assistant", "hey")];
+		await store.saveMessages("c1", path, null, regenerated.branches);
+		const before = await everything(store);
+		expect(before[0]?.branches).toEqual(regenerated.branches);
+
+		const exported = await exportChats(store, null);
+		const wiped = freshStore("regenerated-after-wipe");
+		await importChats(wiped, exported.json, null);
+		expect(await everything(wiped)).toEqual(before);
+	});
+
 	it("export → wipe → import restores everything", async () => {
 		const store = freshStore();
 		await store.saveMessages(
@@ -96,6 +119,12 @@ describe("export and import", () => {
 			promptsImported: 0,
 			promptsUpdated: 0,
 			promptsSkipped: 0,
+			workspacesImported: 0,
+			workspacesUpdated: 0,
+			workspacesSkipped: 0,
+			layoutsImported: 0,
+			layoutsUpdated: 0,
+			layoutsSkipped: 0,
 		});
 		expect(await everything(wiped)).toEqual(before);
 	});
@@ -107,7 +136,7 @@ describe("export and import", () => {
 
 		expect(file).toMatchObject({
 			format: CHAT_EXPORT_FORMAT,
-			exportVersion: 1,
+			exportVersion: CHAT_EXPORT_VERSION,
 			exportedAt: "1970-01-01T00:00:00.000Z",
 			chats: [{ formatVersion: CHAT_FORMAT_VERSION, id: "c1", ownerId: null }],
 		});
@@ -194,6 +223,12 @@ describe("export and import", () => {
 			promptsImported: 0,
 			promptsUpdated: 0,
 			promptsSkipped: 0,
+			workspacesImported: 0,
+			workspacesUpdated: 0,
+			workspacesSkipped: 0,
+			layoutsImported: 0,
+			layoutsUpdated: 0,
+			layoutsSkipped: 0,
 		});
 		expect(
 			await importChats(store, exportFile([chat(20, "newer")]), null),
@@ -205,6 +240,12 @@ describe("export and import", () => {
 			promptsImported: 0,
 			promptsUpdated: 0,
 			promptsSkipped: 0,
+			workspacesImported: 0,
+			workspacesUpdated: 0,
+			workspacesSkipped: 0,
+			layoutsImported: 0,
+			layoutsUpdated: 0,
+			layoutsSkipped: 0,
 		});
 		expect((await store.getChat("c1"))?.messages[0].parts[0]).toMatchObject({
 			text: "newer",
@@ -251,6 +292,12 @@ describe("export and import", () => {
 			promptsImported: 0,
 			promptsUpdated: 0,
 			promptsSkipped: 0,
+			workspacesImported: 0,
+			workspacesUpdated: 0,
+			workspacesSkipped: 0,
+			layoutsImported: 0,
+			layoutsUpdated: 0,
+			layoutsSkipped: 0,
 		});
 		expect(
 			(await store.listChats()).map((c) => `${c.id}:${c.ownerId}`).sort(),
@@ -286,6 +333,12 @@ describe("export and import", () => {
 			promptsImported: 0,
 			promptsUpdated: 0,
 			promptsSkipped: 0,
+			workspacesImported: 0,
+			workspacesUpdated: 0,
+			workspacesSkipped: 0,
+			layoutsImported: 0,
+			layoutsUpdated: 0,
+			layoutsSkipped: 0,
 		});
 		expect(await store.getChat("mine")).toMatchObject({ ownerId: "user-a" });
 		expect(await store.getChat("anyone")).toMatchObject({ ownerId: null });
@@ -309,7 +362,11 @@ describe("export and import", () => {
 			JSON.stringify({ format: "other", chats: [] }),
 			"invalid-export",
 		],
-		["a newer export layout", exportFile([], 2), "too-new"],
+		[
+			"a newer export layout",
+			exportFile([], CHAT_EXPORT_VERSION + 1),
+			"too-new",
+		],
 	])("rejects %s", async (_, json, code) => {
 		const error = await importChats(freshStore(), json, null).catch(
 			(e: unknown) => e,

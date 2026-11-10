@@ -20,10 +20,15 @@ import { type PromptSource, replyPromptSource } from "@/lib/prompts/provenance";
 import { chatStore } from "@/lib/storage/app-store";
 import type { ReplyVote } from "@/lib/storage/votes";
 import type { MessageUIProps } from "@/types/types";
+import { HIDE_WHILE_BUSY, VersionSwitcher } from "./user-message-actions";
 
 export type MessageActionsProps = MessageUIProps & {
-	/** Set on the reply that can be regenerated (the last one, once it has finished). */
+	/** Regenerates this reply into a new version (roadmap R4). Hidden while the chat is busy. */
 	onRegenerate?: () => void;
+	/** This reply's versions, oldest first, when it has been regenerated. */
+	versionIds?: readonly string[];
+	/** Shows another version. Ignored while the chat is busy. */
+	onSwitch?: (versionId: string) => void;
 	/** The reply's chat, for its thumbs up/down (roadmap 3.4). No vote buttons without it. */
 	chatId?: string;
 };
@@ -127,6 +132,8 @@ const MessageActions = ({
 	message,
 	onRegenerate,
 	chatId,
+	versionIds,
+	onSwitch,
 }: MessageActionsProps) => {
 	const handleCopy = () => {
 		navigator.clipboard
@@ -140,11 +147,26 @@ const MessageActions = ({
 			// No side padding and -ml-2 (the icon buttons' own inset) line the copy icon up with the reply
 			// text. Model, host, cost and timings all sit behind "⋯", so the row stays one line.
 			<Actions className="-ml-2 px-0">
+				{versionIds && (
+					// Hidden while a reply streams, by CSS, like the person's own switcher (roadmap 1.7).
+					<div className={HIDE_WHILE_BUSY}>
+						<VersionSwitcher
+							messageId={message.id}
+							versionIds={versionIds}
+							onSwitch={onSwitch}
+							label="Reply versions"
+						/>
+					</div>
+				)}
 				<Action onClick={handleCopy} tooltip="Copy to clipboard">
 					<CopyIcon className="size-4" />
 				</Action>
 				{onRegenerate && (
-					<Action onClick={onRegenerate} tooltip="Regenerate response">
+					<Action
+						onClick={onRegenerate}
+						tooltip="Regenerate response"
+						className={HIDE_WHILE_BUSY}
+					>
 						<RefreshCcwIcon className="size-4" />
 					</Action>
 				)}

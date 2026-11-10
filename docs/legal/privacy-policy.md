@@ -48,10 +48,11 @@ Most of what the app stores never leaves your device. It lives in your browser's
   the chat's model. Each reply records which saved prompt and version it was sent with (an id and a number, not
   the text), stored with the chat and included in its exports.
 - **Workspaces.** Which chats sit side by side, in what order, each pane's width and whether it's synced, and
-  which account on this device made it. No messages: those stay with each chat. Stored in IndexedDB, and not
-  included in chat exports yet.
+  which account on this device made it. No messages: those stay with each chat. Stored in IndexedDB, and included
+  in exports (only the panes whose chats are in the same file).
 - **Saved layouts.** A name you give, and for each pane its model and host choice, width and sync switch. No
-  chats, messages or keys. Up to 20, stored in localStorage and shared by every account in this browser.
+  chats, messages or keys. Up to 20, stored in localStorage and shared by every account in this browser, so an
+  export includes all of them.
 - **API keys.** "This session only" keeps a key in the tab's memory until you reload or close the tab.
   "Remember on this device" stores it in IndexedDB, encrypted with a key your browser won't let any script
   export, with the last 4 characters visible so you can recognize it. This protects against someone copying
@@ -154,6 +155,8 @@ message content.
   elsewhere. Exports include the chat's attachments and system prompt, and never include API keys. Deleting a chat
   deletes its attachments.
 - **Saved prompts:** delete them in the prompt library. They're included in the same export file as your chats.
+- **Workspaces and saved layouts:** delete them from the sidebar and in Layouts. Both are included in the same
+  export file; importing keeps whichever copy is newer.
   Clearing your browser's site data for this app deletes everything stored in the browser.
 - **API keys:** delete them in Settings → API keys. To revoke a key entirely, do it on the provider's site.
 - **Your account:** self-serve account deletion and export are planned. Until then, email us at the address below. We

@@ -5,6 +5,7 @@ import {
 	EMPTY_BRANCHES,
 	editAt,
 	normalizeBranches,
+	regenerateAt,
 	siblingsAt,
 	switchAt,
 } from "./branches";
@@ -131,5 +132,100 @@ describe("branch tree", () => {
 		expect(normalizeBranches(edited.path, stale).forks[0]?.activeId).toBe(
 			"u2b",
 		);
+	});
+});
+
+/** Regenerates the reply at `index` into `id`, as if `id` then streamed in. */
+function regenerateWith(
+	current: readonly UIMessage[],
+	branches: ChatBranches,
+	index: number,
+	id: string,
+) {
+	const next = regenerateAt(current, branches, index, id);
+	return {
+		path: [...next.path, textMessage(id, "assistant", id)],
+		branches: next.branches,
+	};
+}
+
+describe("regenerating into a branch", () => {
+	it("keeps the last reply as the older sibling and shows the new one", () => {
+		const cut = regenerateAt(path, EMPTY_BRANCHES, 3, "a2b");
+		expect(ids(cut.path)).toEqual(["u1", "a1", "u2"]);
+		expect(cut.branches.forks).toEqual([
+			{ parentId: "u2", childIds: ["a2", "a2b"], activeId: "a2b" },
+		]);
+		expect(cut.branches.messages).toEqual([{ parentId: "u2", message: a2 }]);
+		const next = regenerateWith(path, EMPTY_BRANCHES, 3, "a2b");
+		expect(siblingsAt(next.path, next.branches, 3)).toEqual({
+			ids: ["a2", "a2b"],
+			index: 1,
+		});
+	});
+
+	it("regenerating a middle reply takes the rest of the chat with the old one", () => {
+		const next = regenerateWith(path, EMPTY_BRANCHES, 1, "a1b");
+		expect(ids(next.path)).toEqual(["u1", "a1b"]);
+		expect(next.branches.messages.map((entry) => entry.message.id)).toEqual([
+			"a1",
+			"u2",
+			"a2",
+		]);
+		const back = switchAt(next.path, next.branches, 1, "a1");
+		expect(ids(back.path)).toEqual(["u1", "a1", "u2", "a2"]);
+		expect(siblingsAt(back.path, back.branches, 1)).toEqual({
+			ids: ["a1", "a1b"],
+			index: 0,
+		});
+	});
+
+	it("each regenerate is the newest sibling, oldest first", () => {
+		const second = regenerateWith(path, EMPTY_BRANCHES, 3, "a2b");
+		const third = regenerateWith(second.path, second.branches, 3, "a2c");
+		expect(siblingsAt(third.path, third.branches, 3)).toEqual({
+			ids: ["a2", "a2b", "a2c"],
+			index: 2,
+		});
+		// Regenerating from an older sibling still appends, and shows the new one.
+		const shown = switchAt(third.path, third.branches, 3, "a2");
+		const fourth = regenerateWith(shown.path, shown.branches, 3, "a2d");
+		expect(siblingsAt(fourth.path, fourth.branches, 3)).toEqual({
+			ids: ["a2", "a2b", "a2c", "a2d"],
+			index: 3,
+		});
+	});
+
+	it("a regenerated reply forks inside an edited branch, and both survive switching", () => {
+		const edited = editWithReply(path, EMPTY_BRANCHES, 2, "u2b");
+		const regenerated = regenerateWith(
+			edited.path,
+			edited.branches,
+			3,
+			"u2b-reply-2",
+		);
+		const original = switchAt(regenerated.path, regenerated.branches, 2, "u2");
+		expect(ids(original.path)).toEqual(["u1", "a1", "u2", "a2"]);
+		const again = switchAt(original.path, original.branches, 2, "u2b");
+		expect(ids(again.path)).toEqual(["u1", "a1", "u2b", "u2b-reply-2"]);
+		expect(siblingsAt(again.path, again.branches, 3)?.ids).toEqual([
+			"u2b-reply",
+			"u2b-reply-2",
+		]);
+		expect(normalizeBranches(again.path, again.branches)).toEqual(
+			again.branches,
+		);
+	});
+
+	it("only a reply can be regenerated", () => {
+		expect(() => regenerateAt(path, EMPTY_BRANCHES, 2, "x")).toThrow(
+			RangeError,
+		);
+	});
+
+	it("a reply that never arrived leaves the old one on its own", () => {
+		const cut = regenerateAt(path, EMPTY_BRANCHES, 3, "a2b");
+		const normalized = normalizeBranches(cut.path, cut.branches);
+		expect(normalized.forks).toEqual([]);
 	});
 });

@@ -21,7 +21,8 @@ Notes for working in this folder. The root [CLAUDE.md](/CLAUDE.md) (commands, ha
 - **Layouts and links** (roadmap 3.5): `/new?models=a,b,c` (`model-link.ts`, parsed in `validateSearch`, so it
   imports only Zod) opens a workspace with a fresh chat per catalog model (`createWorkspaceWith`); unknown ids are
   dropped and counted in `/w/$id?missing=n`. Saved layouts (`saved-layouts.ts`, localStorage) keep pane models,
-  widths and sync, never chat ids; opening one makes a new workspace. Neither changes the default for new chats
+  widths and sync, never chat ids; opening one makes a new workspace. Both travel in exports (`workspace-transfer.ts`, Refine R4): a
+  workspace keeps only panes whose chat is in the file, and an import puts back the panes here the viewer can't see. Neither changes the default for new chats
   (`setChatModelChoice`, not `storeChatModelChoice`).
 - **Compare tools** (roadmap 3.4): each pane's stats line (`pane-stats.ts`, latest reply's TTFT and tok/s plus the
   chat's cost, built on `readReplyStats` / `chatUsage`) sits under its header, never on replies. Sync scroll

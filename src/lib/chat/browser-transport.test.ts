@@ -57,6 +57,18 @@ describe("BrowserChatTransport", () => {
 		expect(deltas("text-delta")).toEqual(["Hel", "lo"]);
 	});
 
+	it("gives the reply the id the request names (regenerating into a branch)", async () => {
+		const transport = new BrowserChatTransport(async () =>
+			mockChatModel({ text: ["x"] }),
+		);
+		const named = await collect(
+			await send(transport, { ...SELECTION, replyId: "reply-2" }),
+		);
+		expect(named[0]).toMatchObject({ type: "start", messageId: "reply-2" });
+		const unnamed = await collect(await send(transport, SELECTION));
+		expect(unnamed[0]).not.toHaveProperty("messageId");
+	});
+
 	it("refuses a request without a provider and model", async () => {
 		const transport = new BrowserChatTransport(async () =>
 			mockChatModel({ text: ["x"] }),
