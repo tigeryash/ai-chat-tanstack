@@ -1,4 +1,5 @@
 import { useNavigate, useRouter } from "@tanstack/react-router";
+import type { SettingId } from "./registry";
 import { DEFAULT_SETTINGS_SECTION, type SettingsSectionId } from "./sections";
 
 // Settings is a dialog driven by `?settings=<section>` (docs/settings-research.md, "Container"). Opening
@@ -9,6 +10,8 @@ import { DEFAULT_SETTINGS_SECTION, type SettingsSectionId } from "./sections";
 // otherwise reset or restore scroll positions on the page behind (a chat) and inside the dialog.
 
 let openedByPush = false;
+// A row to focus and highlight when the dialog next opens (the command palette's settings search).
+let pendingHighlight: SettingId | null = null;
 
 /** Call when an opening navigation pushes the entry (a `SettingsLink` click does). */
 export function markSettingsPushed() {
@@ -18,6 +21,12 @@ export function markSettingsPushed() {
 /** Call when the dialog closes by any route (Back included), so the next close doesn't go back twice. */
 export function forgetSettingsPush() {
 	openedByPush = false;
+	pendingHighlight = null;
+}
+
+/** The row the dialog should focus and highlight as it opens, if one was asked for. */
+export function settingToHighlight(): SettingId | null {
+	return pendingHighlight;
 }
 
 export function withSettings<T extends object>(
@@ -39,8 +48,13 @@ export function useSettingsNavigation() {
 	const router = useRouter();
 
 	return {
-		open(section: SettingsSectionId = DEFAULT_SETTINGS_SECTION) {
+		/** With `setting`, the dialog opens with that row focused and highlighted. */
+		open(
+			section: SettingsSectionId = DEFAULT_SETTINGS_SECTION,
+			setting?: SettingId,
+		) {
 			markSettingsPushed();
+			pendingHighlight = setting ?? null;
 			void navigate({
 				to: ".",
 				search: (prev) => withSettings(prev, section),

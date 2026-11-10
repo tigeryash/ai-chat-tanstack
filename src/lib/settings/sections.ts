@@ -1,6 +1,7 @@
 // The Settings dialog's sections (roadmap R2 S1, docs/settings-research.md section 2). This module is
 // tiny on purpose: the root route parses `?settings=<section>` with it on every page, so it must not
-// import the controls. The rows live in `registry.ts`.
+// import the controls. The rows live in `registry.ts`, and each section's "coming here" note in
+// `upcoming.ts`, which only the dialog loads.
 
 export const SETTINGS_SECTION_IDS = [
 	"general",
@@ -24,8 +25,6 @@ export interface SettingsSection {
 	id: SettingsSectionId;
 	label: string;
 	group: SettingsGroupId;
-	/** What lands here in later slices, for the empty state of a section with no rows yet. */
-	upcoming: string;
 }
 
 export const SETTINGS_GROUPS: readonly {
@@ -42,70 +41,56 @@ export const SETTINGS_SECTIONS: readonly SettingsSection[] = [
 		id: "general",
 		label: "General",
 		group: "app",
-		upcoming:
-			"A default model for new chats and a model that names your chats.",
 	},
 	{
 		id: "appearance",
 		label: "Appearance",
 		group: "app",
-		upcoming: "Theme presets.",
 	},
 	{
 		id: "chat",
 		label: "Chat",
 		group: "app",
-		upcoming:
-			"Reply stats, reasoning open or closed, and scroll sync defaults.",
 	},
 	{
 		id: "keyboard",
 		label: "Keyboard",
 		group: "app",
-		upcoming: "A list of keyboard shortcuts.",
 	},
 	{
 		id: "notifications",
 		label: "Notifications",
 		group: "app",
-		upcoming: "Notifications for agent runs.",
 	},
 	{
 		id: "models",
 		label: "Models & hosts",
 		group: "models",
-		upcoming:
-			"Host preferences: hosts to skip, a price cap for Auto, and per-model defaults.",
 	},
 	{
 		id: "connections",
 		label: "Connections",
 		group: "models",
-		upcoming: "More connections, like a search tool key.",
 	},
 	{
 		id: "prompts",
 		label: "Prompts",
 		group: "models",
-		upcoming: "A default system prompt for every chat.",
 	},
 	{
 		id: "data",
 		label: "Your data",
 		group: "you",
-		upcoming: "Storage used on this device, and deleting every chat here.",
 	},
 	{
 		id: "privacy",
 		label: "Privacy",
 		group: "you",
-		upcoming: "Your share links.",
 	},
 	{
 		id: "account",
 		label: "Account",
 		group: "you",
-		upcoming: "Your profile, sign-in methods and signing out.",
 	},
 ];
 

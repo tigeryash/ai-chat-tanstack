@@ -74,6 +74,7 @@ before changing code that uses that feature from elsewhere**, too.
 | Folder | What it covers | Don't miss |
 |---|---|---|
 | `src/lib/settings/` | Settings dialog: section list, `?settings=` parsing, the settings registry, open/close navigation | A new setting is a registry row plus its control in `setting-controls.tsx`; the dialog loads lazily |
+| `src/lib/commands/` | Command registry, Cmd+K palette search, recency | Data-made commands carry a `kind`, never an id in analytics |
 | `src/lib/storage/` | Local chats (Dexie `ChatStore`), ownership, Dexie version rules | Never list or open chats without the viewer from `ownership.ts` |
 | `src/lib/chat/` | AI SDK chat in the browser, chat sessions, transport | Never `openChat(id)` in render for a saved chat; use `openSavedChat` |
 | `src/lib/workspaces/` | Multi-pane workspaces, pane sync | Panes hold their own model choice |
