@@ -41,11 +41,24 @@ export function applyAppearance(
 		typeof doc.startViewTransition === "function" &&
 		!doc.defaultView?.matchMedia(REDUCED_MOTION).matches
 	) {
-		doc.startViewTransition(apply);
+		ignoreSkippedTransition(doc.startViewTransition(apply).ready);
 	} else {
 		apply();
 	}
 	saveBootSnapshot(snapshot);
+}
+
+/**
+ * A theme change made while the last one is still cross-fading (picking a theme, then "Reset all"
+ * right away) skips the older transition, and Chromium rejects its `ready` with an `AbortError`.
+ * That's expected: the newer transition applies the newer snapshot. Anything else (the update
+ * callback threw) is rethrown so it still surfaces.
+ */
+function ignoreSkippedTransition(ready: Promise<unknown>): void {
+	ready.catch((error: unknown) => {
+		if (error instanceof DOMException && error.name === "AbortError") return;
+		throw error;
+	});
 }
 
 function currentScheme(root: HTMLElement): AppearanceSnapshot["scheme"] {

@@ -126,22 +126,25 @@ async function hoverTransitions(page: Page, button: Locator) {
 }
 
 // Moves the mouse onto a button and records its rendered width (hover scale included) on every
-// animation frame for about 0.75 s. Sampling starts before the mouse arrives, so the first sample is
-// the resting width.
+// animation frame, from before the mouse arrives (so the first sample is the resting width) until
+// about 0.75 s after the width first changes. The window is counted from that change, not from the
+// start: under load the hover can land later than a fixed number of frames after sampling starts.
 async function buttonWidthsWhileHovering(page: Page, button: Locator) {
-	const box = await button.boundingBox();
-	if (!box) throw new Error("button has no box");
 	await button.evaluate((element) => {
 		const record = window as unknown as { hoverWidths?: number[] };
 		const widths = [element.getBoundingClientRect().width];
+		let framesSinceChange = -1;
 		const sample = () => {
-			widths.push(element.getBoundingClientRect().width);
-			if (widths.length < 46) requestAnimationFrame(sample);
+			const width = element.getBoundingClientRect().width;
+			widths.push(width);
+			if (framesSinceChange < 0 && width !== widths[0]) framesSinceChange = 0;
+			if (framesSinceChange >= 0) framesSinceChange++;
+			if (framesSinceChange < 45) requestAnimationFrame(sample);
 			else record.hoverWidths = widths;
 		};
 		requestAnimationFrame(sample);
 	});
-	await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+	await button.hover();
 	await page.waitForFunction(
 		() => (window as unknown as { hoverWidths?: number[] }).hoverWidths,
 	);
@@ -214,6 +217,23 @@ function distinctStyleValues(element: Locator, property: string) {
 		}
 		return values.size;
 	}, property);
+}
+
+// The auth layout marks itself hydrated (`data-hydrated` on <main>, src/routes/(auth)/route.tsx), which
+// is when its reveals start. Tests that don't need the WebGL scene wait for that: the scene is a
+// separate ~240 kB (gzipped) three.js chunk loaded after hydration, the slowest thing on the page.
+async function authPageHydrated(page: Page) {
+	await expect(page.locator("main[data-hydrated='true']")).toBeAttached();
+}
+
+// Tests about the scene itself wait for its canvas. Under parallel workers that lazy chunk alone has
+// taken over 4 s to arrive from the preview server, so the default 5 s expect timeout was too short
+// to cover the download, parse and WebGL start.
+const SCENE_LOAD_TIMEOUT = 15_000;
+async function sceneMounted(page: Page) {
+	await expect(page.locator("canvas")).toBeVisible({
+		timeout: SCENE_LOAD_TIMEOUT,
+	});
 }
 
 // Screenshots of the canvas's area with the page content layered over it hidden. A page screenshot
@@ -340,7 +360,7 @@ test.describe("with Reduce motion on", () => {
 		await recordRevealOpacity(page);
 		await page.goto("/login");
 		// The scene mounts after hydration, which is when the reveals would start.
-		await expect(page.locator("canvas")).toBeVisible();
+		await sceneMounted(page);
 
 		// Once the first frame and layout have landed, nothing on the page moves: no reveals, no
 		// scrolling model strip, no wave.
@@ -376,7 +396,7 @@ test.describe("with Reduce motion on", () => {
 		page,
 	}) => {
 		await page.goto("/login");
-		await expect(page.locator("canvas")).toBeVisible();
+		await authPageHydrated(page);
 
 		const widths = await buttonWidthsWhileHovering(
 			page,
@@ -470,7 +490,7 @@ test.describe("with full motion", () => {
 	test("login reveals play and the WebGL scene moves", async ({ page }) => {
 		await recordRevealOpacity(page);
 		await page.goto("/login");
-		await expect(page.locator("canvas")).toBeVisible();
+		await sceneMounted(page);
 
 		await expect.poll(() => fadedRevealTargets(page)).toEqual(REVEAL_TARGETS);
 		// Give the scene a moment to draw its first frames before comparing two of them.
@@ -484,7 +504,7 @@ test.describe("with full motion", () => {
 		test(`${path} reveals play`, async ({ page }) => {
 			await recordRevealOpacity(page);
 			await page.goto(path);
-			await expect(page.locator("canvas")).toBeVisible();
+			await authPageHydrated(page);
 
 			await expect.poll(() => fadedRevealTargets(page)).toEqual(REVEAL_TARGETS);
 		});
@@ -492,7 +512,7 @@ test.describe("with full motion", () => {
 
 	test("the Login button eases into its hover growth", async ({ page }) => {
 		await page.goto("/login");
-		await expect(page.locator("canvas")).toBeVisible();
+		await authPageHydrated(page);
 
 		const durationMs = await hoverTransitions(
 			page,

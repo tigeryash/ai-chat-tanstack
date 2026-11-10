@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { applyAppearance, applySnapshot } from "./apply";
 import { APPEARANCE_BOOT_SCRIPT, BOOT_SNAPSHOT_KEY } from "./boot-script";
 import { DEFAULT_APPEARANCE } from "./schema";
@@ -7,6 +7,8 @@ import { DEFAULT_APPEARANCE } from "./schema";
 const root = document.documentElement;
 
 afterEach(() => {
+	vi.unstubAllGlobals();
+	Reflect.deleteProperty(document, "startViewTransition");
 	root.className = "";
 	root.removeAttribute("style");
 	localStorage.clear();
@@ -47,6 +49,49 @@ describe("applyAppearance", () => {
 		applySnapshot({ scheme: "light", vars: { "--spacing": "1px" } }, root);
 		applySnapshot({ scheme: null, vars: {} }, root);
 		expect(root.style.getPropertyValue("overflow")).toBe("hidden");
+	});
+});
+
+describe("applyAppearance's view transition", () => {
+	/** Stubs `startViewTransition` with one whose `ready` rejects with `error`, and reports unhandled rejections. */
+	async function changeThemeWhileReadyRejects(error: unknown) {
+		vi.stubGlobal("matchMedia", () => ({ matches: false }));
+		Object.defineProperty(document, "visibilityState", {
+			value: "visible",
+			configurable: true,
+		});
+		const startViewTransition = vi.fn((update: () => void) => {
+			update();
+			return { ready: Promise.reject(error) };
+		});
+		Object.assign(document, { startViewTransition });
+		const unhandled: unknown[] = [];
+		const onUnhandled = (reason: unknown) => unhandled.push(reason);
+		process.on("unhandledRejection", onUnhandled);
+		try {
+			applyAppearance(custom);
+			// Unhandled rejections are reported after the microtask queue drains.
+			await new Promise((resolve) => setTimeout(resolve, 0));
+		} finally {
+			process.off("unhandledRejection", onUnhandled);
+			Reflect.deleteProperty(document, "visibilityState");
+		}
+		expect(startViewTransition).toHaveBeenCalledOnce();
+		expect(root.classList.contains("dark")).toBe(true);
+		return unhandled;
+	}
+
+	it("swallows the AbortError of a transition a newer theme change skipped", async () => {
+		const skipped = new DOMException(
+			"Transition was skipped. New ViewTransition started",
+			"AbortError",
+		);
+		expect(await changeThemeWhileReadyRejects(skipped)).toEqual([]);
+	});
+
+	it("still surfaces any other failure", async () => {
+		const boom = new Error("boom");
+		expect(await changeThemeWhileReadyRejects(boom)).toEqual([boom]);
 	});
 });
 
