@@ -10,7 +10,7 @@ Notes for working in this folder. The root [CLAUDE.md](/CLAUDE.md) (commands, ha
   would move the others. Attachments are checked per pane (roadmap 3.3, decision 17): synced composers share
   the hub's one `AttachmentList` (`hub.attachments`, `lib/attachments/attachment-list.ts`), so they all show the
   same chips and a send from any of them sends and clears the same files. Each pane whose model can't read one
-  gets an amber border (`useCantReadAttachments`) and `PaneAttachmentNotice` (a radio group: send text only, or
+  gets an amber border and inward glow (`useCantReadAttachments`; outer glows are clipped by the resizable panels), a warning icon on its phone tab (the hub's `warned`, set by each pane) and `PaneAttachmentNotice` (a radio group: send text only, or
   skip the pane, held until the send), and `sendAll` gives each pane only what its model reads
   (`lib/attachments/capability.ts`; only images and PDFs depend on the model). The sidebar folds a workspace's chats into one entry (`sidebar-entries.ts`).
 - **Ownership** (roadmap 1.9, quality audit Q2 W2–W4): a new pane's chat (and the workspace "Add pane" makes) is

@@ -212,6 +212,17 @@ describe("pane sync", () => {
 			expect(sync.attachments.getFiles()).toEqual([]);
 		});
 
+		it("keeps which panes warn, for their tabs, until each pane says otherwise or stops checking", () => {
+			const sync = createPaneSync();
+			const undoA = sync.setWarned("a", true);
+			sync.setWarned("b", true);
+			expect(sync.getState().warned).toEqual(["a", "b"]);
+			sync.setWarned("b", false);
+			expect(sync.getState().warned).toEqual(["a"]);
+			undoA();
+			expect(sync.getState().warned).toEqual([]);
+		});
+
 		it("forgets a skip when the files that asked for it are removed", async () => {
 			const { sync } = twoPanes();
 			await sync.attachments.add([image()]);

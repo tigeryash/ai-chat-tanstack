@@ -96,6 +96,8 @@ export function ChatView({
 	// Roadmap 3.3: while a file this pane's model can't read is attached, the card's border turns amber.
 	// The note above the composer says why, so colour isn't the only signal.
 	const cantRead = useCantReadAttachments(hub, attachmentSupport);
+	// The pane tabs on a narrow screen mark this pane too (roadmap 3.8).
+	useEffect(() => hub?.setWarned(chat.id, cantRead), [hub, chat.id, cantRead]);
 	useEffect(
 		() =>
 			hub?.join(chat.id, {
@@ -144,7 +146,7 @@ export function ChatView({
 
 	return (
 		<div
-			className="flex h-full min-h-0 min-w-0 flex-col items-center overflow-hidden rounded-pane border bg-card pb-4 text-card-foreground transition-colors data-unreadable-attachments:border-warning"
+			className="flex h-full min-h-0 min-w-0 flex-col items-center overflow-hidden rounded-pane border bg-card pb-4 text-card-foreground transition-[border-color,box-shadow] data-unreadable-attachments:border-warning data-unreadable-attachments:inset-shadow-warning-glow"
 			data-chat-status={status}
 			data-unreadable-attachments={cantRead ? "" : undefined}
 		>

@@ -20,6 +20,7 @@ export function WorkspaceToolbar({
 	panes,
 	shownId,
 	onShow,
+	warned,
 	diverged,
 	saveFailed,
 	onAddPane,
@@ -32,6 +33,8 @@ export function WorkspaceToolbar({
 	/** The pane shown on a narrow screen; undefined when every pane shows. */
 	shownId: string | undefined;
 	onShow: (chatId: string) => void;
+	/** Panes whose model can't read an attached file (roadmap 3.3), marked on their tabs. */
+	warned?: readonly string[];
 	diverged: boolean;
 	saveFailed: boolean;
 	onAddPane: () => void;
@@ -48,7 +51,12 @@ export function WorkspaceToolbar({
 	return (
 		<div className="flex min-w-0 flex-1 items-center gap-2">
 			{shownId !== undefined && (
-				<PaneTabs panes={panes} shownId={shownId} onShow={onShow} />
+				<PaneTabs
+					panes={panes}
+					shownId={shownId}
+					onShow={onShow}
+					warned={warned}
+				/>
 			)}
 			<div className="ml-auto flex items-center gap-2">
 				{saveFailed && (

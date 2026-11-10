@@ -1,3 +1,4 @@
+import { TriangleAlertIcon } from "lucide-react";
 import { type KeyboardEvent, useEffect, useRef } from "react";
 import type { WorkspacePane } from "@/lib/storage/workspace";
 import { cn } from "@/lib/utils";
@@ -16,10 +17,13 @@ export function PaneTabs({
 	panes,
 	shownId,
 	onShow,
+	warned = [],
 }: {
 	panes: readonly WorkspacePane[];
 	shownId: string;
 	onShow: (chatId: string) => void;
+	/** Panes whose model can't read an attached file (roadmap 3.3): their tab shows a warning icon. */
+	warned?: readonly string[];
 }) {
 	const list = useRef<HTMLDivElement>(null);
 
@@ -61,11 +65,18 @@ export function PaneTabs({
 						tabIndex={selected ? 0 : -1}
 						onClick={() => onShow(pane.chatId)}
 						className={cn(
-							"shrink-0 rounded-md px-2.5 py-1 text-muted-foreground text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+							"flex shrink-0 items-center gap-1 rounded-md px-2.5 py-1 text-muted-foreground text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
 							selected && "bg-muted text-foreground",
 						)}
 					>
 						Pane {index + 1}
+						{warned.includes(pane.chatId) && (
+							<TriangleAlertIcon
+								role="img"
+								aria-label="Can't read an attachment"
+								className="size-3.5 text-warning"
+							/>
+						)}
 					</button>
 				);
 			})}
