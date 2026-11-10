@@ -152,6 +152,10 @@ before changing code that uses that feature from elsewhere**, too.
   - **One e2e run at a time per worktree.** Host and Docker runs share the build output and break each other.
   - **Finish before ending your turn.** Don't end it while a test run or build is still going; wait for it, then
     commit, push and open the PR. Report the PR URL, head SHA and check state last.
+  - **Run e2e in the foreground.** Run `bun run test:e2e` (and `--repeat-each` runs) as a normal blocking command
+    with the longest allowed timeout (10 minutes), not as a background job. Agents that backgrounded a run and
+    ended their turn to "wait for the notification" stalled for good. A run that may take longer: split it by spec
+    file or `--shard`, each in the foreground.
   - **Check a PR is open before pushing to it.** Yash merges fast; pushing to a merged PR's deleted branch
     re-creates it. Check with `gh pr view <n> --json state`.
 - **Screenshots and merge order.** PRs that change the same baseline (`workspace-three-panes`, `workspace-phone`)
