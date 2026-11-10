@@ -14,7 +14,11 @@ import { HUGE_PAYLOADS, XSS_PAYLOADS } from "./-xss-payloads";
 
 type Search = { huge?: boolean };
 
+// Client-only, like every route that shows chats (roadmap 1.2). Server-rendered, the page streamed
+// finished markdown that React then swapped back to SafeMarkdown's loading fallback until the lazy
+// Streamdown chunk arrived, so a test could see the server's links, then none (xss.spec.ts flake).
 export const Route = createFileRoute("/e2e/markdown")({
+	ssr: false,
 	validateSearch: (search: Record<string, unknown>): Search => ({
 		huge: search.huge === true || search.huge === "true" ? true : undefined,
 	}),
