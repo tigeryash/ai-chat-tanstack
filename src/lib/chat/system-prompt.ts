@@ -2,9 +2,10 @@ import { useSyncExternalStore } from "react";
 import { logError } from "@/lib/log";
 import type { ChatStore } from "@/lib/storage/chat-store";
 
-// The shared system prompt (decision 19: a chat's own prompt, else the shared one; the prompt library
-// is roadmap 3.6). It's content, so it lives in IndexedDB with the chats, not in localStorage. Loaded
-// once per tab and cached here so every chat can read it synchronously when it sends.
+// The shared system prompt (decision 19: a chat's own prompt, else its model's default from the prompt
+// library, else this one; `src/lib/prompts/defaults.ts` picks). It's content, so it lives in IndexedDB
+// with the chats, not in localStorage. Loaded once per tab and cached here so every chat can read it
+// synchronously when it sends.
 
 let current = "";
 let loading: Promise<void> | undefined;
@@ -52,12 +53,4 @@ export function useDefaultSystemPrompt(store: ChatStore): string {
 		() => current,
 		() => current,
 	);
-}
-
-/** What a chat sends as its system prompt: its own, else the shared one. Empty means none. */
-export function systemPromptFor(
-	own: string | undefined,
-	shared: string,
-): string {
-	return own ?? shared;
 }

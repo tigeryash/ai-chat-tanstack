@@ -106,11 +106,19 @@ function NewPrompt({
 	);
 }
 
-export function PromptLibrary() {
+export function PromptLibrary({
+	initialPromptId,
+	initialVersion,
+}: {
+	/** Opens this prompt (a link from a reply's details, roadmap 3.6b). */
+	initialPromptId?: string;
+	/** And shows this version of it in the history. */
+	initialVersion?: number;
+}) {
 	const list = usePrompts();
 	const [query, setQuery] = useState("");
 	const [creating, setCreating] = useState(false);
-	const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
+	const [selectedId, setSelectedId] = useState(initialPromptId);
 
 	const prompts = list.status === "ready" ? list.prompts : [];
 	const shown = searchPrompts(prompts, query);
@@ -179,15 +187,24 @@ export function PromptLibrary() {
 					<PromptDetail
 						key={selected.id}
 						prompt={selected}
+						initialVersion={
+							selected.id === initialPromptId ? initialVersion : undefined
+						}
 						onDeleted={() => setSelectedId(undefined)}
 					/>
 				) : (
 					list.status === "ready" &&
-					prompts.length > 0 && (
+					(selectedId !== undefined ? (
 						<p className="text-muted-foreground text-sm">
-							Pick a prompt to edit it or see its history.
+							That prompt was deleted, or isn't in this browser.
 						</p>
-					)
+					) : (
+						prompts.length > 0 && (
+							<p className="text-muted-foreground text-sm">
+								Pick a prompt to edit it or see its history.
+							</p>
+						)
+					))
 				)}
 			</div>
 		</div>

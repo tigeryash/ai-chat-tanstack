@@ -513,9 +513,13 @@ Only what's still open. When one is done, tick it, add a dated note, and move it
   *Done when:* Vitest covers the store, versioning, diff and apply, and e2e saves a prompt, edits it, restores the
   old version from the diff view, applies it to a chat from Model settings and sees both after a reload.
   *Status (2026-11-09):* done in [PR #90](https://github.com/tigeryash/ai-chat-tanstack/pull/90). Logic in `src/lib/prompts/`, page at `/prompts`.
-- [ ] **3.6b Prompt defaults and provenance** (decision 19). Per-model default prompts (pane override → model
-  default → shared prompt), and each reply records which prompt version produced it. Later: variables
-  (`{{date}}`), and prompts in exports.
+- [x] **3.6b Prompt defaults and provenance** (decision 19). Per-model default prompts (pane override → model
+  default → shared prompt), and each reply records which prompt version produced it; saved prompts in exports.
+  Later: variables (`{{date}}`).
+  *Done when:* Vitest covers default resolution, provenance recording and the export round-trip, and e2e sets a
+  saved prompt as a model's default, opens a new chat with it and sees it applied, sends, and finds the reply's
+  prompt version in its details (with a link to it) after a reload.
+  *Status (2026-11-09):* done in [PR #99](https://github.com/tigeryash/ai-chat-tanstack/pull/99).
 - [ ] **3.7 Blind mode** *(deferred; revisit with monetization)*. Hide model names, pick the better answer, reveal.
   Votes stay local and feed a personal leaderboard. Runs on the user's keys.
 - [x] **3.8 Mobile.** Panes become swipeable tabs below `md`. Done when, at a 390px viewport, a 3-pane workspace

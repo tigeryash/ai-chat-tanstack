@@ -6,6 +6,7 @@ import {
 	ThumbsUpIcon,
 } from "lucide-react";
 import { Action, Actions } from "@/components/ai-elements/actions";
+import { ReplyPromptRow } from "@/components/prompts/reply-prompt";
 import { Button } from "@/components/ui/button";
 import {
 	Popover,
@@ -15,6 +16,7 @@ import {
 import { useReplyVote, voteOnReply } from "@/lib/chat/chat-votes";
 import { type ReplyDetail, replyDetails } from "@/lib/chat/reply-details";
 import { logWarn } from "@/lib/log";
+import { type PromptSource, replyPromptSource } from "@/lib/prompts/provenance";
 import { chatStore } from "@/lib/storage/app-store";
 import type { ReplyVote } from "@/lib/storage/votes";
 import type { MessageUIProps } from "@/types/types";
@@ -32,8 +34,17 @@ function textOf(message: MessageUIProps["message"]): string {
 		.join("\n\n");
 }
 
-/** The "⋯" on a reply's action row (roadmap 2.5b): its model, host, cost, tokens and timings. */
-function ReplyDetailsButton({ details }: { details: ReplyDetail[] }) {
+/**
+ * The "⋯" on a reply's action row (roadmap 2.5b): its model, host, cost, tokens and timings, and the
+ * saved prompt version it was sent with (3.6b).
+ */
+function ReplyDetailsButton({
+	details,
+	promptSource,
+}: {
+	details: ReplyDetail[];
+	promptSource: PromptSource | undefined;
+}) {
 	return (
 		<Popover>
 			<PopoverTrigger
@@ -60,6 +71,7 @@ function ReplyDetailsButton({ details }: { details: ReplyDetail[] }) {
 							<dd className="break-all font-mono">{value}</dd>
 						</div>
 					))}
+					{promptSource && <ReplyPromptRow source={promptSource} />}
 				</dl>
 			</PopoverContent>
 		</Popover>
@@ -122,6 +134,7 @@ const MessageActions = ({
 			.catch((error) => logWarn("Couldn't copy the reply:", error));
 	};
 	const details = replyDetails(message.metadata);
+	const promptSource = replyPromptSource(message.metadata);
 	return (
 		message.role === "assistant" && (
 			// No side padding and -ml-2 (the icon buttons' own inset) line the copy icon up with the reply
@@ -136,7 +149,9 @@ const MessageActions = ({
 					</Action>
 				)}
 				{chatId && <ReplyVoteButtons chatId={chatId} messageId={message.id} />}
-				{details && <ReplyDetailsButton details={details} />}
+				{details && (
+					<ReplyDetailsButton details={details} promptSource={promptSource} />
+				)}
 			</Actions>
 		)
 	);

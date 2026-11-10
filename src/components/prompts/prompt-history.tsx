@@ -28,15 +28,20 @@ export function PromptHistory({
 	prompt,
 	onRestore,
 	busy,
+	initialVersion,
 }: {
 	prompt: Prompt;
 	onRestore: (version: number) => void;
 	busy: boolean;
+	/** The version to show first (a link from a reply, roadmap 3.6b); else the one before current. */
+	initialVersion?: number;
 }) {
 	const current = currentVersion(prompt);
 	const previous = prompt.versions.at(-2)?.version;
-	const [picked, setPicked] = useState<number | undefined>(undefined);
-	const selected = versionOf(prompt, picked ?? previous ?? current.version);
+	const [picked, setPicked] = useState(initialVersion);
+	const selected =
+		versionOf(prompt, picked ?? previous ?? current.version) ??
+		versionOf(prompt, previous ?? current.version);
 	const newestFirst = [...prompt.versions].reverse();
 
 	return (
@@ -66,6 +71,11 @@ export function PromptHistory({
 					);
 				})}
 			</ul>
+			{initialVersion !== undefined && !versionOf(prompt, initialVersion) && (
+				<p className="text-muted-foreground text-xs">
+					Version {initialVersion} is no longer in this prompt's history.
+				</p>
+			)}
 			{selected && selected.version !== current.version && (
 				<div className="flex flex-col gap-2">
 					<PromptDiff

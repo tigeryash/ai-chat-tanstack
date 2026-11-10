@@ -173,6 +173,33 @@ describe("BrowserChatTransport settings (roadmap 2.4b)", () => {
 		});
 	});
 
+	it("records which saved prompt version the reply was sent with (roadmap 3.6b)", async () => {
+		const source = { promptId: "p1", version: 4 };
+		const transport = new BrowserChatTransport(async () =>
+			mockChatModel({ text: ["ok"] }),
+		);
+		const start = (settings: object) =>
+			send(transport, { ...SELECTION, settings }).then(collect);
+		const withPrompt = await start({
+			params: {},
+			systemPrompt: "Be brief.",
+			promptSource: source,
+		});
+		expect(withPrompt[0]).toMatchObject({
+			type: "start",
+			messageMetadata: { prompt: source },
+		});
+		// No prompt sent, nothing recorded, whatever the source says.
+		const empty = await start({
+			params: {},
+			systemPrompt: "",
+			promptSource: source,
+		});
+		expect(
+			(empty[0] as { messageMetadata?: object }).messageMetadata,
+		).not.toHaveProperty("prompt");
+	});
+
 	it("sends attached images and PDFs to the model as file parts (roadmap 1.6)", async () => {
 		const { model, calls } = recordingModel();
 		const png = "data:image/png;base64,iVBORw0KGgo=";

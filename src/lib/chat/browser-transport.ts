@@ -14,6 +14,7 @@ import { logError } from "@/lib/log";
 import { mergeProviderOptions, toCallParams } from "@/lib/params/mapping";
 import { parseRequestSettings } from "@/lib/params/request";
 import { developerOf, type ParamRoute } from "@/lib/params/routes";
+import type { PromptSource } from "@/lib/prompts/provenance";
 import {
 	ChatSetupError,
 	chatErrorLogFields,
@@ -48,6 +49,8 @@ export interface ReplyMetadata extends ReplyHost, ReplyStats {
 	gatewayId?: string;
 	/** The upstream the request pinned on a router. */
 	upstream?: string;
+	/** The saved prompt version sent as the system prompt (roadmap 3.6b); absent for none or hand-written. */
+	prompt?: PromptSource;
 }
 
 export type ResolveModel = (
@@ -117,9 +120,10 @@ export class BrowserChatTransport implements ChatTransport<UIMessage> {
 		ReadableStream<UIMessageChunk>
 	> {
 		const selection = parseSelection(body);
-		const { params, support, systemPrompt } = parseRequestSettings(
-			(body as { settings?: unknown } | undefined)?.settings,
-		);
+		const { params, support, systemPrompt, promptSource } =
+			parseRequestSettings(
+				(body as { settings?: unknown } | undefined)?.settings,
+			);
 		const call = toCallParams(paramRouteOf(selection), params, support);
 		const name = providerName(selection.provider);
 		const host = hostKey(selection.provider, selection.upstream);
@@ -168,6 +172,7 @@ export class BrowserChatTransport implements ChatTransport<UIMessage> {
 							model: selection.model,
 							gatewayId: selection.gatewayId,
 							upstream: selection.upstream,
+							...(promptSource && { prompt: promptSource }),
 						};
 					}
 					if (part.type === "finish-step") {

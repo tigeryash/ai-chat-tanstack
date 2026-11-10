@@ -1,3 +1,4 @@
+import { type PromptSource, readPromptSource } from "@/lib/prompts/provenance";
 import { z } from "@/lib/zod";
 import {
 	cleanParams,
@@ -15,6 +16,8 @@ export interface RequestSettings {
 	support: ParamSupport;
 	/** The system prompt to send. Empty or absent: none. */
 	systemPrompt?: string;
+	/** The saved prompt version `systemPrompt` is (roadmap 3.6b); the reply records it. */
+	promptSource?: PromptSource;
 }
 
 const systemPromptSchema = z.string().max(MAX_SYSTEM_PROMPT_LENGTH);
@@ -24,14 +27,22 @@ export function parseRequestSettings(raw: unknown): RequestSettings {
 	if (typeof raw !== "object" || raw === null) {
 		return { params: {}, support: NO_SUPPORT };
 	}
-	const { params, support, systemPrompt } = raw as Record<string, unknown>;
+	const { params, support, systemPrompt, promptSource } = raw as Record<
+		string,
+		unknown
+	>;
 	const parsedSupport = paramSupportSchema.safeParse(support);
 	const parsedPrompt = systemPromptSchema.safeParse(systemPrompt);
+	const source = readPromptSource(promptSource);
+	const prompt =
+		parsedPrompt.success && parsedPrompt.data.trim() !== ""
+			? parsedPrompt.data
+			: undefined;
 	return {
 		params: cleanParams(params),
 		support: parsedSupport.success ? parsedSupport.data : NO_SUPPORT,
-		...(parsedPrompt.success && parsedPrompt.data.trim() !== ""
-			? { systemPrompt: parsedPrompt.data }
-			: {}),
+		...(prompt !== undefined && { systemPrompt: prompt }),
+		// No prompt sent, no source: an empty prompt didn't produce anything.
+		...(prompt !== undefined && source && { promptSource: source }),
 	};
 }

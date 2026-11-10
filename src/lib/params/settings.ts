@@ -1,3 +1,4 @@
+import { promptSourceSchema, readPromptSource } from "@/lib/prompts/provenance";
 import { z } from "@/lib/zod";
 import {
 	MAX_STOP_SEQUENCE_LENGTH,
@@ -46,6 +47,11 @@ export const chatSettingsSchema = z.object({
 	params: paramValuesSchema,
 	/** This chat's own prompt. Absent: the shared default. */
 	systemPrompt: z.string().max(MAX_SYSTEM_PROMPT_LENGTH).optional(),
+	/**
+	 * The saved prompt version `systemPrompt` was applied from (roadmap 3.6b), so replies can say so.
+	 * Dropped when the prompt is edited by hand. Never without `systemPrompt`.
+	 */
+	systemPromptSource: promptSourceSchema.optional(),
 });
 export type ChatSettings = z.infer<typeof chatSettingsSchema>;
 
@@ -68,13 +74,19 @@ export function cleanParams(raw: unknown): ParamValues {
 /** Settings from storage or an import, bad values dropped. */
 export function cleanSettings(raw: unknown): ChatSettings {
 	if (typeof raw !== "object" || raw === null) return EMPTY_SETTINGS;
-	const { params, systemPrompt } = raw as Record<string, unknown>;
+	const { params, systemPrompt, systemPromptSource } = raw as Record<
+		string,
+		unknown
+	>;
 	const prompt = chatSettingsSchema.shape.systemPrompt.safeParse(systemPrompt);
+	const source = readPromptSource(systemPromptSource);
+	if (!prompt.success || prompt.data === undefined) {
+		return { params: cleanParams(params) };
+	}
 	return {
 		params: cleanParams(params),
-		...(prompt.success && prompt.data !== undefined
-			? { systemPrompt: prompt.data }
-			: {}),
+		systemPrompt: prompt.data,
+		...(source && { systemPromptSource: source }),
 	};
 }
 
@@ -86,4 +98,23 @@ export function withParam<K extends keyof ParamValues>(
 ): ParamValues {
 	const { [id]: _, ...rest } = params;
 	return value === undefined ? rest : { ...rest, [id]: value };
+}
+
+/**
+ * `settings` with a hand-written system prompt (blank: none, so the defaults apply). A different text
+ * than now drops `systemPromptSource`: it no longer came from the library (roadmap 3.6b).
+ */
+export function withSystemPrompt(
+	settings: ChatSettings,
+	prompt: string,
+): ChatSettings {
+	const {
+		systemPrompt: current,
+		systemPromptSource: source,
+		...rest
+	} = settings;
+	if (prompt.trim() === "") return rest;
+	return prompt === current && source
+		? { ...rest, systemPrompt: prompt, systemPromptSource: source }
+		: { ...rest, systemPrompt: prompt };
 }
