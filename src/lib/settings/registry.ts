@@ -424,6 +424,14 @@ export function searchSettings(query: string): SettingMatch[] {
 		}));
 }
 
+/** Every row with its section, in registry order (the command palette lists them). */
+export function allSettingMatches(): SettingMatch[] {
+	return SETTINGS.map((setting) => ({
+		setting,
+		section: settingsSection(setting.section),
+	}));
+}
+
 export function settingById(id: SettingId): Setting {
 	const setting = SETTINGS.find((s) => s.id === id);
 	if (!setting) throw new Error(`Unknown setting: ${id}`);

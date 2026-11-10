@@ -41,6 +41,13 @@ export const EVENT_SCHEMAS = {
 	local_endpoint_added: z.object({
 		kind: z.enum(ENDPOINT_KINDS),
 	}),
+	/** The command palette opened (roadmap R2 S5). Never what was typed in it. */
+	palette_opened: z.object({}),
+	/**
+	 * A palette command ran: its fixed id ("new-chat", "setting.theme"), or for one made from your data
+	 * its kind ("chat.open"). Never a chat's id or title, a layout's name, or the query.
+	 */
+	command_run: z.object({ id: slug }),
 } as const;
 
 export type EventName = keyof typeof EVENT_SCHEMAS;

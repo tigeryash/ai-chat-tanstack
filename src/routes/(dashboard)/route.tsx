@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { BackgroundStatus } from "@/components/background-status/background-status";
 import { NoAccountChatsPrompt } from "@/components/chat-ownership/no-account-chats-prompt";
+import { CommandPaletteHost } from "@/components/command-palette/command-palette-host";
 import { HeaderSlot } from "@/components/header-slot";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import {
@@ -32,6 +33,8 @@ function DashboardLayout() {
 			</SidebarInset>
 			<BackgroundStatus />
 			<NoAccountChatsPrompt />
+			{/* Cmd+K, the command palette (roadmap R2 S5), loaded on first open. */}
+			<CommandPaletteHost />
 		</SidebarProvider>
 	);
 }

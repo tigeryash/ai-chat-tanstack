@@ -2,6 +2,7 @@ import { Dialog } from "@base-ui/react/dialog";
 import { ArrowLeftIcon, XIcon } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { settingToHighlight } from "@/lib/settings/navigation";
 import type { SettingId, SettingMatch } from "@/lib/settings/registry";
 import {
 	DEFAULT_SETTINGS_SECTION,
@@ -16,7 +17,7 @@ import { SettingsSectionBody } from "./settings-section";
 // Settings (roadmap R2 S1, docs/settings-research.md "Layout decision"): a large centered dialog over
 // any page, opened by `?settings=<section>`. A grouped section nav with search on the left, one section
 // on the right. Below `md` it's a full-screen sheet: the section list first, then one section.
-// Under reduced motion it only fades (`data-settings-fade` in src/styles.css keeps the fade).
+// Under reduced motion it only fades (`data-fade-only` in src/styles.css keeps the fade).
 
 type PhoneView = "list" | "section";
 
@@ -48,15 +49,23 @@ export function SettingsDialog({
 	const [shown, setShown] = useState(section ?? DEFAULT_SETTINGS_SECTION);
 	const [lastSection, setLastSection] = useState(section);
 	const [query, setQuery] = useState("");
-	const [phoneView, setPhoneView] = useState(() => phoneViewFor(section));
-	const [highlight, setHighlight] = useState<{ id: SettingId } | null>(null);
+	// Settings mounts on its first open, so that open starts here rather than in the check below.
+	const [phoneView, setPhoneView] = useState(() =>
+		section && settingToHighlight() ? "section" : phoneViewFor(section),
+	);
+	const [highlight, setHighlight] = useState<{ id: SettingId } | null>(() => {
+		const target = section ? settingToHighlight() : null;
+		return target ? { id: target } : null;
+	});
 	if (section !== lastSection) {
 		setLastSection(section);
 		if (section) setShown(section);
 		if (section && !lastSection) {
+			// The command palette can open Settings at a row (roadmap R2 S5).
+			const target = settingToHighlight();
 			setQuery("");
-			setHighlight(null);
-			setPhoneView(phoneViewFor(section));
+			setHighlight(target ? { id: target } : null);
+			setPhoneView(target ? "section" : phoneViewFor(section));
 		}
 	}
 
@@ -115,13 +124,17 @@ export function SettingsDialog({
 		>
 			<Dialog.Portal>
 				<Dialog.Backdrop
-					data-settings-fade
+					data-fade-only
 					className="fixed inset-0 z-50 bg-overlay/30 transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0 supports-backdrop-filter:backdrop-blur-xs"
 				/>
 				<Dialog.Popup
-					data-settings-fade
+					data-fade-only
 					data-testid="settings-dialog"
-					initialFocus={() => (isWide() ? searchRef.current : true)}
+					initialFocus={() =>
+						(highlight &&
+							document.getElementById(settingRowId(highlight.id))) ||
+						(isWide() ? searchRef.current : true)
+					}
 					className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-background text-foreground outline-none transition-[opacity,scale] duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0 motion-safe:data-ending-style:scale-[0.98] motion-safe:data-starting-style:scale-[0.98] md:inset-auto md:top-1/2 md:left-1/2 md:h-[min(46rem,calc(100dvh-4rem))] md:w-[min(64rem,calc(100vw-4rem))] md:-translate-x-1/2 md:-translate-y-1/2 md:flex-row md:rounded-pane md:border md:shadow-2xl"
 				>
 					<aside
