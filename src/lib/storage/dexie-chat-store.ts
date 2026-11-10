@@ -396,6 +396,24 @@ export function createDexieChatStore({
 			});
 		},
 
+		async putWorkspaces(workspaces) {
+			const checked = workspaces.map((workspace) =>
+				workspaceSchema.parse(workspace),
+			);
+			await db.transaction("rw", db.workspaces, async () => {
+				for (const workspace of checked) {
+					const existing = await db.workspaces.get(workspace.id);
+					if (existing && existing.formatVersion > WORKSPACE_FORMAT_VERSION) {
+						continue;
+					}
+					await db.workspaces.put({
+						...workspace,
+						formatVersion: WORKSPACE_FORMAT_VERSION,
+					});
+				}
+			});
+		},
+
 		listWorkspaces,
 
 		async setWorkspaceOwner(workspaceIds, ownerId) {

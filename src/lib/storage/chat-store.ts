@@ -96,6 +96,11 @@ export interface ChatStore {
 	saveWorkspace(
 		workspace: Omit<Workspace, "createdAt" | "updatedAt">,
 	): Promise<Workspace>;
+	/**
+	 * Writes whole workspaces, keeping their timestamps (import, roadmap 1.10). A workspace saved by a
+	 * newer version of the app is left as it is.
+	 */
+	putWorkspaces(workspaces: readonly Workspace[]): Promise<void>;
 	/** Newest first. Unreadable workspaces are left out. */
 	listWorkspaces(): Promise<WorkspaceSummary[]>;
 	/** Like `setOwner`, for workspaces: skips missing ones and doesn't change `updatedAt`. */
