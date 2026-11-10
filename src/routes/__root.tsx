@@ -14,6 +14,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { MotionConfig } from "motion/react";
 import { VercelAnalytics } from "@/components/analytics/vercel-analytics";
 import { AppearanceSync } from "@/components/appearance/appearance-sync";
+import { ErrorReporting } from "@/components/error-reporting/error-reporting";
 import { TooltipProvider } from "@/components/ui/tooltip-provider";
 import { env } from "@/env";
 import { currentViewer } from "@/lib/account";
@@ -35,6 +36,7 @@ function pageCspHeaders(nonce: string | undefined): Record<string, string> {
 	return cspHeaders({
 		nonce,
 		convexUrls: [env.VITE_CONVEX_URL, env.VITE_CONVEX_SITE_URL],
+		errorReportingDsn: env.VITE_SENTRY_DSN,
 		dev: import.meta.env.DEV,
 	});
 }
@@ -122,6 +124,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 					</MotionConfig>
 					{/* Page views and Web Vitals in production, unless switched off (roadmap 1.8). */}
 					<VercelAnalytics />
+					{/* Scrubbed error reports when a Sentry DSN is set, behind the same switch (roadmap 1.8b). */}
+					<ErrorReporting />
 					<TanStackDevtools
 						config={{
 							position: "bottom-right",

@@ -73,6 +73,15 @@ Only what's still open. When one is done, tick it, add a dated note, and move it
 - [ ] After 3.11 is deployed: on `www.highelollms.com`, open Settings → Appearance and make a theme of your own
   (theme, fonts, text size, an accent, a few Advanced colors). Reload and open a chat: the look should be there
   from the first frame, with no flash of the default. Export it, Reset all, then import it back.
+- [ ] Error reporting (1.8b): create a Sentry project (free Developer plan, platform "Browser JavaScript"; pick
+  the US or EU data region). In its settings → Security & Privacy, turn on "Prevent Storing of IP Addresses" and
+  keep "Data Scrubber" and "Use Default Scrubbers" on, and set data retention to the shortest offered (30 days on
+  free). Copy the DSN (Settings → Client Keys) into Vercel as `VITE_SENTRY_DSN`, **Production scope only**, and
+  redeploy. Then on `www.highelollms.com`, with analytics on in Settings, run
+  `setTimeout(() => { throw new Error("sentry test") })` in the browser console and check the event in Sentry
+  shows no IP, no query strings and nothing but the route. Source maps (readable stack traces) need a Sentry auth
+  token in Vercel and a build-time upload that deletes the maps afterwards: ask for that slice if traces are
+  unreadable.
 - [ ] Vercel Hobby is fine while this is a portfolio piece; move to Pro before charging money. *Still on Hobby
   (2026-10-23).*
 
@@ -396,8 +405,9 @@ Only what's still open. When one is done, tick it, add a dated note, and move it
   opt-out in Settings that also honors Do Not Track / Global Privacy Control. From here on, each slice lists the
   events it adds.
   *Status:* merged in [#44](https://github.com/tigeryash/ai-chat-tanstack/pull/44); turning on Analytics and Speed Insights in Vercel is an owner to-do.
-- [ ] **1.8b Error reporting (Sentry, scrubbed).** Sentry with `redact()` in `beforeSend`, no content, behind the
+- [x] **1.8b Error reporting (Sentry, scrubbed).** Sentry with `redact()` in `beforeSend`, no content, behind the
   same opt-out.
+  *Status (2026-11-09):* done, off until the DSN is set (owner to-do); source maps are a follow-up. PR: PR_URL
 - [x] **1.9 Chat ownership on this device.** Each stored chat records its owner (a Better Auth user ID, or none
   when made signed out), through a format migration that makes existing chats no-account chats. Signed out, the
   sidebar shows only no-account chats; signed in, the account's own plus the no-account ones (marked "Not saved to

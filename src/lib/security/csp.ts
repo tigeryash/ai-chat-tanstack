@@ -28,6 +28,8 @@ export interface StrictCspOptions {
 	nonce: string;
 	/** Convex deployment URLs (`VITE_CONVEX_URL`, `VITE_CONVEX_SITE_URL`); unset ones are skipped. */
 	convexUrls: ReadonlyArray<string | undefined>;
+	/** Sentry's DSN (`VITE_SENTRY_DSN`): its ingest origin is allowed. Unset, nothing is added. */
+	errorReportingDsn?: string;
 	/** Vite's dev server: allows its HMR WebSocket. */
 	dev?: boolean;
 }
@@ -35,6 +37,7 @@ export interface StrictCspOptions {
 export function buildStrictCsp({
 	nonce,
 	convexUrls,
+	errorReportingDsn,
 	dev = false,
 }: StrictCspOptions): string {
 	const convexOrigins = convexUrls.flatMap(convexConnectSources);
@@ -55,6 +58,7 @@ export function buildStrictCsp({
 			...convexOrigins,
 			...PROVIDER_API_ORIGINS,
 			...LOCAL_MODEL_ORIGINS,
+			...sentryIngestOrigin(errorReportingDsn),
 			...(dev ? ["ws://localhost:*", "ws://127.0.0.1:*"] : []),
 		],
 		"media-src": ["'self'", "blob:"],
@@ -89,6 +93,20 @@ function convexConnectSources(url: string | undefined): string[] {
 		return [];
 	}
 	return [origin, origin.replace(/^http/, "ws")];
+}
+
+/**
+ * Where Sentry's SDK sends events for a DSN (`https://<public key>@o1.ingest.us.sentry.io/2`): the
+ * DSN's origin without its key. An unset or malformed DSN adds nothing.
+ */
+export function sentryIngestOrigin(dsn: string | undefined): string[] {
+	if (!dsn) return [];
+	try {
+		const { protocol, host } = new URL(dsn);
+		return protocol === "https:" ? [`${protocol}//${host}`] : [];
+	} catch {
+		return [];
+	}
 }
 
 function unique(values: readonly string[]): string[] {

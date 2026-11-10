@@ -17,8 +17,8 @@ you can export or delete it.
   join a group chat. None of those features is live yet.
 - **We never see your prompts, files or replies.** They go from your browser straight to the provider you choose, under
   your own account with that provider.
-- **Analytics never include content.** No prompts, replies, file contents, or keys. You can turn analytics
-  off in Settings.
+- **Analytics and error reports never include content.** No prompts, replies, file contents, or keys. You can
+  turn both off in Settings.
 - **An account is optional.** You can chat without one. You need one only for cloud features.
 
 ## What stays in your browser
@@ -119,8 +119,13 @@ syncing chats across devices, sharing a chat by link, group chats, and durable a
   no cookies, see only the page's route (never chat IDs, codes or tokens in the address), never include
   content, and keep data for 1 month. You can turn them off in Settings, and we honor Global Privacy Control
   and Do Not Track.
-- **Error reporting** (planned, likely Sentry): error reports scrubbed of keys and content. This section will
-  give its retention before it's turned on.
+- **Sentry** receives error reports when something breaks in the app: the kind of error, a shortened error
+  message with keys, quoted text and web address details removed, where in our code it happened, the kind of
+  page (such as "a chat" or "settings", never a chat ID or the rest of the address), the pages you moved
+  between just before, and your browser and operating system. Never prompts, replies, files or file names,
+  keys, request contents, cookies, your email or your account. We ask Sentry not to store your IP address.
+  Reports are kept for 30 days. They use no cookies, and they're off whenever analytics are off: the Settings
+  switch, Global Privacy Control and Do Not Track turn off both.
 
 We don't sell your data, and we don't share it for advertising.
 
@@ -166,10 +171,10 @@ the minimum age for most AI providers it connects to, such as OpenRouter, Anthro
 
 ## International transfers
 
-We're based in Ontario, Canada. Convex stores our server data in the United States, and Vercel and Brevo may
+We're based in Ontario, Canada. Convex stores our server data in the United States, and Vercel, Sentry and Brevo may
 process it in the United States and other countries where they operate, so it may be handled under those
-countries' laws. For data from the EU or UK, Vercel is certified under the EU-U.S. Data Privacy Framework and
-its UK Extension. Convex covers transfers in its Data Processing Agreement. Brevo is based in the EU. AI providers you connect process your prompts wherever they operate, under their own terms.
+countries' laws. For data from the EU or UK, Vercel and Sentry are certified under the EU-U.S. Data Privacy Framework
+and its UK Extension. Convex covers transfers in its Data Processing Agreement. Brevo is based in the EU. AI providers you connect process your prompts wherever they operate, under their own terms.
 
 ## Your rights
 
@@ -186,7 +191,8 @@ to your data protection authority (in the UK, the Information Commissioner's Off
 - **Contract:** your account data, sessions and sign-in emails, which we need to provide the account you asked
   for.
 - **Legitimate interests:** keeping the app secure and working (request and security logs, error reports) and
-  understanding how it's used through cookieless, content-free analytics. You can turn analytics off in Settings.
+  understanding how it's used through cookieless, content-free analytics. You can turn analytics and error
+  reports off in Settings.
 - **Consent:** notifications and anything else the app asks you to turn on. You can withdraw it at any time.
 
 We don't sell your data, use it for advertising, or make automated decisions about you that have legal or

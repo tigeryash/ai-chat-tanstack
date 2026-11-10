@@ -61,8 +61,16 @@ const PAGES = [
 	},
 ] as const;
 
-// Chat-only packages that must not load before a chat does.
-const CHAT_ONLY_PACKAGES = ["@ai-sdk/", "ai", "dexie", "gsap", "streamdown"];
+// Chat-only packages that must not load before a chat does. Sentry (roadmap 1.8b) loads on demand,
+// only with a DSN and analytics allowed, so it must never be a preload either.
+const CHAT_ONLY_PACKAGES = [
+	"@ai-sdk/",
+	"ai",
+	"dexie",
+	"gsap",
+	"streamdown",
+	"@sentry/",
+];
 const LEAN_ROUTES = [ROOT_ROUTE, "/(auth)/login"];
 
 async function loadManifest(): Promise<Manifest> {
