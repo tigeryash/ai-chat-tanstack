@@ -2,12 +2,11 @@ import type { UIMessage } from "ai";
 import { createLocalStore } from "@/lib/local-store";
 import { z } from "@/lib/zod";
 import type { ReplyMetadata } from "./browser-transport";
+import { readDefaultModelChoice, useDefaultModelChoice } from "./default-model";
 import {
 	type ModelChoice,
 	modelChoiceSchema,
-	readModelChoice,
 	storeModelChoice,
-	useModelChoice,
 } from "./model-selection";
 
 // Each chat's model choice (roadmap 2.2). Picking a model stores it for that chat and makes it the
@@ -78,7 +77,10 @@ export function holdChatModelChoice(
 	if (choice) writeChatChoice(chatId, choice);
 }
 
-/** This chat's choice: its own, else its last reply's model, else the last choice in this browser. */
+/**
+ * This chat's choice: its own, else its last reply's model, else the default for new chats (the last
+ * choice in this browser, or the fixed model from Settings → General).
+ */
 export function readChatModelChoice(
 	chatId: string,
 	messages: readonly UIMessage[] = [],
@@ -86,7 +88,7 @@ export function readChatModelChoice(
 	return (
 		storedChoice(choices.read(), chatId) ??
 		lastReplyChoice(messages) ??
-		readModelChoice()
+		readDefaultModelChoice()
 	);
 }
 
@@ -96,8 +98,8 @@ export function useChatModelChoice(
 	replyChoice: ModelChoice | undefined,
 ) {
 	const entries = choices.use();
-	const [lastChoice] = useModelChoice();
-	const choice = storedChoice(entries, chatId) ?? replyChoice ?? lastChoice;
+	const defaultChoice = useDefaultModelChoice();
+	const choice = storedChoice(entries, chatId) ?? replyChoice ?? defaultChoice;
 	const setChoice = (next: ModelChoice) => storeChatModelChoice(chatId, next);
 	return [choice, setChoice] as const;
 }
