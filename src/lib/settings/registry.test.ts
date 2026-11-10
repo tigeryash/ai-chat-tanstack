@@ -50,6 +50,8 @@ describe("settings search", () => {
 		expect(ids("sentry")).toEqual(["analytics"]);
 		expect(ids("anthropic")).toEqual(["provider-keys"]);
 		expect(ids("advanced colors")).toEqual(["advanced-colors"]);
+		expect(ids("auto title")).toEqual(["title-model"]);
+		expect(ids("last used")).toEqual(["default-model"]);
 	});
 
 	it("needs every word, in any order", () => {

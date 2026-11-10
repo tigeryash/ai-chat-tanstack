@@ -10,13 +10,15 @@ import type { ChatBranches } from "@/lib/storage/branches";
 import type { ChatStore, NewChatFields } from "@/lib/storage/chat-store";
 import { isVisibleTo, type Viewer } from "@/lib/storage/ownership";
 import { requestPersistentStorage } from "@/lib/storage/persistence";
-import { BrowserChatTransport } from "./browser-transport";
+import { BrowserChatTransport, type ResolveModel } from "./browser-transport";
 import { chatBranchesOf, loadChatBranches } from "./chat-branches";
 import { chatSettingsOf, loadChatSettings } from "./chat-settings";
 import { titleFromMessages } from "./chat-title";
+import { writeChatTitle } from "./chat-title-writer";
 import { chatVotesOf, loadChatVotes } from "./chat-votes";
 import { resolveAppModel } from "./e2e-model";
 import { addOpenChat, getOpenChat, peekOpenChat } from "./open-chats";
+import { titleModelChoice } from "./title-model";
 
 // Creates and opens chats; `open-chats.ts` keeps track of them. Chats are saved to the local ChatStore
 // once each reply finishes (roadmap decision 11). This module loads the chat engine (the AI SDK and
@@ -30,6 +32,27 @@ export interface OpenChatOptions {
 	store?: ChatStore;
 	/** Who the chat belongs to: a Better Auth user ID, or null (the default) for no account. */
 	ownerId?: string | null;
+	/** Resolves the title model (roadmap R2 S2); tests swap in a mock. */
+	resolveTitleModel?: ResolveModel;
+}
+
+/** Chats opened empty in this tab: never saved, so their first save names them. */
+const unsavedChats = new Set<string>();
+/** Titles being written by the title model, by chat id, until the chat's first save. */
+const pendingTitles = new Map<string, Promise<string>>();
+
+/**
+ * Starts writing a new chat's title as its first message is sent, so it's usually ready by the time
+ * the reply is saved. Only with a title model set (Settings → General); once per chat.
+ */
+function startTitle(chat: Chat<UIMessage>, resolveModel: ResolveModel) {
+	if (!unsavedChats.has(chat.id) || pendingTitles.has(chat.id)) return;
+	const choice = titleModelChoice();
+	if (!choice) return;
+	pendingTitles.set(
+		chat.id,
+		writeChatTitle({ messages: chat.messages, choice, resolveModel }),
+	);
 }
 
 /**
@@ -47,7 +70,7 @@ export function saveChat(
 	// back after its reply failed, roadmap R4) never lands under an earlier one still in flight.
 	const write = writeChat(store, chatId, messages, ownerId, {
 		branches: chatBranchesOf(chatId),
-		title: titleFromMessages(messages),
+		title: pendingTitles.get(chatId) ?? titleFromMessages(messages),
 		settings: chatSettingsOf(chatId),
 		votes: chatVotesOf(chatId),
 	});
@@ -69,8 +92,12 @@ function writeChat(
 	ownerId: string | null,
 	{
 		branches,
+		title,
 		...extras
-	}: NewChatFields & { branches: ChatBranches | undefined },
+	}: Omit<NewChatFields, "title"> & {
+		branches: ChatBranches | undefined;
+		title: string | Promise<string>;
+	},
 ) {
 	return async (): Promise<void> => {
 		try {
@@ -78,13 +105,17 @@ function writeChat(
 			// the settings (roadmap 2.4b) and votes (roadmap 3.4) that had nowhere to go before its first
 			// reply, in the same write: the SDK reports "ready" before this runs, so the page may be left
 			// mid-save, and a separate later write would leave the chat "New chat" for good.
+			// A title the title model is still writing is waited for (it falls back to the first line on
+			// its own, after at most TITLE_TIMEOUT_MS), so it lands in this same write.
 			const { created } = await store.saveMessages(
 				chatId,
 				messages,
 				ownerId,
 				branches,
-				extras,
+				{ ...extras, title: await title },
 			);
+			unsavedChats.delete(chatId);
+			pendingTitles.delete(chatId);
 			if (!created) return;
 			await requestPersistentStorage();
 		} catch (error) {
@@ -98,6 +129,8 @@ export function openChat(id: string, options: OpenChatOptions = {}) {
 	const existing = getOpenChat(id);
 	if (existing) return existing.chat;
 	const store = options.store ?? chatStore();
+	const resolveTitleModel = options.resolveTitleModel ?? resolveAppModel;
+	if (!options.messages?.length) unsavedChats.add(id);
 	const chat = new Chat<UIMessage>({
 		id,
 		messages: options.messages,
@@ -125,9 +158,12 @@ export function openChat(id: string, options: OpenChatOptions = {}) {
 	});
 	// Tab status (roadmap 3.10) counts replies across every open chat. `~registerStatusCallback` is how
 	// `useChat` itself watches a `Chat`; there's no other public way to observe it outside React.
-	chat["~registerStatusCallback"](() =>
-		setReplying(id, chat.status === "submitted" || chat.status === "streaming"),
-	);
+	chat["~registerStatusCallback"](() => {
+		setReplying(id, chat.status === "submitted" || chat.status === "streaming");
+		if (chat.status === "submitted" && peekOpenChat(id)?.chat === chat) {
+			startTitle(chat, resolveTitleModel);
+		}
+	});
 	addOpenChat(id, { chat, ownerId: options.ownerId ?? null });
 	return chat;
 }
