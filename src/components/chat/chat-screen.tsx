@@ -3,6 +3,7 @@ import type { UIMessage } from "ai";
 import type { ReactNode } from "react";
 import { ChatUsageButton } from "@/components/chat/chat-usage";
 import { ChatView, type ChatViewProps } from "@/components/chat/chat-view";
+import { ContextWarning } from "@/components/chat/context-warning";
 import { HostSwitcher } from "@/components/models/host-switcher";
 import { LocalModelCard, ModelCard } from "@/components/models/model-card";
 import { ModelPicker } from "@/components/models/model-picker";
@@ -49,6 +50,15 @@ export function ChatScreen({
 		params.pin();
 		onSend?.();
 	};
+
+	// The pinned upstream's context, else the direct host's, else the model's (R2 S4).
+	const upstream = choice?.upstream
+		? model.host?.upstreams?.find((up) => up.slug === choice.upstream)
+		: undefined;
+	const contextLength =
+		upstream?.contextLength ??
+		model.host?.stats?.contextLength ??
+		chosenModel?.contextWindow;
 
 	let empty: React.ReactNode = "Pick a model to start.";
 	if (chosenModel) {
@@ -117,6 +127,7 @@ export function ChatScreen({
 						)}
 					</div>
 					{subheader}
+					<ContextWarning chat={chat} contextLength={contextLength} />
 					{chosenModel?.status === "removed" && (
 						<RemovedModelBanner
 							model={chosenModel}

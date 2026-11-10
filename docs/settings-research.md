@@ -399,7 +399,7 @@ Yash picked the layout from the reference apps.)
   OpenRouter and Gateway routing. *Done when:* Vitest covers the mapping and Auto's filtering; e2e on fixture
   endpoints shows a blocked host gone from Auto and marked in "Run with", and the request to the faked OpenRouter
   carries `ignore`, `quantizations` and `max_price`.
-- [ ] **S4 Context-length warnings.** A pane-header notice when the chat outgrows its host's context, with a
+- [x] **S4 Context-length warnings.** A pane-header notice when the chat outgrows its host's context, with a
   switch in Settings. *Done when:* Vitest covers the check; e2e shows the notice on a fixture chat and not when
   it's off.
 - [ ] **S5 Palette v1.** Cmd+K, go to (chats, workspaces, settings sections, Prompts), new chat, settings search,

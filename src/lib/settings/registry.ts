@@ -50,6 +50,7 @@ export const SETTINGS_CARDS = [
 	{ id: "theme", section: "appearance" },
 	{ id: "text", section: "appearance", title: "Fonts" },
 	{ id: "theme-file", section: "appearance" },
+	{ id: "chat-notices", section: "chat" },
 	{
 		id: "background-status",
 		section: "notifications",
@@ -243,6 +244,19 @@ export const SETTINGS = [
 		keywords: ["reset all", "default", "restore"],
 		scope: "global",
 		storage: "syncs",
+		layout: "inline",
+	},
+	// Chat
+	{
+		id: "context-warnings",
+		section: "chat",
+		card: "chat-notices",
+		label: "Context-length warnings",
+		description:
+			"A notice above a chat once it has used 80% of its model's context, and again when it's past it.",
+		keywords: ["context window", "context limit", "token limit", "too long"],
+		scope: "global",
+		storage: "device",
 		layout: "inline",
 	},
 	// Notifications

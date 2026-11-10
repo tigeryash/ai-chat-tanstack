@@ -9,6 +9,7 @@ import { settingsDialog, showSettingsSection } from "./support/settings";
 const SECTION_LABELS: Record<string, string> = {
 	connections: "Connections",
 	appearance: "Appearance",
+	chat: "Chat",
 	notifications: "Notifications",
 	data: "Your data",
 	privacy: "Privacy",
