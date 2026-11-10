@@ -410,13 +410,14 @@ Only what's still open. When one is done, tick it, add a dated note, and move it
   choices, both sign-out paths, and another account not seeing chats.
   *Status (2026-10-29):* done; e2e signs in through a stubbed Better Auth session, so real accounts are an owner
   to-do. PR: https://github.com/tigeryash/ai-chat-tanstack/pull/41
-- [ ] **1.10 Export and import in Settings.** A "Your data" section: Export downloads one JSON file of the viewer's
+- [x] **1.10 Export and import in Settings.** A "Your data" section: Export downloads one JSON file of the viewer's
   chats (branches, attachments, model settings) and saved prompts; Import validates a picked file before writing,
   keeps the newer copy of anything already here, and says what was added, updated and skipped. Never keys.
   Workspaces and saved layouts aren't in the export format yet (follow-up to 3.5).
   *Done when:* Vitest covers import validation (bad JSON, wrong version, too large) and an export with keys saved
   containing no key; e2e makes a chat with an attachment and a saved prompt, exports from Settings, clears site
   data, imports the file, and sees the chat, attachment and prompt back.
+  *Status (2026-11-09):* done in [PR #101](https://github.com/tigeryash/ai-chat-tanstack/pull/101); workspaces and layouts in exports stay a follow-up.
 
 ## Phase 2: Models and providers
 
