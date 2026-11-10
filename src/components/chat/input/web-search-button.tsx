@@ -12,6 +12,8 @@ export const WebSearch = ({
 		<ToolTipContainer Tip="Web Search">
 			<button
 				type="button"
+				aria-label="Web Search"
+				aria-pressed={WebSearchEnabled}
 				className={`input-button group flex items-center space-x-1 transition-all duration-300 ease-in-out
                 ${
 									WebSearchEnabled

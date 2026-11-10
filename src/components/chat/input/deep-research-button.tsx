@@ -4,7 +4,7 @@ import { ToolTipContainer } from "./tooltip-container";
 export const DeepResearch = () => {
 	return (
 		<ToolTipContainer Tip="Deep Research">
-			<button type="button" className="input-button">
+			<button type="button" aria-label="Deep Research" className="input-button">
 				<AtomIcon size={20} />
 			</button>
 		</ToolTipContainer>

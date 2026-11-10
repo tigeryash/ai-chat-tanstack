@@ -85,6 +85,9 @@ export function userHistory(messages: readonly UIMessage[]): string {
 		.join("\u0000");
 }
 
+/** How often a streaming pane's messages may re-check "Diverged", at most. */
+const MESSAGES_THROTTLE_MS = 100;
+
 export function createPaneSync(
 	attachments: AttachmentList = createAttachmentList(),
 ): PaneSync {
@@ -169,7 +172,12 @@ export function createPaneSync(
 		join(paneId, pane) {
 			panes.get(paneId)?.leave();
 			const offStatus = pane.chat["~registerStatusCallback"](recompute);
-			const offMessages = pane.chat["~registerMessagesCallback"](recompute);
+			// Throttled like `useChat`'s own renders: replies stream messages ~50 times a second per pane, and
+			// only a send changes what was asked (quality audit Q2 S1).
+			const offMessages = pane.chat["~registerMessagesCallback"](
+				recompute,
+				MESSAGES_THROTTLE_MS,
+			);
 			const entry = {
 				pane,
 				leave: () => {

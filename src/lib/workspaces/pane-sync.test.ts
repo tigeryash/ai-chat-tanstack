@@ -13,7 +13,9 @@ vi.mock("@/lib/attachments/process", () => ({
 function fakeChat(messages: UIMessage[] = []) {
 	const statusListeners = new Set<() => void>();
 	const messageListeners = new Set<() => void>();
+	const throttles: (number | undefined)[] = [];
 	const chat = {
+		throttles,
 		status: "ready" as SyncedPane["chat"]["status"],
 		messages,
 		stop: vi.fn(async () => {
@@ -23,7 +25,11 @@ function fakeChat(messages: UIMessage[] = []) {
 			statusListeners.add(listener);
 			return () => statusListeners.delete(listener);
 		},
-		"~registerMessagesCallback": (listener: () => void) => {
+		"~registerMessagesCallback": (
+			listener: () => void,
+			throttleMs?: number,
+		) => {
+			throttles.push(throttleMs);
 			messageListeners.add(listener);
 			return () => messageListeners.delete(listener);
 		},
@@ -100,6 +106,14 @@ describe("pane sync", () => {
 		leaveB();
 		expect(sync.getState().diverged).toBe(false);
 		expect(b.listeners()).toBe(0);
+	});
+
+	it("re-checks divergence on streamed messages throttled, not per chunk (quality audit Q2 S1)", () => {
+		const sync = createPaneSync();
+		const chat = fakeChat();
+		sync.join("a", { chat, send: vi.fn() });
+		expect(chat.throttles).toEqual([expect.any(Number)]);
+		expect(chat.throttles[0]).toBeGreaterThan(0);
 	});
 
 	it("compares what each pane was asked, not what it answered", () => {

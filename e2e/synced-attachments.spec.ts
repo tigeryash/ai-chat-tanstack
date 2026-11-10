@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect, test } from "./support/fixtures";
 import { connectOpenRouter, fakeOpenRouter, PNG } from "./support/openrouter";
+import { openModelLink } from "./support/workspaces";
 
 // Roadmap 3.3 (decision 17) on two synced panes: DeepSeek V4.1 Flash (text only) on the left, Claude Opus
 // 5.5 (reads images) on the right, as in Yash's report. Files attached in one synced composer show in both,
@@ -14,6 +15,7 @@ const note = (scope: Locator) =>
 	scope.getByRole("radiogroup", { name: "Attachments this model can't read" });
 const chip = (scope: Locator, name: string) =>
 	scope.getByRole("button", { name: `Remove ${name}` });
+const MODELS = ["deepseek/deepseek-v4.1-flash", "anthropic/claude-opus-5.5"];
 const files = [
 	{ name: "red.png", mimeType: "image/png", buffer: PNG },
 	{
@@ -26,9 +28,7 @@ const files = [
 async function openSyncedPanes(page: Page) {
 	const completions = await fakeOpenRouter(page);
 	await connectOpenRouter(page);
-	await page.goto(
-		"/new?models=deepseek/deepseek-v4.1-flash,anthropic/claude-opus-5.5",
-	);
+	await openModelLink(page, MODELS);
 	const text = pane(page, 1);
 	const vision = pane(page, 2);
 	await expect(vision.getByRole("button", { name: /^Model: / })).toContainText(
@@ -204,9 +204,7 @@ test.describe("on a phone", () => {
 	}) => {
 		const completions = await fakeOpenRouter(page);
 		await connectOpenRouter(page);
-		await page.goto(
-			"/new?models=deepseek/deepseek-v4.1-flash,anthropic/claude-opus-5.5",
-		);
+		await openModelLink(page, MODELS);
 		const tab = (n: number) =>
 			page.getByRole("tab", { name: new RegExp(`^Pane ${n}`) });
 		const warning = (n: number) =>

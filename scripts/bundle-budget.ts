@@ -7,7 +7,9 @@
 // source maps (`bun run build --sourcemap`, as CI does), it also checks that the root and /login
 // preloads contain none of the chat-only packages.
 //
-// Raise a budget only on purpose, and say why in the PR.
+// Raise a budget only on purpose, and say in the PR what grew. Only `__root.tsx` itself (reviewed) may grow
+// the root preloads, which every page pays for; chat code reaches a route through `import()` (CLAUDE.md,
+// First load).
 
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
@@ -36,10 +38,12 @@ const SERVER_FUNCTION = path.join(OUTPUT, "functions/__server.func");
 // /new 557, /settings 340, largest chunk 370, scene 897, CSS 23), with a few percent of headroom.
 // /settings raised to 370 by 3.11's Appearance section (it reached 355).
 // Root raised to 198 by Better Auth 1.7's client (it reached 195.2).
+// /w/$workspaceId added by quality audit Q2 slice 5 at 610 (it reached 593.1: /new plus the workspace view).
 const BUDGET_KB = {
 	root: 198,
 	login: 240,
 	new: 580,
+	workspace: 610,
 	settings: 370,
 	largestEagerChunkMin: 400,
 	sceneChunkMin: 950,
@@ -54,6 +58,11 @@ const PAGES = [
 	},
 	{ name: "/login", route: "/(auth)/login", budget: BUDGET_KB.login },
 	{ name: "/new", route: "/(dashboard)/new", budget: BUDGET_KB.new },
+	{
+		name: "/w/$workspaceId",
+		route: "/(dashboard)/w/$workspaceId",
+		budget: BUDGET_KB.workspace,
+	},
 	{
 		name: "/settings",
 		route: "/(dashboard)/settings",
