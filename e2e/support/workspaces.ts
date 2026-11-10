@@ -82,3 +82,36 @@ export async function openWorkspace(page: Page, count: number) {
 	}
 	await expect(panes(page)).toHaveCount(count);
 }
+
+/** A row of the app's IndexedDB (`highelo-chats`), as stored; undefined until it's written. */
+export const storedRow = <Row>(
+	page: Page,
+	table: "chats" | "workspaces",
+	id: string,
+) =>
+	page.evaluate(
+		async ([name, key]) => {
+			const db = await new Promise<IDBDatabase>((resolve, reject) => {
+				const open = indexedDB.open("highelo-chats");
+				open.onsuccess = () => resolve(open.result);
+				open.onerror = () => reject(open.error);
+			});
+			const row = await new Promise<unknown>((resolve, reject) => {
+				const request = db.transaction(name).objectStore(name).get(key);
+				request.onsuccess = () => resolve(request.result);
+				request.onerror = () => reject(request.error);
+			});
+			db.close();
+			return row as Row | undefined;
+		},
+		[table, id] as const,
+	);
+
+/**
+ * How many messages the chat has saved in this browser (0 before its first save). A pane's
+ * `data-chat-status="ready"` isn't enough before leaving the page: the AI SDK reports "ready" before
+ * the reply's `onFinish` save runs.
+ */
+export const savedMessages = async (page: Page, chatId: string) =>
+	(await storedRow<{ messageCount?: number }>(page, "chats", chatId))
+		?.messageCount ?? 0;

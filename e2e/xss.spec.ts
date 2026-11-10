@@ -22,7 +22,11 @@ test.describe("model output with XSS payloads", () => {
 	test.beforeEach(async ({ page }) => {
 		await page.goto("/e2e/markdown");
 		await expect(page.locator("main")).toHaveAttribute("data-hydrated", "true");
-		// SafeMarkdown shows plain text until Streamdown loads; check what Streamdown renders.
+		// SafeMarkdown shows plain text until Streamdown loads; check what Streamdown renders. No
+		// fallback is also true before anything rendered, so wait for Streamdown's own output as well.
+		await expect(
+			page.locator(`${RENDERED} [data-streamdown="link"]`).first(),
+		).toBeAttached();
 		await expect(
 			page.locator(`${RENDERED} [data-streamdown="loading"]`),
 		).toHaveCount(0);

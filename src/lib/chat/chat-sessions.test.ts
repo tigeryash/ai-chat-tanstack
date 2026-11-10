@@ -133,6 +133,28 @@ describe("chat sessions", () => {
 		);
 	});
 
+	it("names a new chat in the same write that creates it, so leaving the page can't strand it untitled", async () => {
+		const store = createDexieChatStore({ db: openTestDatabase() });
+		// What the store holds the moment the creating save resolves, before anything else is written.
+		const createdAs: (string | undefined)[] = [];
+		const watched: typeof store = {
+			...store,
+			saveMessages: async (...args) => {
+				const result = await store.saveMessages(...args);
+				createdAs.push((await store.getChat(args[0]))?.title);
+				return result;
+			},
+		};
+		const transport = new BrowserChatTransport(async () =>
+			mockChatModel({ text: ["ok"] }),
+		);
+		const chat = openNewChat({ transport, store: watched, ownerId: null });
+
+		await chat.sendMessage({ text: "Plan a trip" }, { body: SELECTION });
+
+		await vi.waitFor(() => expect(createdAs).toEqual(["Plan a trip"]));
+	});
+
 	it("deletes a chat mid-reply without the stopped reply saving it again", async () => {
 		const store = createDexieChatStore({ db: openTestDatabase() });
 		await store.saveMessages(

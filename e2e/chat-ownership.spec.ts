@@ -3,6 +3,7 @@ import { E2E_MOCK_MODEL, E2E_MOCK_REPLY } from "../src/lib/chat/e2e-model";
 import { MODEL_CHOICE_STORAGE_KEY } from "../src/lib/chat/model-selection";
 import { signInAs } from "./support/accounts";
 import { expect, test } from "./support/fixtures";
+import { savedMessages, storedRow } from "./support/workspaces";
 
 // Roadmap 1.9: chats stored in this browser belong to the account that made them, or to no account
 // when made signed out. Test accounts come from the Convex stub (support/accounts.ts); chats use the
@@ -248,7 +249,10 @@ test("a workspace never drops or deletes a pane of another account's chat (quali
 	const workspaceEntry = page
 		.getByRole("list", { name: "Recent chats" })
 		.getByRole("link", { name: /^Before signing in/ });
-	const send = async (n: number, text: string) => {
+	const chatIdOf = async (n: number) =>
+		(await pane(n).getAttribute("data-pane-id")) ?? "";
+	/** Sends from pane `n` and waits until each pane in `replying` has saved its first exchange. */
+	const send = async (n: number, text: string, replying: number[]) => {
 		await pane(n).getByPlaceholder("Ask anything").fill(text);
 		await pane(n).getByPlaceholder("Ask anything").press("Enter");
 		await expect(pane(n).getByText(text)).toBeVisible();
@@ -258,6 +262,11 @@ test("a workspace never drops or deletes a pane of another account's chat (quali
 				"ready",
 			);
 		}
+		// "ready" comes before the save, and every step after this leaves the page.
+		for (const each of replying) {
+			const chatId = await chatIdOf(each);
+			await expect.poll(() => savedMessages(page, chatId)).toBe(2);
+		}
 	};
 
 	// Signed out: a two-pane workspace with a reply in both.
@@ -266,7 +275,7 @@ test("a workspace never drops or deletes a pane of another account's chat (quali
 	await expect(page).toHaveURL(/\/w\/[0-9a-f-]{36}$/);
 	const workspaceUrl = new URL(page.url()).pathname;
 	await expect(panes).toHaveCount(2);
-	await send(1, "Before signing in");
+	await send(1, "Before signing in", [1, 2]);
 
 	// Signed in, keeping the no-account chats apart: a third pane is the account's (W4).
 	await signIn(page, baseURL, "user-a", { path: workspaceUrl, prompt: true });
@@ -278,7 +287,7 @@ test("a workspace never drops or deletes a pane of another account's chat (quali
 	await expect(panes).toHaveCount(3);
 	await pane(1).getByRole("switch", { name: "Sync Pane 1" }).click();
 	await pane(2).getByRole("switch", { name: "Sync Pane 2" }).click();
-	await send(3, "Account A only");
+	await send(3, "Account A only", [3]);
 
 	// Signed out, the account's pane is hidden, and a change to the workspace keeps it (W2).
 	await signOut(page);
@@ -287,6 +296,20 @@ test("a workspace never drops or deletes a pane of another account's chat (quali
 	await expect(page.getByText("Account A only")).toHaveCount(0);
 	await expect(workspaceEntry).toContainText("2");
 	await pane(1).getByRole("switch", { name: "Sync Pane 1" }).click();
+	// The change is saved before signing in reloads the page.
+	const workspaceId = workspaceUrl.split("/").at(-1) ?? "";
+	const firstChat = await chatIdOf(1);
+	await expect
+		.poll(async () => {
+			const row = await storedRow<{
+				panes: { chatId: string; synced: boolean }[];
+			}>(page, "workspaces", workspaceId);
+			return {
+				panes: row?.panes.length,
+				synced: row?.panes.find((each) => each.chatId === firstChat)?.synced,
+			};
+		})
+		.toEqual({ panes: 3, synced: true });
 	await signIn(page, baseURL, "user-a", { path: workspaceUrl });
 	await expect(panes).toHaveCount(3);
 	await expect(pane(3).getByText("Account A only")).toBeVisible();
