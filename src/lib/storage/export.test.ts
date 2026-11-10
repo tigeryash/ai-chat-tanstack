@@ -90,9 +90,12 @@ describe("export and import", () => {
 
 		expect(await importChats(wiped, exported.json, null)).toEqual({
 			imported: 2,
+			updated: 0,
 			skipped: 0,
 			otherAccounts: 0,
 			promptsImported: 0,
+			promptsUpdated: 0,
+			promptsSkipped: 0,
 		});
 		expect(await everything(wiped)).toEqual(before);
 	});
@@ -185,17 +188,23 @@ describe("export and import", () => {
 			await importChats(store, exportFile([chat(5, "older")]), null),
 		).toEqual({
 			imported: 0,
+			updated: 0,
 			skipped: 1,
 			otherAccounts: 0,
 			promptsImported: 0,
+			promptsUpdated: 0,
+			promptsSkipped: 0,
 		});
 		expect(
 			await importChats(store, exportFile([chat(20, "newer")]), null),
 		).toEqual({
 			imported: 1,
+			updated: 1,
 			skipped: 0,
 			otherAccounts: 0,
 			promptsImported: 0,
+			promptsUpdated: 0,
+			promptsSkipped: 0,
 		});
 		expect((await store.getChat("c1"))?.messages[0].parts[0]).toMatchObject({
 			text: "newer",
@@ -236,9 +245,12 @@ describe("export and import", () => {
 
 		expect(await importChats(store, file, "user-a")).toEqual({
 			imported: 3,
+			updated: 0,
 			skipped: 0,
 			otherAccounts: 1,
 			promptsImported: 0,
+			promptsUpdated: 0,
+			promptsSkipped: 0,
 		});
 		expect(
 			(await store.listChats()).map((c) => `${c.id}:${c.ownerId}`).sort(),
@@ -268,9 +280,12 @@ describe("export and import", () => {
 			),
 		).toEqual({
 			imported: 2,
+			updated: 2,
 			skipped: 0,
 			otherAccounts: 0,
 			promptsImported: 0,
+			promptsUpdated: 0,
+			promptsSkipped: 0,
 		});
 		expect(await store.getChat("mine")).toMatchObject({ ownerId: "user-a" });
 		expect(await store.getChat("anyone")).toMatchObject({ ownerId: null });

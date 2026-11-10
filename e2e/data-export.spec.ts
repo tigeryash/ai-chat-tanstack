@@ -1,0 +1,134 @@
+import { readFile } from "node:fs/promises";
+import type { Page } from "@playwright/test";
+import { expect, test } from "./support/fixtures";
+import {
+	connectOpenRouter,
+	fakeOpenRouter,
+	PNG,
+	pickModel,
+} from "./support/openrouter";
+
+// Roadmap 1.10: Settings → Your data. A chat with an image attachment and a saved prompt are exported
+// from Settings, site data is cleared, and importing the file brings both back. The saved OpenRouter key
+// is never in the file (hard rule 1).
+
+async function clearSiteData(page: Page) {
+	// A page without the chat database open, so nothing blocks the delete.
+	await page.goto("/privacy");
+	await page.evaluate(async () => {
+		localStorage.clear();
+		sessionStorage.clear();
+		const databases = await indexedDB.databases();
+		await Promise.all(
+			databases.map(
+				({ name }) =>
+					new Promise<void>((resolve, reject) => {
+						if (!name) return resolve();
+						const request = indexedDB.deleteDatabase(name);
+						request.onsuccess = () => resolve();
+						request.onerror = () => reject(request.error);
+						request.onblocked = () => reject(new Error(`${name} blocked`));
+					}),
+			),
+		);
+	});
+}
+
+test("export from Settings, clear site data, import: the chat, its image and the saved prompt are back", async ({
+	page,
+}) => {
+	await fakeOpenRouter(page);
+	await connectOpenRouter(page);
+
+	// A chat with an image.
+	await page.goto("/new");
+	await pickModel(page, "Opus", "anthropic/claude-opus-5.5");
+	await page
+		.locator("input[type=file]")
+		.setInputFiles({ name: "red.png", mimeType: "image/png", buffer: PNG });
+	const box = page.getByPlaceholder("Ask anything");
+	await box.fill("Export me");
+	await box.press("Enter");
+	await expect(page.getByText("A red square.")).toBeVisible();
+	await expect(page).toHaveURL(/\/(?!new)[^/]+$/);
+	const chatUrl = page.url();
+
+	// A saved prompt.
+	await page.goto("/prompts");
+	await page.getByRole("button", { name: "New prompt" }).click();
+	const form = page.getByRole("region", { name: "New prompt" });
+	await form.getByLabel("Name").fill("Exported prompt");
+	await form.getByLabel("Prompt").fill("Answer in one line.");
+	await form.getByRole("button", { name: "Save prompt" }).click();
+	await expect(
+		page.getByRole("article", { name: "Exported prompt" }),
+	).toBeVisible();
+
+	// Export.
+	await page.goto("/settings");
+	const data = page.getByRole("region", { name: "Your data" });
+	const downloading = page.waitForEvent("download");
+	await data.getByRole("button", { name: "Export data" }).click();
+	const download = await downloading;
+	expect(download.suggestedFilename()).toMatch(
+		/^high-elo-llms-export-\d{4}-\d{2}-\d{2}\.json$/,
+	);
+	await expect(data.getByRole("status")).toHaveText(
+		"Exported 1 chat and 1 saved prompt.",
+	);
+	const path = await download.path();
+	const file = await readFile(path, "utf8");
+	expect(file).toContain("Answer in one line.");
+	expect(file).toContain("data:image/png;base64,");
+	expect(file).not.toContain("sk-or-v1");
+
+	// Clear site data: the chat is gone.
+	await clearSiteData(page);
+	await page.goto(chatUrl);
+	await expect(page.getByText("A red square.")).toHaveCount(0);
+
+	// Import.
+	await page.goto("/settings");
+	await data.getByLabel("Export file to import").setInputFiles(path);
+	await expect(data.getByRole("status")).toHaveText(
+		"Chats: 1 added, 0 updated, 0 already up to date. Saved prompts: 1 added, 0 updated, 0 already up to date.",
+	);
+
+	// The chat and its image are back, from the sidebar.
+	await page.getByRole("link", { name: "Export me" }).click();
+	await expect(page.getByText("A red square.")).toBeVisible();
+	const image = page.getByRole("img", { name: "red.png" });
+	await expect(image).toBeVisible();
+	expect(
+		await image.evaluate((img: HTMLImageElement) => img.naturalWidth),
+	).toBe(4);
+
+	// The saved prompt is back.
+	await page.goto("/prompts");
+	await page.getByRole("button", { name: /^Exported prompt/ }).click();
+	await expect(
+		page.getByRole("article", { name: "Exported prompt" }).getByLabel("Prompt"),
+	).toHaveValue("Answer in one line.");
+
+	// Importing the same file again changes nothing.
+	await page.goto("/settings");
+	await data.getByLabel("Export file to import").setInputFiles(path);
+	await expect(data.getByRole("status")).toHaveText(
+		"Chats: 0 added, 0 updated, 1 already up to date. Saved prompts: 0 added, 0 updated, 1 already up to date.",
+	);
+});
+
+test("importing a file that isn't an export shows a friendly error", async ({
+	page,
+}) => {
+	await page.goto("/settings");
+	const data = page.getByRole("region", { name: "Your data" });
+	await data.getByLabel("Export file to import").setInputFiles({
+		name: "notes.json",
+		mimeType: "application/json",
+		buffer: Buffer.from('{"hello": "world"}'),
+	});
+	await expect(data.getByRole("alert")).toHaveText(
+		"That file isn't a High Elo LLMs export, or it's damaged. Nothing was changed.",
+	);
+});

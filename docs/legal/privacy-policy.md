@@ -145,9 +145,11 @@ message content.
 
 ## Exporting and deleting your data
 
-- **Chats:** delete them in the app, or export them as a file (JSON) and import them elsewhere. Exports include
-  the chat's attachments and system prompt, and never include API keys. Deleting a chat deletes its attachments.
-- **Saved prompts:** delete them in the prompt library. They aren't included in exports yet. Clearing your browser's site data for this app deletes everything stored in the browser.
+- **Chats:** delete them in the app, or export them as a file (JSON) in Settings → Your data and import them
+  elsewhere. Exports include the chat's attachments and system prompt, and never include API keys. Deleting a chat
+  deletes its attachments.
+- **Saved prompts:** delete them in the prompt library. They're included in the same export file as your chats.
+  Clearing your browser's site data for this app deletes everything stored in the browser.
 - **API keys:** delete them in Settings → API keys. To revoke a key entirely, do it on the provider's site.
 - **Your account:** self-serve account deletion and export are planned. Until then, email us at the address below. We
   delete your account and its server data as soon as we get your request, and always within 30 days.

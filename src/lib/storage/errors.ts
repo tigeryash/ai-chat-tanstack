@@ -2,7 +2,8 @@ export type ChatStoreErrorCode =
 	| "not-found"
 	| "invalid-chat"
 	| "too-new"
-	| "invalid-export";
+	| "invalid-export"
+	| "too-large";
 
 // Errors from the chat store carry a code for the UI to pick its own wording, and `issues` that name
 // only paths and Zod codes. They never carry message text: AI SDK's validation errors quote the whole
