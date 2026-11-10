@@ -15,7 +15,7 @@ test("signed-out visitors land on a new chat", async ({ page }) => {
 test("settings work signed out", async ({ page }) => {
 	await page.goto("/settings");
 
-	await expect(page).toHaveURL(/\/settings$/);
+	await expect(page).toHaveURL(/\/new\?settings=connections$/);
 	await expect(
 		page.getByRole("region", { name: "OpenRouter", exact: true }),
 	).toBeVisible();

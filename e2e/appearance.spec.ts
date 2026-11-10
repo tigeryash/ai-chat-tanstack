@@ -51,7 +51,7 @@ test("theme, fonts and text size persist across reloads with no flash of the def
 	page,
 }) => {
 	await recordFirstFrame(page);
-	await page.goto("/settings");
+	await page.goto("/new?settings=appearance");
 	expect(await firstFrame(page)).toMatchObject({
 		scheme: "light dark",
 		fontSize: "16px",
@@ -79,7 +79,7 @@ test("theme, fonts and text size persist across reloads with no flash of the def
 	// The script removed itself, so React found the markup it rendered.
 	await expect(page.locator("head script:not([src])")).toHaveCount(0);
 
-	await page.goto("/settings");
+	await page.goto("/new?settings=appearance");
 	await appearance(page).getByRole("button", { name: "Reset all" }).click();
 	await page.reload();
 	expect(await firstFrame(page)).toMatchObject({
@@ -92,7 +92,7 @@ test("theme, fonts and text size persist across reloads with no flash of the def
 test("a custom color applies, warns about contrast, and resets", async ({
 	page,
 }) => {
-	await page.goto("/settings");
+	await page.goto("/new?settings=appearance");
 	const section = appearance(page);
 	await section.getByRole("button", { name: "Advanced colors" }).click();
 	await expect(
@@ -123,7 +123,7 @@ test("a custom color applies, warns about contrast, and resets", async ({
 });
 
 test("a theme exports and imports as JSON", async ({ page }) => {
-	await page.goto("/settings");
+	await page.goto("/new?settings=appearance");
 	const section = appearance(page);
 	await section.getByRole("radio", { name: "Light", exact: true }).click();
 	await section.getByLabel("Accent color").fill("#3366cc");

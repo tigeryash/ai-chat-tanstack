@@ -40,16 +40,18 @@ export function ThemeFile({ settings }: { settings: AppearanceSettings }) {
 
 	return (
 		<>
-			<Button size="sm" variant="outline" onClick={download}>
-				Export theme
-			</Button>
-			<Button
-				size="sm"
-				variant="outline"
-				onClick={() => input.current?.click()}
-			>
-				Import theme
-			</Button>
+			<div className="flex flex-wrap gap-2 @lg:justify-self-end">
+				<Button size="sm" variant="outline" onClick={download}>
+					Export theme
+				</Button>
+				<Button
+					size="sm"
+					variant="outline"
+					onClick={() => input.current?.click()}
+				>
+					Import theme
+				</Button>
+			</div>
 			<input
 				ref={input}
 				type="file"
@@ -66,8 +68,8 @@ export function ThemeFile({ settings }: { settings: AppearanceSettings }) {
 					role={message.error ? "alert" : "status"}
 					className={
 						message.error
-							? "text-sm text-destructive"
-							: "text-sm text-muted-foreground"
+							? "col-span-full text-sm text-destructive"
+							: "col-span-full text-sm text-muted-foreground"
 					}
 				>
 					{message.text}

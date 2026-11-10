@@ -57,7 +57,7 @@ async function networkAccessIs(page: Page, state: PermissionState) {
 }
 
 async function addStubEndpoint(page: Page) {
-	await page.goto("/settings");
+	await page.goto("/new?settings=connections");
 	const section = page.getByRole("region", { name: "Local models" });
 	await section.getByRole("button", { name: "Add local server" }).click();
 	await section
@@ -192,7 +192,7 @@ test("no local server is called on page load, and a LAN address can't be saved",
 	await expect(page.getByRole("button", { name: /^Model: / })).toBeVisible();
 	expect(seen).toEqual([]);
 
-	await page.goto("/settings");
+	await page.goto("/new?settings=connections");
 	const section = page.getByRole("region", { name: "Local models" });
 	await section.getByRole("button", { name: "Add local server" }).click();
 	await section.getByLabel("Base URL").fill("http://192.168.1.20:1234/v1");

@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "./support/fixtures";
+import { showSettingsSection } from "./support/settings";
 
 // Roadmap 1.8: Vercel Web Analytics and Speed Insights under the CSP, and the Settings opt-out. The
 // scripts Vercel serves at /_vercel/… don't exist outside Vercel, so stand-ins load from the same paths
@@ -53,7 +54,7 @@ test("the Settings switch turns track() off, and the scripts don't load", async 
 	page,
 }) => {
 	const vercel = await stubVercel(page);
-	await page.goto("/settings");
+	await page.goto("/new?settings=connections");
 	const local = page.getByRole("region", { name: "Local models" });
 	const addServer = async (name: string) => {
 		await local.getByRole("button", { name: "Add local server" }).click();
@@ -62,12 +63,16 @@ test("the Settings switch turns track() off, and the scripts don't load", async 
 		await expect(local.getByRole("region", { name })).toBeVisible();
 	};
 
+	await showSettingsSection(page, "Privacy");
 	await expect(analyticsSwitch(page)).toBeChecked();
+	await showSettingsSection(page, "Connections");
 	await addServer("First");
 	expect(await recorded(page)).toEqual(["local_endpoint_added"]);
 
+	await showSettingsSection(page, "Privacy");
 	await analyticsSwitch(page).click();
 	await expect(analyticsSwitch(page)).not.toBeChecked();
+	await showSettingsSection(page, "Connections");
 	await addServer("Second");
 	expect(await recorded(page)).toEqual(["local_endpoint_added"]);
 

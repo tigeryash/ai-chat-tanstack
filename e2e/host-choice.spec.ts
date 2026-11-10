@@ -425,7 +425,7 @@ test("the first key ever saved turns the light green without a reload", async ({
 		.host("OpenRouter")
 		.getByRole("link", { name: "Connect" })
 		.click();
-	await expect(page).toHaveURL(/\/settings$/);
+	await expect(page).toHaveURL(/\/new\?settings=connections$/);
 	const row = page.getByRole("region", { name: "OpenRouter", exact: true });
 	await row.getByRole("button", { name: "Add key" }).click();
 	await row.getByLabel("OpenRouter API key").fill(KEYS.openrouter);

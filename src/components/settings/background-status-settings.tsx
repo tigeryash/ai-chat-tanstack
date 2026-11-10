@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -12,93 +12,75 @@ import {
 	updateBackgroundStatusSettings,
 	useBackgroundStatusSettings,
 } from "@/lib/background-status/settings";
+import type { SettingControlProps } from "./setting-row-props";
 
-/** Settings → Background status (roadmap 3.10): tab title and notifications while the tab is hidden. */
-export function BackgroundStatusSettings() {
+/** A switch for one background-status setting, labelled by its settings row. */
+function BackgroundStatusSwitch({
+	setting,
+	controlId,
+	descriptionId,
+}: SettingControlProps & { setting: ToggleKey }) {
 	const settings = useBackgroundStatusSettings();
-	const toggle = (key: keyof Settings) => (checked: boolean) =>
-		updateBackgroundStatusSettings({ [key]: checked });
-
 	return (
-		<section aria-labelledby="background-status" className="mt-10 grid gap-4">
-			<header className="grid gap-2">
-				<h2 id="background-status" className="font-semibold">
-					Background status
-				</h2>
-				<p className="max-w-2xl text-sm text-muted-foreground">
-					When this tab is in the background, show how replies are going. Only
-					counts and the chat's name are shown, never what's in a chat.
-				</p>
-			</header>
-			<SettingSwitch
-				label="Show reply status in the tab title"
-				checked={settings.tabStatus}
-				onChange={toggle("tabStatus")}
-			/>
-			<SettingSwitch
-				label="Notify me when a reply is ready"
-				checked={settings.notifyFinished}
-				onChange={toggle("notifyFinished")}
-			/>
-			<SettingSwitch
-				label="Notify me when a reply fails"
-				checked={settings.notifyFailed}
-				onChange={toggle("notifyFailed")}
-			/>
-			<NotificationPermission />
-			<TestNotification />
-		</section>
+		<Switch
+			id={controlId}
+			aria-describedby={descriptionId}
+			checked={settings[setting]}
+			onCheckedChange={(checked) =>
+				updateBackgroundStatusSettings({ [setting]: checked })
+			}
+			className="@lg:justify-self-end"
+		/>
 	);
 }
 
-function SettingSwitch({
-	label,
-	checked,
-	onChange,
-}: {
-	label: string;
-	checked: boolean;
-	onChange: (checked: boolean) => void;
-}) {
-	const id = useId();
-	return (
-		<div className="flex items-center gap-3">
-			<Switch id={id} checked={checked} onCheckedChange={onChange} />
-			<label htmlFor={id} className="text-sm">
-				{label}
-			</label>
-		</div>
-	);
+type ToggleKey = keyof Pick<
+	Settings,
+	"tabStatus" | "notifyFinished" | "notifyFailed"
+>;
+
+// Settings → Notifications (roadmap 3.10, moved into the Settings dialog in R2 S1): tab title and
+// notifications while the tab is hidden.
+export function TabStatusSwitch(props: SettingControlProps) {
+	return <BackgroundStatusSwitch {...props} setting="tabStatus" />;
 }
 
-function NotificationPermission() {
+export function NotifyFinishedSwitch(props: SettingControlProps) {
+	return <BackgroundStatusSwitch {...props} setting="notifyFinished" />;
+}
+
+export function NotifyFailedSwitch(props: SettingControlProps) {
+	return <BackgroundStatusSwitch {...props} setting="notifyFailed" />;
+}
+
+export function NotificationPermission() {
 	const access = useNotificationAccess();
 	const [asking, setAsking] = useState(false);
 
 	if (access === "granted") {
 		return (
-			<p className="text-sm text-muted-foreground">
+			<p className="text-sm text-muted-foreground @lg:text-right">
 				Notifications are allowed in this browser.
 			</p>
 		);
 	}
 	if (access === "unsupported") {
 		return (
-			<p className="text-sm text-muted-foreground">
+			<p className="text-sm text-muted-foreground @lg:text-right">
 				This browser can't show notifications.
 			</p>
 		);
 	}
 	if (access === "denied") {
 		return (
-			<p className="text-sm text-muted-foreground">
+			<p className="max-w-xs text-sm text-muted-foreground @lg:text-right">
 				Notifications are blocked for this site. Allow them in your browser's
 				site settings to get them.
 			</p>
 		);
 	}
 	return (
-		<div className="flex flex-wrap items-center gap-3">
+		<div className="flex flex-wrap items-center gap-3 @lg:justify-end">
 			<Button
 				size="sm"
 				variant="outline"
@@ -127,15 +109,15 @@ const TEST_RESULT_TEXT: Record<TestNotificationResult, string> = {
 };
 
 /** Sends a fixed test notification, and says where to look when it doesn't appear. */
-function TestNotification() {
+export function TestNotification() {
 	const access = useNotificationAccess();
 	const [result, setResult] = useState<TestNotificationResult | null>(null);
 	const [sending, setSending] = useState(false);
 	if (access === "unsupported") return null;
 
 	return (
-		<div className="grid gap-2">
-			<div className="flex flex-wrap items-center gap-3">
+		<>
+			<div className="@lg:justify-self-end">
 				<Button
 					size="sm"
 					variant="outline"
@@ -149,15 +131,18 @@ function TestNotification() {
 				>
 					Send test notification
 				</Button>
-				<span role="status" className="text-sm text-muted-foreground">
-					{result && TEST_RESULT_TEXT[result]}
-				</span>
 			</div>
+			<span
+				role="status"
+				className="col-span-full text-sm text-muted-foreground empty:hidden"
+			>
+				{result && TEST_RESULT_TEXT[result]}
+			</span>
 			{result && result !== "unsupported" && (
 				<div
 					role="note"
 					aria-label="If notifications don't appear"
-					className="max-w-2xl text-sm text-muted-foreground"
+					className="col-span-full max-w-2xl text-sm text-muted-foreground"
 				>
 					<p>If notifications don't appear:</p>
 					<ul className="mt-1 list-disc pl-5">
@@ -173,6 +158,6 @@ function TestNotification() {
 					</ul>
 				</div>
 			)}
-		</div>
+		</>
 	);
 }

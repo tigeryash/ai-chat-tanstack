@@ -1,12 +1,14 @@
 import { api } from "@convex/_generated/api";
 import { Link } from "@tanstack/react-router";
 import { useConvexAuth, useMutation } from "convex/react";
-import { KeyRoundIcon, LogInIcon } from "lucide-react";
+import { LogInIcon, SettingsIcon } from "lucide-react";
 import { useEffect } from "react";
+import { SettingsLink } from "@/components/settings/settings-link";
 import {
 	SidebarMenu,
 	SidebarMenuButton,
 	SidebarMenuItem,
+	useSidebar,
 } from "@/components/ui/sidebar";
 import { useViewer } from "@/lib/account";
 import { logError } from "@/lib/log";
@@ -31,13 +33,21 @@ export function AccountLinks() {
 	useUserRecord(isAuthenticated);
 	// Signed in or out by Better Auth's session, the same answer that decides which chats show.
 	const viewer = useViewer();
+	const { setOpenMobile } = useSidebar();
 
 	return (
 		<SidebarMenu>
 			<SidebarMenuItem>
-				<SidebarMenuButton render={<Link to="/settings" />}>
-					<KeyRoundIcon />
-					API keys
+				<SidebarMenuButton
+					render={
+						<SettingsLink
+							section="general"
+							onClick={() => setOpenMobile(false)}
+						/>
+					}
+				>
+					<SettingsIcon />
+					Settings
 				</SidebarMenuButton>
 			</SidebarMenuItem>
 			{viewer === undefined ? null : viewer ? (

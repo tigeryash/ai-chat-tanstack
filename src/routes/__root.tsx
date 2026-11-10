@@ -15,6 +15,7 @@ import { MotionConfig } from "motion/react";
 import { VercelAnalytics } from "@/components/analytics/vercel-analytics";
 import { AppearanceSync } from "@/components/appearance/appearance-sync";
 import { ErrorReporting } from "@/components/error-reporting/error-reporting";
+import { SettingsHost } from "@/components/settings/settings-host";
 import { TooltipProvider } from "@/components/ui/tooltip-provider";
 import { env } from "@/env";
 import { currentViewer } from "@/lib/account";
@@ -22,6 +23,7 @@ import { APPEARANCE_BOOT_SCRIPT } from "@/lib/appearance/boot-script";
 import { authClient } from "@/lib/auth-client";
 import { getToken } from "@/lib/auth-server";
 import { cspHeaders } from "@/lib/security/csp";
+import { validateSettingsSearch } from "@/lib/settings/sections";
 import TanStackQueryDevtools from "../integrations/tanstack-query/devtools";
 
 import appCss from "../styles.css?url";
@@ -47,6 +49,9 @@ interface MyRouterContext {
 }
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
+	// `?settings=<section>` opens the Settings dialog on any page (roadmap R2 S1).
+	validateSearch: validateSettingsSearch,
+
 	head: () => ({
 		meta: [
 			{
@@ -120,7 +125,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 					<AppearanceSync />
 					<MotionConfig reducedMotion="user">
 						{/* Base UI tooltips share their open delay through one provider (0 ms, as before). */}
-						<TooltipProvider>{children}</TooltipProvider>
+						<TooltipProvider>
+							{children}
+							{/* Settings, a dialog over any page (`?settings=`, Cmd+,), loaded on first open. */}
+							<SettingsHost />
+						</TooltipProvider>
 					</MotionConfig>
 					{/* Page views and Web Vitals in production, unless switched off (roadmap 1.8). */}
 					<VercelAnalytics />
