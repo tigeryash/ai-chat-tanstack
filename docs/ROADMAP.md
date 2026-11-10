@@ -24,6 +24,8 @@ Each milestone is deployable and demo-able on its own, so the portfolio piece is
    live catalog, chat in 2–4 synced panes, chats saved on your device.
 2. **Serious playground:** 1.6–1.8, 2.4–2.5, 3.3–3.6, 3.10. Attachments, branching, per-model settings, cost and
    speed stats, prompt library with versions, tab status and notifications.
+2b. **Refine** (agreed 2026-11-09, after Milestone 2 closed): polish the core app before agents. The "Refine"
+   section below. Agents wait until it's done.
 3. **Agents:** Phase 4, starting with the 4.0 design session.
 4. **Voice:** Phase 5.
 5. **Cloud and launch:** Phases 6 and 7.
@@ -556,6 +558,29 @@ Only what's still open. When one is done, tick it, add a dated note, and move it
   Saved on the device like other settings; presets, plus import/export of a theme.
   *Status:* done in [#55](https://github.com/tigeryash/ai-chat-tanstack/pull/55) (2026-10-31), except presets.
 
+## Refine (before agents)
+
+Agreed with Yash on 2026-11-09: the core app grew fast in Milestone 2, so tighten it before Phase 4 adds a layer
+on top. Order: R1 first; R2 and R3 can run alongside; R4 after R3; R5 any time.
+
+- [ ] **R1 Yash's walkthrough.** Yash uses production for a day and notes anything that feels off (bugs, rough
+  edges, missing pieces). The notes feed R3's fix slices.
+- [ ] **R2 Settings design.** Research what an app like this needs in Settings and a Cmd+K command palette
+  ([settings-research.md](./settings-research.md)), then throwaway layout prototypes (as in 3.0), Yash picks one,
+  then small slices build it. Yash wants: section navigation, a default model for new chats, an account section,
+  keyboard shortcuts and a Cmd+K palette, the model that writes chat titles, host preferences (the open 2.2b
+  sub-items), and more theming (beyond 3.11). Settings must grow with later phases (agent permissions, MCP servers,
+  skills, voice, sync) without a redesign. Done when the research doc is merged and Yash has picked a layout; the
+  build slices get their own lines then.
+- [ ] **R3 Quality audit Q3.** A fresh review of UX consistency, performance and code health across everything
+  Milestone 2 added, folded together with R1's notes, turned into fix slices (as Q1 and Q2 were).
+- [ ] **R4 Leftovers.** Q2 slice 5 (small follow-ups); workspaces and layouts in exports (from 3.5 and 1.10);
+  regenerate into a branch (from 1.7); Sentry source maps (from 1.8b, needs an auth token, so Yash first);
+  the flaky `synced-attachments` e2e under load (from #102).
+- [ ] **R5 Accessibility audit** (7.4, pulled forward). Keyboard-only pass, screen reader pass with streaming
+  replies, contrast in every theme.
+- After R1–R5: 3.9 Insights if Yash still wants it, then 4.0.
+
 ## Phase 4: Agent harness
 
 This is effectively a small agent harness. Slices below are a draft; 4.0 settles the design first.
@@ -621,7 +646,8 @@ This is effectively a small agent harness. Slices below are a draft; 4.0 settles
 - [ ] **7.2 Account deletion and data export** for cloud data.
 - [ ] **7.3 Security review** against OWASP Top 10 for LLM Applications (2026) and for Agentic Applications, plus
   a dependency and CSP audit.
-- [ ] **7.4 Accessibility audit.** Keyboard-only pass, screen reader pass with streaming replies, contrast.
+- [ ] **7.4 Accessibility audit.** Keyboard-only pass, screen reader pass with streaming replies, contrast. Pulled
+  forward as R5; this line stays for a final pass before launch.
 
 ## Open questions (build first, decide later)
 
