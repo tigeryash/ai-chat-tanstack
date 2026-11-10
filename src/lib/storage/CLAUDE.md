@@ -4,7 +4,8 @@ Notes for working in this folder. The root [CLAUDE.md](/CLAUDE.md) (commands, ha
 
 - **Local chats** (roadmap 1.3, `src/lib/storage/`): a `ChatStore` interface over Dexie (IndexedDB database
   `highelo-chats`; the app's instance is `app-store.ts`). Every stored chat has a `formatVersion` (`format.ts` lists
-  the migrations); export/import are versioned JSON in `export.ts`. Each chat has an `ownerId` (roadmap 1.9): the
+  the migrations); export/import are versioned JSON in `export.ts`, offered in Settings → Your data (roadmap 1.10,
+  `data-transfer.ts`, loaded with `import()`; wording and the size cap in `data-file.ts`). Each chat has an `ownerId` (roadmap 1.9): the
   Better Auth user ID that made it, or null when made signed out. What a viewer may see is `ownership.ts`; the viewer
   comes from `src/lib/account.ts` (Better Auth's session, not Convex auth). Never list or open chats without it.
   **Dexie versions** (rules in `db.ts`'s header): prefer none (optional fields, or a new table); take the next
