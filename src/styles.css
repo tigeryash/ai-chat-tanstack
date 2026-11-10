@@ -123,6 +123,12 @@
   --color-destructive-foreground: var(--destructive-foreground);
   --color-success: var(--success);
   --color-warning: var(--warning);
+  /*
+    A pane whose model can't read an attached file (roadmap 3.3): a soft glow in the warning colour, inward
+    from the border. The resizable panels clip anything outside a pane's card (their overflow), so an outer
+    glow would need room around every pane.
+  */
+  --inset-shadow-warning-glow: inset 0 0 18px 0 color-mix(in oklab, var(--warning) 30%, transparent);
   --color-link: var(--link);
   --color-auth-backdrop: var(--auth-backdrop);
   --color-overlay: var(--overlay);

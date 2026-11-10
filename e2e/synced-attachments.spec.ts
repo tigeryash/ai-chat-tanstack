@@ -41,15 +41,25 @@ async function openSyncedPanes(page: Page) {
 	return { completions, text, vision, userContent };
 }
 
-/** The pane card's border colour, and the warning token's, resolved for the current theme. */
+/**
+ * The pane card's border colour and shadow, and the warning token's colour and glow, resolved for the
+ * current theme.
+ */
 async function borderColors(scope: Locator) {
 	return card(scope).evaluate((element) => {
 		const probe = document.createElement("div");
-		probe.className = "border border-warning";
+		probe.className = "border border-warning inset-shadow-warning-glow";
 		document.body.append(probe);
-		const warning = getComputedStyle(probe).borderTopColor;
+		const { borderTopColor: warning, boxShadow: glow } =
+			getComputedStyle(probe);
 		probe.remove();
-		return { border: getComputedStyle(element).borderTopColor, warning };
+		const style = getComputedStyle(element);
+		return {
+			border: style.borderTopColor,
+			warning,
+			shadow: style.boxShadow,
+			glow,
+		};
 	});
 }
 
@@ -77,8 +87,16 @@ test("files attached in one synced composer show in both, and a send empties bot
 			return border === warning;
 		})
 		.toBe(true);
+	// …and a soft glow in the same colour (a 150 ms transition, so polled).
+	await expect
+		.poll(async () => {
+			const { shadow, glow } = await borderColors(text);
+			return glow !== "none" && shadow === glow;
+		})
+		.toBe(true);
 	const plain = await borderColors(vision);
 	expect(plain.border).not.toBe(plain.warning);
+	expect(plain.shadow).not.toBe(plain.glow);
 
 	// Removing a chip in either composer removes it everywhere.
 	await chip(vision, "notes.md").dispatchEvent("click");
@@ -110,8 +128,8 @@ test("files attached in one synced composer show in both, and a send empties bot
 	await expect(card(text)).not.toHaveAttribute("data-unreadable-attachments");
 	await expect
 		.poll(async () => {
-			const { border, warning } = await borderColors(text);
-			return border === warning;
+			const { border, warning, shadow, glow } = await borderColors(text);
+			return border === warning || shadow === glow;
 		})
 		.toBe(false);
 
@@ -176,4 +194,44 @@ test("Skip this pane, chosen with the keyboard, keeps that pane out of an Enter 
 	await expect(
 		note(text).getByRole("radio", { name: "Send text only" }),
 	).toBeChecked();
+});
+
+test.describe("on a phone", () => {
+	test.use({ viewport: { width: 390, height: 844 } });
+
+	test("the tab of a pane whose model can't read an attached file shows a labelled warning icon until the send", async ({
+		page,
+	}) => {
+		const completions = await fakeOpenRouter(page);
+		await connectOpenRouter(page);
+		await page.goto(
+			"/new?models=deepseek/deepseek-v4.1-flash,anthropic/claude-opus-5.5",
+		);
+		const tab = (n: number) =>
+			page.getByRole("tab", { name: new RegExp(`^Pane ${n}`) });
+		const warning = (n: number) =>
+			tab(n).getByRole("img", { name: "Can't read an attachment" });
+		await tab(2).click();
+		const vision = pane(page, 2);
+		await expect(
+			vision.getByRole("button", { name: /^Model: / }),
+		).toContainText("Opus");
+
+		// Attached in the Opus pane: the hidden DeepSeek pane's tab warns, Opus's doesn't.
+		await vision
+			.locator("input[type=file]")
+			.setInputFiles([files[0] as (typeof files)[number]]);
+		await expect(warning(1)).toBeVisible();
+		await expect(tab(1)).toHaveAccessibleName(
+			"Pane 1 Can't read an attachment",
+		);
+		await expect(warning(2)).toHaveCount(0);
+
+		const box = vision.getByPlaceholder("Ask anything");
+		await box.fill("What colour is this?");
+		await box.press("Enter");
+		await expect.poll(() => completions.length).toBe(2);
+		await expect(warning(1)).toHaveCount(0);
+		await expect(tab(1)).toHaveAccessibleName("Pane 1");
+	});
 });

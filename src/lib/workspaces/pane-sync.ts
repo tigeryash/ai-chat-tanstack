@@ -48,6 +48,8 @@ export interface PaneSyncState {
 	attachments: readonly AttachedFileInfo[];
 	/** Panes whose person chose to skip them while a file their model can't read is attached. */
 	skipped: readonly string[];
+	/** Panes whose model can't read an attached file, so their tabs can say so (roadmap 3.8). */
+	warned: readonly string[];
 }
 
 export interface PaneSync {
@@ -58,6 +60,8 @@ export interface PaneSync {
 	attachments: AttachmentList;
 	/** A pane's choice for files its model can't read: skip the pane (true) or send text only. */
 	setSkipped(paneId: string, skip: boolean): void;
+	/** A pane's own check (its model against what's attached); returns an undo for when it stops checking. */
+	setWarned(paneId: string, warned: boolean): () => void;
 	/** Joins a pane, until the returned function is called. Joining again replaces its entry. */
 	join(paneId: string, pane: SyncedPane): () => void;
 	sendAll(text: string, files?: FileUIPart[]): void;
@@ -90,6 +94,7 @@ export function createPaneSync(
 		diverged: false,
 		attachments: [],
 		skipped: [],
+		warned: [],
 	};
 	const panes = new Map<string, { pane: SyncedPane; leave: () => void }>();
 	const listeners = new Set<() => void>();
@@ -141,6 +146,18 @@ export function createPaneSync(
 		},
 		setDraft: (draft) => update({ draft }),
 		attachments,
+		setWarned(paneId, warned) {
+			const set = (on: boolean) => {
+				if (state.warned.includes(paneId) === on) return;
+				update({
+					warned: on
+						? [...state.warned, paneId]
+						: state.warned.filter((id) => id !== paneId),
+				});
+			};
+			set(warned);
+			return () => set(false);
+		},
 		setSkipped(paneId, skip) {
 			if (state.skipped.includes(paneId) === skip) return;
 			update({
