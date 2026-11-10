@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
 import { createDexiePromptStore } from "@/lib/prompts/prompt-store";
+import { memoryLayoutStore } from "@/lib/workspaces/layout-store.fixtures";
 import {
 	exportFileName,
 	exportSummary,
@@ -27,6 +28,7 @@ function device(name: string) {
 	return {
 		chats: createDexieChatStore({ db, now: tickingClock() }),
 		prompts: createDexiePromptStore({ db, now: tickingClock() }),
+		layouts: memoryLayoutStore(),
 	};
 }
 
@@ -145,8 +147,20 @@ describe("export file", () => {
 			ownerId: null,
 		});
 		const now = () => 0;
-		const json = await exportChats(here.chats, null, now, here.prompts);
-		const blob = await exportChatsBlob(here.chats, null, here.prompts, now);
+		const json = await exportChats(
+			here.chats,
+			null,
+			now,
+			here.prompts,
+			here.layouts,
+		);
+		const blob = await exportChatsBlob(
+			here.chats,
+			null,
+			here.prompts,
+			here.layouts,
+			now,
+		);
 		expect(await blob.blob.text()).toBe(json.json);
 		expect(JSON.parse(json.json)).toMatchObject({
 			exportedAt: expect.any(String),
@@ -159,27 +173,36 @@ describe("export file", () => {
 			await blob.blob.text(),
 			null,
 			there.prompts,
+			there.layouts,
 		);
 		expect(importSummary(result)).toBe(
-			"Chats: 2 added, 0 updated, 0 already up to date. Saved prompts: 1 added, 0 updated, 0 already up to date.",
+			"Chats: 2 added, 0 updated, 0 already up to date. Saved prompts: 1 added, 0 updated, 0 already up to date. Workspaces: 0 added, 0 updated, 0 already up to date. Saved layouts: 0 added, 0 updated, 0 already up to date.",
 		);
 		const again = await importChats(
 			there.chats,
 			await blob.blob.text(),
 			null,
 			there.prompts,
+			there.layouts,
 		);
 		expect(importSummary(again)).toBe(
-			"Chats: 0 added, 0 updated, 2 already up to date. Saved prompts: 0 added, 0 updated, 1 already up to date.",
+			"Chats: 0 added, 0 updated, 2 already up to date. Saved prompts: 0 added, 0 updated, 1 already up to date. Workspaces: 0 added, 0 updated, 0 already up to date. Saved layouts: 0 added, 0 updated, 0 already up to date.",
 		);
 	});
 
 	it("exports an empty library as a valid file", async () => {
 		const here = device("empty");
-		const { blob } = await exportChatsBlob(here.chats, null, here.prompts);
+		const { blob } = await exportChatsBlob(
+			here.chats,
+			null,
+			here.prompts,
+			here.layouts,
+		);
 		expect(JSON.parse(await blob.text())).toMatchObject({
 			chats: [],
 			prompts: [],
+			workspaces: [],
+			layouts: [],
 		});
 	});
 });

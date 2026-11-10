@@ -37,6 +37,21 @@ const layouts = createLocalStore<SavedLayout[]>(
 	[],
 );
 
+/** Where saved layouts are read and written: this browser's localStorage, or a stand-in in tests. */
+export interface SavedLayoutStore {
+	read(): SavedLayout[];
+	write(layouts: SavedLayout[]): void;
+}
+
+/** The app's saved layouts, for export and import (roadmap 1.10). */
+export const savedLayoutStore: SavedLayoutStore = layouts;
+
+/** A layout from an export file, checked. Null when it isn't a valid layout. */
+export function parseSavedLayout(raw: unknown): SavedLayout | null {
+	const parsed = savedLayoutSchema.safeParse(raw);
+	return parsed.success ? parsed.data : null;
+}
+
 /** Every saved layout, newest last, shared by every component that reads them. */
 export function useSavedLayouts(): SavedLayout[] {
 	return layouts.use();
