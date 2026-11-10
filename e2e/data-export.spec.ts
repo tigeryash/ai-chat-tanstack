@@ -37,6 +37,8 @@ async function clearSiteData(page: Page) {
 test("export from Settings, clear site data, import: the chat, its image and the saved prompt are back", async ({
 	page,
 }) => {
+	// A chat, a prompt, an export, a wipe and two imports: longer than one flow's default budget.
+	test.slow();
 	await fakeOpenRouter(page);
 	await connectOpenRouter(page);
 
