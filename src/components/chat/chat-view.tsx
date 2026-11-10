@@ -15,7 +15,11 @@ import {
 } from "@/lib/chat/model-selection";
 import { logError } from "@/lib/log";
 import type { RequestSettings } from "@/lib/params/request";
-import { type PaneSync, usePaneSyncState } from "@/lib/workspaces/pane-sync";
+import {
+	type PaneSync,
+	useCantReadAttachments,
+	usePaneSyncState,
+} from "@/lib/workspaces/pane-sync";
 
 export interface ChatViewProps {
 	chat: Chat<UIMessage>;
@@ -89,6 +93,9 @@ export function ChatView({
 		supportRef.current = attachmentSupport;
 	});
 	const hub = sync?.synced ? sync.hub : undefined;
+	// Roadmap 3.3: while a file this pane's model can't read is attached, the card's border turns amber.
+	// The note above the composer says why, so colour isn't the only signal.
+	const cantRead = useCantReadAttachments(hub, attachmentSupport);
 	useEffect(
 		() =>
 			hub?.join(chat.id, {
@@ -137,8 +144,9 @@ export function ChatView({
 
 	return (
 		<div
-			className="flex h-full min-h-0 min-w-0 flex-col items-center overflow-hidden rounded-pane border bg-card pb-4 text-card-foreground"
+			className="flex h-full min-h-0 min-w-0 flex-col items-center overflow-hidden rounded-pane border bg-card pb-4 text-card-foreground transition-colors data-unreadable-attachments:border-warning"
 			data-chat-status={status}
+			data-unreadable-attachments={cantRead ? "" : undefined}
 		>
 			{header && (
 				<div className="flex w-full shrink-0 flex-col border-b">{header}</div>
@@ -201,11 +209,13 @@ export function ChatView({
 				</div>
 			)}
 			{hub && (
-				<PaneAttachmentNotice
-					hub={hub}
-					paneId={chat.id}
-					support={attachmentSupport}
-				/>
+				<div className="flex w-full justify-center px-3">
+					<PaneAttachmentNotice
+						hub={hub}
+						paneId={chat.id}
+						support={attachmentSupport}
+					/>
+				</div>
 			)}
 			{/* Inset, so the composer doesn't touch a narrow pane's edges. */}
 			<div className="flex w-full justify-center px-3">
@@ -214,7 +224,6 @@ export function ChatView({
 					// type, size and count; each pane checks its own model (PaneAttachmentNotice, roadmap 3.3).
 					<SyncedComposer
 						hub={hub}
-						paneId={chat.id}
 						ready={options !== undefined}
 						onAttachmentErrors={setAttachmentErrors}
 					/>
@@ -238,12 +247,10 @@ export function ChatView({
  */
 function SyncedComposer({
 	hub,
-	paneId,
 	ready,
 	onAttachmentErrors,
 }: {
 	hub: PaneSync;
-	paneId: string;
 	ready: boolean;
 	onAttachmentErrors: (errors: string[]) => void;
 }) {
@@ -253,7 +260,7 @@ function SyncedComposer({
 			value={draft}
 			onValueChange={hub.setDraft}
 			onAttachmentErrors={onAttachmentErrors}
-			onAttachmentsChange={(files) => hub.setAttachments(paneId, files)}
+			attachments={hub.attachments}
 			onSubmit={async (text, files) => hub.sendAll(text, files)}
 			isLoading={replying || !ready}
 			onStop={replying ? hub.stopAll : undefined}

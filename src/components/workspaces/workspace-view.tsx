@@ -134,6 +134,8 @@ export function WorkspaceView({
 }) {
 	const [workspace, setWorkspace] = useState(initial);
 	const [hub] = useState(createPaneSync);
+	// The synced composers' attachments go with the workspace (their previews are revoked).
+	useEffect(() => () => hub.dispose(), [hub]);
 	const { diverged } = usePaneSyncState(hub);
 	const [saveFailed, setSaveFailed] = useState(false);
 	const [shownId, setShownId] = useState(initial.panes[0]?.chatId);

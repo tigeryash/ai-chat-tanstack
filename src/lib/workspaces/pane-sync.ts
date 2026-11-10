@@ -2,8 +2,13 @@ import type { Chat } from "@ai-sdk/react";
 import type { FileUIPart, UIMessage } from "ai";
 import { useSyncExternalStore } from "react";
 import {
+	type AttachmentList,
+	createAttachmentList,
+} from "@/lib/attachments/attachment-list";
+import {
 	type AttachedFileInfo,
 	planPaneSend,
+	unreadableFiles,
 } from "@/lib/attachments/capability";
 import type { AttachmentSupport } from "@/lib/attachments/validate";
 import { logError } from "@/lib/log";
@@ -12,9 +17,10 @@ import { logError } from "@/lib/log";
 // `Chat` and a `send` that uses its own model and settings. They share one composer draft, a send goes
 // to every one of them, and the composer's Stop stops every one that's replying. Panes never see each
 // other's history: when their user messages differ, the hub reports them as diverged. Attachments are
-// checked per pane (roadmap 3.3, decision 17): the hub knows what's attached in the synced composers, so
-// a pane whose model can't read a file says so before the send, and each pane gets only the files its
-// model reads, or nothing if its person chose to skip it. Imports nothing from the AI SDK at runtime.
+// shared and checked per pane (roadmap 3.3, decision 17): synced composers all show one attachment list
+// (`attachments`), so a send from any of them sends and clears the same files; a pane whose model can't
+// read one says so before the send, and each pane gets only the files its model reads, or nothing if its
+// person chose to skip it. Imports nothing from the AI SDK at runtime.
 
 export interface SyncedPane {
 	chat: Pick<
@@ -38,7 +44,7 @@ export interface PaneSyncState {
 	replying: boolean;
 	/** Synced panes have different user messages, so their replies aren't like for like. */
 	diverged: boolean;
-	/** What's attached in the synced composers, waiting to be sent. */
+	/** What's attached in the synced composers (names and types), waiting to be sent. */
 	attachments: readonly AttachedFileInfo[];
 	/** Panes whose person chose to skip them while a file their model can't read is attached. */
 	skipped: readonly string[];
@@ -48,14 +54,16 @@ export interface PaneSync {
 	getState(): PaneSyncState;
 	subscribe(listener: () => void): () => void;
 	setDraft(draft: string): void;
-	/** What one pane's composer has attached (names and types only); [] once it sends or clears. */
-	setAttachments(composerId: string, files: readonly AttachedFileInfo[]): void;
+	/** The synced composers' one attachment list. */
+	attachments: AttachmentList;
 	/** A pane's choice for files its model can't read: skip the pane (true) or send text only. */
 	setSkipped(paneId: string, skip: boolean): void;
 	/** Joins a pane, until the returned function is called. Joining again replaces its entry. */
 	join(paneId: string, pane: SyncedPane): () => void;
 	sendAll(text: string, files?: FileUIPart[]): void;
 	stopAll(): void;
+	/** Lets go of the attachments (and their previews): the workspace is gone. */
+	dispose(): void;
 }
 
 const isBusy = (chat: SyncedPane["chat"]) =>
@@ -73,7 +81,9 @@ export function userHistory(messages: readonly UIMessage[]): string {
 		.join("\u0000");
 }
 
-export function createPaneSync(): PaneSync {
+export function createPaneSync(
+	attachments: AttachmentList = createAttachmentList(),
+): PaneSync {
 	let state: PaneSyncState = {
 		draft: "",
 		replying: false,
@@ -82,7 +92,6 @@ export function createPaneSync(): PaneSync {
 		skipped: [],
 	};
 	const panes = new Map<string, { pane: SyncedPane; leave: () => void }>();
-	const attached = new Map<string, readonly AttachedFileInfo[]>();
 	const listeners = new Set<() => void>();
 
 	const update = (changes: Partial<PaneSyncState>) => {
@@ -92,14 +101,29 @@ export function createPaneSync(): PaneSync {
 		state = next;
 		for (const listener of listeners) listener();
 	};
-	const recomputeAttachments = () => {
-		const attachments = [...attached.values()].flat();
+	// Only a change in names or types reaches the panes, not each file finishing its read.
+	const sameFiles = (
+		a: readonly AttachedFileInfo[],
+		b: readonly AttachedFileInfo[],
+	) =>
+		a.length === b.length &&
+		a.every(
+			(file, index) =>
+				file.name === b[index]?.name && file.mediaType === b[index]?.mediaType,
+		);
+	attachments.subscribe(() => {
+		const files = attachments.getFiles().map((f) => ({
+			name: f.file.name,
+			mediaType: f.file.type || f.type,
+		}));
 		update({
-			attachments,
+			attachments: sameFiles(files, state.attachments)
+				? state.attachments
+				: files,
 			// Nothing attached, nothing to skip for: the next attachment asks afresh.
-			skipped: attachments.length === 0 ? [] : state.skipped,
+			skipped: files.length === 0 ? [] : state.skipped,
 		});
-	};
+	});
 	const recompute = () => {
 		const chats = [...panes.values()].map(({ pane }) => pane.chat);
 		update({
@@ -116,20 +140,7 @@ export function createPaneSync(): PaneSync {
 			return () => listeners.delete(listener);
 		},
 		setDraft: (draft) => update({ draft }),
-		setAttachments(composerId, files) {
-			const before = attached.get(composerId) ?? [];
-			const same =
-				before.length === files.length &&
-				before.every(
-					(file, index) =>
-						file.name === files[index]?.name &&
-						file.mediaType === files[index]?.mediaType,
-				);
-			if (same) return;
-			if (files.length === 0) attached.delete(composerId);
-			else attached.set(composerId, [...files]);
-			recomputeAttachments();
-		},
+		attachments,
 		setSkipped(paneId, skip) {
 			if (state.skipped.includes(paneId) === skip) return;
 			update({
@@ -155,9 +166,7 @@ export function createPaneSync(): PaneSync {
 				if (panes.get(paneId) !== entry) return;
 				entry.leave();
 				panes.delete(paneId);
-				attached.delete(paneId);
 				update({ skipped: state.skipped.filter((id) => id !== paneId) });
-				recomputeAttachments();
 				recompute();
 			};
 		},
@@ -179,9 +188,30 @@ export function createPaneSync(): PaneSync {
 					.catch((error) => logError("Couldn't stop the reply:", error));
 			}
 		},
+		dispose: () => attachments.clear(),
 	};
 }
 
 export function usePaneSyncState(sync: PaneSync): PaneSyncState {
 	return useSyncExternalStore(sync.subscribe, sync.getState, sync.getState);
+}
+
+const noHub = () => () => {};
+const nothing = () => false;
+
+/**
+ * Whether the synced composers hold a file this pane's model can't read (roadmap 3.3). A boolean, so a
+ * pane re-renders when that flips, not with every keystroke in the shared draft. False without a hub.
+ */
+export function useCantReadAttachments(
+	sync: PaneSync | undefined,
+	support: AttachmentSupport | undefined,
+): boolean {
+	return useSyncExternalStore(
+		sync?.subscribe ?? noHub,
+		sync
+			? () => unreadableFiles(sync.getState().attachments, support).length > 0
+			: nothing,
+		nothing,
+	);
 }
