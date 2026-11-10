@@ -17,7 +17,7 @@ import {
 	hasBranches,
 	normalizeBranches,
 } from "./branches";
-import type { Chat, ChatStore, ChatSummary } from "./chat-store";
+import type { Chat, ChatStore, ChatSummary, NewChatFields } from "./chat-store";
 import {
 	type ChatDatabase,
 	type ChatRow,
@@ -64,6 +64,23 @@ function checkOwnerId(ownerId: string | null): void {
 			"An owner ID is empty or too long.",
 		);
 	}
+}
+
+/**
+ * `whenCreated`, cleaned like a rename. Settings or votes that don't validate are left out rather than
+ * failing the save: losing them beats losing the chat (reads drop bad ones the same way).
+ */
+function newChatFields(
+	whenCreated: NewChatFields,
+): Pick<ChatRow, "title" | "settings" | "votes"> {
+	const { title = "", settings, votes } = whenCreated;
+	const cleanSettings = settings && chatSettingsSchema.safeParse(settings);
+	const cleanVotes = votes && chatVotesSchema.safeParse(votes);
+	return {
+		title: normalizeTitle(title),
+		...(cleanSettings?.success && { settings: cleanSettings.data }),
+		...(cleanVotes?.success && { votes: cleanVotes.data }),
+	};
 }
 
 function toSummary(row: ChatRow): ChatSummary {
@@ -219,9 +236,10 @@ export function createDexieChatStore({
 			return hydrateAttachments(await upgradeChat(read.raw), read.files);
 		},
 
-		async saveMessages(chatId, messages, ownerId, branches) {
+		async saveMessages(chatId, messages, ownerId, branches, whenCreated = {}) {
 			checkChatId(chatId);
 			checkOwnerId(ownerId);
+			const initial = newChatFields(whenCreated);
 			const valid = await validateMessages(messages, chatId);
 			const validBranches =
 				branches && (await validateBranches(branches, valid, chatId));
@@ -241,10 +259,14 @@ export function createDexieChatStore({
 					db,
 					{
 						id: chatId,
-						title: existing?.title ?? "",
-						...(existing?.pinned && { pinned: true }),
-						...(existing?.settings && { settings: existing.settings }),
-						...(existing?.votes && { votes: existing.votes }),
+						...(existing
+							? {
+									title: existing.title,
+									...(existing.pinned && { pinned: true }),
+									...(existing.settings && { settings: existing.settings }),
+									...(existing.votes && { votes: existing.votes }),
+								}
+							: initial),
 						ownerId: existing ? (existing.ownerId ?? null) : ownerId,
 						createdAt: existing?.createdAt ?? timestamp,
 						updatedAt: timestamp,

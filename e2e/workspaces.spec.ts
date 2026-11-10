@@ -12,6 +12,7 @@ import {
 	pane,
 	panes,
 	pickModel,
+	savedMessages,
 	setUp,
 	status,
 } from "./support/workspaces";
@@ -328,25 +329,6 @@ test.describe("after the tab releases idle chats", () => {
 		page
 			.getByRole("list", { name: "Recent chats" })
 			.getByRole("link", { name: new RegExp(`^${title}`) });
-
-	/** How many messages the chat has saved in this browser (0 before its first save). */
-	const savedMessages = (page: Page, chatId: string) =>
-		page.evaluate(async (id) => {
-			const db = await new Promise<IDBDatabase>((resolve, reject) => {
-				const open = indexedDB.open("highelo-chats");
-				open.onsuccess = () => resolve(open.result);
-				open.onerror = () => reject(open.error);
-			});
-			const row = await new Promise<{ messageCount?: number } | undefined>(
-				(resolve, reject) => {
-					const request = db.transaction("chats").objectStore("chats").get(id);
-					request.onsuccess = () => resolve(request.result);
-					request.onerror = () => reject(request.error);
-				},
-			);
-			db.close();
-			return row?.messageCount ?? 0;
-		}, chatId);
 
 	async function openOtherChats(page: Page) {
 		const body = page.locator("body");

@@ -412,6 +412,40 @@ describe("DexieChatStore", () => {
 		).rejects.toThrow();
 	});
 
+	it("names a new chat and gives it settings and votes in the write that creates it, not later", async () => {
+		const { store } = setup();
+		const settings = { params: { temperature: 0.2 } };
+		await store.saveMessages("c1", hello, null, undefined, {
+			title: "  hello ",
+			settings,
+			votes: { m2: "up" },
+		});
+		expect(await store.getChat("c1")).toMatchObject({
+			title: "hello",
+			settings,
+			votes: { m2: "up" },
+		});
+
+		// An existing chat keeps its own: a rename isn't undone by the next save.
+		await store.renameChat("c1", "Renamed");
+		await store.saveMessages("c1", hello, null, undefined, {
+			title: "hello",
+			votes: { m2: "down" },
+		});
+		expect(await store.getChat("c1")).toMatchObject({
+			title: "Renamed",
+			votes: { m2: "up" },
+		});
+		// Bad votes are left out; the chat is still saved.
+		await store.saveMessages("c2", hello, null, undefined, {
+			title: "hello",
+			votes: { m1: "sideways" } as never,
+		});
+		const c2 = await store.getChat("c2");
+		expect(c2).toMatchObject({ title: "hello" });
+		expect(c2?.votes).toBeUndefined();
+	});
+
 	it("drops bad votes on read instead of failing the chat", async () => {
 		const { db, store } = setup();
 		await store.saveMessages("c1", hello, null);

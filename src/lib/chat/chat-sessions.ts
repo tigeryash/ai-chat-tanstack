@@ -43,22 +43,22 @@ export async function saveChat(
 ): Promise<void> {
 	if (messages.length === 0) return;
 	try {
-		// Branches this tab never loaded are left as stored (roadmap 1.7).
+		// Branches this tab never loaded are left as stored (roadmap 1.7). A new chat gets its title, and
+		// the settings (roadmap 2.4b) and votes (roadmap 3.4) that had nowhere to go before its first
+		// reply, in the same write: the SDK reports "ready" before this runs, so the page may be left
+		// mid-save, and a separate later write would leave the chat "New chat" for good.
 		const { created } = await store.saveMessages(
 			chatId,
 			messages,
 			ownerId,
 			chatBranchesOf(chatId),
+			{
+				title: titleFromMessages(messages),
+				settings: chatSettingsOf(chatId),
+				votes: chatVotesOf(chatId),
+			},
 		);
 		if (!created) return;
-		// Settings changed before the first reply had nowhere to go until now (roadmap 2.4b).
-		const settings = chatSettingsOf(chatId);
-		if (settings) await store.setSettings(chatId, settings);
-		// Likewise votes on the first reply before it was saved (roadmap 3.4).
-		const votes = chatVotesOf(chatId);
-		if (votes) await store.setVotes(chatId, votes);
-		const title = titleFromMessages(messages);
-		if (title) await store.renameChat(chatId, title);
 		await requestPersistentStorage();
 	} catch (error) {
 		logError("Couldn't save the chat in this browser:", error);

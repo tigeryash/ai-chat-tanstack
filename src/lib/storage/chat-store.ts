@@ -30,6 +30,9 @@ export interface Chat {
 	branches?: ChatBranches;
 }
 
+/** What a chat starts with besides its messages, written only when `saveMessages` creates it. */
+export type NewChatFields = Partial<Pick<Chat, "title" | "settings" | "votes">>;
+
 /** One sidebar row. Reading it never loads or migrates the chat's messages. */
 export interface ChatSummary {
 	id: string;
@@ -52,13 +55,15 @@ export interface ChatStore {
 	 * Replaces the chat's messages, creating the chat if it's new. A new chat belongs to `ownerId`; an
 	 * existing one keeps its owner. Call `requestPersistentStorage()` when `created` is true (decision 9).
 	 * `branches` replaces the chat's (roadmap 1.7); leave it out to keep the stored ones. Either way,
-	 * branches the new path no longer reaches are dropped.
+	 * branches the new path no longer reaches are dropped. `whenCreated` goes into the write that creates
+	 * the chat, so a page that closes right after can't leave it unnamed; an existing chat ignores it.
 	 */
 	saveMessages(
 		chatId: string,
 		messages: readonly UIMessage[],
 		ownerId: string | null,
 		branches?: ChatBranches,
+		whenCreated?: NewChatFields,
 	): Promise<{ created: boolean }>;
 	/** Doesn't change `updatedAt`, so a rename doesn't reorder the sidebar. */
 	renameChat(chatId: string, title: string): Promise<void>;
