@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { EMPTY_BRANCHES, editAt } from "./branches";
+import { EMPTY_BRANCHES, editAt, regenerateAt } from "./branches";
 import type { Chat, ChatStore } from "./chat-store";
 import { createDexieChatStore } from "./dexie-chat-store";
 import { ChatStoreError } from "./errors";
@@ -52,6 +52,24 @@ describe("export and import", () => {
 		await importChats(wiped, exported.json, null);
 		expect(await everything(wiped)).toEqual(before);
 		expect(before[0]?.branches).toEqual(edit.branches);
+	});
+
+	it("round-trips regenerated replies (roadmap R4)", async () => {
+		const store = freshStore();
+		const original = [
+			textMessage("m1", "user", "hello"),
+			textMessage("m2", "assistant", "hi"),
+		];
+		const regenerated = regenerateAt(original, EMPTY_BRANCHES, 1, "m2b");
+		const path = [...regenerated.path, textMessage("m2b", "assistant", "hey")];
+		await store.saveMessages("c1", path, null, regenerated.branches);
+		const before = await everything(store);
+		expect(before[0]?.branches).toEqual(regenerated.branches);
+
+		const exported = await exportChats(store, null);
+		const wiped = freshStore("regenerated-after-wipe");
+		await importChats(wiped, exported.json, null);
+		expect(await everything(wiped)).toEqual(before);
 	});
 
 	it("export → wipe → import restores everything", async () => {

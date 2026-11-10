@@ -7,7 +7,11 @@ import { Button } from "@/components/ui/button";
 import { PaneAttachmentNotice } from "@/components/workspaces/pane-attachment-notice";
 import { track } from "@/lib/analytics/track";
 import type { AttachmentSupport } from "@/lib/attachments/validate";
-import { editMessage, switchBranch } from "@/lib/chat/branching";
+import {
+	editMessage,
+	regenerateReply,
+	switchBranch,
+} from "@/lib/chat/branching";
 import { useChatBranches } from "@/lib/chat/chat-branches";
 import {
 	LOCAL_PROVIDER,
@@ -108,7 +112,7 @@ export function ChatView({
 		[hub, chat],
 	);
 	const branches = useChatBranches(chat.id);
-	// Roadmap 1.7: only while idle, like Regenerate, so a branch never moves under a streaming reply.
+	// Roadmap 1.7 and R4: only while idle, so a branch never moves under a streaming reply.
 	// The handlers go through a ref, so the message rows keep their props (and don't re-render) when a
 	// reply starts or ends; the buttons hide themselves while one streams.
 	const branching = {
@@ -119,6 +123,12 @@ export function ChatView({
 						editMessage(chat, messageId, text, options).catch(logFailure);
 						// An edit is a send, so it counts as `chat_sent`.
 						trackSent(options.body.provider);
+					},
+		regenerate:
+			busy || !options
+				? undefined
+				: (messageId: string) => {
+						regenerateReply(chat, messageId, options).catch(logFailure);
 					},
 		switchVersion: busy
 			? undefined
@@ -134,14 +144,22 @@ export function ChatView({
 	});
 	// Made once: the React Compiler doesn't keep these closures stable in this component (chat-screen's
 	// render-count test caught the person's message re-rendering with every streamed chunk).
-	const [{ edit, switchVersion }] = useState(() => ({
+	const [{ edit, regenerateVersion, switchVersion }] = useState(() => ({
 		edit: (messageId: string, text: string) =>
 			branchingRef.current.edit?.(messageId, text),
+		regenerateVersion: (messageId: string) =>
+			branchingRef.current.regenerate?.(messageId),
 		switchVersion: (index: number, versionId: string) =>
 			branchingRef.current.switchVersion?.(index, versionId),
 	}));
+	// A failed or put-back reply is kept as a version too (roadmap R4); a failed send just goes again.
+	const last = messages.at(-1);
 	const retry = options
-		? () => regenerate(options).catch(logFailure)
+		? () =>
+				(last?.role === "assistant"
+					? regenerateReply(chat, last.id, options)
+					: regenerate(options)
+				).catch(logFailure)
 		: undefined;
 
 	return (
@@ -165,12 +183,7 @@ export function ChatView({
 					<MessagesList
 						messages={messages}
 						chatId={chat.id}
-						onRegenerate={
-							busy || !options
-								? undefined
-								: (messageId) =>
-										regenerate({ messageId, ...options }).catch(logFailure)
-						}
+						onRegenerate={options ? regenerateVersion : undefined}
 						branches={branches}
 						onEdit={options ? edit : undefined}
 						onSwitch={switchVersion}
