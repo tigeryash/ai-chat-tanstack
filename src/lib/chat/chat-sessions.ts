@@ -6,7 +6,8 @@ import {
 } from "@/lib/background-status/activity";
 import { logError } from "@/lib/log";
 import { chatStore } from "@/lib/storage/app-store";
-import type { ChatStore } from "@/lib/storage/chat-store";
+import type { ChatBranches } from "@/lib/storage/branches";
+import type { ChatStore, NewChatFields } from "@/lib/storage/chat-store";
 import { isVisibleTo, type Viewer } from "@/lib/storage/ownership";
 import { requestPersistentStorage } from "@/lib/storage/persistence";
 import { BrowserChatTransport } from "./browser-transport";
@@ -35,34 +36,61 @@ export interface OpenChatOptions {
  * Saves the whole chat. The first save names the chat after its first message (roadmap 1.4) and asks
  * the browser to keep our storage (decision 9). A chat that's already saved keeps its owner.
  */
-export async function saveChat(
+export function saveChat(
 	store: ChatStore,
 	chatId: string,
 	messages: UIMessage[],
 	ownerId: string | null,
 ): Promise<void> {
-	if (messages.length === 0) return;
-	try {
-		// Branches this tab never loaded are left as stored (roadmap 1.7). A new chat gets its title, and
-		// the settings (roadmap 2.4b) and votes (roadmap 3.4) that had nowhere to go before its first
-		// reply, in the same write: the SDK reports "ready" before this runs, so the page may be left
-		// mid-save, and a separate later write would leave the chat "New chat" for good.
-		const { created } = await store.saveMessages(
-			chatId,
-			messages,
-			ownerId,
-			chatBranchesOf(chatId),
-			{
-				title: titleFromMessages(messages),
-				settings: chatSettingsOf(chatId),
-				votes: chatVotesOf(chatId),
-			},
-		);
-		if (!created) return;
-		await requestPersistentStorage();
-	} catch (error) {
-		logError("Couldn't save the chat in this browser:", error);
-	}
+	if (messages.length === 0) return Promise.resolve();
+	// What to save is read now, and writes to one chat run in order, so a later save (a regenerate put
+	// back after its reply failed, roadmap R4) never lands under an earlier one still in flight.
+	const write = writeChat(store, chatId, messages, ownerId, {
+		branches: chatBranchesOf(chatId),
+		title: titleFromMessages(messages),
+		settings: chatSettingsOf(chatId),
+		votes: chatVotesOf(chatId),
+	});
+	const previous = pendingSaves.get(chatId) ?? Promise.resolve();
+	const saved = previous.then(write);
+	pendingSaves.set(chatId, saved);
+	void saved.then(() => {
+		if (pendingSaves.get(chatId) === saved) pendingSaves.delete(chatId);
+	});
+	return saved;
+}
+
+const pendingSaves = new Map<string, Promise<void>>();
+
+function writeChat(
+	store: ChatStore,
+	chatId: string,
+	messages: UIMessage[],
+	ownerId: string | null,
+	{
+		branches,
+		...extras
+	}: NewChatFields & { branches: ChatBranches | undefined },
+) {
+	return async (): Promise<void> => {
+		try {
+			// Branches this tab never loaded are left as stored (roadmap 1.7). A new chat gets its title, and
+			// the settings (roadmap 2.4b) and votes (roadmap 3.4) that had nowhere to go before its first
+			// reply, in the same write: the SDK reports "ready" before this runs, so the page may be left
+			// mid-save, and a separate later write would leave the chat "New chat" for good.
+			const { created } = await store.saveMessages(
+				chatId,
+				messages,
+				ownerId,
+				branches,
+				extras,
+			);
+			if (!created) return;
+			await requestPersistentStorage();
+		} catch (error) {
+			logError("Couldn't save the chat in this browser:", error);
+		}
+	};
 }
 
 /** The open chat with this id, creating it (with `messages`) if this tab hasn't opened it yet. */

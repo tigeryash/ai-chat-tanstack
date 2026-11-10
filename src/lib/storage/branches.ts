@@ -4,8 +4,9 @@ import { z } from "@/lib/zod";
 // Edit and branch (roadmap 1.7). A chat is a tree of messages, but the app (the AI SDK `Chat`, the
 // sidebar, workspaces, the transport) only ever sees one path through it: `Chat.messages`. Everything
 // else is here:
-// - `forks`: each place with more than one version of the next message (only user messages fork, by
-//   editing), its versions in the order they were made, and which one was shown last;
+// - `forks`: each place with more than one version of the next message (a user message forks by
+//   editing, a reply by regenerating), its versions in the order they were made, and which one was
+//   shown last;
 // - `messages`: every message that isn't on the path, with the id of the message it follows.
 // The functions below are pure: they take the path and its branches and return new ones.
 
@@ -128,6 +129,28 @@ export function editAt(
 }
 
 /**
+ * Regenerates the reply at `path[index]` into a new branch (roadmap R4): it and everything after it
+ * move off the path, and `replyId` becomes its newest version. The returned path ends before the
+ * reply; the caller streams the new reply, with id `replyId`, onto it.
+ */
+export function regenerateAt(
+	path: readonly UIMessage[],
+	branches: ChatBranches,
+	index: number,
+	replyId: string,
+): { path: UIMessage[]; branches: ChatBranches } {
+	if (path[index]?.role !== "assistant") {
+		throw new RangeError("Only a reply can be regenerated.");
+	}
+	const next = editAt(path, branches, index, {
+		id: replyId,
+		role: "assistant",
+		parts: [],
+	});
+	return { path: next.path.slice(0, -1), branches: next.branches };
+}
+
+/**
  * Shows another version of `path[index]` (one of `siblingsAt(...).ids`), with the replies it had when
  * it was last shown. The current version and its replies move off the path.
  */
@@ -171,9 +194,9 @@ export function switchAt(
 }
 
 /**
- * Drops what the path no longer reaches: off-path messages whose parent is gone (a regenerated reply
- * takes nothing with it, since only user messages fork) or that are back on the path, and forks left
- * with one version. A fork on the path shows the path's message.
+ * Drops what the path no longer reaches: off-path messages whose parent is gone or that are back on
+ * the path, and forks left with one version (a regenerated reply that never arrived leaves its fork
+ * with one). A fork on the path shows the path's message.
  */
 export function normalizeBranches(
 	path: readonly UIMessage[],

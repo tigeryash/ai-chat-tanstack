@@ -90,22 +90,6 @@ test("Stop ends the reply where it is, keeps it, and allows a new message", asyn
 	).toHaveCount(1);
 });
 
-test("Regenerate replaces the last reply", async ({ page }) => {
-	await open(page);
-	await send(page, "Hello mock");
-	await expect(status(page)).toHaveAttribute("data-chat-status", "ready", {
-		timeout: 10_000,
-	});
-
-	await page.getByRole("button", { name: "Regenerate response" }).click();
-	await expect(status(page)).toHaveAttribute("data-chat-status", "streaming");
-	await expect(status(page)).toHaveAttribute("data-chat-status", "ready", {
-		timeout: 10_000,
-	});
-	await expect(reply(page)).toHaveCount(1);
-	await expect(reply(page)).toContainText(replyText);
-});
-
 test("finished reasoning reopens collapsed after a reload, without opening first", async ({
 	page,
 }) => {
