@@ -248,6 +248,24 @@ test("Connect OpenRouter mints a key with PKCE and keeps it out of the URL", asy
 	]);
 });
 
+test("Connect OpenRouter in the Settings dialog finishes on /settings, then shows Connections", async ({
+	page,
+}) => {
+	const traffic = await interceptTraffic(page);
+	await page.goto("/new?settings=connections");
+
+	await page.getByRole("button", { name: "Connect OpenRouter" }).click();
+	await expect(page.getByText("OpenRouter is connected.")).toBeVisible();
+	await expect(page).toHaveURL(/\/new\?settings=connections$/);
+	await expect(providerRow(page, "OpenRouter")).toContainText(
+		"Connected with OpenRouter",
+	);
+	expect(traffic.exchanges[1]).toMatchObject({ code: "e2e-auth-code" });
+	await expect(
+		page.getByRole("button", { name: "Reconnect OpenRouter" }),
+	).toBeVisible();
+});
+
 test("a planted OpenRouter callback connects nothing", async ({ page }) => {
 	const traffic = await interceptTraffic(page);
 	await page.goto("/e2e/keys?code=attacker-code&state=attacker-state");

@@ -39,7 +39,9 @@ on every PR; the `Playwright` check passes without running e2e when a PR only to
 - **TanStack Start 1.169** (React 19, Vite 8 with Rolldown, Nitro). File routes live in `src/routes/`;
   `src/routeTree.gen.ts` is generated, so never edit it. `src/routes/__root.tsx` fetches the auth token during SSR
   (`beforeLoad`) and wraps the app in `ConvexBetterAuthProvider`. `(dashboard)` (`ssr: false`) needs no session
-  (decision 4: no login wall) and holds the sidebar (`src/components/sidebar/`, roadmap 1.4); `(auth)` holds login,
+  (decision 4: no login wall) and holds the sidebar (`src/components/sidebar/`, roadmap 1.4). Settings is a dialog
+  over any page (`?settings=<section>`, Cmd+,; roadmap R2 S1), mounted by `SettingsHost` in `__root.tsx`, and
+  `/settings` only redirects into it and serves the OpenRouter OAuth callback. `(auth)` holds login,
   sign-up, forgot and reset password (signed-in visitors go to `/new`; forms share `auth-form.tsx`). Server routes
   sit in `src/routes/api/` (`/api/auth/$` proxies to Convex, `/api/csp-report` logs CSP violations). There is no
   chat route on our server.
@@ -71,6 +73,7 @@ before changing code that uses that feature from elsewhere**, too.
 
 | Folder | What it covers | Don't miss |
 |---|---|---|
+| `src/lib/settings/` | Settings dialog: section list, `?settings=` parsing, the settings registry, open/close navigation | A new setting is a registry row plus its control in `setting-controls.tsx`; the dialog loads lazily |
 | `src/lib/storage/` | Local chats (Dexie `ChatStore`), ownership, Dexie version rules | Never list or open chats without the viewer from `ownership.ts` |
 | `src/lib/chat/` | AI SDK chat in the browser, chat sessions, transport | Never `openChat(id)` in render for a saved chat; use `openSavedChat` |
 | `src/lib/workspaces/` | Multi-pane workspaces, pane sync | Panes hold their own model choice |

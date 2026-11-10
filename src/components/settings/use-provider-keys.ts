@@ -28,12 +28,31 @@ async function loadKeys(): Promise<LoadedKeys> {
 	}
 }
 
+// Every mounted list re-reads after a change, so the Connect OpenRouter row and the key list (separate
+// rows in Settings) agree on what's saved.
+const reloaders = new Set<() => void>();
+
+function reloadAll() {
+	for (const reload of reloaders) reload();
+}
+
 /** The saved-key list for settings, plus the actions that change it. Never holds a full key. */
 export function useProviderKeys() {
 	const [loaded, setLoaded] = useState<LoadedKeys | null>(null);
 
 	useEffect(() => {
-		loadKeys().then(setLoaded);
+		let live = true;
+		const reload = () => {
+			loadKeys().then((next) => {
+				if (live) setLoaded(next);
+			});
+		};
+		reload();
+		reloaders.add(reload);
+		return () => {
+			live = false;
+			reloaders.delete(reload);
+		};
 	}, []);
 
 	const save = async (
@@ -43,12 +62,12 @@ export function useProviderKeys() {
 		source: KeySource = "manual",
 	) => {
 		await saveProviderKey(providerId, key, mode, source);
-		setLoaded(await loadKeys());
+		reloadAll();
 	};
 
 	const remove = async (providerId: ProviderId) => {
 		await deleteProviderKey(providerId);
-		setLoaded(await loadKeys());
+		reloadAll();
 	};
 
 	return {

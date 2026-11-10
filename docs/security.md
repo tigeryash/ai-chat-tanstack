@@ -144,11 +144,13 @@ memory instead; `e2e/analytics.spec.ts` loads stand-in scripts from the same pat
   `referrerPolicy: "origin"`. Error bodies are never read, since some quote the key. OpenRouter's, Hugging Face's and
   AI Gateway's model lists are public, so their tests call `/api/v1/key`, `huggingface.co/api/whoami-v2` and
   `/v1/credits`. `huggingface.co` was added to `connect-src` for this.
-- **Forms.** The settings routes render client-only (`ssr: false`), and the key input has no `name`, so even a
-  native form submit has nothing to send to our server.
+- **Forms.** Settings renders client-only (the dialog loads in the browser on first open, and `/settings` is
+  `ssr: false`), and the key input has no `name`, so even a native form submit has nothing to send to our server.
 - **Connect OpenRouter** (`openrouter-oauth.ts`): PKCE S256 plus `state`. The verifier and state wait in
   sessionStorage, are removed before the exchange (one use), and expire with the code after 10 minutes. A callback
-  that this tab didn't start makes no request. The page strips `?code=&state=` with `history.replaceState` first.
+  that this tab didn't start makes no request. The callback page is `/settings` (`openrouter-callback.ts`): it
+  strips `?code=&state=` with `history.replaceState` first, finishes the exchange there, then opens Settings →
+  Connections with `?settings=connections`, so the code never travels to another route.
 - **Scrubbing.** `redact()` now also knows Cerebras (`csk-`) and Together (`tgp_`) keys and `code_verifier`, and
   scrubs every key the vault has saved or read by exact match (`registerSecret`), which covers keys with no prefix
   (Mistral, older Together and Fireworks keys).

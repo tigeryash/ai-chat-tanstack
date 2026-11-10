@@ -83,7 +83,7 @@ test("export from Settings, clear site data, import: the chat, its image and the
 	).toBeVisible();
 
 	// Export.
-	await page.goto("/settings");
+	await page.goto("/new?settings=data");
 	const data = page.getByRole("region", { name: "Your data" });
 	const downloading = page.waitForEvent("download");
 	await data.getByRole("button", { name: "Export data" }).click();
@@ -106,13 +106,14 @@ test("export from Settings, clear site data, import: the chat, its image and the
 	await expect(page.getByText("A red square.")).toHaveCount(0);
 
 	// Import.
-	await page.goto("/settings");
+	await page.goto("/new?settings=data");
 	await data.getByLabel("Export file to import").setInputFiles(path);
 	await expect(data.getByRole("status")).toHaveText(
 		"Chats: 1 added, 0 updated, 0 already up to date. Saved prompts: 1 added, 0 updated, 0 already up to date. Workspaces: 0 added, 0 updated, 0 already up to date. Saved layouts: 0 added, 0 updated, 0 already up to date.",
 	);
 
 	// The chat and its image are back, from the sidebar.
+	await page.keyboard.press("Escape");
 	await page.getByRole("link", { name: "Export me" }).click();
 	await expect(page.getByText("A red square.")).toBeVisible();
 	const image = page.getByRole("img", { name: "red.png" });
@@ -129,7 +130,7 @@ test("export from Settings, clear site data, import: the chat, its image and the
 	).toHaveValue("Answer in one line.");
 
 	// Importing the same file again changes nothing.
-	await page.goto("/settings");
+	await page.goto("/new?settings=data");
 	await data.getByLabel("Export file to import").setInputFiles(path);
 	await expect(data.getByRole("status")).toHaveText(
 		"Chats: 0 added, 0 updated, 1 already up to date. Saved prompts: 0 added, 0 updated, 1 already up to date. Workspaces: 0 added, 0 updated, 0 already up to date. Saved layouts: 0 added, 0 updated, 0 already up to date.",
@@ -163,7 +164,7 @@ test("export, clear site data, import: the workspace and the saved layout are ba
 	await page.keyboard.press("Escape");
 
 	// Export, wipe, import.
-	await page.goto("/settings");
+	await page.goto("/new?settings=data");
 	const data = page.getByRole("region", { name: "Your data" });
 	const downloading = page.waitForEvent("download");
 	await data.getByRole("button", { name: "Export data" }).click();
@@ -176,7 +177,7 @@ test("export, clear site data, import: the workspace and the saved layout are ba
 	expect(file.layouts).toHaveLength(1);
 
 	await clearSiteData(page);
-	await page.goto("/settings");
+	await page.goto("/new?settings=data");
 	await data.getByLabel("Export file to import").setInputFiles(path);
 	await expect(data.getByRole("status")).toHaveText(
 		"Chats: 2 added, 0 updated, 0 already up to date. Saved prompts: 0 added, 0 updated, 0 already up to date. Workspaces: 1 added, 0 updated, 0 already up to date. Saved layouts: 1 added, 0 updated, 0 already up to date.",
@@ -204,7 +205,7 @@ test("export, clear site data, import: the workspace and the saved layout are ba
 test("importing a file that isn't an export shows a friendly error", async ({
 	page,
 }) => {
-	await page.goto("/settings");
+	await page.goto("/new?settings=data");
 	const data = page.getByRole("region", { name: "Your data" });
 	await data.getByLabel("Export file to import").setInputFiles({
 		name: "notes.json",

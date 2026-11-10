@@ -206,7 +206,7 @@ test("a denied prompt is handled without asking again", async ({ page }) => {
 test("settings switch tab status and each notification on and off", async ({
 	page,
 }) => {
-	await page.goto("/settings");
+	await page.goto("/new?settings=notifications");
 	const section = page.getByRole("region", { name: "Background status" });
 	const tabStatus = section.getByRole("switch", {
 		name: "Show reply status in the tab title",
@@ -251,6 +251,7 @@ test("settings switch tab status and each notification on and off", async ({
 	await expect(failed).not.toBeChecked();
 
 	// With tab status off, a hidden reply leaves the title alone.
+	await page.keyboard.press("Escape");
 	await page.getByRole("link", { name: "New chat" }).click();
 	await send(page, "Quiet please", true);
 	await setHidden(page, false);
@@ -263,7 +264,7 @@ test("settings switch tab status and each notification on and off", async ({
 test("Settings sends a test notification, asking first, with no chat content", async ({
 	page,
 }) => {
-	await page.goto("/settings");
+	await page.goto("/new?settings=notifications");
 	const section = page.getByRole("region", { name: "Background status" });
 	await expect(page.getByText("Loading saved keys…")).toHaveCount(0);
 	await section.getByRole("button", { name: "Send test notification" }).click();
@@ -292,7 +293,7 @@ test("a blocked test notification explains what to check", async ({ page }) => {
 	await page.addInitScript(() => {
 		window.__grantNotifications = "denied";
 	});
-	await page.goto("/settings");
+	await page.goto("/new?settings=notifications");
 	const section = page.getByRole("region", { name: "Background status" });
 	await expect(page.getByText("Loading saved keys…")).toHaveCount(0);
 	await section.getByRole("button", { name: "Send test notification" }).click();

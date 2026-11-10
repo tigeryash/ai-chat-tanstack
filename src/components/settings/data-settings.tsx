@@ -30,7 +30,7 @@ function download(blob: Blob, name: string) {
  * Settings → Your data (roadmap 1.10): export the viewer's chats (with branches and attachments) and
  * saved prompts to one JSON file, and import such a file back. Keys never go in it (hard rule 1).
  */
-export function DataSettings() {
+export function DataTransfer() {
 	const viewer = useViewer();
 	const input = useRef<HTMLInputElement>(null);
 	const [busy, setBusy] = useState<Busy>(null);
@@ -75,19 +75,7 @@ export function DataSettings() {
 	const disabled = busy !== null || viewer === undefined;
 
 	return (
-		<section aria-labelledby="your-data" className="mt-10 grid gap-4">
-			<header className="grid gap-2">
-				<h2 id="your-data" className="font-semibold">
-					Your data
-				</h2>
-				<p className="max-w-2xl text-sm text-muted-foreground">
-					Chats are kept in this browser. Export them, with their branches,
-					attached files and model settings, plus your saved prompts, to one
-					file you can keep or import on another device. A chat or prompt
-					already here is replaced only by a newer copy. API keys are never
-					included; the theme has its own export under Appearance.
-				</p>
-			</header>
+		<>
 			<div
 				className="flex flex-wrap items-center gap-2"
 				aria-busy={busy !== null}
@@ -138,6 +126,6 @@ export function DataSettings() {
 					{message.text}
 				</p>
 			)}
-		</section>
+		</>
 	);
 }

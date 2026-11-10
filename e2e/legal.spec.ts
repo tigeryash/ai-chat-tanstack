@@ -35,7 +35,7 @@ test("the auth pages and settings link to the legal pages", async ({
 		"Terms of Service",
 	);
 
-	await page.goto("/settings");
+	await page.goto("/new?settings=privacy");
 	await page.getByRole("link", { name: "Privacy Policy" }).click();
 	await expect(page).toHaveURL(/\/privacy$/);
 });

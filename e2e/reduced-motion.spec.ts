@@ -329,7 +329,7 @@ async function countViewTransitions(page: Page) {
 /** Switches the theme to Light in Settings and returns how many view transitions ran. */
 async function viewTransitionsForThemeSwitch(page: Page) {
 	await countViewTransitions(page);
-	await page.goto("/settings");
+	await page.goto("/new?settings=appearance");
 	await page
 		.getByRole("region", { name: "Appearance" })
 		.getByRole("radio", { name: "Light", exact: true })
@@ -343,6 +343,35 @@ async function viewTransitionsForThemeSwitch(page: Page) {
 
 test.describe("with Reduce motion on", () => {
 	test.use({ reducedMotion: "reduce" });
+
+	test("Settings fades in without scaling", async ({ page }) => {
+		await page.goto("/new");
+		await expect(page.getByPlaceholder("Ask anything")).toBeVisible();
+		const frames = await page.evaluate(async () => {
+			window.dispatchEvent(
+				new KeyboardEvent("keydown", {
+					key: ",",
+					metaKey: true,
+					ctrlKey: true,
+				}),
+			);
+			const seen: { scale: string; opacity: string }[] = [];
+			let after = 0;
+			for (let frame = 0; frame < 600 && after < 30; frame++) {
+				const popup = document.querySelector("[data-testid='settings-dialog']");
+				if (popup) {
+					const style = getComputedStyle(popup);
+					seen.push({ scale: style.scale, opacity: style.opacity });
+					after++;
+				}
+				await new Promise(requestAnimationFrame);
+			}
+			return seen;
+		});
+		expect(frames.length).toBe(30);
+		expect(new Set(frames.map((f) => f.scale))).toEqual(new Set(["none"]));
+		expect(frames.at(-1)?.opacity).toBe("1");
+	});
 
 	test("the composer resizes without animating", async ({ page }) => {
 		await page.goto("/e2e/composer");
