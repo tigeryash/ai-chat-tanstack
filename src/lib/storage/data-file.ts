@@ -47,6 +47,8 @@ export function importSummary(result: ImportResult): string {
 	const parts = [
 		`Chats: ${result.imported - result.updated} added, ${result.updated} updated, ${result.skipped} already up to date.`,
 		`Saved prompts: ${result.promptsImported - result.promptsUpdated} added, ${result.promptsUpdated} updated, ${result.promptsSkipped} already up to date.`,
+		`Workspaces: ${result.workspacesImported - result.workspacesUpdated} added, ${result.workspacesUpdated} updated, ${result.workspacesSkipped} already up to date.`,
+		`Saved layouts: ${result.layoutsImported - result.layoutsUpdated} added, ${result.layoutsUpdated} updated, ${result.layoutsSkipped} already up to date.`,
 	];
 	if (result.otherAccounts > 0) {
 		parts.push(
