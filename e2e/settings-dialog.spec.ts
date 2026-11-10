@@ -106,6 +106,32 @@ test("old /settings links land on their section", async ({ page }) => {
 	await expect(composer(page)).toBeVisible();
 });
 
+test("a quick second section switch wins over the first", async ({ page }) => {
+	await page.goto("/new?settings=connections");
+	await expect(breadcrumb(page)).toHaveText("Settings/Connections");
+	const nav = settingsDialog(page).getByRole("navigation", {
+		name: "Settings sections",
+	});
+	// Both clicks land before the first switch's navigation finishes.
+	await nav.evaluate((element) => {
+		const button = (name: string) =>
+			[...element.querySelectorAll("button")].find(
+				(b) => b.textContent === name,
+			);
+		button("Privacy")?.click();
+		button("Connections")?.click();
+	});
+	await expect(breadcrumb(page)).toHaveText("Settings/Connections");
+	await expect(page).toHaveURL(/\?settings=connections$/);
+	await page.waitForTimeout(500);
+	await expect(breadcrumb(page)).toHaveText("Settings/Connections");
+	await expect(
+		page.getByRole("region", { name: "Local models" }).getByRole("button", {
+			name: "Add local server",
+		}),
+	).toBeVisible();
+});
+
 test("every setting is reachable from the nav", async ({ page }) => {
 	await page.goto("/new?settings=general");
 	for (const [section, label] of Object.entries(SECTION_LABELS)) {

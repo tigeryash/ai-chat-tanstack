@@ -64,10 +64,12 @@ export function SettingsDialog({
 	const contentRef = useRef<HTMLElement>(null);
 	const headingId = useId();
 
+	// Always navigates: `section` lags behind a switch that is still navigating, so comparing with it
+	// would drop a quick second switch and let the first one's late navigation win.
 	const select = (next: SettingsSectionId) => {
 		setShown(next);
 		setPhoneView("section");
-		if (next !== section) onSelect(next);
+		onSelect(next);
 	};
 
 	const pick = ({ setting }: SettingMatch) => {
