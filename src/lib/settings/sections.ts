@@ -74,8 +74,7 @@ export const SETTINGS_SECTIONS: readonly SettingsSection[] = [
 		id: "models",
 		label: "Models & hosts",
 		group: "models",
-		upcoming:
-			"Host preferences: hosts to skip, a price cap for Auto, and per-model defaults.",
+		upcoming: "Per-model defaults and context-length warnings.",
 	},
 	{
 		id: "connections",

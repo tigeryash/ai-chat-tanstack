@@ -22,6 +22,11 @@ import {
 } from "./background-status-settings";
 import { ConnectOpenRouter } from "./connect-openrouter";
 import { DataTransfer } from "./data-settings";
+import {
+	BlockedHostsControl,
+	MinPrecisionSelect,
+	PriceCapControl,
+} from "./host-preferences";
 import { LocalEndpoints } from "./local-endpoints";
 import { ProviderKeyList } from "./provider-keys";
 import type { SettingControlProps } from "./setting-row-props";
@@ -31,6 +36,9 @@ export const SETTING_CONTROLS: Record<
 	SettingId,
 	ComponentType<SettingControlProps>
 > = {
+	"blocked-hosts": BlockedHostsControl,
+	"min-precision": MinPrecisionSelect,
+	"price-cap": PriceCapControl,
 	"connect-openrouter": () => <ConnectOpenRouter />,
 	"provider-keys": ProviderKeyList,
 	"local-endpoints": LocalEndpoints,
