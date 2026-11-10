@@ -391,7 +391,7 @@ Yash picked the layout from the reference apps.)
   link and from Cmd+, while focus is in the composer, closes it with Esc and Back, and completes the OAuth
   callback. The keys, local endpoints, appearance and export specs pass unchanged apart from navigation, and the
   reduced-motion spec covers the dialog.
-- [ ] **S2 General: default model and title model.** "Default model for new chats" (last used or a fixed model)
+- [x] **S2 General: default model and title model.** "Default model for new chats" (last used or a fixed model)
   and "Title model" (off = first line, as today). Titles are written once, with the user's key, never logged.
   *Done when:* Vitest covers default resolution and title fallback; e2e on a mock model gets an auto-title and a
   fixed default model in a new chat after reload.

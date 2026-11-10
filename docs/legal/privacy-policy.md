@@ -57,7 +57,8 @@ Most of what the app stores never leaves your device. It lives in your browser's
   "Remember on this device" stores it in IndexedDB, encrypted with a key your browser won't let any script
   export, with the last 4 characters visible so you can recognize it. This protects against someone copying
   your browser profile, not against malicious code running in the page.
-- **Settings and choices.** Your chosen models and hosts, picker view, hosting preferences, local model servers
+- **Settings and choices.** Your chosen models and hosts, the default model for new chats and the title model,
+  picker view, hosting preferences, local model servers
   you add, background status and notification settings, and a few "already seen" flags. Stored in localStorage.
 - **Recent host failures.** The host, error status and time of failed requests, forgotten after 15 minutes. No
   content.
@@ -96,7 +97,9 @@ syncing chats across devices, sharing a chat by link, group chats, and durable a
   Gateway). Your prompts, the chat's system prompt, files you attach and your API key go **directly from your
   browser** to the provider you chose, under your own account and that provider's terms and privacy policy. Each
   new message sends the conversation so far, so attachments and the system prompt go again with every later
-  message in that chat. Text and code files go as part of your message's text: their name and full contents. We don't proxy, see or pay for these requests.
+  message in that chat. Text and code files go as part of your message's text: their name and full contents. If
+  you turn on a title model in Settings → General, the text of each new chat's first message also goes once to
+  that model's provider, with your key, to write the chat's title. We don't proxy, see or pay for these requests.
   What the provider keeps, and whether it trains on your data, is between you and the provider. The app can
   filter to hosts that say they don't train on your prompts, but we rely on what those hosts publish.
 - **Testing a key** sends it once to its own provider to check it works.

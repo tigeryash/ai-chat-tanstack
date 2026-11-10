@@ -7,6 +7,7 @@ import { settingsDialog, showSettingsSection } from "./support/settings";
 // sidebar. Every existing control is a row of the settings registry, reachable by nav and by search.
 
 const SECTION_LABELS: Record<string, string> = {
+	general: "General",
 	connections: "Connections",
 	appearance: "Appearance",
 	notifications: "Notifications",
@@ -65,6 +66,10 @@ test("a deep link opens a section, and Back closes the dialog, not the section",
 	// An unknown section opens General.
 	await page.goto("/new?settings=nope");
 	await expect(breadcrumb(page)).toHaveText("Settings/General");
+	await expect(page.locator("#setting-default-model")).toBeVisible();
+
+	// A section with no rows yet says what's coming.
+	await page.goto("/new?settings=keyboard");
 	await expect(settingsDialog(page)).toContainText("Nothing to set here yet");
 });
 

@@ -16,3 +16,9 @@ Notes for working in this folder. The root [CLAUDE.md](/CLAUDE.md) (commands, ha
   chats are untrusted, so read it back through `replyDetails` / `readReplyStats`; `chat-usage.ts` totals a chat.
   Nothing shows inline under a reply; the "⋯" popover lists model, host, cost, tokens and timings from
   `replyDetails` (`reply-details.ts`, 2.5b).
+- **New-chat defaults and titles** (Refine R2 S2, Settings → General). `readChatModelChoice` falls back to
+  `default-model.ts` (last pick, or a fixed model). A title model (`title-model.ts` setting,
+  `chat-title-writer.ts`) starts writing when a chat opened empty first sends, and `saveChat` waits for it so the
+  title lands in the first write; any failure falls back to the first line, and nothing about it is logged.
+  Read a `createLocalStore` inside a hook through a `use…`-named function: the React Compiler caches a bare
+  `store.use()` call.
