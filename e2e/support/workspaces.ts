@@ -83,6 +83,19 @@ export async function openWorkspace(page: Page, count: number) {
 	await expect(panes(page)).toHaveCount(count);
 }
 
+export const WORKSPACE_URL = /\/w\/[0-9a-f-]{36}(\?.*)?$/;
+
+/**
+ * Opens a `/new?models=a,b,…` link with two or more catalog models and waits until it has become a workspace.
+ * The link's work happens after the page's `load`: `/new` imports its chat code, then reads the catalog, saves
+ * the workspace and replaces the URL with `/w/<id>`. Under load those chunks alone can outlast a 5 s `expect`
+ * (#100, #102), so this waits for that navigation, as `goto` waits for its own, and only then on the panes.
+ */
+export async function openModelLink(page: Page, models: readonly string[]) {
+	await page.goto(`/new?models=${models.join(",")}`);
+	await page.waitForURL(WORKSPACE_URL);
+}
+
 /** A row of the app's IndexedDB (`highelo-chats`), as stored; undefined until it's written. */
 export const storedRow = <Row>(
 	page: Page,

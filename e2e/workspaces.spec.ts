@@ -17,6 +17,11 @@ import {
 	status,
 } from "./support/workspaces";
 
+// The workspace screenshots mask the composer (quality audit Q2 T3): e2e/composer-design.spec.ts is its only
+// baseline, so a workspace change never refreshes an image of the composer (hard rule 8), and an approved
+// composer change never refreshes these.
+const COMPOSER = ".composer-design";
+
 // Roadmaps 3.1 and 3.2: panes side by side, each with its own model, synced composers, Stop, the
 // "Diverged" badge, and a workspace that survives a reload. The models are e2e mock models listed by a
 // stubbed local server, so every reply comes from MockLanguageModelV4 (hard rule 6).
@@ -289,7 +294,9 @@ test.describe("on a phone", () => {
 		await page.addStyleTag({
 			content: "[data-usage] { display: none !important; }",
 		});
-		await expect(page).toHaveScreenshot("workspace-phone.png");
+		await expect(page).toHaveScreenshot("workspace-phone.png", {
+			mask: [page.locator(COMPOSER)],
+		});
 	});
 });
 
@@ -312,7 +319,9 @@ test("screenshot: three panes side by side", async ({ page, context }) => {
 	});
 	await expect(
 		page.locator("main, [data-slot=sidebar-inset]").first(),
-	).toHaveScreenshot("workspace-three-panes.png");
+	).toHaveScreenshot("workspace-three-panes.png", {
+		mask: [page.locator(COMPOSER)],
+	});
 });
 
 // Quality audit Q2, W1: the tab keeps at most 8 idle chats open, so opening 9 others releases the ones

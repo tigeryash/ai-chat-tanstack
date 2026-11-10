@@ -6,7 +6,7 @@ export const VoiceChat = () => {
 	return (
 		<ToolTipContainer Tip="Voice Chat">
 			<AnimateIcon animateOnHover>
-				<button type="button" className="input-button">
+				<button type="button" aria-label="Voice Chat" className="input-button">
 					<AudioLines size={20} strokeWidth={0.75} />
 				</button>
 			</AnimateIcon>

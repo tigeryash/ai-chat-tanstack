@@ -44,7 +44,7 @@ at once), then turn its findings into small refactor slices.
 - [x] **Q2 (2026-10):** [quality-audit-2026-10-q2.md](./quality-audit-2026-10-q2.md) ([#60](https://github.com/tigeryash/ai-chat-tanstack/pull/60)). Fix slices 1–4
   before Milestone 2.
   *Status:* slices 1–4 fixed in [#61](https://github.com/tigeryash/ai-chat-tanstack/pull/61), [#62](https://github.com/tigeryash/ai-chat-tanstack/pull/62)
-  and [#68](https://github.com/tigeryash/ai-chat-tanstack/pull/68) (workspace ownership). Slice 5 (small follow-ups) is still open.
+  and [#68](https://github.com/tigeryash/ai-chat-tanstack/pull/68) (workspace ownership); slice 5 (small follow-ups) in [#108](https://github.com/tigeryash/ai-chat-tanstack/pull/108).
 
 ## Owner to-dos (Yash)
 
@@ -581,6 +581,7 @@ on top. Order: R1 first; R2 and R3 can run alongside; R4 after R3; R5 any time.
   the flaky `synced-attachments` e2e under load (from #102).
   *Status (2026-11-09):* workspaces and layouts in exports done in [PR #105](https://github.com/tigeryash/ai-chat-tanstack/pull/105) (export format 2).
   *Status (2026-11-09):* regenerate into a branch done (any reply; the old one stays as a version). PR: https://github.com/tigeryash/ai-chat-tanstack/pull/106
+  *Status:* Q2 slice 5 and the `synced-attachments` flake done in [#108](https://github.com/tigeryash/ai-chat-tanstack/pull/108).
 - [ ] **R5 Accessibility audit** (7.4, pulled forward). Keyboard-only pass, screen reader pass with streaming
   replies, contrast in every theme.
 - After R1–R5: 3.9 Insights if Yash still wants it, then 4.0.
