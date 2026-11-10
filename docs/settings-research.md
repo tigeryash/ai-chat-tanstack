@@ -5,10 +5,11 @@ it, and a slice plan. Docs only; nothing here is built yet. Researched 2026-11-0
 
 ## Summary
 
-- **Use a full page with section nav, not a modal.** We'll have 12+ sections (keys, local servers, hosts,
-  agents, MCP, voice, account), and keys and MCP forms need room. Every app with a modal (ChatGPT, Claude, Open
-  WebUI) is getting complaints or a redesign as settings grow. LibreChat's 2026 redesign shows the way to copy:
-  one **settings registry** that drives the nav, the search and the palette.
+- **Decided (Yash, 2026-11-09): a large settings dialog with grouped section nav.** It opens over any route,
+  like T3 Code's and Claude desktop's settings: a grouped left nav with search on top, a "Settings / <Section>"
+  breadcrumb, and one section at a time. Deep links use `?settings=<section>`, and Cmd+, opens it. On phones it
+  becomes a full-screen sheet. LibreChat's 2026 redesign shows the part to copy: one **settings registry** that
+  drives the nav, the search and the palette.
 - **Group by job, in 11 sections** (12 once Phase 4 adds Agents). General, Models & hosts, Connections,
   Appearance, Chat, Prompts, Notifications, Keyboard, Your data, Privacy, Account, plus Agents (Phase 4). Voice
   goes under Chat, and sync and sharing go under Account. Each setting has a stated scope (global, per model, per
@@ -18,12 +19,12 @@ it, and a slice plan. Docs only; nothing here is built yet. Researched 2026-11-0
   opens over the page and never touches the composer's look (hard rule 8). It loads on first use (bundle budget),
   and analytics record at most which command ran, never what you typed.
 - **Theme presets are just saved appearance settings.** A preset is a 3.11 theme file shipped with the app, so it
-  needs no new mechanism. Ship about 6: Default, High contrast, Brand (the landing page's magenta), Paper
-  (warm, serif replies), and two popular open-licensed palettes. Add a few new token knobs too: corner radius,
-  reading width, and the code-highlight theme.
-- **Twelve small slices, in order** (S0–S11): prototypes first, then the shell and registry, then one slice per
-  section, with the palette in two steps. My layout recommendation is **A: a full page with a left section nav
-  and search**, with the palette giving quick access.
+  needs no new mechanism. Six are confirmed: Default, High contrast, Brand (the landing page's magenta), Paper
+  (warm, serif replies), Nord-style and Dracula-style. A few new token knobs come with them: corner radius,
+  reading width, and the code-highlight theme. A large theme library inspired by Monkeytype comes later (S12),
+  built from upstream palettes under their own licenses.
+- **Twelve small slices, in order** (S1–S12): the dialog shell and registry first (its PR carries screenshots
+  for Yash's OK), then one slice per section, the palette in two steps, and the theme library last.
 
 ---
 
@@ -158,8 +159,8 @@ it, and a slice plan. Docs only; nothing here is built yet. Researched 2026-11-0
   removed in 0.7. See section 3.
 
 **What this means for us.**
-1. A registry-driven settings page with search (LibreChat, Raycast) beats a modal that grows tabs (ChatGPT, Open
-   WebUI).
+1. Registry-driven settings with search (LibreChat, Raycast) beat a flat list of tabs that keeps growing (ChatGPT,
+   Open WebUI). That holds whether the settings live on a page or in a dialog.
 2. A palette that only searches chats goes unused (GitHub). Msty's mix of create, go to, settings and theme is
    the one people use.
 3. Power users want rebindable shortcuts and a shortcut sheet (T3 Chat, Open WebUI, TypingMind, GitHub).
@@ -172,16 +173,19 @@ it, and a slice plan. Docs only; nothing here is built yet. Researched 2026-11-0
 
 ### Container
 
-Settings stays a route inside the dashboard shell, with the app sidebar still visible:
+Settings is a large centered dialog over the app (decided; see "Layout decision" at the end):
 
-- **Sections:** `/settings/<section>`, with a left section nav and a search box at the top of the nav.
-- **Narrow screens:** below `md` the nav becomes a list, and each section opens as its own screen (LibreChat's
-  drill-in).
-- **Old links keep working:** `/settings` opens General, and the OpenRouter OAuth callback still lands on
-  `/settings` (or moves to `/settings/connections` with a redirect). Old `#provider-keys`-style anchors redirect
-  to their section.
+- **Opening it:** `?settings=<section>` on any route opens the dialog at that section, so any page, the palette
+  and Cmd+, can open it.
+- **History:** opening pushes one history entry and switching sections replaces it, so Back closes the dialog
+  instead of stepping through sections.
+- **Narrow screens:** below `md` it's a full-screen sheet with LibreChat's drill-in, a section list first and
+  then one section with a back arrow.
+- **Old links keep working:** `/settings` redirects to `/new?settings=general`. The OpenRouter OAuth callback
+  keeps its route: it finishes the code exchange there, then redirects to `?settings=connections`. Old
+  `#provider-keys`-style anchors map to their section.
 - **One registry:** a settings registry (`src/lib/settings/registry.ts`) lists every section and setting (id,
-  label, keywords, section, scope, `phase` gate). The nav, the in-page search and the palette all read it, so a
+  label, keywords, section, scope, `phase` gate). The nav, the dialog's search and the palette all read it, so a
   later phase adds a setting by adding a registry entry and a control, never by redesigning the page.
 
 ### Sections
@@ -222,7 +226,8 @@ browser").
 - **Per chat or pane:** the model and host (including the Auto switch, `ModelChoice.autoHost`), param overrides,
   system prompt override, and the attachments decision (3.3).
 - **Precedence:** pane → chat → model default → global, the same order as decision 19 for prompts. A host
-  blocklist is the exception: it's **global and absolute**. A pinned host that's blocked shows "blocked in
+  blocklist is the exception (confirmed by Yash, 2026-11-09): it's **global and always wins over a pinned
+  host**. A pinned host that's blocked shows "blocked in
   Settings" in "Run with" instead of silently switching.
 - **Sync (Phase 6):** "S" settings sync as one versioned settings document per account. Keys, local endpoint
   URLs, notification permission and storage facts never sync.
@@ -330,6 +335,8 @@ Rebinding comes after v1 and is stored with the Keyboard settings.
   preview on hover or focus. They work from the palette too ("Theme: Paper").
 - **Testing:** a unit test runs each preset through `contrast.ts` (AA in both modes).
 
+The list below is confirmed (Yash, 2026-11-09).
+
 | Preset | Idea |
 |---|---|
 | Default | Today's direction A |
@@ -351,20 +358,39 @@ Rebinding comes after v1 and is stored with the Keyboard settings.
 - **Theming the composer:** hard rule 8.
 - **A theme store or sharing service:** theme files already cover sharing.
 
+**Later: a large theme library (S12), inspired by [Monkeytype](https://github.com/monkeytypegame/monkeytype).**
+Monkeytype has about 190 themes, each a small palette with a live preview and searchable by name. We want that
+kind of breadth.
+- **Licensing:** Monkeytype is **GPL-3.0**, so don't copy its theme files or theme lists into this repo.
+- **Ports of upstream schemes:** take the palette from the upstream project under that project's license, and
+  credit it in an in-app "Theme credits" list and in the theme's metadata. Most are MIT: Catppuccin, Nord,
+  Dracula, Gruvbox, Solarized, Tokyo Night, Rosé Pine, Everforest. Check each license when adding it.
+- **Monkeytype's own themes:** only after a licensing check. Whether a color palette is copyrightable at all is a
+  question for the lawyer review already on the owner to-dos.
+- **Building them:** each library theme maps onto our tokens (background, card, foreground, muted, line,
+  accent, plus the code theme). It's data in the same theme-file format and passes the same AA contrast test.
+  Themes load on demand, not in the first-load bundle.
+
 ---
 
 ## 5. Slices for R2 (in order)
 
-Each slice is one PR; S2 onward can run in parallel once S1 lands.
+Each slice is one PR; S2 onward can run in parallel once S1 lands. (S0, throwaway layout prototypes, was dropped:
+Yash picked the layout from the reference apps.)
 
-- [ ] **S0 Layout prototypes.** Three throwaway layouts under `/e2e/settings-proto/` (as in 3.0) on fixture data
-  with the real section list, each with the palette open in one screenshot. *Done when:* Yash picks one;
-  screenshots go into this doc.
-- [ ] **S1 Settings shell and registry.** `/settings/$section` with the chosen nav, in-page search over the
-  registry, mobile drill-in, and every existing control moved unchanged into its section. Old `/settings` links
-  and the OpenRouter OAuth callback still work. *Done when:* Vitest covers registry search (labels and keywords),
-  and e2e reaches every existing control by nav and by search. The keys, local endpoints, appearance and export
-  e2e specs pass unchanged apart from navigation.
+- [ ] **S1 Settings dialog and registry.** The layout below: a large centered dialog opened by `?settings=<section>`
+  from any route and by Cmd+,. It has the grouped nav with search, the breadcrumb header with close, and section
+  cards of rows. Every existing control moves into its section unchanged. Opening pushes one history entry, so
+  Back closes it. `/settings` and the OpenRouter OAuth callback redirect into the dialog. Base UI `Dialog`: focus
+  trapped, Esc closes (a search with text clears first), and focus returns to whatever opened it. The section
+  pane scrolls inside the dialog and the page behind doesn't. Phones get a full-screen sheet with list → detail.
+  Under reduced motion the open and close animation is only a fade. Lazy-loaded on first open. The PR includes
+  light, dark and phone screenshots for Yash's OK.
+  *Done when:* Vitest covers registry search (labels and keywords) and the `?settings=` parsing (unknown sections
+  fall back to General). e2e reaches every existing control by nav and by search, opens the dialog from a deep
+  link and from Cmd+, while focus is in the composer, closes it with Esc and Back, and completes the OAuth
+  callback. The keys, local endpoints, appearance and export specs pass unchanged apart from navigation, and the
+  reduced-motion spec covers the dialog.
 - [ ] **S2 General: default model and title model.** "Default model for new chats" (last used or a fixed model)
   and "Title model" (off = first line, as today). Titles are written once, with the user's key, never logged.
   *Done when:* Vitest covers default resolution and title fallback; e2e on a mock model gets an auto-title and a
@@ -396,35 +422,38 @@ Each slice is one PR; S2 onward can run in parallel once S1 lands.
   new-pane-synced defaults. *Done when:* e2e covers each default on a new chat.
 - [ ] **S11 Your data and Privacy tidy-up.** Storage used, persistence status, Danger zone, legal links.
   *Done when:* e2e shows the storage numbers on a fixture chat and the delete-all confirm.
+- [ ] **S12 Theme library (later).** A searchable library of many themes beyond the six presets (inspired by
+  Monkeytype's ~190), built from upstream palettes under their own licenses with credits, as in section 4. No
+  Monkeytype files are copied, and Monkeytype-original themes wait for the licensing check. *Done when:* every
+  library theme passes the AA contrast test in its mode(s), a credits list names each upstream project and
+  license, theme data loads on demand (bundle budget passes), and e2e searches, previews and applies one.
 
 **Data and legal:** S2 (title model sends the first message to the user's own provider; nothing new to us), S3
 and S6 store new local settings: update `docs/data-inventory.md` in each. S8 shows account data already
 collected. No slice sends anything new to our servers.
 
-### Layout options for S0
+### Layout decision (Yash, 2026-11-09)
 
-**A. Full page with left section nav (recommended).**
-- **Layout:** Settings is a page in the dashboard shell. A narrow left column lists the 11 sections (grouped:
-  *App* — General, Appearance, Chat, Keyboard, Notifications; *Models* — Models & hosts, Connections, Prompts;
-  *You* — Your data, Privacy, Account) with a search box on top. The right side holds one section at a time,
-  max-width as today.
-- **Mobile:** list → detail.
-- **Precedent:** Vercel, GitHub, Linear, Raycast, Claude.ai.
-- **Why:** deep links, room for key and MCP forms, and it scales to Agents' child pages.
-- **Cost:** you leave the chat to change something. The palette covers that.
+**A's structure, in a large modal.** Settings is a large centered dialog over the app, like T3 Code's and Claude
+desktop's settings:
+- **Left:** a grouped section nav with a search box on top. The groups are *App* (General, Appearance, Chat,
+  Keyboard, Notifications), *Models* (Models & hosts, Connections, Prompts) and *You* (Your data, Privacy,
+  Account), plus *Agents* in Phase 4.
+- **Right:** a "Settings / <Section>" breadcrumb header with a close button, then one section at a time. Each
+  section is cards of rows: the label and a one-line description on the left, the control on the right.
+- **Opening it:** `?settings=<section>` from any route, Back closes it, and Cmd+, opens it. Links and the
+  OpenRouter OAuth callback redirect into it.
+- **Phones:** a full-screen sheet with list → detail.
 
-**B. Modal with left tabs.**
-- **Layout:** Cmd+, opens a large dialog over the current chat, with tabs on the left (ChatGPT, LibreChat). Deep
-  link through `?settings=appearance`.
-- **Why:** quick tweaks while looking at the chat, and theme changes are visible right away behind the dialog.
-- **Cost:** gets cramped with 12+ sections, nested Agents pages and long forms (Open WebUI's complaints), plus
-  focus-trap and scroll-in-dialog work on mobile.
+**Why a modal now:**
+- You change things without leaving the chat, and theme changes show live behind the dialog.
+- The worry against modals was Open WebUI's cramped window (issue #32900). Three things handle it here: the
+  dialog is large (close to the viewport, with a max width); the nav is grouped and searchable; and Agents gets
+  child pages inside the dialog later (Agents → Permissions, MCP servers, Skills) instead of one long tab.
+- Deep links keep the one real advantage a full page had.
 
-**C. One long page with a sticky table of contents.**
-- **Layout:** today's page, plus a sticky in-page TOC on the left with scroll-spy and a filter box that hides
-  non-matching sections.
-- **Why:** the smallest change, and Ctrl+F still works across everything.
-- **Cost:** the page is already long and will double, and there are no per-section URLs (anchors only).
-
-Recommendation: **A**. B's one advantage (seeing a change take effect behind the dialog) is covered by
-Appearance's live previews and the palette's quick toggles.
+**Rejected:**
+- **A full page with section nav:** you have to leave the chat to change anything.
+- **One long page with a sticky table of contents:** too long once Agents and Voice land, and it has no
+  per-section links.
+- **Throwaway prototypes:** Yash picked from the reference apps instead. S1's PR carries screenshots for his OK.
