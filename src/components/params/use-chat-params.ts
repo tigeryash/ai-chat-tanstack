@@ -8,7 +8,6 @@ import {
 import { LOCAL_PROVIDER } from "@/lib/chat/model-selection";
 import {
 	saveDefaultSystemPrompt,
-	systemPromptFor,
 	useDefaultSystemPrompt,
 } from "@/lib/chat/system-prompt";
 import { useLocalEndpointFor } from "@/lib/local-endpoints/endpoints";
@@ -17,10 +16,15 @@ import type { RequestSettings } from "@/lib/params/request";
 import { developerOf } from "@/lib/params/routes";
 import type { ChatSettings } from "@/lib/params/settings";
 import { NO_SUPPORT, paramSupport } from "@/lib/params/support";
+import {
+	modelDefaultPrompt,
+	resolveSystemPrompt,
+} from "@/lib/prompts/defaults";
+import { usePrompts } from "@/lib/prompts/use-prompts";
 import { chatStore } from "@/lib/storage/app-store";
 
 // A chat's settings panel state (roadmap 2.4b): its values, what its model and host support, the
-// shared system prompt, and what the next request carries.
+// shared system prompt, its model's default prompt (roadmap 3.6b), and what the next request carries.
 
 export function useChatParams(chatId: string, model: ChatModel) {
 	const { choice } = model;
@@ -28,6 +32,17 @@ export function useChatParams(chatId: string, model: ChatModel) {
 	const key = modelKey(choice);
 	const { settings, isOwn } = useChatSettings(chatId, key);
 	const sharedPrompt = useDefaultSystemPrompt(store);
+	const prompts = usePrompts();
+	const modelDefault = modelDefaultPrompt(
+		prompts.status === "ready" ? prompts.prompts : [],
+		key,
+	);
+	const systemPrompt = resolveSystemPrompt({
+		own: settings.systemPrompt,
+		ownSource: settings.systemPromptSource,
+		modelDefault,
+		shared: sharedPrompt,
+	});
 	const isLocal = choice?.provider === LOCAL_PROVIDER;
 	const endpoint = useLocalEndpointFor(isLocal ? choice.endpoint : undefined);
 	const gatewayId = isLocal ? undefined : choice?.gatewayId;
@@ -45,7 +60,8 @@ export function useChatParams(chatId: string, model: ChatModel) {
 	const request: RequestSettings = {
 		params: settings.params,
 		support,
-		systemPrompt: systemPromptFor(settings.systemPrompt, sharedPrompt),
+		systemPrompt: systemPrompt.text,
+		...(systemPrompt.source && { promptSource: systemPrompt.source }),
 	};
 
 	return {
@@ -56,6 +72,12 @@ export function useChatParams(chatId: string, model: ChatModel) {
 		/** Still waiting for the catalog's parameter lists. */
 		loading: catalog.isLoading,
 		sharedPrompt,
+		/** The model's default prompt from the library, if it has one (roadmap 3.6b). */
+		modelDefault,
+		/** The key model defaults are kept by; undefined until a model is picked. */
+		modelKey: key,
+		/** What the next request sends as its system prompt, and where it comes from. */
+		systemPrompt,
 		request,
 		update: (next: ChatSettings) => setChatSettings(chatId, next, store, key),
 		setSharedPrompt: (prompt: string) => saveDefaultSystemPrompt(prompt, store),

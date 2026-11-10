@@ -42,6 +42,9 @@ export function copySettingsToPanes(
 				...(settings.systemPrompt !== undefined && {
 					systemPrompt: settings.systemPrompt,
 				}),
+				...(settings.systemPromptSource && {
+					systemPromptSource: { ...settings.systemPromptSource },
+				}),
 			},
 			store,
 		);

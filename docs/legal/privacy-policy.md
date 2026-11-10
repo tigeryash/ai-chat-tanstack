@@ -42,9 +42,11 @@ Most of what the app stores never leaves your device. It lives in your browser's
 - **System prompts.** A chat's own system prompt, if you set one, is stored with the chat and included in exports.
   The default system prompt for chats without their own is stored in IndexedDB and isn't exported.
 - **Saved prompts.** Prompts you save in the prompt library: each one's name, tags, which account on this device
-  saved it, and every version of its text (up to 200 per prompt) with when it was saved. Stored in IndexedDB,
-  and not included in exports yet. A saved prompt leaves your device only when you apply it to a chat, where it
-  becomes that chat's system prompt.
+  saved it, every version of its text (up to 200 per prompt) with when it was saved, and the models it's the
+  default prompt for. Stored in IndexedDB and included in exports. A saved prompt leaves your device only as a
+  chat's system prompt, sent to that chat's provider: when you apply it to a chat, or when it's the default for
+  the chat's model. Each reply records which saved prompt and version it was sent with (an id and a number, not
+  the text), stored with the chat and included in its exports.
 - **Workspaces.** Which chats sit side by side, in what order, each pane's width and whether it's synced, and
   which account on this device made it. No messages: those stay with each chat. Stored in IndexedDB, and not
   included in chat exports yet.

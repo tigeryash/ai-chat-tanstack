@@ -21,12 +21,16 @@ describe("applyPrompt", () => {
 		expect(applyPrompt(settings, prompt)).toEqual({
 			params: { temperature: 0.3 },
 			systemPrompt: "Two",
+			systemPromptSource: { promptId: "p", version: 2 },
 		});
 		expect(settings.systemPrompt).toBe("Old");
 	});
 
 	it("applies an older version on request", () => {
-		expect(applyPrompt({ params: {} }, prompt, 1).systemPrompt).toBe("One");
+		expect(applyPrompt({ params: {} }, prompt, 1)).toMatchObject({
+			systemPrompt: "One",
+			systemPromptSource: { promptId: "p", version: 1 },
+		});
 		expect(() => applyPrompt({ params: {} }, prompt, 5)).toThrow();
 	});
 });

@@ -1,6 +1,7 @@
 import { SlidersHorizontalIcon } from "lucide-react";
 import { useId, useState } from "react";
 import { ApplyPrompt } from "@/components/prompts/apply-prompt";
+import { ModelDefaultPrompt } from "@/components/prompts/model-default-prompt";
 import { Button } from "@/components/ui/button";
 import {
 	Sheet,
@@ -10,8 +11,13 @@ import {
 	SheetTitle,
 	SheetTrigger,
 } from "@/components/ui/sheet";
-import { type ParamValues, withParam } from "@/lib/params/settings";
+import {
+	type ParamValues,
+	withParam,
+	withSystemPrompt,
+} from "@/lib/params/settings";
 import { applyPrompt } from "@/lib/prompts/apply";
+import { currentVersion } from "@/lib/prompts/prompt";
 import { ParamControl } from "./param-controls";
 import type { ChatParams } from "./use-chat-params";
 
@@ -53,30 +59,47 @@ function PromptField({
 	);
 }
 
-function SystemPrompt({ params }: { params: ChatParams }) {
+/** What the chat's prompt field says about the prompt it sends. */
+function promptHelp(params: ChatParams, modelName: string | undefined): string {
+	const { systemPrompt, modelDefault } = params;
+	if (systemPrompt.from === "chat") {
+		return systemPrompt.source
+			? "Applied from a saved prompt. Clear it to use the defaults."
+			: "This chat's own prompt. Clear it to use the defaults.";
+	}
+	if (modelDefault) {
+		return `Empty: this chat uses "${modelDefault.name}", the default prompt for ${modelName ?? "this model"}.`;
+	}
+	return "Empty: this chat uses your default prompt.";
+}
+
+function SystemPrompt({
+	params,
+	modelName,
+}: {
+	params: ChatParams;
+	modelName: string | undefined;
+}) {
 	const helpId = useId();
 	const own = params.settings.systemPrompt;
 	const [editShared, setEditShared] = useState(false);
-	const save = (prompt: string) => {
-		const { systemPrompt: _, ...rest } = params.settings;
-		params.update(
-			prompt.trim() === "" ? rest : { ...rest, systemPrompt: prompt },
-		);
-	};
+	const save = (prompt: string) =>
+		params.update(withSystemPrompt(params.settings, prompt));
+	const fallback = params.modelDefault
+		? currentVersion(params.modelDefault).text
+		: params.sharedPrompt;
 	return (
 		<section className="flex flex-col gap-1.5" aria-label="System prompt">
 			<span className="font-medium text-sm">System prompt</span>
 			<PromptField
 				label="System prompt for this chat"
 				value={own ?? ""}
-				placeholder={params.sharedPrompt || "None"}
+				placeholder={fallback || "None"}
 				onSave={save}
 				describedBy={helpId}
 			/>
 			<p id={helpId} className="text-muted-foreground text-xs">
-				{own === undefined
-					? "Empty: this chat uses your default prompt."
-					: "This chat's own prompt. Clear it to use your default."}
+				{promptHelp(params, modelName)}
 			</p>
 			<ApplyPrompt
 				onApply={(prompt) =>
@@ -98,6 +121,13 @@ function SystemPrompt({ params }: { params: ChatParams }) {
 					value={params.sharedPrompt}
 					placeholder="Used by every chat without its own"
 					onSave={params.setSharedPrompt}
+				/>
+			)}
+			{params.modelKey && modelName && (
+				<ModelDefaultPrompt
+					modelKey={params.modelKey}
+					modelName={modelName}
+					current={params.modelDefault}
 				/>
 			)}
 		</section>
@@ -169,7 +199,7 @@ export function SettingsPanel({
 							Reset to defaults
 						</Button>
 					)}
-					<SystemPrompt params={params} />
+					<SystemPrompt params={params} modelName={modelName} />
 				</div>
 			</SheetContent>
 		</Sheet>

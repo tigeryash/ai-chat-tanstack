@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
 import { openTestDatabase, tickingClock } from "@/lib/storage/test-support";
+import { modelDefaultPrompt } from "./defaults";
 import { currentVersion } from "./prompt";
 import { createDexiePromptStore } from "./prompt-store";
 
@@ -85,5 +86,48 @@ describe("DexiePromptStore", () => {
 		await store.deletePrompt(p.id);
 		await store.deletePrompt(p.id);
 		expect(await store.listPrompts()).toEqual([]);
+	});
+
+	it("keeps one default per model among the viewer's prompts (roadmap 3.6b)", async () => {
+		const { store } = setup();
+		const make = (name: string, ownerId: string | null) =>
+			store.createPrompt({ name, tags: [], text: name, ownerId });
+		const a = await make("A", null);
+		const b = await make("B", "user-a");
+		const theirs = await make("Theirs", "user-b");
+		await store.setModelDefault("m", theirs.id, "user-b");
+
+		await store.setModelDefault("m", a.id, "user-a");
+		await store.setModelDefault("other", a.id, "user-a");
+		await store.setModelDefault("m", b.id, "user-a");
+		const forA = await store.getPrompt(a.id);
+		expect(forA?.defaultFor).toEqual(["other"]);
+		expect((await store.getPrompt(b.id))?.defaultFor).toEqual(["m"]);
+		// Another account's default is untouched, and its prompt can't be picked.
+		expect((await store.getPrompt(theirs.id))?.defaultFor).toEqual(["m"]);
+		await expect(
+			store.setModelDefault("m", theirs.id, "user-a"),
+		).rejects.toThrow(/No such prompt/);
+
+		// Editing keeps the default; it follows the newest version.
+		await store.saveText(b.id, "B2");
+		const prompts = await store.listPrompts();
+		const visible = prompts.filter((p) => p.ownerId !== "user-b");
+		const found = modelDefaultPrompt(visible, "m");
+		expect(found && currentVersion(found)).toMatchObject({
+			version: 2,
+			text: "B2",
+		});
+
+		// Clearing, then deleting a default: the model has none.
+		await store.setModelDefault("other", null, "user-a");
+		expect((await store.getPrompt(a.id))?.defaultFor).toBeUndefined();
+		await store.deletePrompt(b.id);
+		expect(
+			modelDefaultPrompt(
+				(await store.listPrompts()).filter((p) => p.ownerId !== "user-b"),
+				"m",
+			),
+		).toBeUndefined();
 	});
 });

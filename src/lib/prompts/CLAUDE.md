@@ -11,4 +11,16 @@ Notes for working in this folder. The root [CLAUDE.md](/CLAUDE.md) (commands, ha
   `visibleChats` for the viewer); `chat-ownership.ts` moves or deletes them with the account's chats.
 - **Apply** (`apply.ts`) copies a version's text into the chat's own `systemPrompt`, from the Model settings
   sheet (never the composer, hard rule 8). Prompt text is content: never log, track or put it in errors.
-- Not yet (3.6b): per-model defaults and which prompt version produced a reply; prompts in exports.
+- **Model defaults** (roadmap 3.6b, `defaults.ts`): a prompt's optional `defaultFor` lists the model keys
+  (`modelKey` in `lib/chat/chat-settings.ts`) it's the default for; `setModelDefault` keeps one per model
+  among the viewer's prompts. Precedence (decision 19): the chat's own prompt → its model's default →
+  the shared prompt (`resolveSystemPrompt`, used by `useChatParams`, so each pane resolves its own model).
+  The default is a live link: edits apply to every chat without its own prompt; deleting the prompt
+  falls back to the shared one. Set it in Model settings (`model-default-prompt.tsx`); the prompts page
+  lists and removes them.
+- **Provenance** (`provenance.ts`): a reply's metadata has `prompt: { promptId, version }` when its system
+  prompt came from the library (a model default, or applied text not edited since, `systemPromptSource`
+  on chat settings). The reply's "⋯" shows it and links to `/prompts?prompt=…&version=…`.
+- **Exports**: `exportChats` / `importChats` take an optional `PromptStore`; prompts follow the chats' owner
+  and newer-wins rules (`src/lib/storage/export.ts`).
+- Not yet: variables (`{{date}}`).

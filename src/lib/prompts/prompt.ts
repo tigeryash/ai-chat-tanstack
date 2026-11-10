@@ -15,6 +15,9 @@ export const MAX_TAG_LENGTH = 40;
 export const MAX_TAGS = 20;
 /** The oldest versions go first once there are more. */
 export const MAX_VERSIONS = 200;
+/** Models a prompt can be the default for (roadmap 3.6b). */
+export const MAX_DEFAULT_MODELS = 100;
+export const MAX_MODEL_KEY_LENGTH = 300;
 
 export interface PromptVersion {
 	/** 1 for the first text, counting up; never reused, even after old ones are dropped. */
@@ -35,6 +38,11 @@ export interface Prompt {
 	tags: string[];
 	/** Oldest first; the last is the current text. Never empty. */
 	versions: PromptVersion[];
+	/**
+	 * The models this prompt is the default system prompt for (roadmap 3.6b, decision 19), by
+	 * `modelKey` (src/lib/chat/chat-settings.ts). Absent when none. Optional, so no format change.
+	 */
+	defaultFor?: string[];
 	createdAt: number;
 	updatedAt: number;
 }
@@ -64,6 +72,10 @@ export const promptSchema = z.object({
 				),
 			"Versions are out of order.",
 		),
+	defaultFor: z
+		.array(z.string().min(1).max(MAX_MODEL_KEY_LENGTH))
+		.max(MAX_DEFAULT_MODELS)
+		.optional(),
 	createdAt: timestamp,
 	updatedAt: timestamp,
 });
@@ -193,4 +205,25 @@ export function withLabels(
 		return prompt;
 	}
 	return { ...prompt, name, tags, updatedAt: now };
+}
+
+/** Whether `prompt` is the default for the model with `key`. */
+export function isDefaultFor(prompt: Prompt, key: string): boolean {
+	return prompt.defaultFor?.includes(key) === true;
+}
+
+/**
+ * The prompt as the default for `key` (`on`) or not. Doesn't change `updatedAt`: it's a setting of
+ * the model, not an edit of the prompt. Unchanged prompts come back as they are.
+ */
+export function withDefaultFor(
+	prompt: Prompt,
+	key: string,
+	on: boolean,
+): Prompt {
+	if (isDefaultFor(prompt, key) === on) return prompt;
+	const others = (prompt.defaultFor ?? []).filter((entry) => entry !== key);
+	const next = on ? [...others, key].slice(-MAX_DEFAULT_MODELS) : others;
+	const { defaultFor: _, ...rest } = prompt;
+	return next.length > 0 ? { ...rest, defaultFor: next } : rest;
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseRequestSettings } from "./request";
-import { cleanSettings, withParam } from "./settings";
+import { cleanSettings, withParam, withSystemPrompt } from "./settings";
 import { NO_SUPPORT } from "./support";
 
 describe("settings", () => {
@@ -46,5 +46,54 @@ describe("settings", () => {
 			params: { seed: 1 },
 			support: { params: ["seed"], reasoningEfforts: [] },
 		});
+	});
+
+	it("keeps a prompt's source only with its prompt (roadmap 3.6b)", () => {
+		const source = { promptId: "p", version: 2 };
+		expect(
+			cleanSettings({
+				params: {},
+				systemPrompt: "Hi",
+				systemPromptSource: source,
+			}),
+		).toEqual({ params: {}, systemPrompt: "Hi", systemPromptSource: source });
+		expect(cleanSettings({ params: {}, systemPromptSource: source })).toEqual({
+			params: {},
+		});
+		expect(
+			cleanSettings({
+				params: {},
+				systemPrompt: "Hi",
+				systemPromptSource: { promptId: "p" },
+			}),
+		).toEqual({ params: {}, systemPrompt: "Hi" });
+	});
+
+	it("drops the source when the prompt is edited by hand", () => {
+		const applied = {
+			params: { seed: 1 },
+			systemPrompt: "Hi",
+			systemPromptSource: { promptId: "p", version: 2 },
+		};
+		expect(withSystemPrompt(applied, "Hi")).toEqual(applied);
+		expect(withSystemPrompt(applied, "Hello")).toEqual({
+			params: { seed: 1 },
+			systemPrompt: "Hello",
+		});
+		expect(withSystemPrompt(applied, " ")).toEqual({ params: { seed: 1 } });
+	});
+
+	it("passes a request's prompt source on only with a prompt", () => {
+		const source = { promptId: "p", version: 1 };
+		expect(
+			parseRequestSettings({
+				params: {},
+				systemPrompt: "Hi",
+				promptSource: source,
+			}),
+		).toMatchObject({ systemPrompt: "Hi", promptSource: source });
+		expect(
+			parseRequestSettings({ params: {}, promptSource: source }),
+		).not.toHaveProperty("promptSource");
 	});
 });

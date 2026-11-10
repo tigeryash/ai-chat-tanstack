@@ -2,12 +2,14 @@ import { liveQuery } from "dexie";
 import { type ChatDatabase, openChatDatabase } from "@/lib/storage/db";
 import { ChatStoreError } from "@/lib/storage/errors";
 import { ownerIdSchema } from "@/lib/storage/format";
+import { isVisibleTo, type Viewer } from "@/lib/storage/ownership";
 import {
 	newPrompt,
 	PROMPT_FORMAT_VERSION,
 	type Prompt,
 	promptSchema,
 	readPrompt,
+	withDefaultFor,
 	withLabels,
 	withRestored,
 	withText,
@@ -40,6 +42,20 @@ export interface PromptStore {
 	restoreVersion(id: string, version: number): Promise<Prompt>;
 	/** Moves prompts to another owner, skipping missing ones. Doesn't change `updatedAt`. */
 	setPromptOwner(ids: readonly string[], ownerId: string | null): Promise<void>;
+	/**
+	 * Makes `promptId` the default prompt for the model with `key` (roadmap 3.6b), or none with null.
+	 * Only the prompts `viewer` may see change: the one default among them moves to `promptId`.
+	 */
+	setModelDefault(
+		key: string,
+		promptId: string | null,
+		viewer: Viewer,
+	): Promise<void>;
+	/**
+	 * Writes imported prompts as they are (owners included), checked first; all or nothing. The caller
+	 * decides which win over the copies here (src/lib/storage/export.ts).
+	 */
+	putPrompts(prompts: readonly Prompt[]): Promise<void>;
 	/** Deleting a prompt that doesn't exist does nothing. */
 	deletePrompt(id: string): Promise<void>;
 	/** Like `ChatStore.watchChats`, for `listPrompts()`. */
@@ -118,6 +134,37 @@ export function createDexiePromptStore(
 				.where("id")
 				.anyOf([...ids])
 				.modify({ ownerId });
+		},
+
+		setModelDefault: (key, promptId, viewer) =>
+			db.transaction("rw", db.prompts, async () => {
+				if (promptId !== null) {
+					const row = await db.prompts.get(promptId);
+					if (!row || !isVisibleTo(readPrompt(row), viewer)) {
+						throw new ChatStoreError("not-found", "No such prompt.");
+					}
+				}
+				for (const row of await db.prompts.toArray()) {
+					let prompt: Prompt;
+					try {
+						prompt = readPrompt(row);
+					} catch {
+						continue;
+					}
+					if (!isVisibleTo(prompt, viewer)) continue;
+					const next = withDefaultFor(prompt, key, prompt.id === promptId);
+					if (next !== prompt) await write(next);
+				}
+			}),
+
+		async putPrompts(prompts) {
+			const checked = prompts.map((prompt) => promptSchema.parse(prompt));
+			await db.prompts.bulkPut(
+				checked.map((prompt) => ({
+					...prompt,
+					formatVersion: PROMPT_FORMAT_VERSION,
+				})),
+			);
 		},
 
 		async deletePrompt(id) {
