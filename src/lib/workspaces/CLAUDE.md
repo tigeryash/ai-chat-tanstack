@@ -7,9 +7,11 @@ Notes for working in this folder. The root [CLAUDE.md](/CLAUDE.md) (commands, ha
   synced) is the ChatStore's `workspaces` table (`storage/workspace.ts`, its own format version). `pane-sync.ts`
   is the hub synced panes join: one shared draft (the composer's optional `value`/`onValueChange`), send to all,
   Stop all, and the "Diverged" check. Panes hold their own model choice (`holdChatModelChoice`), or a pick in one
-  would move the others. Attachments are checked per pane (roadmap 3.3, decision 17): synced composers report
-  what's attached (names and types only) to the hub, each pane shows `PaneAttachmentNotice` for files its model
-  can't read (send text only, or skip the pane), and `sendAll` gives each pane only what its model reads
+  would move the others. Attachments are checked per pane (roadmap 3.3, decision 17): synced composers share
+  the hub's one `AttachmentList` (`hub.attachments`, `lib/attachments/attachment-list.ts`), so they all show the
+  same chips and a send from any of them sends and clears the same files. Each pane whose model can't read one
+  gets an amber border (`useCantReadAttachments`) and `PaneAttachmentNotice` (a radio group: send text only, or
+  skip the pane, held until the send), and `sendAll` gives each pane only what its model reads
   (`lib/attachments/capability.ts`; only images and PDFs depend on the model). The sidebar folds a workspace's chats into one entry (`sidebar-entries.ts`).
 - **Ownership** (roadmap 1.9, quality audit Q2 W2–W4): a new pane's chat (and the workspace "Add pane" makes) is
   the viewer's. Panes of another account's chats are hidden, not dropped: `openWorkspace` returns them as

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { createAttachmentList } from "./attachment-list";
 import { toFileObject, toFilePart } from "./file-object";
 import { AttachmentRefusal } from "./text-file";
 import { useAttachments } from "./use-attachments";
@@ -127,5 +128,34 @@ describe("useAttachments", () => {
 			"blob:test/1",
 			"blob:test/2",
 		]);
+	});
+
+	it("shares a list between synced composers: both show it, and a send from either clears both (3.3)", async () => {
+		const list = createAttachmentList();
+		const a = renderHook(() => useAttachments({ list }));
+		const b = renderHook(() => useAttachments({ list }));
+
+		await act(() => a.result.current.add([image("a.png"), image("b.png")]));
+		expect(b.result.current.files.map((f) => f.file.name)).toEqual([
+			"a.png",
+			"b.png",
+		]);
+
+		act(() => b.result.current.remove(a.result.current.files[0]?.id ?? ""));
+		expect(a.result.current.files.map((f) => f.file.name)).toEqual(["b.png"]);
+
+		act(() => a.result.current.clear());
+		expect(b.result.current.files).toEqual([]);
+	});
+
+	it("leaves a shared list's previews to its owner when a composer unmounts", async () => {
+		const list = createAttachmentList();
+		const { result, unmount } = renderHook(() => useAttachments({ list }));
+		await act(() => result.current.add([image()]));
+
+		unmount();
+
+		expect(revokeObjectURL).not.toHaveBeenCalled();
+		expect(list.getFiles()).toHaveLength(1);
 	});
 });

@@ -1,7 +1,13 @@
 import type { UIMessage } from "ai";
 import { describe, expect, it, vi } from "vitest";
+import { toFilePart } from "@/lib/attachments/file-object";
 import { textMessage } from "@/lib/storage/test-support";
 import { createPaneSync, type SyncedPane, userHistory } from "./pane-sync";
+
+// Files are "read" at once: FileReader and image compression are the browser's, and not what's tested here.
+vi.mock("@/lib/attachments/process", () => ({
+	processAttachment: async (file: File) => ({ file, base64: "data:," }),
+}));
 
 /** Enough of an AI SDK `Chat` for the hub: status, messages, stop and the change callbacks. */
 function fakeChat(messages: UIMessage[] = []) {
@@ -133,6 +139,9 @@ describe("pane sync", () => {
 			mediaType: "text/plain",
 			url: "data:,",
 		};
+		const image = () => new File(["x"], "red.png", { type: "image/png" });
+		const markdown = () =>
+			new File(["# hi"], "notes.md", { type: "text/markdown" });
 		const twoPanes = () => {
 			const sync = createPaneSync();
 			const reads = vi.fn();
@@ -166,41 +175,60 @@ describe("pane sync", () => {
 			expect(textOnly).toHaveBeenCalledWith("Review", [notes, code]);
 		});
 
-		it("leaves out a pane whose person chose to skip it, for that send only", () => {
-			const { sync, reads, textOnly } = twoPanes();
-			sync.setAttachments("reads", [
-				{ name: "red.png", mediaType: "image/png" },
-			]);
-			sync.setSkipped("text", true);
-			expect(sync.getState().skipped).toEqual(["text"]);
-			sync.sendAll("Describe", [png]);
-			expect(reads).toHaveBeenCalledOnce();
-			expect(textOnly).not.toHaveBeenCalled();
-			expect(sync.getState().skipped).toEqual([]);
-		});
-
-		it("shares what every synced composer has attached, and forgets it when they clear", () => {
+		it("gives every synced composer one list: a file added or removed in one is added or removed in all", async () => {
 			const { sync } = twoPanes();
 			const onChange = vi.fn();
 			sync.subscribe(onChange);
-			const red = { name: "red.png", mediaType: "image/png" };
-			sync.setAttachments("reads", [red]);
-			sync.setAttachments("reads", [{ ...red }]);
+			await sync.attachments.add([image(), markdown()]);
+			// Reading the files doesn't change their names or types, so panes don't re-render for it.
 			expect(onChange).toHaveBeenCalledOnce();
-			expect(sync.getState().attachments).toEqual([red]);
+			expect(sync.getState().attachments).toEqual([
+				{ name: "red.png", mediaType: "image/png" },
+				{ name: "notes.md", mediaType: "text/markdown" },
+			]);
 
-			sync.setSkipped("text", true);
-			sync.setAttachments("reads", []);
-			expect(sync.getState()).toMatchObject({ attachments: [], skipped: [] });
+			const [first] = sync.attachments.getFiles();
+			sync.attachments.remove(first?.id ?? "");
+			expect(sync.getState().attachments).toEqual([
+				{ name: "notes.md", mediaType: "text/markdown" },
+			]);
 		});
 
-		it("drops a pane's attachments and choice when it leaves", () => {
+		it("keeps a skip until the send, then clears it with the files", async () => {
+			const { sync, reads, textOnly } = twoPanes();
+			await sync.attachments.add([image()]);
+			sync.setSkipped("text", true);
+			sync.setDraft("typing more");
+			expect(sync.getState().skipped).toEqual(["text"]);
+
+			// What a composer does on Enter: send what's attached, then clear the shared list.
+			const files = await sync.attachments.settled();
+			sync.sendAll("Describe", files.map(toFilePart));
+			sync.attachments.clear();
+
+			expect(reads).toHaveBeenCalledOnce();
+			expect(textOnly).not.toHaveBeenCalled();
+			expect(sync.getState()).toMatchObject({ attachments: [], skipped: [] });
+			expect(sync.attachments.getFiles()).toEqual([]);
+		});
+
+		it("forgets a skip when the files that asked for it are removed", async () => {
+			const { sync } = twoPanes();
+			await sync.attachments.add([image()]);
+			sync.setSkipped("text", true);
+			sync.attachments.clear();
+			expect(sync.getState().skipped).toEqual([]);
+		});
+
+		it("drops a pane's choice when it leaves, and the files when the workspace goes", async () => {
 			const sync = createPaneSync();
 			const leave = sync.join("a", { chat: fakeChat(), send: vi.fn() });
-			sync.setAttachments("a", [{ name: "red.png", mediaType: "image/png" }]);
+			await sync.attachments.add([image()]);
 			sync.setSkipped("a", true);
 			leave();
-			expect(sync.getState()).toMatchObject({ attachments: [], skipped: [] });
+			expect(sync.getState().skipped).toEqual([]);
+			sync.dispose();
+			expect(sync.getState().attachments).toEqual([]);
 		});
 	});
 });
