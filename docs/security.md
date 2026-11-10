@@ -94,6 +94,15 @@ analytics never receive prompt or reply text at all.
 It is `src/lib/redact.ts`; app code logs through `logError`/`logWarn` in `src/lib/log.ts`, which run it first.
 `convex/` has its own logging (names and config only) and doesn't import it yet.
 
+*Error reporting (1.8b, 2026-11-09).* Sentry's browser SDK (`src/lib/error-reporting/`) loads as its own chunk, only
+when `VITE_SENTRY_DSN` is set and analytics are allowed (Settings, GPC, DNT); otherwise it never loads. Its
+`beforeSend` (`scrubEvent`) rebuilds each event from an allowlist (error type, message through `redact()` with URL
+queries and quoted text removed, stack frames without variables or source lines, route-only page URL), and drops it
+if analytics were switched off since. `beforeBreadcrumb` keeps only route changes: console, click, fetch and XHR
+breadcrumbs, which could carry a key in a provider URL, are never recorded. All of v11's `dataCollection` is off,
+`infer_ip` is `never`, and there's no Session Replay, tracing or session tracking. The DSN's ingest origin is added
+to `connect-src` only when the DSN is set. Server routes don't report to Sentry (nothing there handles content).
+
 *Analytics (1.8, 2026-10-30).* `track()` (`src/lib/analytics/track.ts`) is the only way to send an event: the name
 must be on the allowlist in `events.ts`, properties must pass that event's schema (booleans, small numbers, enums,
 short lowercase slugs; unknown ones are dropped), and if `redact()` would change anything the event is dropped.

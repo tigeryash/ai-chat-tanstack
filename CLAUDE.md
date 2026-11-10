@@ -80,6 +80,7 @@ before changing code that uses that feature from elsewhere**, too.
 | `src/lib/models/` | Model catalog, runnability | |
 | `src/lib/local-endpoints/` | LM Studio / Ollama endpoints | localhost and 127.0.0.1 only |
 | `src/lib/analytics/` | `track()` and its allowlist | Hard rule 4 |
+| `src/lib/error-reporting/` | Sentry, lazy-loaded behind the analytics switch, scrubbed by an allowlist | Never import `@sentry/*` statically |
 | `src/lib/appearance/`, `src/lib/background-status/` | Theme overrides, hidden-tab status | |
 | `convex/` | Backend, public-function guard, `convex-test` helpers | |
 | `e2e/` | Playwright setup, network/CSP guards, screenshot baselines | Import `test` from `e2e/support/fixtures.ts` |

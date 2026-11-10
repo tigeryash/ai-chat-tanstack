@@ -15,6 +15,9 @@ export const env = createEnv({
 		// Send `track()` events to Vercel Web Analytics (src/lib/analytics/track.ts). Custom events need
 		// Vercel Pro; leave unset on Hobby, where page views and Web Vitals still go.
 		VITE_ANALYTICS_CUSTOM_EVENTS: z.enum(["true", "false"]).optional(),
+		// Sentry error reports (src/lib/error-reporting/). Set only in Vercel Production; unset, Sentry
+		// never loads. A DSN is public by design: it can only send events to the project.
+		VITE_SENTRY_DSN: z.url().optional(),
 	},
 
 	runtimeEnv: import.meta.env,

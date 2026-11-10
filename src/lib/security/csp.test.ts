@@ -6,6 +6,7 @@ import {
 	cspHeaders,
 	ENFORCE_STRICT_CSP,
 	ENFORCED_CSP,
+	sentryIngestOrigin,
 	withStrictCspEnforced,
 } from "@/lib/security/csp";
 import { parseCspReport } from "@/lib/security/csp-report";
@@ -206,5 +207,27 @@ describe("withStrictCspEnforced", () => {
 	it("leaves a response without a strict policy alone", () => {
 		const response = new Response("{}");
 		expect(withStrictCspEnforced(response)).toBe(response);
+	});
+});
+
+describe("sentryIngestOrigin", () => {
+	it("allows Sentry's ingest origin, without the DSN's key, only when a DSN is set", () => {
+		const dsn = "https://abc123publickey@o4501.ingest.us.sentry.io/4502";
+		expect(sentryIngestOrigin(dsn)).toEqual([
+			"https://o4501.ingest.us.sentry.io",
+		]);
+		expect(sentryIngestOrigin(undefined)).toEqual([]);
+		expect(sentryIngestOrigin("not a dsn")).toEqual([]);
+		expect(sentryIngestOrigin("http://key@insecure.example/1")).toEqual([]);
+		const policy = buildStrictCsp({
+			nonce: "n",
+			convexUrls: [],
+			errorReportingDsn: dsn,
+		});
+		expect(policy).toContain("https://o4501.ingest.us.sentry.io");
+		expect(policy).not.toContain("abc123publickey");
+		expect(buildStrictCsp({ nonce: "n", convexUrls: [] })).not.toContain(
+			"sentry",
+		);
 	});
 });

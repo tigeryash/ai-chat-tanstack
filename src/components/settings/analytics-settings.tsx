@@ -6,7 +6,7 @@ import {
 	useAnalyticsEnabled,
 } from "@/lib/analytics/consent";
 
-/** Settings → Analytics (roadmap 1.8): one switch for page views, Web Vitals and usage events. */
+/** Settings → Analytics (roadmap 1.8, 1.8b): one switch for page views, Web Vitals, usage events and error reports. */
 export function AnalyticsSettings() {
 	const enabled = useAnalyticsEnabled();
 	const id = useId();
@@ -21,7 +21,8 @@ export function AnalyticsSettings() {
 				<p className="max-w-2xl text-sm text-muted-foreground">
 					Cookieless page views and load times (Vercel Web Analytics and Speed
 					Insights), plus counts like "a message was sent" or "a model was
-					picked". Never your messages, replies, files, keys or chat names.
+					picked", and error reports (Sentry) with keys and content removed.
+					Never your messages, replies, files, keys or chat names.
 				</p>
 			</header>
 			<div className="flex items-center gap-3">
