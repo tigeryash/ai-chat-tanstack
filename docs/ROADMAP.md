@@ -407,7 +407,7 @@ Only what's still open. When one is done, tick it, add a dated note, and move it
   *Status:* merged in [#44](https://github.com/tigeryash/ai-chat-tanstack/pull/44); turning on Analytics and Speed Insights in Vercel is an owner to-do.
 - [x] **1.8b Error reporting (Sentry, scrubbed).** Sentry with `redact()` in `beforeSend`, no content, behind the
   same opt-out.
-  *Status (2026-11-09):* done, off until the DSN is set (owner to-do); source maps are a follow-up. PR: PR_URL
+  *Status (2026-11-09):* done, off until the DSN is set (owner to-do); source maps are a follow-up. PR: https://github.com/tigeryash/ai-chat-tanstack/pull/100
 - [x] **1.9 Chat ownership on this device.** Each stored chat records its owner (a Better Auth user ID, or none
   when made signed out), through a format migration that makes existing chats no-account chats. Signed out, the
   sidebar shows only no-account chats; signed in, the account's own plus the no-account ones (marked "Not saved to
