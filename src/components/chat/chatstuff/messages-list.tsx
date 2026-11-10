@@ -14,13 +14,13 @@ type Message = UIMessage<unknown, UIDataTypes, UITools>;
 
 type MessagesListProps = {
 	messages: Message[];
-	/** Regenerates the last reply. Leave unset while a reply is streaming. */
+	/** Regenerates a reply into a new version (roadmap R4). Ignored while busy; unset with no model. */
 	onRegenerate?: (messageId: string) => void;
 	/** Other versions of edited messages (roadmap 1.7). */
 	branches?: ChatBranches;
 	/** Sends a new version of a user message. Leave unset while a reply is streaming. */
 	onEdit?: (messageId: string, text: string) => void;
-	/** Shows another version of the message at `index`. Leave unset while a reply is streaming. */
+	/** Shows another version of the message at `index`. Ignored while a reply is streaming. */
 	onSwitch?: (index: number, versionId: string) => void;
 	/** The chat's id, for the replies' thumbs up/down (roadmap 3.4). */
 	chatId?: string;
@@ -40,7 +40,7 @@ const MessageRow = memo(function MessageRow({
 	chatId?: string;
 	message: Message;
 	index: number;
-	onRegenerate?: () => void;
+	onRegenerate?: (messageId: string) => void;
 	versionIds?: readonly string[];
 	onEdit?: (messageId: string, text: string) => void;
 	onSwitch?: (index: number, versionId: string) => void;
@@ -54,8 +54,14 @@ const MessageRow = memo(function MessageRow({
 		>
 			<MessageUI
 				message={message}
-				onRegenerate={onRegenerate}
+				onRegenerate={onRegenerate && (() => onRegenerate(message.id))}
 				chatId={chatId}
+				versionIds={message.role === "assistant" ? versionIds : undefined}
+				onSwitch={
+					message.role === "assistant" && onSwitch
+						? (id) => onSwitch(index, id)
+						: undefined
+				}
 				branching={
 					message.role === "user"
 						? {
@@ -78,11 +84,6 @@ const MessagesList = ({
 	onSwitch,
 	chatId,
 }: MessagesListProps) => {
-	const last = messages.at(-1);
-	const regenerate =
-		onRegenerate && last?.role === "assistant"
-			? () => onRegenerate(last.id)
-			: undefined;
 	return (
 		<div className="flex-1 h-full  ">
 			<Conversation className=" relative size-full">
@@ -93,14 +94,16 @@ const MessagesList = ({
 							message={message}
 							index={index}
 							chatId={chatId}
-							onRegenerate={message === last ? regenerate : undefined}
+							onRegenerate={
+								message.role === "assistant" ? onRegenerate : undefined
+							}
 							// The fork's own list, so its identity holds while a reply streams.
 							versionIds={
 								branches &&
 								siblingsAt(messages as UIMessage[], branches, index)?.ids
 							}
 							onEdit={message.role === "user" ? onEdit : undefined}
-							onSwitch={message.role === "user" ? onSwitch : undefined}
+							onSwitch={onSwitch}
 						/>
 					))}
 				</ConversationContent>

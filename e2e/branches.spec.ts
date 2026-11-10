@@ -86,3 +86,93 @@ test("editing a message branches; switching back shows the original, after a rel
 	await expect(page.getByText("Edited mock")).toBeVisible();
 	await expect(replies(page)).toHaveCount(1);
 });
+
+// Roadmap R4: regenerating a reply keeps the old one as a version, like an edit does.
+const takes = (page: Page) =>
+	page.locator("[data-slot='message']").filter({ hasText: /^Take \d+\./ });
+const replyVersions = (page: Page) =>
+	page.getByRole("group", { name: "Reply versions" });
+
+/** Exactly these replies are shown, in order. */
+async function expectTakes(page: Page, texts: string[]) {
+	await expect(takes(page)).toHaveCount(texts.length);
+	await expect(takes(page)).toContainText(texts);
+}
+
+async function sendNumbered(page: Page, text: string) {
+	const box = page.getByPlaceholder("Ask anything");
+	await box.fill(text);
+	await box.press("Enter");
+	await expect(status(page)).toHaveAttribute("data-chat-status", "ready", {
+		timeout: 10_000,
+	});
+}
+
+async function regenerate(page: Page, index: number) {
+	await page
+		.getByRole("button", { name: "Regenerate response" })
+		.nth(index)
+		.click();
+	await expect(status(page)).toHaveAttribute(
+		"data-chat-status",
+		/submitted|streaming/,
+	);
+	await expect(status(page)).toHaveAttribute("data-chat-status", "ready", {
+		timeout: 10_000,
+	});
+}
+
+test("regenerating a reply branches; the original is one switch away, after a reload too", async ({
+	page,
+}) => {
+	test.setTimeout(60_000);
+	await open(page, "?numbered=true");
+	await sendNumbered(page, "Hello mock");
+	await expectTakes(page, ["Take 1."]);
+	await expect(replyVersions(page)).toHaveCount(0);
+
+	await regenerate(page, 0);
+	await expectTakes(page, ["Take 2."]);
+	await expect(replyVersions(page)).toHaveText("2/2");
+
+	await replyVersions(page)
+		.getByRole("button", { name: "Previous version" })
+		.click();
+	await expectTakes(page, ["Take 1."]);
+	await expect(replyVersions(page)).toHaveText("1/2");
+
+	// Both survive a reload, with the version shown last.
+	const chatId = await page.locator("main").getAttribute("data-chat-id");
+	await expect(async () => {
+		await open(page, `?chat=${chatId}`);
+		await expect(replyVersions(page)).toHaveText("1/2", { timeout: 1_000 });
+	}).toPass();
+	await expectTakes(page, ["Take 1."]);
+	await replyVersions(page)
+		.getByRole("button", { name: "Next version" })
+		.click();
+	await expectTakes(page, ["Take 2."]);
+});
+
+test("regenerating a middle reply branches there; the later turns stay with the old reply", async ({
+	page,
+}) => {
+	test.setTimeout(60_000);
+	await open(page, "?numbered=true");
+	await sendNumbered(page, "First question");
+	await sendNumbered(page, "Second question");
+	await expectTakes(page, ["Take 1.", "Take 2."]);
+
+	// Every reply can be regenerated, not only the last.
+	await regenerate(page, 0);
+	await expectTakes(page, ["Take 3."]);
+	await expect(page.getByText("Second question")).toHaveCount(0);
+	await expect(replyVersions(page)).toHaveText("2/2");
+
+	await replyVersions(page)
+		.getByRole("button", { name: "Previous version" })
+		.click();
+	await expectTakes(page, ["Take 1.", "Take 2."]);
+	await expect(page.getByText("Second question")).toBeVisible();
+	await expect(replyVersions(page)).toHaveText("1/2");
+});

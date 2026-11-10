@@ -30,10 +30,12 @@ export function VersionSwitcher({
 	messageId,
 	versionIds,
 	onSwitch,
+	label = "Message versions",
 }: {
 	messageId: string;
 	versionIds: readonly string[];
 	onSwitch?: (versionId: string) => void;
+	label?: string;
 }) {
 	const index = versionIds.indexOf(messageId);
 	const go = (step: number) => {
@@ -44,7 +46,7 @@ export function VersionSwitcher({
 		// biome-ignore lint/a11y/useSemanticElements: a toolbar of two buttons, not a form fieldset.
 		<div
 			role="group"
-			aria-label="Message versions"
+			aria-label={label}
 			className="flex items-center"
 			data-slot="message-versions"
 		>
@@ -76,7 +78,7 @@ export function VersionSwitcher({
 }
 
 /** Hidden while the chat's reply streams (`data-chat-status` on the pane), by CSS: see the header. */
-const HIDE_WHILE_BUSY =
+export const HIDE_WHILE_BUSY =
 	"in-data-[chat-status=streaming]:invisible in-data-[chat-status=submitted]:invisible";
 
 function EditAction({

@@ -15,6 +15,7 @@ import { mergeProviderOptions, toCallParams } from "@/lib/params/mapping";
 import { parseRequestSettings } from "@/lib/params/request";
 import { developerOf, type ParamRoute } from "@/lib/params/routes";
 import type { PromptSource } from "@/lib/prompts/provenance";
+import { z } from "@/lib/zod";
 import {
 	ChatSetupError,
 	chatErrorLogFields,
@@ -91,6 +92,17 @@ function paramRouteOf(selection: ModelSelection): ParamRoute {
 	};
 }
 
+const replyIdSchema = z.object({ replyId: z.string().min(1).max(256) });
+
+/**
+ * The id the reply must get, when the request asks for one (`body.replyId`): regenerating into a
+ * branch (roadmap R4) names the new reply up front, so its branch exists before it streams.
+ */
+function replyIdOf(body: object | undefined): string | undefined {
+	const parsed = replyIdSchema.safeParse(body);
+	return parsed.success ? parsed.data.replyId : undefined;
+}
+
 function parseSelection(body: object | undefined): ModelSelection {
 	const parsed = modelSelectionSchema.safeParse(body);
 	if (!parsed.success) {
@@ -120,6 +132,7 @@ export class BrowserChatTransport implements ChatTransport<UIMessage> {
 		ReadableStream<UIMessageChunk>
 	> {
 		const selection = parseSelection(body);
+		const replyId = replyIdOf(body);
 		const { params, support, systemPrompt, promptSource } =
 			parseRequestSettings(
 				(body as { settings?: unknown } | undefined)?.settings,
@@ -162,6 +175,11 @@ export class BrowserChatTransport implements ChatTransport<UIMessage> {
 			return result.toUIMessageStream({
 				sendReasoning: true,
 				sendSources: true,
+				// The start chunk carries `replyId`, which the chat gives the reply it streams.
+				...(replyId !== undefined && {
+					originalMessages: messages,
+					generateMessageId: () => replyId,
+				}),
 				onError,
 				messageMetadata: ({ part }): Partial<ReplyMetadata> | undefined => {
 					const stats = clock(part);
