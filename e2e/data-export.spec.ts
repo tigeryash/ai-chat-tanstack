@@ -164,7 +164,7 @@ test("export, clear site data, import: the workspace and the saved layout are ba
 	await page.keyboard.press("Escape");
 
 	// Export, wipe, import.
-	await page.goto("/settings");
+	await page.goto("/new?settings=data");
 	const data = page.getByRole("region", { name: "Your data" });
 	const downloading = page.waitForEvent("download");
 	await data.getByRole("button", { name: "Export data" }).click();
@@ -177,7 +177,7 @@ test("export, clear site data, import: the workspace and the saved layout are ba
 	expect(file.layouts).toHaveLength(1);
 
 	await clearSiteData(page);
-	await page.goto("/settings");
+	await page.goto("/new?settings=data");
 	await data.getByLabel("Export file to import").setInputFiles(path);
 	await expect(data.getByRole("status")).toHaveText(
 		"Chats: 2 added, 0 updated, 0 already up to date. Saved prompts: 0 added, 0 updated, 0 already up to date. Workspaces: 1 added, 0 updated, 0 already up to date. Saved layouts: 1 added, 0 updated, 0 already up to date.",
