@@ -577,6 +577,7 @@ on top. Order: R1 first; R2 and R3 can run alongside; R4 after R3; R5 any time.
 - [ ] **R4 Leftovers.** Q2 slice 5 (small follow-ups); workspaces and layouts in exports (from 3.5 and 1.10);
   regenerate into a branch (from 1.7); Sentry source maps (from 1.8b, needs an auth token, so Yash first);
   the flaky `synced-attachments` e2e under load (from #102).
+  *Status (2026-11-09):* workspaces and layouts in exports done in [PR #105](https://github.com/tigeryash/ai-chat-tanstack/pull/105) (export format 2).
 - [ ] **R5 Accessibility audit** (7.4, pulled forward). Keyboard-only pass, screen reader pass with streaming
   replies, contrast in every theme.
 - After R1–R5: 3.9 Insights if Yash still wants it, then 4.0.
