@@ -1,10 +1,11 @@
-import { createGateway, type LanguageModel } from "ai";
+import type { LanguageModel } from "ai";
 import { createThinkTagModel } from "@/lib/reasoning-middleware";
 import {
 	type OpenAiCompatibleId,
 	PROVIDER_IDS,
 	providerEntry,
 } from "@/models/provider-registry";
+import { createGateway } from "./ai-engine";
 import { LOCAL_PROVIDER, type ModelSelection } from "./model-selection";
 import { openRouterMetadataExtractor } from "./reply-host";
 
@@ -13,7 +14,7 @@ import { openRouterMetadataExtractor } from "./reply-host";
 // (src/lib/security/provider-origins.ts), and the key goes only into that provider's own client, so
 // it's only ever sent to that origin.
 // The provider SDKs load on first use, so pages that never chat don't download them (quality audit P1).
-// The gateway stays a static import: `ai` bundles it anyway as its default provider.
+// The gateway comes with streamText (ai-engine.ts), which loads on the first send too.
 
 /** Providers that speak OpenAI's chat completions API, and where (from the provider registry). */
 export const OPENAI_COMPATIBLE_BASE_URLS = Object.fromEntries(

@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
 import { devtools } from "@tanstack/devtools-vite";
@@ -31,6 +33,42 @@ function cspReportsInDev(): Plugin {
 	};
 }
 
+// `ai` ships as one module, so every chat page would preload streamText and the gateway SDK alongside
+// `useChat`'s `Chat`. Only src/lib/chat/ai-engine.ts imports the request side, and only modules that load
+// on the first send import it, so in the client build its "ai" becomes a second copy of the module
+// (a second id next to the real file): the page keeps the `Chat` half and the first send loads the rest. Their shared
+// dependencies (@ai-sdk/provider, provider-utils, zod) stay single. AI SDK errors are checked with
+// `isInstance` (a global symbol), so they work across the copies. Dev and SSR use plain "ai".
+// Keep every lazy chat module's "ai" import going through ai-engine.ts: a lazy chunk that also imports
+// the page's copy changes how Rolldown merges shared chunks, and the root preloads grew 2 KB.
+const AI_ENGINE = path.resolve("src/lib/chat/ai-engine.ts");
+const AI_ENGINE_SUFFIX = ".ai-engine.js";
+function aiEngineCopy(): Plugin {
+	return {
+		name: "ai-engine-copy",
+		apply: "build",
+		enforce: "pre",
+		async resolveId(source, importer, options) {
+			if (source !== "ai" || importer !== AI_ENGINE) return null;
+			if (this.environment.name !== "client") return null;
+			const resolved = await this.resolve(source, importer, {
+				...options,
+				skipSelf: true,
+			});
+			// A path next to the real file, so its relative imports, its dependencies and the package's
+			// `sideEffects: false` resolve as they do for the original.
+			return resolved && { id: resolved.id.replace(/\.js$/, AI_ENGINE_SUFFIX) };
+		},
+		load(id) {
+			if (!id.endsWith(AI_ENGINE_SUFFIX)) return null;
+			return readFileSync(
+				`${id.slice(0, -AI_ENGINE_SUFFIX.length)}.js`,
+				"utf8",
+			);
+		},
+	};
+}
+
 const config = defineConfig({
 	// Vite 8 resolves the `@/` alias from tsconfig.json itself.
 	resolve: { tsconfigPaths: true },
@@ -46,6 +84,7 @@ const config = defineConfig({
 		),
 		// Before nitro(), so its middleware runs first.
 		cspReportsInDev(),
+		aiEngineCopy(),
 		nitro({
 			preset: "vercel",
 			// Static files never reach our server middleware (src/start.ts), so the same security headers

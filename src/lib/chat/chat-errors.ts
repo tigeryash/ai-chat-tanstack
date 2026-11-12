@@ -1,4 +1,4 @@
-import { APICallError, RetryError } from "ai";
+import { APICallError, RetryError } from "./ai-engine";
 
 // What a failed chat request tells the person. Provider error bodies and messages can quote the request
 // (the user's messages) or part of the key, so they are never shown or logged: only the status is read.
