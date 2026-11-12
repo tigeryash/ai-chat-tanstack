@@ -57,6 +57,7 @@ export const SETTINGS_CARDS = [
 	{ id: "theme", section: "appearance" },
 	{ id: "text", section: "appearance", title: "Fonts" },
 	{ id: "theme-file", section: "appearance" },
+	{ id: "chat-notices", section: "chat" },
 	{
 		id: "background-status",
 		section: "notifications",
@@ -295,6 +296,26 @@ export const SETTINGS = [
 		keywords: ["reset all", "default", "restore"],
 		scope: "global",
 		storage: "syncs",
+		layout: "inline",
+	},
+	// Chat
+	{
+		id: "context-warnings",
+		section: "chat",
+		card: "chat-notices",
+		label: "Context-length notices",
+		description:
+			"A notice under a chat's header once it has used 80% of its context, and again past it. The context ring in the header always shows.",
+		keywords: [
+			"context window",
+			"context limit",
+			"token limit",
+			"too long",
+			"warning",
+			"context ring",
+		],
+		scope: "global",
+		storage: "device",
 		layout: "inline",
 	},
 	// Notifications
