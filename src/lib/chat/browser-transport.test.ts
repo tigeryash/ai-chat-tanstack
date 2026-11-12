@@ -1,12 +1,10 @@
 import { APICallError, type UIMessage, type UIMessageChunk } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
 import { describe, expect, it, vi } from "vitest";
-import {
-	BrowserChatTransport,
-	resolveProviderModel,
-} from "./browser-transport";
+import { BrowserChatTransport } from "./browser-transport";
 import { ChatSetupError } from "./chat-errors";
 import { mockChatModel } from "./mock-model";
+import { resolveProviderModel } from "./provider-model";
 
 vi.mock("@/lib/keys", async (importOriginal) => ({
 	...(await importOriginal<typeof import("@/lib/keys")>()),
