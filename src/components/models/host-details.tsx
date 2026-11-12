@@ -18,6 +18,7 @@ import {
 } from "@/lib/models/format";
 import { cn } from "@/lib/utils";
 import { HostLight } from "./host-light";
+import { SkipBadge } from "./skip-badge";
 
 // What an expanded "Run with" row shows (roadmap 2.2b): a direct host's details, or a router's
 // upstream providers with Auto first. OpenRouter's upstreams are ranked by what Auto optimizes for
@@ -169,6 +170,7 @@ function UpstreamRow({
 							Auto's likely pick
 						</span>
 					)}
+					<SkipBadge reason={upstream.skipped} />
 					<span className="ml-auto shrink-0 text-muted-foreground tabular-nums">
 						{facts.join(" · ")}
 					</span>

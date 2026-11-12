@@ -31,6 +31,7 @@ describe("settings registry", () => {
 			"appearance",
 			"chat",
 			"notifications",
+			"models",
 			"connections",
 			"data",
 			"privacy",

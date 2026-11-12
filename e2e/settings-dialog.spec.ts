@@ -11,6 +11,7 @@ const SECTION_LABELS: Record<string, string> = {
 	appearance: "Appearance",
 	chat: "Chat",
 	notifications: "Notifications",
+	models: "Models & hosts",
 	data: "Your data",
 	privacy: "Privacy",
 };

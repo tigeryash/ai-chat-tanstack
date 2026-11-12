@@ -44,6 +44,13 @@ export interface SettingDefinition {
 }
 
 export const SETTINGS_CARDS = [
+	{
+		id: "host-preferences",
+		section: "models",
+		title: "Host preferences",
+		description:
+			'How Auto picks a host for a model. Picking a host yourself in the model picker\'s "Run with" still runs it, marked. Kept in this browser and sent only to your own router (OpenRouter, AI Gateway).',
+	},
 	{ id: "openrouter", section: "connections" },
 	{ id: "api-keys", section: "connections" },
 	{ id: "local-models", section: "connections" },
@@ -73,6 +80,51 @@ const KEY_MODE_WORDS = [
 ];
 
 export const SETTINGS = [
+	// Models & hosts
+	{
+		id: "blocked-hosts",
+		section: "models",
+		card: "host-preferences",
+		label: "Blocked hosts",
+		description:
+			"Hosts Auto never uses, on OpenRouter, AI Gateway or a direct key. Name the host (DeepInfra), not the router.",
+		keywords: [
+			"blocklist",
+			"ignore",
+			"exclude host",
+			"skip provider",
+			"provider routing",
+			"openrouter",
+			"ai gateway",
+		],
+		scope: "global",
+		storage: "device",
+		layout: "block",
+	},
+	{
+		id: "min-precision",
+		section: "models",
+		card: "host-preferences",
+		label: "Exclude quantized",
+		description:
+			"Skip hosts that serve a model at lower precision than this. Hosts that don't say still count.",
+		keywords: ["quantization", "precision", "fp8", "fp16", "fp4", "int4"],
+		scope: "global",
+		storage: "device",
+		layout: "inline",
+	},
+	{
+		id: "price-cap",
+		section: "models",
+		card: "host-preferences",
+		label: "Price cap for Auto",
+		description:
+			"Auto skips hosts above these prices. Leave one empty for no cap there.",
+		keywords: ["max price", "budget", "cost limit", "cheap", "spending"],
+		scope: "global",
+		storage: "device",
+		layout: "block",
+	},
 	// Connections
 	{
 		id: "connect-openrouter",

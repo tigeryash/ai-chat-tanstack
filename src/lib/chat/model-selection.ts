@@ -1,3 +1,4 @@
+import { MIN_PRECISIONS } from "@/lib/hosts/precision";
 import { PROVIDER_IDS, type ProviderId } from "@/lib/keys";
 import { PROVIDERS } from "@/lib/keys/providers";
 import { createLocalStore } from "@/lib/local-store";
@@ -60,6 +61,20 @@ const pricingSchema = z.object({
 	output: z.number().nonnegative().optional(),
 });
 
+const routerSlugs = z.array(z.string().min(1).max(UPSTREAM_MAX)).max(200);
+const maxPrice = z.number().finite().nonnegative().optional();
+
+/** The routing extras a request may carry; `resolve-host.ts` builds them, `routing-options.ts` maps them. */
+const SELECTION_EXTRAS = [
+	"sort",
+	"noTraining",
+	"pricing",
+	"ignore",
+	"only",
+	"minPrecision",
+	"maxPrice",
+] as const;
+
 /** What a request needs: a choice with a model. The transport checks every request against it. */
 export const modelSelectionSchema = modelChoiceSchema.extend({
 	model: z.string().trim().min(1).max(MODEL_ID_MAX),
@@ -69,8 +84,20 @@ export const modelSelectionSchema = modelChoiceSchema.extend({
 	noTraining: z.boolean().optional(),
 	/** The host's prices, for the reply's cost estimate. */
 	pricing: pricingSchema.optional(),
+	/** OpenRouter upstream slugs to skip (the blocklist, roadmap R2 S3): `provider.ignore`. */
+	ignore: routerSlugs.optional(),
+	/** AI Gateway provider slugs to keep (our own blocklist and price-cap filter): `only`. */
+	only: routerSlugs.optional(),
+	/** The lowest weight format a router may route to. */
+	minPrecision: z.enum(MIN_PRECISIONS).optional(),
+	/** USD per million tokens; OpenRouter's `provider.max_price`. */
+	maxPrice: z.object({ prompt: maxPrice, completion: maxPrice }).optional(),
 });
 export type ModelSelection = z.infer<typeof modelSelectionSchema>;
+export type SelectionExtras = Pick<
+	ModelSelection,
+	(typeof SELECTION_EXTRAS)[number]
+>;
 
 export const MODEL_CHOICE_STORAGE_KEY = "highelo-model-choice";
 
@@ -97,7 +124,7 @@ export function useModelChoice() {
 /** The choice as request options for `useChat`, or undefined while no model is picked. */
 export function toSelection(
 	choice: ModelChoice | null,
-	extras?: Pick<ModelSelection, "sort" | "noTraining" | "pricing">,
+	extras?: SelectionExtras,
 ): ModelSelection | undefined {
 	if (!choice) return undefined;
 	const parsed = modelSelectionSchema.safeParse({ ...choice, ...extras });

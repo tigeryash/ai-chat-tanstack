@@ -18,6 +18,7 @@ import { formatSpeed } from "@/lib/models/format";
 import { cn } from "@/lib/utils";
 import { DirectHostDetails, priceText, RouterUpstreams } from "./host-details";
 import { HostLight, LIGHT_LABELS, lightState } from "./host-light";
+import { SkipBadge } from "./skip-badge";
 import { useRunWithRows } from "./use-run-with-rows";
 
 // The picker preview's "Run with" section (roadmap 2.2b): every host that can run the model, as an
@@ -211,6 +212,7 @@ function HostRow({
 									Auto's pick
 								</span>
 							)}
+							<SkipBadge reason={option.skipped} />
 						</span>
 						<span className="truncate font-normal text-muted-foreground text-xs">
 							{option.excluded ?? (summary || "No live data")}

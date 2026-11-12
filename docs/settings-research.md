@@ -395,7 +395,7 @@ Yash picked the layout from the reference apps.)
   and "Title model" (off = first line, as today). Titles are written once, with the user's key, never logged.
   *Done when:* Vitest covers default resolution and title fallback; e2e on a mock model gets an auto-title and a
   fixed default model in a new chat after reload.
-- [ ] **S3 Host preferences.** Blocklist, exclude quantized, price cap for Auto in Models & hosts, mapped to
+- [x] **S3 Host preferences.** Blocklist, exclude quantized, price cap for Auto in Models & hosts, mapped to
   OpenRouter and Gateway routing. *Done when:* Vitest covers the mapping and Auto's filtering; e2e on fixture
   endpoints shows a blocked host gone from Auto and marked in "Run with", and the request to the faked OpenRouter
   carries `ignore`, `quantizations` and `max_price`.
