@@ -28,7 +28,6 @@ import { Route as E2eAnalyticsRouteImport } from './routes/e2e/analytics'
 import { Route as E2eChatRouteImport } from './routes/e2e/chat'
 import { Route as E2eChatLiveRouteImport } from './routes/e2e/chat-live'
 import { Route as E2eComposerRouteImport } from './routes/e2e/composer'
-import { Route as E2eContextWarningRouteImport } from './routes/e2e/context-warning'
 import { Route as E2eKeysRouteImport } from './routes/e2e/keys'
 import { Route as E2eLoadingRouteImport } from './routes/e2e/loading'
 import { Route as E2eMarkdownRouteImport } from './routes/e2e/markdown'
@@ -132,11 +131,6 @@ const E2eComposerRoute = E2eComposerRouteImport.update({
   path: '/composer',
   getParentRoute: () => E2eRouteRoute,
 } as any)
-const E2eContextWarningRoute = E2eContextWarningRouteImport.update({
-  id: '/context-warning',
-  path: '/context-warning',
-  getParentRoute: () => E2eRouteRoute,
-} as any)
 const E2eKeysRoute = E2eKeysRouteImport.update({
   id: '/keys',
   path: '/keys',
@@ -201,7 +195,6 @@ export interface FileRoutesByFullPath {
   '/e2e/chat': typeof E2eChatRoute
   '/e2e/chat-live': typeof E2eChatLiveRoute
   '/e2e/composer': typeof E2eComposerRoute
-  '/e2e/context-warning': typeof E2eContextWarningRoute
   '/e2e/keys': typeof E2eKeysRoute
   '/e2e/loading': typeof E2eLoadingRoute
   '/e2e/markdown': typeof E2eMarkdownRoute
@@ -230,7 +223,6 @@ export interface FileRoutesByTo {
   '/e2e/chat': typeof E2eChatRoute
   '/e2e/chat-live': typeof E2eChatLiveRoute
   '/e2e/composer': typeof E2eComposerRoute
-  '/e2e/context-warning': typeof E2eContextWarningRoute
   '/e2e/keys': typeof E2eKeysRoute
   '/e2e/loading': typeof E2eLoadingRoute
   '/e2e/markdown': typeof E2eMarkdownRoute
@@ -262,7 +254,6 @@ export interface FileRoutesById {
   '/e2e/chat': typeof E2eChatRoute
   '/e2e/chat-live': typeof E2eChatLiveRoute
   '/e2e/composer': typeof E2eComposerRoute
-  '/e2e/context-warning': typeof E2eContextWarningRoute
   '/e2e/keys': typeof E2eKeysRoute
   '/e2e/loading': typeof E2eLoadingRoute
   '/e2e/markdown': typeof E2eMarkdownRoute
@@ -293,7 +284,6 @@ export interface FileRouteTypes {
     | '/e2e/chat'
     | '/e2e/chat-live'
     | '/e2e/composer'
-    | '/e2e/context-warning'
     | '/e2e/keys'
     | '/e2e/loading'
     | '/e2e/markdown'
@@ -322,7 +312,6 @@ export interface FileRouteTypes {
     | '/e2e/chat'
     | '/e2e/chat-live'
     | '/e2e/composer'
-    | '/e2e/context-warning'
     | '/e2e/keys'
     | '/e2e/loading'
     | '/e2e/markdown'
@@ -353,7 +342,6 @@ export interface FileRouteTypes {
     | '/e2e/chat'
     | '/e2e/chat-live'
     | '/e2e/composer'
-    | '/e2e/context-warning'
     | '/e2e/keys'
     | '/e2e/loading'
     | '/e2e/markdown'
@@ -511,13 +499,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof E2eComposerRouteImport
       parentRoute: typeof E2eRouteRoute
     }
-    '/e2e/context-warning': {
-      id: '/e2e/context-warning'
-      path: '/context-warning'
-      fullPath: '/e2e/context-warning'
-      preLoaderRoute: typeof E2eContextWarningRouteImport
-      parentRoute: typeof E2eRouteRoute
-    }
     '/e2e/keys': {
       id: '/e2e/keys'
       path: '/keys'
@@ -627,7 +608,6 @@ interface E2eRouteRouteChildren {
   E2eChatRoute: typeof E2eChatRoute
   E2eChatLiveRoute: typeof E2eChatLiveRoute
   E2eComposerRoute: typeof E2eComposerRoute
-  E2eContextWarningRoute: typeof E2eContextWarningRoute
   E2eKeysRoute: typeof E2eKeysRoute
   E2eLoadingRoute: typeof E2eLoadingRoute
   E2eMarkdownRoute: typeof E2eMarkdownRoute
@@ -642,7 +622,6 @@ const E2eRouteRouteChildren: E2eRouteRouteChildren = {
   E2eChatRoute: E2eChatRoute,
   E2eChatLiveRoute: E2eChatLiveRoute,
   E2eComposerRoute: E2eComposerRoute,
-  E2eContextWarningRoute: E2eContextWarningRoute,
   E2eKeysRoute: E2eKeysRoute,
   E2eLoadingRoute: E2eLoadingRoute,
   E2eMarkdownRoute: E2eMarkdownRoute,

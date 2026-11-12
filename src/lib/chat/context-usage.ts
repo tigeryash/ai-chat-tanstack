@@ -34,3 +34,26 @@ export function contextLevel(
 	if (tokens >= contextLength) return "over";
 	return tokens >= contextLength * CONTEXT_NEARING_RATIO ? "nearing" : "under";
 }
+
+/** Whole percent of the context used, rounded down: "41% of 128K context used". */
+export function contextPercent(tokens: number, contextLength: number): number {
+	return Math.floor((tokens / contextLength) * 100);
+}
+
+const NOTICE_RANK: Record<ContextLevel, number> = {
+	under: 0,
+	nearing: 1,
+	over: 2,
+};
+
+/**
+ * Whether the notice shows at `level`, given the level it was last closed at in this chat. Closing it
+ * at "nearing" hides it until the chat goes past its context.
+ */
+export function showsContextNotice(
+	level: ContextLevel | null,
+	closedAt: ContextLevel | undefined,
+): boolean {
+	if (level === null || level === "under") return false;
+	return closedAt === undefined || NOTICE_RANK[level] > NOTICE_RANK[closedAt];
+}

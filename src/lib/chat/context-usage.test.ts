@@ -3,7 +3,9 @@ import { describe, expect, it } from "vitest";
 import {
 	CONTEXT_NEARING_RATIO,
 	contextLevel,
+	contextPercent,
 	contextTokens,
+	showsContextNotice,
 } from "./context-usage";
 
 const user = (id: string): UIMessage => ({
@@ -72,5 +74,31 @@ describe("contextLevel", () => {
 		expect(contextLevel(9_000, undefined)).toBeNull();
 		expect(contextLevel(9_000, 0)).toBeNull();
 		expect(contextLevel(null, length)).toBeNull();
+	});
+});
+
+describe("contextPercent", () => {
+	it("rounds down, and goes past 100 when over", () => {
+		expect(contextPercent(52_600, 128_000)).toBe(41);
+		expect(contextPercent(140_800, 128_000)).toBe(110);
+	});
+});
+
+describe("showsContextNotice", () => {
+	it("never shows under the threshold or with no known context", () => {
+		expect(showsContextNotice("under", undefined)).toBe(false);
+		expect(showsContextNotice(null, undefined)).toBe(false);
+	});
+
+	it("shows near or past the context until closed", () => {
+		expect(showsContextNotice("nearing", undefined)).toBe(true);
+		expect(showsContextNotice("over", undefined)).toBe(true);
+	});
+
+	it("once closed, stays hidden until the next level", () => {
+		expect(showsContextNotice("nearing", "nearing")).toBe(false);
+		expect(showsContextNotice("over", "nearing")).toBe(true);
+		expect(showsContextNotice("over", "over")).toBe(false);
+		expect(showsContextNotice("nearing", "over")).toBe(false);
 	});
 });

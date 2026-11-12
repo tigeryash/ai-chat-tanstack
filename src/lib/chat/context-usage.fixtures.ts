@@ -1,9 +1,10 @@
 import type { UIMessage } from "ai";
 
-// Chats near and past a 128K context (roadmap R2 S4), for /e2e/context-warning and
-// e2e/context-warning.spec.ts.
+// Saved chats on DeepSeek V4.1 Flash (128K context in the seeded catalog) at about 41%, 85% and 110% of
+// it (roadmap R2 S4), for e2e/context-warning.spec.ts. The model comes from the reply's metadata, as in
+// a chat saved by the app.
 
-export const CONTEXT_FIXTURE_LENGTH = 128_000;
+export const CONTEXT_FIXTURE_MODEL = "deepseek/deepseek-v4.1-flash";
 
 const chatOf = (inputTokens: number, outputTokens: number): UIMessage[] => [
 	{
@@ -17,14 +18,15 @@ const chatOf = (inputTokens: number, outputTokens: number): UIMessage[] => [
 		parts: [{ type: "text", text: "A long answer" }],
 		metadata: {
 			provider: "openrouter",
-			model: "deepseek/deepseek-v4.1-flash",
+			model: CONTEXT_FIXTURE_MODEL,
+			gatewayId: CONTEXT_FIXTURE_MODEL,
 			usage: { inputTokens, outputTokens },
 		},
 	},
 ];
 
 export const CONTEXT_FIXTURE_CHATS = {
-	under: chatOf(40_000, 2_000),
+	under: chatOf(51_000, 1_600),
 	nearing: chatOf(108_000, 1_500),
-	over: chatOf(127_500, 4_000),
+	over: chatOf(137_000, 3_800),
 } as const;
