@@ -8,7 +8,9 @@ import {
 	providerKeyOf,
 } from "./endpoint-stats";
 import { hostKey, localHealth } from "./host-failures";
+import { type HostFilters, isBlocked, overPriceCap } from "./host-filters";
 import type { HostPrefs } from "./host-prefs";
+import { belowPrecision } from "./precision";
 import type { HostData } from "./use-endpoints";
 
 // Every host that can run a catalog model, for the picker's "Run with" list and for Auto (roadmap
@@ -20,9 +22,17 @@ export interface ChatNeeds {
 	images: boolean;
 }
 
+/**
+ * Why Auto passes over a host or upstream the user could still pin (roadmap R2 S3): on the blocklist,
+ * below the minimum precision, or above the price cap.
+ */
+export type SkipReason = "blocked" | "precision" | "price";
+
 export interface Upstream extends EndpointStats {
-	/** Why Auto skips it and the list flags it, e.g. "Can't read images". */
+	/** Why Auto skips it and the list flags it, e.g. "Can't read images". Can't be pinned. */
 	excluded?: string;
+	/** Why Auto skips it under the host preferences. Can still be pinned. */
+	skipped?: SkipReason;
 }
 
 export interface HostOption {
@@ -45,6 +55,8 @@ export interface HostOption {
 	noTraining?: boolean;
 	zdr?: boolean;
 	excluded?: string;
+	/** Why Auto skips it under the host preferences; pinning it still runs. */
+	skipped?: SkipReason;
 }
 
 /** Names a direct provider goes by in the routers' data, where it isn't its own id. */
@@ -106,6 +118,28 @@ function exclusion(
 	return undefined;
 }
 
+/** The first host preference that has Auto skip a host with these facts. */
+export function skipReason(
+	host: {
+		keys: readonly string[];
+		pricing: { input?: number; output?: number };
+		quantization?: string;
+	},
+	filters: HostFilters,
+): SkipReason | undefined {
+	if (host.keys.some((key) => isBlocked(filters, key))) return "blocked";
+	if (belowPrecision(host.quantization, filters.minPrecision)) {
+		return "precision";
+	}
+	if (overPriceCap(host.pricing, filters.priceCap)) return "price";
+	return undefined;
+}
+
+/** The keys a direct provider goes by in the routers' data and in the blocklist. */
+export function directKeys(provider: ProviderId): string[] {
+	return PROVIDER_KEYS[provider] ?? [providerKeyOf(provider)];
+}
+
 type Failures = Parameters<typeof localHealth>[0];
 
 interface Inputs {
@@ -117,6 +151,7 @@ interface Inputs {
 	data: HostData;
 	failures: Failures;
 	prefs: HostPrefs;
+	filters: HostFilters;
 	needs: ChatNeeds;
 	now?: number;
 }
@@ -137,6 +172,10 @@ function upstreamsOf(
 			),
 		),
 		excluded: exclusion(endpoint, inputs.needs, inputs.prefs),
+		skipped: skipReason(
+			{ keys: [endpoint.providerKey], ...endpoint },
+			inputs.filters,
+		),
 	}));
 }
 
@@ -157,8 +196,12 @@ function routerOption(
 ): HostOption {
 	const upstreams = upstreamsOf(provider, list, inputs);
 	const fitting = upstreams?.filter((upstream) => !upstream.excluded) ?? [];
-	// The summary describes what the router would actually use: upstreams that fit and are up.
-	const usable = fitting.filter((upstream) => upstream.health !== "down");
+	const preferred = fitting.filter((upstream) => !upstream.skipped);
+	// The summary describes what the router would actually use: upstreams that fit, pass the host
+	// preferences (when any do) and are up.
+	const usable = (preferred.length > 0 ? preferred : fitting).filter(
+		(upstream) => upstream.health !== "down",
+	);
 	const cheapest = [...usable].sort(
 		(a, b) => priceOf(a.pricing) - priceOf(b.pricing),
 	)[0];
@@ -189,6 +232,11 @@ function routerOption(
 			upstreams && upstreams.length > 0 && fitting.length === 0
 				? "No upstream fits this chat"
 				: undefined,
+		// Every upstream that fits is skipped: Auto passes the router over too.
+		skipped:
+			fitting.length > 0 && preferred.length === 0
+				? fitting[0]?.skipped
+				: undefined,
 	};
 }
 
@@ -198,6 +246,7 @@ function directOption(
 	inputs: Inputs,
 ): HostOption {
 	const stats = statsFor(provider, inputs.data);
+	const pricing = stats?.pricing ?? inputs.model.pricing ?? {};
 	return {
 		provider,
 		model,
@@ -208,7 +257,7 @@ function directOption(
 			stats?.health ?? "unknown",
 			localHealth(inputs.failures, provider, inputs.now),
 		),
-		pricing: stats?.pricing ?? inputs.model.pricing ?? {},
+		pricing,
 		throughput: stats?.throughput,
 		latencyMs: stats?.latencyMs,
 		uptime: stats?.uptime,
@@ -216,6 +265,14 @@ function directOption(
 		noTraining: stats?.noTraining,
 		zdr: stats?.zdr,
 		excluded: exclusion(stats, inputs.needs, inputs.prefs),
+		skipped: skipReason(
+			{
+				keys: directKeys(provider),
+				pricing,
+				quantization: stats?.quantization,
+			},
+			inputs.filters,
+		),
 	};
 }
 
@@ -268,7 +325,9 @@ const SORTERS: Record<AutoSort, (a: Ranked, b: Ranked) => number> = {
 
 /**
  * Auto's pick: a connected host that fits the chat and isn't down, best by `sort` (ties keep the list's
- * order). Falls back to any connected host that fits, then any connected host.
+ * order). Hosts the preferences skip (blocked, quantized, over the price cap) come after every other
+ * host that fits, even one that's down; with only skipped ones, Auto still runs on one and "Run with"
+ * marks why. Then any connected host.
  */
 export function autoHost(
 	options: readonly HostOption[],
@@ -276,14 +335,21 @@ export function autoHost(
 ): HostOption | undefined {
 	const connected = options.filter((option) => option.connected);
 	const fits = connected.filter((option) => !option.excluded);
-	const up = fits.filter((option) => option.health !== "down");
-	const pool = up.length > 0 ? up : fits.length > 0 ? fits : connected;
-	return [...pool].sort(SORTERS[sort])[0];
+	const preferred = fits.filter((option) => !option.skipped);
+	const up = (list: HostOption[]) =>
+		list.filter((option) => option.health !== "down");
+	const pool = [up(preferred), preferred, up(fits), fits, connected].find(
+		(list) => list.length > 0,
+	);
+	return pool ? [...pool].sort(SORTERS[sort])[0] : undefined;
 }
 
-/** Usable upstreams first, then ones that are down, then ones the chat can't use. */
-const usability = (upstream: Upstream) =>
-	upstream.excluded ? 2 : upstream.health === "down" ? 1 : 0;
+/** Usable upstreams first, then ones that are down, then skipped ones, then ones the chat can't use. */
+const usability = (upstream: Upstream) => {
+	if (upstream.excluded) return 3;
+	if (upstream.skipped) return 2;
+	return upstream.health === "down" ? 1 : 0;
+};
 
 /**
  * A router's upstreams in the order Auto's sort ranks them (OpenRouter's `provider.sort`; "reliable"
