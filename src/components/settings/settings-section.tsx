@@ -8,6 +8,7 @@ import {
 } from "@/lib/settings/registry";
 import type { SettingsSectionId } from "@/lib/settings/sections";
 import { SECTION_UPCOMING } from "@/lib/settings/upcoming";
+import { AccountGate } from "./account-settings";
 import { SettingRow } from "./setting-row";
 
 /** One section of Settings: its cards of rows, or what's coming when it has none yet. */
@@ -24,7 +25,7 @@ export function SettingsSectionBody({
 	if (cards.length === 0) {
 		return <EmptySection section={section} onSelect={onSelect} />;
 	}
-	return (
+	const body = (
 		<div className="grid gap-6">
 			{cards.map(({ card, rows }) => (
 				<Card key={card.id} card={card}>
@@ -39,6 +40,7 @@ export function SettingsSectionBody({
 			))}
 		</div>
 	);
+	return section === "account" ? <AccountGate>{body}</AccountGate> : body;
 }
 
 function Card({ card, children }: { card: SettingsCard; children: ReactNode }) {
