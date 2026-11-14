@@ -10,7 +10,7 @@ import type { ChatBranches } from "@/lib/storage/branches";
 import type { ChatStore, NewChatFields } from "@/lib/storage/chat-store";
 import { isVisibleTo, type Viewer } from "@/lib/storage/ownership";
 import { requestPersistentStorage } from "@/lib/storage/persistence";
-import { BrowserChatTransport } from "./browser-transport";
+import { BrowserChatTransport, prefetchStreamReply } from "./browser-transport";
 import { chatBranchesOf, loadChatBranches } from "./chat-branches";
 import { chatSettingsOf, loadChatSettings } from "./chat-settings";
 import { titleFromMessages } from "./chat-title";
@@ -23,6 +23,7 @@ import { addOpenChat, getOpenChat, peekOpenChat } from "./open-chats";
 // the transport), so pages that don't chat import it with `import()`.
 
 const defaultTransport = new BrowserChatTransport(resolveAppModel);
+prefetchStreamReply();
 
 export interface OpenChatOptions {
 	messages?: UIMessage[];
