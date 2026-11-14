@@ -580,6 +580,8 @@ on top. Order: R1 first; R2 and R3 can run alongside; R4 after R3; R5 any time.
     OpenRouter and AI Gateway routing. *Status:* [PR #110](https://github.com/tigeryash/ai-chat-tanstack/pull/110).
   - [x] **S5 Command palette v1.** Cmd+K over any dashboard page: go to chats, workspaces, Prompts and Settings,
     new chat (also from a layout), settings search, quick toggles, recency. *Status:* [PR #111](https://github.com/tigeryash/ai-chat-tanstack/pull/111).
+  - [x] **S6 Keyboard shortcuts.** One keymap in the command registry, a ⌘/ and ? shortcut sheet, and a read-only
+    Settings → Keyboard list. *Status:* [PR #115](https://github.com/tigeryash/ai-chat-tanstack/pull/115).
 - [ ] **R3 Quality audit Q3.** A fresh review of UX consistency, performance and code health across everything
   Milestone 2 added, folded together with R1's notes, turned into fix slices (as Q1 and Q2 were).
 - [ ] **R4 Leftovers.** Q2 slice 5 (small follow-ups); workspaces and layouts in exports (from 3.5 and 1.10);
