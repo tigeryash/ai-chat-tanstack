@@ -22,6 +22,7 @@ import {
 } from "./background-status-settings";
 import { ConnectOpenRouter } from "./connect-openrouter";
 import { DataTransfer } from "./data-settings";
+import { DefaultModelControl, TitleModelControl } from "./general-settings";
 import {
 	BlockedHostsControl,
 	MinPrecisionSelect,
@@ -36,6 +37,8 @@ export const SETTING_CONTROLS: Record<
 	SettingId,
 	ComponentType<SettingControlProps>
 > = {
+	"default-model": DefaultModelControl,
+	"title-model": TitleModelControl,
 	"blocked-hosts": BlockedHostsControl,
 	"min-precision": MinPrecisionSelect,
 	"price-cap": PriceCapControl,

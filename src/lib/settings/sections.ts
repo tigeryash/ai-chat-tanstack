@@ -42,8 +42,7 @@ export const SETTINGS_SECTIONS: readonly SettingsSection[] = [
 		id: "general",
 		label: "General",
 		group: "app",
-		upcoming:
-			"A default model for new chats and a model that names your chats.",
+		upcoming: "How many panes a new chat starts with.",
 	},
 	{
 		id: "appearance",
