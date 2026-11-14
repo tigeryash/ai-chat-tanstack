@@ -1,4 +1,4 @@
-import { type ResolveModel, resolveProviderModel } from "./browser-transport";
+import type { ResolveModel } from "./browser-transport";
 import { LOCAL_PROVIDER } from "./model-selection";
 
 // Playwright drives the real chat routes (`/new`, `/$chatId`) without calling a real model (hard rule 6).
@@ -42,5 +42,6 @@ export const resolveAppModel: ResolveModel = async (selection) => {
 		const { mockChatModel } = await import("./mock-model");
 		return mockChatModel(reply);
 	}
+	const { resolveProviderModel } = await import("./stream-reply");
 	return resolveProviderModel(selection);
 };
