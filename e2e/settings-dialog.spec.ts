@@ -11,6 +11,7 @@ const SECTION_LABELS: Record<string, string> = {
 	connections: "Connections",
 	appearance: "Appearance",
 	notifications: "Notifications",
+	models: "Models & hosts",
 	data: "Your data",
 	privacy: "Privacy",
 };

@@ -30,6 +30,7 @@ describe("settings registry", () => {
 			"general",
 			"appearance",
 			"notifications",
+			"models",
 			"connections",
 			"data",
 			"privacy",

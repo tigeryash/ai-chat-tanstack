@@ -13,6 +13,11 @@ import {
 } from "@/lib/chat/model-selection";
 import { useChatMessagesValue } from "@/lib/chat/use-chat-messages-value";
 import { useHostFailures } from "@/lib/hosts/host-failures";
+import {
+	type HostFilters,
+	hasPriceCap,
+	useHostFilters,
+} from "@/lib/hosts/host-filters";
 import { type HostOption, hostOptionsFor } from "@/lib/hosts/host-options";
 import { useHostPrefs } from "@/lib/hosts/host-prefs";
 import {
@@ -91,6 +96,10 @@ function resolveWanted({
 	return catalogFailed ? { choice: wanted, option: undefined } : null;
 }
 
+function needsUpstreams(filters: HostFilters): boolean {
+	return filters.blockedHosts.length > 0 || hasPriceCap(filters.priceCap);
+}
+
 export function useChatModel(chat: Chat<UIMessage>) {
 	// Read from the messages without re-rendering per streamed chunk: both change only when the
 	// person sends or a reply records its model.
@@ -101,6 +110,7 @@ export function useChatModel(chat: Chat<UIMessage>) {
 	const connected = useConnectedProviders();
 	const failures = useHostFailures();
 	const [prefs] = useHostPrefs();
+	const [filters] = useHostFilters();
 	const models = catalog.data?.models;
 
 	const wanted = stored ?? defaultChoice(models, connected);
@@ -109,8 +119,9 @@ export function useChatModel(chat: Chat<UIMessage>) {
 	// Not in the list: removed (or hidden). Ask for it by id once the list has loaded.
 	const lookup = useCatalogModel(models && !listed ? gatewayId : undefined);
 	const chosenModel = listed ?? lookup.data ?? undefined;
-	// Only what the picker already loaded: opening a chat fetches nothing from the routers.
-	const hostData = useHostData(chosenModel, false);
+	// Only what the picker already loaded: opening a chat fetches nothing from the routers, unless a
+	// host preference needs their upstreams (the blocklist's slugs, the Gateway's price filter).
+	const hostData = useHostData(chosenModel, needsUpstreams(filters));
 
 	const hosts: HostOption[] =
 		chosenModel && connected
@@ -120,6 +131,7 @@ export function useChatModel(chat: Chat<UIMessage>) {
 					data: hostData,
 					failures,
 					prefs,
+					filters,
 					needs,
 				})
 			: [];
@@ -144,7 +156,10 @@ export function useChatModel(chat: Chat<UIMessage>) {
 			connected?.has(choice.provider) === true);
 	const selection: ModelSelection | undefined = useSameValue(
 		resolved?.option && chosenModel
-			? toSelection(choice, selectionExtras(resolved, chosenModel, prefs))
+			? toSelection(
+					choice,
+					selectionExtras(resolved, chosenModel, prefs, filters),
+				)
 			: toSelection(choice),
 	);
 

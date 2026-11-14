@@ -1,4 +1,5 @@
-import { type LanguageModel, streamText, type UIMessage } from "ai";
+import type { LanguageModel, UIMessage } from "ai";
+import { streamText } from "./ai-engine";
 import type { ResolveModel } from "./browser-transport";
 import { TITLE_MAX_LENGTH, titleFromMessages } from "./chat-title";
 import { type ModelChoice, toSelection } from "./model-selection";
@@ -6,7 +7,9 @@ import { type ModelChoice, toSelection } from "./model-selection";
 // Writes a new chat's title with the title model (roadmap R2 S2, setting in `title-model.ts`). The
 // first message goes, once, to the chosen model, in this browser with the user's own key (resolved
 // like any chat request, `resolveAppModel`). Anything going wrong falls back to the first line
-// quietly. Neither the message nor the title is logged or tracked (hard rule 4).
+// quietly. Neither the message nor the title is logged or tracked (hard rule 4). It runs a request, so it
+// imports `ai` through ai-engine.ts, and chat-sessions.ts loads it with `import()` only when a title
+// model is on.
 
 /** How long a title may take before the first line is used instead. */
 export const TITLE_TIMEOUT_MS = 15_000;

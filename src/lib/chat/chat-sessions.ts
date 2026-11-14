@@ -10,11 +10,14 @@ import type { ChatBranches } from "@/lib/storage/branches";
 import type { ChatStore, NewChatFields } from "@/lib/storage/chat-store";
 import { isVisibleTo, type Viewer } from "@/lib/storage/ownership";
 import { requestPersistentStorage } from "@/lib/storage/persistence";
-import { BrowserChatTransport, type ResolveModel } from "./browser-transport";
+import {
+	BrowserChatTransport,
+	prefetchStreamReply,
+	type ResolveModel,
+} from "./browser-transport";
 import { chatBranchesOf, loadChatBranches } from "./chat-branches";
 import { chatSettingsOf, loadChatSettings } from "./chat-settings";
 import { titleFromMessages } from "./chat-title";
-import { writeChatTitle } from "./chat-title-writer";
 import { chatVotesOf, loadChatVotes } from "./chat-votes";
 import { resolveAppModel } from "./e2e-model";
 import { addOpenChat, getOpenChat, peekOpenChat } from "./open-chats";
@@ -25,6 +28,7 @@ import { titleModelChoice } from "./title-model";
 // the transport), so pages that don't chat import it with `import()`.
 
 const defaultTransport = new BrowserChatTransport(resolveAppModel);
+prefetchStreamReply();
 
 export interface OpenChatOptions {
 	messages?: UIMessage[];
@@ -49,9 +53,16 @@ function startTitle(chat: Chat<UIMessage>, resolveModel: ResolveModel) {
 	if (!unsavedChats.has(chat.id) || pendingTitles.has(chat.id)) return;
 	const choice = titleModelChoice();
 	if (!choice) return;
+	const messages = chat.messages;
+	// Loaded here, not imported: it holds the send code, which the chat pages don't preload. A failed
+	// download falls back to the first line like any other failure.
 	pendingTitles.set(
 		chat.id,
-		writeChatTitle({ messages: chat.messages, choice, resolveModel }),
+		import("./chat-title-writer")
+			.then(({ writeChatTitle }) =>
+				writeChatTitle({ messages, choice, resolveModel }),
+			)
+			.catch(() => titleFromMessages(messages)),
 	);
 }
 

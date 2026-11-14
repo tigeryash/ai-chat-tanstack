@@ -2,10 +2,11 @@ import type { UIMessage } from "ai";
 import type {
 	AutoSort,
 	ModelChoice,
-	ModelSelection,
+	SelectionExtras,
 } from "@/lib/chat/model-selection";
 import type { CatalogModel } from "@/lib/models/catalog";
 import { routeToConnect } from "@/lib/models/runnability";
+import { type HostFilters, hasPriceCap, isBlocked } from "./host-filters";
 import { autoHost, type ChatNeeds, type HostOption } from "./host-options";
 import type { HostPrefs } from "./host-prefs";
 
@@ -77,12 +78,84 @@ export function resolveHost(
 	};
 }
 
-/** The routing extras a request carries for its host: Auto's sort, the privacy filter, prices. */
+/** OpenRouter's slugs for providers whose blocklist key differs (`providerKeyOf`'s aliases). */
+const OPENROUTER_SLUGS: Record<string, string> = {
+	bedrock: "amazon-bedrock",
+	vertex: "google-vertex",
+	aistudio: "google-ai-studio",
+};
+
+/**
+ * OpenRouter's `provider.ignore` for the blocklist: the slugs of the blocked upstreams in its live
+ * data ("deepinfra" for "deepinfra/fp8"), or, before that has loaded, the blocked hosts' own slugs.
+ */
+function openRouterIgnore(
+	option: ResolvedHost["option"],
+	filters: HostFilters,
+): string[] | undefined {
+	if (filters.blockedHosts.length === 0) return undefined;
+	const slugs = option?.upstreams
+		? option.upstreams
+				.filter((upstream) => isBlocked(filters, upstream.providerKey))
+				.map((upstream) => upstream.slug.split("/")[0] ?? upstream.slug)
+		: filters.blockedHosts.map(
+				(host) => OPENROUTER_SLUGS[host.key] ?? host.key,
+			);
+	const unique = [...new Set(slugs)];
+	return unique.length > 0 ? unique : undefined;
+}
+
+/**
+ * AI Gateway has no exclude list and no price cap, so we filter its upstreams ourselves into `only`:
+ * the ones not blocked and under the cap. Only with its live data, and only when it removes some but
+ * not all (with none left, the router is skipped by Auto and a pin still runs).
+ */
+function gatewayOnly(option: ResolvedHost["option"]): string[] | undefined {
+	const upstreams = option?.upstreams;
+	if (!upstreams) return undefined;
+	const kept = upstreams.filter(
+		(upstream) =>
+			upstream.skipped !== "blocked" && upstream.skipped !== "price",
+	);
+	return kept.length > 0 && kept.length < upstreams.length
+		? kept.map((upstream) => upstream.slug)
+		: undefined;
+}
+
+/** The host preferences a router enforces when it picks the upstream (none is pinned). */
+function routerFilters(
+	resolved: ResolvedHost,
+	filters: HostFilters,
+): SelectionExtras {
+	const { choice, option } = resolved;
+	if (choice.upstream) return {};
+	const minPrecision =
+		filters.minPrecision === "any" ? undefined : filters.minPrecision;
+	if (choice.provider === "openrouter") {
+		return {
+			ignore: openRouterIgnore(option, filters),
+			minPrecision,
+			maxPrice: hasPriceCap(filters.priceCap)
+				? { ...filters.priceCap }
+				: undefined,
+		};
+	}
+	if (choice.provider === "vercel") {
+		return { only: gatewayOnly(option), minPrecision };
+	}
+	return {};
+}
+
+/**
+ * The routing extras a request carries for its host: Auto's sort, the privacy filter, prices, and the
+ * host preferences (roadmap R2 S3). A pinned upstream gets none of the preferences: pinning runs it.
+ */
 export function selectionExtras(
 	resolved: ResolvedHost,
 	model: Pick<CatalogModel, "pricing"> | undefined,
 	prefs: HostPrefs,
-): Pick<ModelSelection, "sort" | "noTraining" | "pricing"> {
+	filters: HostFilters,
+): SelectionExtras {
 	const { choice, option } = resolved;
 	const pinned = choice.upstream
 		? option?.upstreams?.find((upstream) => upstream.slug === choice.upstream)
@@ -97,5 +170,6 @@ export function selectionExtras(
 			pricing && (pricing.input !== undefined || pricing.output !== undefined)
 				? { input: pricing.input, output: pricing.output }
 				: undefined,
+		...routerFilters(resolved, filters),
 	};
 }

@@ -10,6 +10,7 @@ import {
 	TEST_GATEWAY_ENDPOINTS,
 	TEST_OPENROUTER_ENDPOINTS,
 } from "./endpoints.fixtures";
+import { DEFAULT_HOST_FILTERS } from "./host-filters";
 import {
 	autoHost,
 	type ChatNeeds,
@@ -54,6 +55,7 @@ function options(
 		data: withData ? data : { loading: true },
 		failures,
 		prefs,
+		filters: DEFAULT_HOST_FILTERS,
 		needs,
 		now: NOW,
 	});
@@ -221,11 +223,16 @@ describe("resolveHost", () => {
 			"cheapest",
 		);
 		expect(
-			selectionExtras(pinned, model as NonNullable<typeof model>, {
-				...DEFAULT_HOST_PREFS,
-				autoSort: "cheapest",
-				noTrainingOnly: true,
-			}),
+			selectionExtras(
+				pinned,
+				model as NonNullable<typeof model>,
+				{
+					...DEFAULT_HOST_PREFS,
+					autoSort: "cheapest",
+					noTrainingOnly: true,
+				},
+				DEFAULT_HOST_FILTERS,
+			),
 		).toEqual({
 			sort: undefined,
 			noTraining: true,

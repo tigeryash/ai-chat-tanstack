@@ -1,5 +1,6 @@
 import type { ModelChoice } from "@/lib/chat/model-selection";
 import { useHostFailures } from "@/lib/hosts/host-failures";
+import { useHostFilters } from "@/lib/hosts/host-filters";
 import {
 	autoHost,
 	type ChatNeeds,
@@ -39,12 +40,14 @@ export function ModelPreview({
 	const data = useHostData(model, true);
 	const failures = useHostFailures();
 	const [prefs, setPrefs] = useHostPrefs();
+	const [filters] = useHostFilters();
 	const hosts = hostOptionsFor({
 		model,
 		connected: connected ?? new Set(),
 		data,
 		failures,
 		prefs,
+		filters,
 		needs,
 	});
 	const current: CurrentHost | undefined =
