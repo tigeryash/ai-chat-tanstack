@@ -1,6 +1,9 @@
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import type { SettingId } from "./registry";
-import { DEFAULT_SETTINGS_SECTION, type SettingsSectionId } from "./sections";
+import {
+	DEFAULT_SETTINGS_SECTION,
+	type SettingsSectionId,
+} from "./section-ids";
 
 // Settings is a dialog driven by `?settings=<section>` (docs/settings-research.md, "Container"). Opening
 // it pushes one history entry and switching sections replaces it, so Back closes the dialog instead of

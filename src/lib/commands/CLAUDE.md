@@ -13,7 +13,7 @@ Notes for working in this folder. The root [CLAUDE.md](/CLAUDE.md) (commands, ha
 - **Chats only through the viewer:** the palette lists `sidebarEntries(chats, workspaces, viewer)`, as the
   sidebar does (src/lib/storage/CLAUDE.md).
 - **Bundle budget:** only `palette-state.ts` and `shortcut.ts` (and the host and button in
-  `src/components/command-palette/`) are in the dashboard shell; /new sits right at its budget. Everything
+  `src/components/command-palette/`) are in the dashboard shell. Everything
   else loads with the palette through `import()`. Keep those two files small.
 - Toggles (`checked` set) run without closing the palette. Other commands run once it has closed and focus
   is back where it was, so what they open (Settings) returns focus there too.

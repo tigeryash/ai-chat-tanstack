@@ -1,5 +1,5 @@
 import type { SettingId } from "@/lib/settings/registry";
-import type { SettingsSectionId } from "@/lib/settings/sections";
+import type { SettingsSectionId } from "@/lib/settings/section-ids";
 import type { LayoutPane } from "@/lib/workspaces/saved-layouts";
 
 // The command registry's shape (roadmap R2 S5, docs/settings-research.md section 3). The palette lists
