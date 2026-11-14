@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Command } from "./command";
-import { CHATS_SHOWN, parseQuery, searchCommands } from "./search";
+import { CHATS_SHOWN, parseQuery, searchCommands, searchPage } from "./search";
 
 const command = (
 	id: string,
@@ -96,5 +96,29 @@ describe("searchCommands", () => {
 			searchCommands(many, query, { context, recent: [] })[0]?.commands.length;
 		expect(count("")).toBe(CHATS_SHOWN);
 		expect(count("chat")).toBe(CHATS_SHOWN + 3);
+	});
+});
+
+describe("searchPage", () => {
+	const models = [
+		command("gpt-x", "actions"),
+		command("claude-y", "actions", { keywords: ["anthropic"] }),
+		command("/slash-model", "actions"),
+	];
+
+	it("lists the page in its own order under its title", () => {
+		expect(searchPage(models, "", "Switch model")).toEqual([
+			{ id: "page", label: "Switch model", commands: models },
+		]);
+	});
+
+	it("matches titles and keywords, with no prefixes", () => {
+		const ids = (query: string) =>
+			searchPage(models, query, "Switch model").flatMap((group) =>
+				group.commands.map((entry) => entry.id),
+			);
+		expect(ids("anthropic")).toEqual(["claude-y"]);
+		expect(ids("/slash")).toEqual(["/slash-model"]);
+		expect(ids("nothing")).toEqual([]);
 	});
 });

@@ -28,3 +28,7 @@ Notes for working in this folder. The root [CLAUDE.md](/CLAUDE.md) (commands, ha
   chat's cost, built on `readReplyStats` / `chatUsage`) sits under its header, never on replies. Sync scroll
   (`sync-scroll.ts`) matches panes by scroll proportion, for this visit only. "Copy settings to all panes"
   (`copy-settings.ts`) copies params and system prompt, never the model. Votes are `lib/chat/chat-votes.ts`.
+- **Focused pane** (R2 S7, `focused-pane.ts`): which pane the palette's pane actions and S6's shortcuts act on,
+  and every pane's controls (`PaneControls`), registered each render by `ChatScreen` (`usePaneControls`; a single
+  chat is "Pane 1"). A workspace pane's section sets focus on pointer down or focus; on a phone the shown pane is
+  the focused one. Imports only types, so the palette can read it without the chat engine.

@@ -17,6 +17,7 @@ import {
 	LOCAL_PROVIDER,
 	type ModelSelection,
 } from "@/lib/chat/model-selection";
+import { chatRequestOptions } from "@/lib/chat/request-options";
 import { logError } from "@/lib/log";
 import type { RequestSettings } from "@/lib/params/request";
 import {
@@ -70,7 +71,7 @@ export function ChatView({
 		throttle: STREAM_THROTTLE_MS,
 	});
 	const busy = status === "submitted" || status === "streaming";
-	const options = selection && { body: { ...selection, settings } };
+	const options = chatRequestOptions(selection, settings);
 	// Why attached files were refused (roadmap 1.6). Shown above the composer, not in it (hard rule 8).
 	const [attachmentErrors, setAttachmentErrors] = useState<string[]>([]);
 

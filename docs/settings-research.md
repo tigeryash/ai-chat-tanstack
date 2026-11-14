@@ -409,7 +409,7 @@ Yash picked the layout from the reference apps.)
 - [ ] **S6 Keyboard section and shortcut sheet.** Shortcut list from the command registry, ⌘/ and ? sheet, the
   shortcuts in the table above. *Done when:* e2e runs each shortcut once on macOS and Linux keymaps and none fires
   while typing in a field (except Cmd+K and ⇧Esc).
-- [ ] **S7 Palette v2.** Pane actions: add or remove pane, toggle sync, switch model or host, apply prompt, copy
+- [x] **S7 Palette v2.** Pane actions: add or remove pane, toggle sync, switch model or host, apply prompt, copy
   last reply, regenerate, stop all, theme switch. *Done when:* e2e does each on a two-pane mock workspace, and the
   composer screenshot baselines are unchanged.
 - [ ] **S8 Account section.** The signed-in profile, linked methods, both sign-out paths; signed out shows the

@@ -11,9 +11,10 @@ export const PREFIXES: Record<string, CommandGroup> = {
 	"/": "settings",
 };
 
-export type ResultGroupId = CommandGroup | "recent";
+/** "page": the one group of a nested page's results. */
+export type ResultGroupId = CommandGroup | "recent" | "page";
 
-export const GROUP_LABELS: Record<ResultGroupId, string> = {
+export const GROUP_LABELS: Record<CommandGroup | "recent", string> = {
 	recent: "Recent",
 	actions: "Actions",
 	chats: "Chats",
@@ -141,4 +142,28 @@ function openingList(
 				]
 			: [];
 	return [...recentGroup, ...grouped(capped)];
+}
+
+/**
+ * A nested page's results (R2 S7): no prefixes and no recency, the page's own order on an empty query,
+ * best match first otherwise, in one group labelled `label`.
+ */
+export function searchPage(
+	commands: readonly Command[],
+	query: string,
+	label: string,
+): ResultGroup[] {
+	const text = normalize(query);
+	let shown: Command[] = [...commands];
+	if (text) {
+		const words = text.split(" ");
+		shown = commands
+			.flatMap((command, index) => {
+				const rank = score(command, text, words);
+				return rank === null ? [] : [{ command, rank, index }];
+			})
+			.sort((a, b) => a.rank - b.rank || a.index - b.index)
+			.map(({ command }) => command);
+	}
+	return shown.length > 0 ? [{ id: "page", label, commands: shown }] : [];
 }
