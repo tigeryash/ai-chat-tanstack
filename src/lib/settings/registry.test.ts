@@ -29,6 +29,7 @@ describe("settings registry", () => {
 		expect(visibleSettingsSections().map((s) => s.id)).toEqual([
 			"general",
 			"appearance",
+			"chat",
 			"notifications",
 			"models",
 			"connections",
