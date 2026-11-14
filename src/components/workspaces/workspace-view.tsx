@@ -10,6 +10,7 @@ import {
 	useState,
 } from "react";
 import { ChatScreen } from "@/components/chat/chat-screen";
+import type { WorkspacePaneControls } from "@/components/chat/use-pane-controls";
 import { InHeader } from "@/components/header-slot";
 import {
 	ResizableHandle,
@@ -25,7 +26,9 @@ import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { chatStore } from "@/lib/storage/app-store";
 import type { WorkspacePane } from "@/lib/storage/workspace";
 import { copySettingsToPanes } from "@/lib/workspaces/copy-settings";
+import { focusPane } from "@/lib/workspaces/focused-pane";
 import {
+	canAddPane,
 	layoutOf,
 	movePane,
 	removePane,
@@ -166,7 +169,15 @@ export function WorkspaceView({
 		save(next);
 		setShownId(next[next.length - 1]?.chatId);
 	};
+	const runAddPane = () => {
+		addPane().catch((error) => logError("Couldn't add a pane:", error));
+	};
 	const shown = panes.find((pane) => pane.chatId === shownId) ?? panes[0];
+	// On a phone the shown pane is the focused one.
+	const shownChatId = isMobile ? shown?.chatId : undefined;
+	useEffect(() => {
+		if (shownChatId) focusPane(shownChatId);
+	}, [shownChatId]);
 
 	// A pane's chat is opened by `PaneChat`, never here: see quality audit Q2, W1.
 	const renderPane = (pane: WorkspacePane, index: number) => (
@@ -180,25 +191,41 @@ export function WorkspaceView({
 		chat: Chat<UIMessage>,
 	) => {
 		const label = `Pane ${index + 1}`;
+		// The pane's buttons and the palette's pane actions (R2 S7) call the same functions.
+		const controls: WorkspacePaneControls = {
+			index,
+			label,
+			synced: pane.synced,
+			setSynced: (synced) => save(setPaneSynced(panes, pane.chatId, synced)),
+			addPane: canAddPane(panes, workspace.hiddenPanes.length)
+				? runAddPane
+				: undefined,
+			removePane:
+				panes.length > 1
+					? () => save(removePane(panes, pane.chatId))
+					: undefined,
+		};
 		return (
+			// The last pane clicked or focused is the one palette actions and shortcuts act on (R2 S7).
 			<section
 				aria-label={label}
 				data-pane-id={pane.chatId}
 				className="h-full min-h-0 min-w-0"
+				onPointerDownCapture={() => focusPane(pane.chatId)}
+				onFocusCapture={() => focusPane(pane.chatId)}
 			>
 				<ChatScreen
 					chat={chat}
 					sync={{ hub, synced: pane.synced }}
 					paneCount={panes.length}
+					pane={controls}
 					subheader={<PaneStatsLine chat={chat} label={label} />}
 					actions={
 						<PaneActions
 							chat={chat}
 							label={label}
 							synced={pane.synced}
-							onSyncedChange={(synced) =>
-								save(setPaneSynced(panes, pane.chatId, synced))
-							}
+							onSyncedChange={(synced) => controls.setSynced?.(synced)}
 							onMoveLeft={
 								index > 0
 									? () => save(movePane(panes, pane.chatId, -1))
@@ -219,11 +246,7 @@ export function WorkspaceView({
 											)
 									: undefined
 							}
-							onClose={
-								panes.length > 1
-									? () => save(removePane(panes, pane.chatId))
-									: undefined
-							}
+							onClose={controls.removePane}
 						/>
 					}
 				/>
@@ -241,9 +264,7 @@ export function WorkspaceView({
 					warned={warned}
 					diverged={diverged}
 					saveFailed={saveFailed}
-					onAddPane={() => {
-						addPane().catch((error) => logError("Couldn't add a pane:", error));
-					}}
+					onAddPane={runAddPane}
 					hiddenPanes={workspace.hiddenPanes.length}
 					currentLayout={() => layoutOfPanes(panes)}
 					missingModels={missingModels}

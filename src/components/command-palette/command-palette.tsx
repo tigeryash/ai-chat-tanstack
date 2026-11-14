@@ -1,5 +1,5 @@
 import { Dialog } from "@base-ui/react/dialog";
-import { SearchIcon } from "lucide-react";
+import { ChevronLeftIcon, SearchIcon } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { track } from "@/lib/analytics/track";
 import {
@@ -9,7 +9,7 @@ import {
 } from "@/lib/commands/command";
 import { closeCommandPalette } from "@/lib/commands/palette-state";
 import { rememberCommand, useRecentCommands } from "@/lib/commands/recent";
-import { searchCommands } from "@/lib/commands/search";
+import { searchCommands, searchPage } from "@/lib/commands/search";
 import { logError } from "@/lib/log";
 import { PaletteResults } from "./palette-results";
 import { restoreSelection, returnElement, saveSelection } from "./return-focus";
@@ -23,9 +23,14 @@ import { usePaletteCommands } from "./use-palette-commands";
 
 type Pending = { command: Command; env: CommandEnv } | null;
 
-function runCommand({ command, env }: NonNullable<Pending>) {
+/** Remembers a fixed command as recent and sends `command_run {id}` (never your data, hard rule 4). */
+function recordCommand(command: Command) {
 	rememberCommand(command);
 	track("command_run", { id: analyticsIdOf(command) });
+}
+
+function runCommand({ command, env }: NonNullable<Pending>) {
+	recordCommand(command);
 	try {
 		void Promise.resolve(command.run(env)).catch((error: unknown) =>
 			logError("A palette command failed:", error),
@@ -40,6 +45,8 @@ export function CommandPalette({ open }: { open: boolean }) {
 	// returns focus there too.
 	const pending = useRef<Pending>(null);
 	const selection = useRef<ReturnType<typeof saveSelection>>(null);
+	// Set while a nested page shows: Esc goes back a page instead of closing.
+	const back = useRef<(() => void) | null>(null);
 
 	useEffect(() => {
 		if (!open) return;
@@ -50,8 +57,14 @@ export function CommandPalette({ open }: { open: boolean }) {
 	return (
 		<Dialog.Root
 			open={open}
-			onOpenChange={(next) => {
-				if (!next) closeCommandPalette();
+			onOpenChange={(next, details) => {
+				if (next) return;
+				if (details.reason === "escape-key" && back.current) {
+					details.cancel();
+					back.current();
+					return;
+				}
+				closeCommandPalette();
 			}}
 			onOpenChangeComplete={(isOpen) => {
 				if (isOpen) return;
@@ -75,6 +88,7 @@ export function CommandPalette({ open }: { open: boolean }) {
 				>
 					<Dialog.Title className="sr-only">Command palette</Dialog.Title>
 					<PaletteBody
+						back={back}
 						onPick={(command, env) => {
 							if (command.checked !== undefined) {
 								runCommand({ command, env });
@@ -92,19 +106,26 @@ export function CommandPalette({ open }: { open: boolean }) {
 
 /** The search box and its results. Mounted only while open, so every open starts empty. */
 function PaletteBody({
+	back,
 	onPick,
 }: {
+	back: React.RefObject<(() => void) | null>;
 	onPick: (command: Command, env: CommandEnv) => void;
 }) {
 	const [query, setQuery] = useState("");
 	const [activeId, setActiveId] = useState<string | null>(null);
-	const { commands, context, chatsFailed } = usePaletteCommands();
+	// Nested pages (R2 S7), by their opener's id. A page whose opener is gone (its pane closed) ends.
+	const [pageId, setPageId] = useState<string | null>(null);
+	const { commands, context, chatsFailed } = usePaletteCommands(pageId);
 	const recent = useRecentCommands();
 	const env = useCommandEnv();
 	const listboxId = useId();
 	const inputRef = useRef<HTMLInputElement>(null);
 
-	const groups = searchCommands(commands, query, { context, recent });
+	const page = commands.find((command) => command.id === pageId)?.opens;
+	const groups = page
+		? searchPage(page.commands(), query, page.title)
+		: searchCommands(commands, query, { context, recent });
 	const flat = groups.flatMap((group) => group.commands);
 	const activeIndex = Math.max(
 		0,
@@ -112,6 +133,28 @@ function PaletteBody({
 	);
 	const active = flat[activeIndex];
 	const optionId = (index: number) => `${listboxId}-option-${index}`;
+
+	const goTo = (next: string | null) => {
+		setPageId(next);
+		setQuery("");
+		setActiveId(null);
+	};
+	const goBack = page ? () => goTo(null) : null;
+	useEffect(() => {
+		back.current = goBack;
+		return () => {
+			back.current = null;
+		};
+	});
+
+	const pick = (command: Command) => {
+		if (command.opens) {
+			recordCommand(command);
+			goTo(command.id);
+			return;
+		}
+		onPick(command, env);
+	};
 
 	const move = (step: number) => {
 		if (flat.length === 0) return;
@@ -126,6 +169,21 @@ function PaletteBody({
 					aria-hidden
 					className="size-4 shrink-0 text-muted-foreground"
 				/>
+				{page && goBack && (
+					<button
+						type="button"
+						tabIndex={-1}
+						aria-label={`Back from ${page.title}`}
+						title="Back (Backspace)"
+						// Keeps focus in the search box.
+						onMouseDown={(event) => event.preventDefault()}
+						onClick={goBack}
+						className="flex shrink-0 items-center gap-0.5 rounded-md bg-muted px-1.5 py-0.5 text-muted-foreground text-xs hover:text-foreground"
+					>
+						<ChevronLeftIcon aria-hidden className="size-3" />
+						{page.title}
+					</button>
+				)}
 				<input
 					ref={inputRef}
 					role="combobox"
@@ -133,8 +191,14 @@ function PaletteBody({
 					aria-controls={listboxId}
 					aria-autocomplete="list"
 					aria-activedescendant={active ? optionId(activeIndex) : undefined}
-					aria-label="Search commands, chats and settings"
-					placeholder="Search chats, settings and actions…"
+					aria-label={
+						page
+							? `Search: ${page.title}`
+							: "Search commands, chats and settings"
+					}
+					placeholder={
+						page?.placeholder ?? "Search chats, settings and actions…"
+					}
 					autoComplete="off"
 					spellCheck={false}
 					value={query}
@@ -152,13 +216,16 @@ function PaletteBody({
 							move(event.key === "ArrowDown" ? 1 : -1);
 						} else if (event.key === "Enter" && active) {
 							event.preventDefault();
-							onPick(active, env);
+							pick(active);
+						} else if (event.key === "Backspace" && query === "" && goBack) {
+							event.preventDefault();
+							goBack();
 						}
 					}}
 					className="h-12 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
 				/>
 			</div>
-			{chatsFailed && (
+			{chatsFailed && !page && (
 				<p role="alert" className="px-4 pt-2 text-destructive text-sm">
 					Couldn't load your chats from this browser.
 				</p>
@@ -167,24 +234,34 @@ function PaletteBody({
 				listboxId={listboxId}
 				groups={groups}
 				query={query}
+				empty={page?.empty}
 				activeIndex={activeIndex}
 				optionId={optionId}
 				onHover={(command) => setActiveId(command.id)}
 				onPick={(command) => {
 					inputRef.current?.focus();
-					onPick(command, env);
+					pick(command);
 				}}
 			/>
 			<p className="flex gap-3 border-t px-3 py-2 text-muted-foreground text-xs">
-				<span>
-					<kbd className="font-mono">&gt;</kbd> actions
-				</span>
-				<span>
-					<kbd className="font-mono">#</kbd> chats
-				</span>
-				<span>
-					<kbd className="font-mono">/</kbd> settings
-				</span>
+				{page ? (
+					<span>
+						<kbd className="font-mono">Backspace</kbd> or{" "}
+						<kbd className="font-mono">Esc</kbd> back
+					</span>
+				) : (
+					<>
+						<span>
+							<kbd className="font-mono">&gt;</kbd> actions
+						</span>
+						<span>
+							<kbd className="font-mono">#</kbd> chats
+						</span>
+						<span>
+							<kbd className="font-mono">/</kbd> settings
+						</span>
+					</>
+				)}
 			</p>
 		</>
 	);

@@ -63,19 +63,51 @@ const DENSITY_NAMES: Record<Density, string> = {
 	comfortable: "Comfortable",
 };
 
-/** Quick toggles: theme, density and analytics, each with whether it's on now. */
-export function toggleCommands(state: ToggleState): Command[] {
-	const themes = THEMES.map(
+/** One toggle per theme, `searchOnly` in the main list and listed in full on "Switch theme…". */
+function themeCommands(current: Theme, searchOnly: boolean): Command[] {
+	return THEMES.map(
 		(theme): Command => ({
 			id: `theme-${theme}`,
 			title: `Theme: ${THEME_NAMES[theme]}`,
 			keywords: ["appearance", "color scheme", "mode", `${theme} mode`],
 			group: "settings",
-			checked: state.theme === theme,
-			searchOnly: true,
+			checked: current === theme,
+			searchOnly,
 			run: () => updateAppearance({ theme }),
 		}),
 	);
+}
+
+/**
+ * "Switch theme…" (roadmap R2 S7): a nested page with the themes. The presets join it when S9 adds
+ * them.
+ */
+export function switchThemeCommand(current: Theme): Command {
+	return {
+		id: "switch-theme",
+		title: "Switch theme…",
+		detail: THEME_NAMES[current],
+		keywords: [
+			"appearance",
+			"color scheme",
+			"dark mode",
+			"light mode",
+			"preset",
+		],
+		group: "actions",
+		opens: {
+			title: "Switch theme",
+			placeholder: "Search themes…",
+			empty: "No themes match.",
+			commands: () => themeCommands(current, false),
+		},
+		run: () => {},
+	};
+}
+
+/** Quick toggles: theme, density and analytics, each with whether it's on now. */
+export function toggleCommands(state: ToggleState): Command[] {
+	const themes = themeCommands(state.theme, true);
 	const densities = DENSITIES.map(
 		(density): Command => ({
 			id: `density-${density}`,

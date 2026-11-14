@@ -137,9 +137,14 @@ function SystemPrompt({
 export function SettingsPanel({
 	params,
 	modelName,
+	open,
+	onOpenChange,
 }: {
 	params: ChatParams;
 	modelName: string | undefined;
+	/** Set to open it from elsewhere (the palette's "Open model settings", R2 S7). */
+	open?: boolean;
+	onOpenChange?: (open: boolean) => void;
 }) {
 	const { settings, support } = params;
 	const setParam = <K extends keyof ParamValues>(
@@ -153,7 +158,7 @@ export function SettingsPanel({
 	const empty = support.params.length === 0;
 
 	return (
-		<Sheet>
+		<Sheet open={open} onOpenChange={onOpenChange}>
 			<SheetTrigger
 				render={
 					<Button variant="ghost" size="icon-sm" aria-label="Model settings" />

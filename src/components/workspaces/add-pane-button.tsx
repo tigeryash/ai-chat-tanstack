@@ -7,13 +7,17 @@ import { logError } from "@/lib/log";
 import { createWorkspaceFrom } from "@/lib/workspaces/workspace-sessions";
 
 /**
- * "Add pane" on a single chat (roadmap 3.1): makes a workspace with this chat and a new one beside it.
- * The workspace and the new chat are the viewer's, like any chat made now (quality audit Q2, W4).
+ * "Add pane" on a single chat (roadmap 3.1): makes a workspace with this chat and a new one beside it,
+ * and goes there. The workspace and the new chat are the viewer's, like any chat made now (quality
+ * audit Q2, W4). The button and the palette's "Add pane" (R2 S7) both call `add`.
  */
-export function AddPaneButton({ chatId }: { chatId: string }) {
+export function useAddPaneToChat(chatId: string): {
+	add: () => Promise<void>;
+	failed: boolean;
+} {
 	const navigate = useNavigate();
 	const [failed, setFailed] = useState(false);
-	const addPane = async () => {
+	const add = async () => {
 		setFailed(false);
 		try {
 			const workspaceId = await createWorkspaceFrom(
@@ -26,6 +30,11 @@ export function AddPaneButton({ chatId }: { chatId: string }) {
 			setFailed(true);
 		}
 	};
+	return { add, failed };
+}
+
+export function AddPaneButton({ chatId }: { chatId: string }) {
+	const { add, failed } = useAddPaneToChat(chatId);
 	return (
 		<>
 			{failed && (
@@ -38,7 +47,7 @@ export function AddPaneButton({ chatId }: { chatId: string }) {
 				size="icon-sm"
 				aria-label="Add pane"
 				title="Add pane"
-				onClick={addPane}
+				onClick={add}
 			>
 				<Columns2Icon />
 			</Button>

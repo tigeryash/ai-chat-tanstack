@@ -1,5 +1,6 @@
 import type { SettingId } from "@/lib/settings/registry";
 import type { SettingsSectionId } from "@/lib/settings/section-ids";
+import type { PaneControls } from "@/lib/workspaces/focused-pane";
 import type { LayoutPane } from "@/lib/workspaces/saved-layouts";
 
 // The command registry's shape (roadmap R2 S5, docs/settings-research.md section 3). The palette lists
@@ -17,6 +18,22 @@ export type Shortcut = readonly ShortcutKey[];
 /** What a command's `when` can look at. */
 export interface CommandContext {
 	pathname: string;
+	/** The pane pane actions act on (R2 S7, `lib/workspaces/focused-pane.ts`); undefined with no chat on screen. */
+	pane?: PaneControls;
+}
+
+/**
+ * A nested page (docs/settings-research.md "Behavior"): picking its command lists these instead, with
+ * its own search. Backspace on an empty query or Esc goes back.
+ */
+export interface CommandPage {
+	/** Shown before the search box, and as the results' label. */
+	title: string;
+	placeholder: string;
+	/** Built when the page shows, so a long list (the models) costs nothing until then. */
+	commands: () => Command[];
+	/** Said when the page has nothing to list. */
+	empty: string;
 }
 
 /** What a command can do. The palette implements it with the router and the app's stores. */
@@ -52,6 +69,8 @@ export interface Command {
 	checked?: boolean;
 	/** Listed only for a search (or its group's prefix), not in the opening list. */
 	searchOnly?: boolean;
+	/** Opens a nested page instead of running; `run` is then not called. */
+	opens?: CommandPage;
 	run(env: CommandEnv): void | Promise<void>;
 }
 

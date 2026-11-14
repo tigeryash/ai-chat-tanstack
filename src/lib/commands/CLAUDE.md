@@ -17,3 +17,11 @@ Notes for working in this folder. The root [CLAUDE.md](/CLAUDE.md) (commands, ha
   else loads with the palette through `import()`. Keep those two files small.
 - Toggles (`checked` set) run without closing the palette. Other commands run once it has closed and focus
   is back where it was, so what they open (Settings) returns focus there too.
+- **Pane actions** (R2 S7, `pane-commands.ts`): commands on the focused pane, which
+  `src/lib/workspaces/focused-pane.ts` tracks (the last pane clicked or focused, else pane 1). Each chat screen
+  registers its controls there (`src/components/chat/use-pane-controls.ts`), built from the functions its own
+  buttons call; a command's `when` reads `context.pane` and its `run` reads `focusedPane()` when it runs, so a
+  shortcut (S6) can run the same command. Ids for shortcuts: `PANE_COMMAND_IDS`.
+- **Nested pages:** a command with `opens` pushes a page (switch model, switch host, apply prompt, switch theme)
+  instead of running. Its rows are built only while it shows (`searchPage`), Backspace on an empty query or Esc
+  goes back. Rows from the catalog or your prompts set a `kind` (`pane.model`, `pane.host`, `prompt.apply`).

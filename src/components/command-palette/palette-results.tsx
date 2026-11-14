@@ -28,6 +28,8 @@ interface PaletteResultsProps {
 	listboxId: string;
 	groups: ResultGroup[];
 	query: string;
+	/** What an empty nested page says; defaults to "Nothing here yet." */
+	empty?: string;
 	activeIndex: number;
 	optionId: (index: number) => string;
 	onHover: (command: Command) => void;
@@ -39,6 +41,7 @@ export function PaletteResults({
 	listboxId,
 	groups,
 	query,
+	empty = "Nothing here yet.",
 	activeIndex,
 	optionId,
 	onHover,
@@ -72,7 +75,7 @@ export function PaletteResults({
 					? ""
 					: query.trim()
 						? `Nothing matches “${query.trim()}”.`
-						: "Nothing here yet."}
+						: empty}
 			</p>
 			<div id={listboxId} role="listbox" aria-label="Results">
 				{groups.map((group) => {
