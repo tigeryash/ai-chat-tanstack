@@ -13,6 +13,25 @@ async function open(page: Page, search = "") {
 	await expect(page.locator("main[data-chat-id]")).toBeAttached();
 }
 
+/**
+ * Resolves once "Thinking..." is on screen with none of the answer yet, checked every frame. The mock
+ * reasons for about 200 ms, and expect's polls (which slow to once a second) can step over that when
+ * the first send also waits for the send code to download (it loads on first use, perf/trim-new-route).
+ */
+function thinkingShows(page: Page) {
+	return page.waitForFunction(
+		(answer) =>
+			[...document.querySelectorAll("main *")].some(
+				(element) =>
+					element.childElementCount === 0 &&
+					element.textContent === "Thinking..." &&
+					element.getClientRects().length > 0,
+			) && !document.querySelector("main")?.textContent?.includes(answer),
+		"word1",
+		{ polling: "raf" },
+	);
+}
+
 async function send(page: Page, text: string) {
 	const box = page.getByPlaceholder("Ask anything");
 	await box.fill(text);
@@ -27,10 +46,11 @@ test("a reply streams in, reasoning first and live, then saves locally", async (
 	page,
 }) => {
 	await open(page);
+	const thinking = thinkingShows(page);
 	await send(page, "Hello mock");
 
 	// Reasoning shows while it streams, before any of the answer.
-	await expect(page.getByText("Thinking...")).toBeVisible();
+	await thinking;
 	await expect(page.getByText(reasoningText)).toBeVisible();
 	await expect(status(page)).toHaveAttribute("data-chat-status", "streaming");
 	// The answer arrives in pieces: part of it is on screen before the end.
@@ -62,6 +82,43 @@ test("a reply streams in, reasoning first and live, then saves locally", async (
 	await expect(reply(page)).toContainText(replyText);
 	await page.getByRole("button", { name: "Reply details" }).click();
 	await expect(page.locator("[data-usage='reply']")).toContainText("Tokens8");
+});
+
+test("a first send shows at once while the send code loads, and says so if it can't", async ({
+	page,
+}) => {
+	// The send code loads with `import()` on first use (perf/trim-new-route). Hold it back, then fail it.
+	let release = () => {};
+	const held = new Promise<void>((resolve) => {
+		release = resolve;
+	});
+	let fail = false;
+	await page.route(/\/assets\/stream-reply-[^/]+\.js$/, async (route) => {
+		if (fail) return route.abort();
+		await held;
+		await route.continue();
+	});
+	await open(page);
+	await send(page, "Hello mock");
+	// The message and Stop show before the send code arrives; reasoning follows once it does.
+	await expect(page.getByText("Hello mock")).toBeVisible();
+	await expect(status(page)).toHaveAttribute("data-chat-status", "submitted");
+	await expect(page.getByRole("button", { name: "Stop" })).toBeVisible();
+	const thinking = thinkingShows(page);
+	release();
+	await thinking;
+	await expect(reply(page)).toContainText(replyText);
+
+	// A fresh page whose send code can't download shows a readable error, not the module's URL.
+	fail = true;
+	await open(page);
+	await send(page, "Hello again");
+	await expect(
+		page.getByText(
+			"Couldn't load the chat. Check your connection and try again.",
+		),
+	).toBeVisible();
+	await expect(page.getByText(/dynamically imported module/)).toHaveCount(0);
 });
 
 test("Stop ends the reply where it is, keeps it, and allows a new message", async ({
