@@ -90,7 +90,12 @@ const SAFE_COMPONENTS: Components = {
 
 export type SafeMarkdownProps = Omit<
 	StreamdownProps,
-	"rehypePlugins" | "urlTransform" | "allowedTags" | "linkSafety"
+	| "rehypePlugins"
+	| "urlTransform"
+	| "allowedTags"
+	| "linkSafety"
+	| "plugins"
+	| "shikiTheme"
 >;
 
 export function SafeMarkdown({

@@ -1,5 +1,12 @@
 import { setAnalyticsEnabled } from "@/lib/analytics/consent";
 import {
+	applyPreset,
+	matchesPreset,
+	PRESETS,
+	presetLabel,
+} from "@/lib/appearance/presets";
+import type { AppearanceSettings } from "@/lib/appearance/schema";
+import {
 	DENSITIES,
 	type Density,
 	THEMES,
@@ -78,15 +85,29 @@ function themeCommands(current: Theme, searchOnly: boolean): Command[] {
 	);
 }
 
-/**
- * "Switch theme…" (roadmap R2 S7): a nested page with the themes. The presets join it when S9 adds
- * them.
- */
-export function switchThemeCommand(current: Theme): Command {
+/** One command per preset (roadmap R2 S9), checked while the settings still match it. */
+function presetCommands(settings: AppearanceSettings): Command[] {
+	const unchanged = matchesPreset(settings);
+	return PRESETS.map(
+		(preset): Command => ({
+			id: `preset-${preset.id}`,
+			title: `Theme: ${preset.label}`,
+			detail: "Preset",
+			keywords: ["preset", "appearance", "colors", preset.description],
+			group: "settings",
+			checked: unchanged && settings.preset === preset.id,
+			run: () => applyPreset(preset.id),
+		}),
+	);
+}
+
+/** "Switch theme…" (roadmap R2 S7): a nested page with light, dark, system and the presets (S9). */
+export function switchThemeCommand(settings: AppearanceSettings): Command {
+	const current = settings.theme;
 	return {
 		id: "switch-theme",
 		title: "Switch theme…",
-		detail: THEME_NAMES[current],
+		detail: `${THEME_NAMES[current]} · ${presetLabel(settings)}`,
 		keywords: [
 			"appearance",
 			"color scheme",
@@ -99,7 +120,10 @@ export function switchThemeCommand(current: Theme): Command {
 			title: "Switch theme",
 			placeholder: "Search themes…",
 			empty: "No themes match.",
-			commands: () => themeCommands(current, false),
+			commands: () => [
+				...themeCommands(current, false),
+				...presetCommands(settings),
+			],
 		},
 		run: () => {},
 	};

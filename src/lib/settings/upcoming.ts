@@ -5,7 +5,7 @@ import type { SettingsSectionId } from "./sections";
 
 export const SECTION_UPCOMING: Record<SettingsSectionId, string> = {
 	general: "How many panes a new chat starts with.",
-	appearance: "Theme presets.",
+	appearance: "A colored top border per model, to tell panes apart.",
 	chat: "Reply stats, reasoning open or closed, and scroll sync defaults.",
 	keyboard: "A list of keyboard shortcuts.",
 	notifications: "Notifications for agent runs.",

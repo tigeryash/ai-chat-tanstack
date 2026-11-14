@@ -214,7 +214,17 @@ test("Stop all stops every replying pane, synced or not; Switch theme is a page"
 	await expect(search(page)).toHaveAccessibleName("Search: Switch theme");
 	await expect(
 		palette(page).getByRole("listbox").getByRole("option"),
-	).toHaveText([/Theme: System/, /Theme: Light/, /Theme: Dark/]);
+	).toHaveText([
+		/Theme: System/,
+		/Theme: Light/,
+		/Theme: Dark/,
+		/Theme: Default/,
+		/Theme: High contrast/,
+		/Theme: Brand/,
+		/Theme: Paper/,
+		/Theme: Nord-style/,
+		/Theme: Dracula-style/,
+	]);
 	await option(page, "Theme: Dark").click();
 	await expect(page.locator("html")).toHaveClass("dark");
 	await expect(option(page, "Theme: Dark")).toHaveAttribute(

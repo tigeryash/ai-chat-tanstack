@@ -1,6 +1,8 @@
 import { z } from "@/lib/zod";
+import { CODE_THEME_IDS } from "./code-themes";
 import { HEX_COLOR } from "./color";
 import { CODE_FONTS, fontIds, READING_FONTS, UI_FONTS } from "./fonts";
+import { PRESET_IDS } from "./preset-ids";
 import { COLOR_TOKEN_NAMES } from "./tokens";
 
 // Appearance settings (roadmap 3.11), kept in this browser (synced in Phase 6). Every field only
@@ -11,6 +13,14 @@ export type Theme = (typeof THEMES)[number];
 
 export const DENSITIES = ["compact", "comfortable"] as const;
 export type Density = (typeof DENSITIES)[number];
+
+/** Corner radius (roadmap R2 S9): `--radius` and the pane cards' `--pane-radius`. */
+export const RADII = ["sharp", "default", "round"] as const;
+export type Radius = (typeof RADII)[number];
+
+/** The longest a message line gets (R2 S9): `--reading-width`. */
+export const READING_WIDTHS = ["narrow", "default", "full"] as const;
+export type ReadingWidth = (typeof READING_WIDTHS)[number];
 
 /** Text size steps, as a share of the browser's default size. */
 export const TEXT_SCALES = [0.875, 0.9375, 1, 1.0625, 1.125, 1.1875, 1.25];
@@ -52,6 +62,13 @@ export const appearanceSchema = z.object({
 	accent: hexColor.nullable(),
 	/** Advanced: per-token colors, separately for each theme. */
 	colors: z.object({ light: colorOverrides, dark: colorOverrides }),
+	// R2 S9. Defaults, so settings and theme files saved before them still load.
+	radius: z.enum(RADII).default("default"),
+	readingWidth: z.enum(READING_WIDTHS).default("default"),
+	/** Code highlighting colors; "auto" follows the preset. */
+	codeTheme: z.enum(CODE_THEME_IDS).default("auto"),
+	/** The preset these settings started from. They are "Custom" once they differ from it (presets.ts). */
+	preset: z.enum(PRESET_IDS).default("default"),
 });
 
 export type AppearanceSettings = z.infer<typeof appearanceSchema>;
@@ -66,6 +83,10 @@ export const DEFAULT_APPEARANCE: AppearanceSettings = {
 	density: "comfortable",
 	accent: null,
 	colors: { light: {}, dark: {} },
+	radius: "default",
+	readingWidth: "default",
+	codeTheme: "auto",
+	preset: "default",
 };
 
 // Export/import (a theme file). The wrapper says what the file is, so importing another JSON file
