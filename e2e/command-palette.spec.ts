@@ -280,6 +280,8 @@ test.describe("on a phone", () => {
 		expect(box?.width).toBeLessThanOrEqual(390);
 		expect(box?.x).toBeGreaterThanOrEqual(0);
 		await search(page).fill("new chat");
-		await expect(option(page, "New chat")).toBeVisible();
+		await expect(
+			results(page).getByRole("option", { name: "New chat", exact: true }),
+		).toBeVisible();
 	});
 });
