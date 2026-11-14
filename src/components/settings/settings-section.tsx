@@ -6,10 +6,8 @@ import {
 	type SettingsCard,
 	visibleSettingsSections,
 } from "@/lib/settings/registry";
-import {
-	type SettingsSectionId,
-	settingsSection,
-} from "@/lib/settings/sections";
+import type { SettingsSectionId } from "@/lib/settings/sections";
+import { SECTION_UPCOMING } from "@/lib/settings/upcoming";
 import { SettingRow } from "./setting-row";
 
 /** One section of Settings: its cards of rows, or what's coming when it has none yet. */
@@ -84,7 +82,7 @@ function EmptySection({
 			<div className="grid gap-1">
 				<p className="font-medium text-sm">Nothing to set here yet</p>
 				<p className="text-muted-foreground text-sm">
-					Coming here: {settingsSection(section).upcoming}
+					Coming here: {SECTION_UPCOMING[section]}
 				</p>
 			</div>
 			<div className="grid gap-2">

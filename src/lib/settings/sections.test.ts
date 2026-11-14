@@ -1,10 +1,19 @@
 import { describe, expect, it } from "vitest";
+import { SETTINGS_SECTION_IDS } from "./section-ids";
 import {
 	parseSettingsSection,
 	SETTINGS_SECTIONS,
 	sectionForLegacySettingsLink,
 	validateSettingsSearch,
 } from "./sections";
+
+describe("sections", () => {
+	it("has one per id, in the ids' order", () => {
+		expect(SETTINGS_SECTIONS.map((s) => s.id)).toEqual([
+			...SETTINGS_SECTION_IDS,
+		]);
+	});
+});
 
 describe("?settings= parsing", () => {
 	it("is closed without the parameter", () => {

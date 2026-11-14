@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import type { AnchorHTMLAttributes, Ref } from "react";
 import { markSettingsPushed, withSettings } from "@/lib/settings/navigation";
-import type { SettingsSectionId } from "@/lib/settings/sections";
+import type { SettingsSectionId } from "@/lib/settings/section-ids";
 
 type SettingsLinkProps = Omit<
 	AnchorHTMLAttributes<HTMLAnchorElement>,

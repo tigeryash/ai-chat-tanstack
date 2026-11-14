@@ -4,6 +4,7 @@ import type {
 	UIMessage,
 	UIMessageChunk,
 } from "ai";
+import { logError } from "@/lib/log";
 import type { PromptSource } from "@/lib/prompts/provenance";
 import type { ModelSelection } from "./model-selection";
 import type { ReplyHost } from "./reply-host";
@@ -38,6 +39,23 @@ export type ResolveModel = (
 
 const loadStreamReply = () => import("./stream-reply");
 
+/** What the chat shows when the send code didn't download, instead of the browser's message and URL. */
+export const SEND_CODE_FAILED =
+	"Couldn't load the chat. Check your connection and try again.";
+
+/** The send path, or a readable error when it didn't download (offline, or a deploy replaced it). */
+async function sendPath() {
+	try {
+		return await loadStreamReply();
+	} catch (error) {
+		logError(
+			"Couldn't load the chat send code:",
+			error instanceof Error ? error.name : error,
+		);
+		throw new Error(SEND_CODE_FAILED);
+	}
+}
+
 /**
  * Starts loading the send path as soon as the chat engine has loaded (chat-sessions.ts calls it), in a
  * task of its own, so the first send doesn't wait for it but the page doesn't preload it. A failed
@@ -67,7 +85,7 @@ export class BrowserChatTransport implements ChatTransport<UIMessage> {
 	async sendMessages(
 		options: Parameters<ChatTransport<UIMessage>["sendMessages"]>[0],
 	): Promise<ReadableStream<UIMessageChunk>> {
-		const { streamReply } = await loadStreamReply();
+		const { streamReply } = await sendPath();
 		return streamReply(options, this.#resolveModel, this.#now);
 	}
 

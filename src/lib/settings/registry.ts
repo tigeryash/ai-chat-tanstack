@@ -44,6 +44,7 @@ export interface SettingDefinition {
 }
 
 export const SETTINGS_CARDS = [
+	{ id: "new-chats", section: "general" },
 	{
 		id: "host-preferences",
 		section: "models",
@@ -80,6 +81,45 @@ const KEY_MODE_WORDS = [
 ];
 
 export const SETTINGS = [
+	// General
+	{
+		id: "default-model",
+		section: "general",
+		card: "new-chats",
+		label: "Default model for new chats",
+		description:
+			"New chats and new panes start on the model you used last, or always on the same one. Picking another model in a chat changes only that chat.",
+		keywords: [
+			"default model",
+			"new chat",
+			"new pane",
+			"last used",
+			"fixed model",
+			"starting model",
+		],
+		scope: "global",
+		storage: "syncs",
+		layout: "block",
+	},
+	{
+		id: "title-model",
+		section: "general",
+		card: "new-chats",
+		label: "Title model",
+		description:
+			"Off: a chat is named after the first line of your first message. On: that message goes once to the model you pick, with your own key, to write a short title. If that fails, the first line is used.",
+		keywords: [
+			"chat title",
+			"auto title",
+			"name chats",
+			"rename",
+			"utility model",
+			"summary",
+		],
+		scope: "global",
+		storage: "syncs",
+		layout: "block",
+	},
 	// Models & hosts
 	{
 		id: "blocked-hosts",
@@ -495,6 +535,14 @@ export function searchSettings(query: string): SettingMatch[] {
 			setting,
 			section: settingsSection(setting.section),
 		}));
+}
+
+/** Every row with its section, in registry order (the command palette lists them). */
+export function allSettingMatches(): SettingMatch[] {
+	return SETTINGS.map((setting) => ({
+		setting,
+		section: settingsSection(setting.section),
+	}));
 }
 
 export function settingById(id: SettingId): Setting {

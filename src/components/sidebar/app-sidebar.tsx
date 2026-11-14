@@ -1,6 +1,7 @@
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { LibraryBigIcon, SquarePenIcon } from "lucide-react";
 import { useState } from "react";
+import { CommandPaletteButton } from "@/components/command-palette/command-palette-button";
 import {
 	Sidebar,
 	SidebarContent,
@@ -68,13 +69,16 @@ export function AppSidebar() {
 						</SidebarMenuButton>
 					</SidebarMenuItem>
 				</SidebarMenu>
-				<SidebarInput
-					type="search"
-					aria-label="Search chats"
-					placeholder="Search chats"
-					value={query}
-					onChange={(event) => setQuery(event.target.value)}
-				/>
+				<div className="flex gap-1.5">
+					<SidebarInput
+						type="search"
+						aria-label="Search chats"
+						placeholder="Search chats"
+						value={query}
+						onChange={(event) => setQuery(event.target.value)}
+					/>
+					<CommandPaletteButton />
+				</div>
 			</SidebarHeader>
 			<SidebarContent>
 				<ChatGroups list={list} viewer={viewer} query={query} />

@@ -23,7 +23,7 @@ import { APPEARANCE_BOOT_SCRIPT } from "@/lib/appearance/boot-script";
 import { authClient } from "@/lib/auth-client";
 import { getToken } from "@/lib/auth-server";
 import { cspHeaders } from "@/lib/security/csp";
-import { validateSettingsSearch } from "@/lib/settings/sections";
+import { validateSettingsSearch } from "@/lib/settings/section-ids";
 import TanStackQueryDevtools from "../integrations/tanstack-query/devtools";
 
 import appCss from "../styles.css?url";

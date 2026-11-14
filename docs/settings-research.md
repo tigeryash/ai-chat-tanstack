@@ -391,7 +391,7 @@ Yash picked the layout from the reference apps.)
   link and from Cmd+, while focus is in the composer, closes it with Esc and Back, and completes the OAuth
   callback. The keys, local endpoints, appearance and export specs pass unchanged apart from navigation, and the
   reduced-motion spec covers the dialog.
-- [ ] **S2 General: default model and title model.** "Default model for new chats" (last used or a fixed model)
+- [x] **S2 General: default model and title model.** "Default model for new chats" (last used or a fixed model)
   and "Title model" (off = first line, as today). Titles are written once, with the user's key, never logged.
   *Done when:* Vitest covers default resolution and title fallback; e2e on a mock model gets an auto-title and a
   fixed default model in a new chat after reload.
@@ -402,7 +402,7 @@ Yash picked the layout from the reference apps.)
 - [x] **S4 Context-length warnings.** A pane-header notice when the chat outgrows its host's context, with a
   switch in Settings. *Done when:* Vitest covers the check; e2e shows the notice on a fixture chat and not when
   it's off.
-- [ ] **S5 Palette v1.** Cmd+K, go to (chats, workspaces, settings sections, Prompts), new chat, settings search,
+- [x] **S5 Palette v1.** Cmd+K, go to (chats, workspaces, settings sections, Prompts), new chat, settings search,
   quick toggles, recency, lazy-loaded. *Done when:* e2e opens it from the composer and returns focus there, finds
   a chat and a setting, and opens neither another account's chat nor any request; the bundle budget passes; the
   reduced-motion spec covers it.
