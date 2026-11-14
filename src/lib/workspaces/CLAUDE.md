@@ -24,11 +24,13 @@ Notes for working in this folder. The root [CLAUDE.md](/CLAUDE.md) (commands, ha
   widths and sync, never chat ids; opening one makes a new workspace. Both travel in exports (`workspace-transfer.ts`, Refine R4): a
   workspace keeps only panes whose chat is in the file, and an import puts back the panes here the viewer can't see. Neither changes the default for new chats
   (`setChatModelChoice`, not `storeChatModelChoice`).
-- **Focused pane** (roadmap R2 S6, S7): `focused-pane.ts` finds the pane focus is in (else the last one used,
-  else the first) and acts on it: focus a pane or its message box, open its model picker, add a pane to its right,
-  remove it. Shortcuts and palette commands both call these. The page registers a `PaneController`
-  (`WorkspaceView`, or `AddPaneButton` on a single chat). It's in the dashboard shell: no imports.
 - **Compare tools** (roadmap 3.4): each pane's stats line (`pane-stats.ts`, latest reply's TTFT and tok/s plus the
   chat's cost, built on `readReplyStats` / `chatUsage`) sits under its header, never on replies. Sync scroll
   (`sync-scroll.ts`) matches panes by scroll proportion, for this visit only. "Copy settings to all panes"
   (`copy-settings.ts`) copies params and system prompt, never the model. Votes are `lib/chat/chat-votes.ts`.
+- **Focused pane** (R2 S7, `focused-pane.ts`): which pane the palette's pane actions and S6's shortcuts act on,
+  and every pane's controls (`PaneControls`), registered each render by `ChatScreen` (`usePaneControls`; a single
+  chat is "Pane 1"). A workspace pane's section sets focus on pointer down or focus; on a phone the shown pane is
+  the focused one. Imports only types, so the palette can read it without the chat engine. S6's shortcuts
+  and the palette's rows share its actions (`addPaneToFocused`, `removeFocusedPane`); it also focuses a pane by
+  number (`focusPaneAt`) or the focused pane's message box (`focusComposer`, `[data-composer-input]`).

@@ -78,10 +78,6 @@ function Area({
 	);
 }
 
-const IN_FIELDS = SHORTCUTS.filter((binding) => binding.inFields)
-	.map((binding) => binding.title)
-	.join(", ");
-
 export function ShortcutList() {
 	const apple = isApplePlatform();
 	return (
@@ -95,7 +91,9 @@ export function ShortcutList() {
 				/>
 			))}
 			<p className="px-1 text-muted-foreground text-sm">
-				While you type in a text field, only these work: {IN_FIELDS}.
+				{apple
+					? "Shortcuts with ⌘ or ⌃ also work while you type in a text field, and so does ⇧Esc. ? doesn't."
+					: "Shortcuts with Ctrl or Alt also work while you type in a text field, and so does Shift+Esc. ? doesn't."}
 			</p>
 		</div>
 	);

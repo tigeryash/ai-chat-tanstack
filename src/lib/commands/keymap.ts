@@ -1,4 +1,5 @@
 import type { Shortcut } from "./command";
+import { PANE_COMMAND_IDS } from "./pane-command-ids";
 import { isApplePlatform, matchesShortcut } from "./shortcut";
 
 // Every keyboard shortcut (roadmap R2 S6, docs/settings-research.md "Shortcuts"), the one place one is
@@ -20,11 +21,12 @@ export type ShortcutId =
 	| "toggle-sidebar"
 	| "open-settings"
 	| "show-shortcuts"
-	| "switch-model"
 	| "focus-composer"
-	| "add-pane"
-	| "remove-pane"
-	| "focus-pane";
+	| "focus-pane"
+	// The palette's pane actions (R2 S7) carry their command ids, so their rows show the keys.
+	| typeof PANE_COMMAND_IDS.switchModel
+	| typeof PANE_COMMAND_IDS.add
+	| typeof PANE_COMMAND_IDS.remove;
 
 export interface ShortcutBinding {
 	id: ShortcutId;
@@ -34,7 +36,7 @@ export interface ShortcutBinding {
 	keys: Shortcut | { apple: Shortcut; other: Shortcut };
 	/** Another way to press it, shown after the first. */
 	alt?: Shortcut;
-	/** Works while typing in a field. Only a few do; the rest would get in the way of typing. */
+	/** Works while typing in a field though it has no ⌘, Ctrl or Alt (Shift+Esc types nothing). */
 	inFields?: boolean;
 }
 
@@ -47,7 +49,6 @@ export const SHORTCUTS: readonly ShortcutBinding[] = [
 		title: "Command palette",
 		area: "general",
 		keys: ["Mod", "K"],
-		inFields: true,
 	},
 	{
 		id: "show-shortcuts",
@@ -61,7 +62,6 @@ export const SHORTCUTS: readonly ShortcutBinding[] = [
 		title: "Open Settings",
 		area: "general",
 		keys: ["Mod", ","],
-		inFields: true,
 	},
 	{
 		id: "toggle-sidebar",
@@ -83,19 +83,19 @@ export const SHORTCUTS: readonly ShortcutBinding[] = [
 		inFields: true,
 	},
 	{
-		id: "switch-model",
+		id: PANE_COMMAND_IDS.switchModel,
 		title: "Switch model in the focused pane",
 		area: "chat",
 		keys: ["Mod", "Shift", "M"],
 	},
 	{
-		id: "add-pane",
+		id: PANE_COMMAND_IDS.add,
 		title: "Add a pane",
 		area: "panes",
 		keys: ["Mod", "\\"],
 	},
 	{
-		id: "remove-pane",
+		id: PANE_COMMAND_IDS.remove,
 		title: "Remove the focused pane",
 		area: "panes",
 		keys: ["Mod", "Shift", "\\"],
@@ -130,6 +130,8 @@ export function shortcutOf(id: ShortcutId): Shortcut {
 
 export interface PressedShortcut {
 	binding: ShortcutBinding;
+	/** Whether it may run while typing in a field (see `worksWhileTyping`). */
+	inFields: boolean;
 	/** For "focus-pane": which pane, from 0. */
 	pane?: number;
 }
@@ -145,12 +147,29 @@ export function pressedShortcut(
 			if (keys[keys.length - 1] === PANE_DIGITS) {
 				for (let pane = 0; pane < 4; pane++) {
 					const digit = [...keys.slice(0, -1), String(pane + 1)];
-					if (matchesShortcut(event, digit, apple)) return { binding, pane };
+					if (matchesShortcut(event, digit, apple)) {
+						return { binding, pane, inFields: worksWhileTyping(binding, keys) };
+					}
 				}
 			} else if (matchesShortcut(event, keys, apple)) {
-				return { binding };
+				return { binding, inFields: worksWhileTyping(binding, keys) };
 			}
 		}
 	}
 	return null;
+}
+
+/**
+ * Keys with ⌘, Ctrl or Alt type no characters, so they work while typing in a field (Yash, 2026-11-14);
+ * plain keys like `?` don't. AltGr arrives as Ctrl+Alt and types characters, but an Alt binding never
+ * matches with Ctrl held (`matchesShortcut` checks every modifier).
+ */
+export function worksWhileTyping(
+	binding: ShortcutBinding,
+	keys: Shortcut,
+): boolean {
+	return (
+		binding.inFields === true ||
+		keys.some((key) => key === "Mod" || key === "Ctrl" || key === "Alt")
+	);
 }

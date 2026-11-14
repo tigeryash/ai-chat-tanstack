@@ -1,17 +1,18 @@
 import { useNavigate } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { pressedShortcut, type ShortcutId } from "@/lib/commands/keymap";
+import { openCommandPalette } from "@/lib/commands/palette-state";
+import { PANE_COMMAND_IDS } from "@/lib/commands/pane-command-ids";
 import { isTypingTarget } from "@/lib/commands/shortcut";
 import {
 	setShortcutSheetOpen,
 	useShortcutSheetOpen,
 } from "@/lib/commands/shortcut-sheet-state";
 import {
-	addPaneNextToFocused,
+	addPaneToFocused,
 	focusComposer,
+	focusedPane,
 	focusPaneAt,
-	notePaneInteraction,
-	openModelPicker,
 	removeFocusedPane,
 } from "@/lib/workspaces/focused-pane";
 
@@ -44,14 +45,18 @@ function runShortcut(
 		case "new-chat":
 			newChat();
 			return true;
-		case "switch-model":
-			return openModelPicker();
+		// The palette's pane actions (R2 S7): the same code its rows run. "Switch model…" is a palette
+		// page, so its shortcut opens the palette there.
+		case PANE_COMMAND_IDS.switchModel:
+			if (!focusedPane()) return false;
+			openCommandPalette(PANE_COMMAND_IDS.switchModel);
+			return true;
+		case PANE_COMMAND_IDS.add:
+			return addPaneToFocused();
+		case PANE_COMMAND_IDS.remove:
+			return removeFocusedPane();
 		case "focus-composer":
 			return focusComposer();
-		case "add-pane":
-			return addPaneNextToFocused();
-		case "remove-pane":
-			return removeFocusedPane();
 		case "focus-pane":
 			return focusPaneAt(pane ?? 0);
 		default:
@@ -71,8 +76,8 @@ export function ShortcutsHost() {
 			const pressed = pressedShortcut(event);
 			if (!pressed || OWN_LISTENERS.has(pressed.binding.id)) return;
 			const { binding } = pressed;
-			// Typing comes first: only a few shortcuts work in a text field (docs/settings-research.md).
-			if (isTypingTarget(event.target) && !binding.inFields) return;
+			// Keys with ⌘, Ctrl or Alt type nothing, so they work in a text field; `?` types itself.
+			if (isTypingTarget(event.target) && !pressed.inFields) return;
 			// Nothing reaches the page under a dialog (Settings, the palette); the sheet's own key closes it.
 			const inDialog =
 				event.target instanceof Element &&
@@ -90,17 +95,10 @@ export function ShortcutsHost() {
 			);
 			if (ran) event.preventDefault();
 		};
-		const onInteraction = (event: Event) => notePaneInteraction(event.target);
 		// Capture, so a field that handles its own keys (the composer) can't swallow Shift+Esc.
 		window.addEventListener("keydown", onKeyDown, { capture: true });
-		window.addEventListener("focusin", onInteraction, { capture: true });
-		window.addEventListener("pointerdown", onInteraction, { capture: true });
 		return () => {
 			window.removeEventListener("keydown", onKeyDown, { capture: true });
-			window.removeEventListener("focusin", onInteraction, { capture: true });
-			window.removeEventListener("pointerdown", onInteraction, {
-				capture: true,
-			});
 		};
 	}, [navigate, open]);
 

@@ -578,10 +578,14 @@ on top. Order: R1 first; R2 and R3 can run alongside; R4 after R3; R5 any time.
     opt-in title model. *Status:* [PR #109](https://github.com/tigeryash/ai-chat-tanstack/pull/109).
   - [x] **S3 Host preferences.** Blocklist, minimum precision and a price cap for Auto in Models & hosts, mapped to
     OpenRouter and AI Gateway routing. *Status:* [PR #110](https://github.com/tigeryash/ai-chat-tanstack/pull/110).
+  - [x] **S4 Context-length warnings.** A context ring in the pane header, and a closable notice near (80%) or past
+    the context length, with a switch in Settings → Chat. *Status:* [PR #112](https://github.com/tigeryash/ai-chat-tanstack/pull/112).
   - [x] **S5 Command palette v1.** Cmd+K over any dashboard page: go to chats, workspaces, Prompts and Settings,
     new chat (also from a layout), settings search, quick toggles, recency. *Status:* [PR #111](https://github.com/tigeryash/ai-chat-tanstack/pull/111).
   - [x] **S6 Keyboard shortcuts.** One keymap in the command registry, a ⌘/ and ? shortcut sheet, and a read-only
     Settings → Keyboard list. *Status:* [PR #115](https://github.com/tigeryash/ai-chat-tanstack/pull/115).
+  - [x] **S7 Palette v2.** Pane actions on the focused pane (add, remove, sync, switch model or host, apply
+    prompt, model settings, copy, regenerate, stop all) and Switch theme, with nested pages. *Status:* [PR #116](https://github.com/tigeryash/ai-chat-tanstack/pull/116).
 - [ ] **R3 Quality audit Q3.** A fresh review of UX consistency, performance and code health across everything
   Milestone 2 added, folded together with R1's notes, turned into fix slices (as Q1 and Q2 were).
 - [ ] **R4 Leftovers.** Q2 slice 5 (small follow-ups); workspaces and layouts in exports (from 3.5 and 1.10);
@@ -592,6 +596,8 @@ on top. Order: R1 first; R2 and R3 can run alongside; R4 after R3; R5 any time.
   *Status:* Q2 slice 5 and the `synced-attachments` flake done in [#108](https://github.com/tigeryash/ai-chat-tanstack/pull/108).
 - [ ] **R5 Accessibility audit** (7.4, pulled forward). Keyboard-only pass, screen reader pass with streaming
   replies, contrast in every theme.
+- [ ] **R6 Context management (research only, not built yet).** Research compaction (summarise older turns) and
+  other strategies (trim, pin, branch to a fresh chat with a summary); output is a research doc, then slices.
 - After R1–R5: 3.9 Insights if Yash still wants it, then 4.0.
 
 ## Phase 4: Agent harness

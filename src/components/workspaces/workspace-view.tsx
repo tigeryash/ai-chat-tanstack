@@ -10,6 +10,7 @@ import {
 	useState,
 } from "react";
 import { ChatScreen } from "@/components/chat/chat-screen";
+import type { WorkspacePaneControls } from "@/components/chat/use-pane-controls";
 import { InHeader } from "@/components/header-slot";
 import {
 	ResizableHandle,
@@ -25,7 +26,7 @@ import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { chatStore } from "@/lib/storage/app-store";
 import type { WorkspacePane } from "@/lib/storage/workspace";
 import { copySettingsToPanes } from "@/lib/workspaces/copy-settings";
-import { registerPaneController } from "@/lib/workspaces/focused-pane";
+import { focusPane } from "@/lib/workspaces/focused-pane";
 import {
 	canAddPane,
 	layoutOf,
@@ -170,19 +171,16 @@ export function WorkspaceView({
 		const added = next.find((pane) => !known.has(pane.chatId));
 		if (added) setShownId(added.chatId);
 	};
-	// Cmd+\ and Cmd+Shift+\ (roadmap R2 S6), and the palette's pane actions, act on this workspace.
-	useEffect(() =>
-		registerPaneController({
-			addPane: (after) => {
-				if (!canAddPane(panes, workspace.hiddenPanes.length)) return;
-				addPane(after).catch((error) =>
-					logError("Couldn't add a pane:", error),
-				);
-			},
-			removePane: (chatId) => save(removePane(panes, chatId)),
-		}),
-	);
+	/** Adds a pane to the right of `after` (the end when undefined). */
+	const runAddPane = (after?: string) => {
+		addPane(after).catch((error) => logError("Couldn't add a pane:", error));
+	};
 	const shown = panes.find((pane) => pane.chatId === shownId) ?? panes[0];
+	// On a phone the shown pane is the focused one.
+	const shownChatId = isMobile ? shown?.chatId : undefined;
+	useEffect(() => {
+		if (shownChatId) focusPane(shownChatId);
+	}, [shownChatId]);
 
 	// A pane's chat is opened by `PaneChat`, never here: see quality audit Q2, W1.
 	const renderPane = (pane: WorkspacePane, index: number) => (
@@ -196,27 +194,44 @@ export function WorkspaceView({
 		chat: Chat<UIMessage>,
 	) => {
 		const label = `Pane ${index + 1}`;
+		// The pane's buttons and the palette's pane actions (R2 S7) call the same functions.
+		const controls: WorkspacePaneControls = {
+			index,
+			label,
+			synced: pane.synced,
+			setSynced: (synced) => save(setPaneSynced(panes, pane.chatId, synced)),
+			// To the right of this pane (Cmd+\, roadmap R2 S6).
+			addPane: canAddPane(panes, workspace.hiddenPanes.length)
+				? () => runAddPane(pane.chatId)
+				: undefined,
+			removePane:
+				panes.length > 1
+					? () => save(removePane(panes, pane.chatId))
+					: undefined,
+		};
 		return (
+			// The last pane clicked or focused is the one palette actions and shortcuts act on (R2 S7).
 			<section
 				aria-label={label}
 				data-pane-id={pane.chatId}
 				// Focusable by script only: Ctrl+1–4 (Alt+1–4 off a Mac) focus a pane (roadmap R2 S6).
 				tabIndex={-1}
 				className="h-full min-h-0 min-w-0 rounded-pane outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+				onPointerDownCapture={() => focusPane(pane.chatId)}
+				onFocusCapture={() => focusPane(pane.chatId)}
 			>
 				<ChatScreen
 					chat={chat}
 					sync={{ hub, synced: pane.synced }}
 					paneCount={panes.length}
+					pane={controls}
 					subheader={<PaneStatsLine chat={chat} label={label} />}
 					actions={
 						<PaneActions
 							chat={chat}
 							label={label}
 							synced={pane.synced}
-							onSyncedChange={(synced) =>
-								save(setPaneSynced(panes, pane.chatId, synced))
-							}
+							onSyncedChange={(synced) => controls.setSynced?.(synced)}
 							onMoveLeft={
 								index > 0
 									? () => save(movePane(panes, pane.chatId, -1))
@@ -237,11 +252,7 @@ export function WorkspaceView({
 											)
 									: undefined
 							}
-							onClose={
-								panes.length > 1
-									? () => save(removePane(panes, pane.chatId))
-									: undefined
-							}
+							onClose={controls.removePane}
 						/>
 					}
 				/>
@@ -259,9 +270,7 @@ export function WorkspaceView({
 					warned={warned}
 					diverged={diverged}
 					saveFailed={saveFailed}
-					onAddPane={() => {
-						addPane().catch((error) => logError("Couldn't add a pane:", error));
-					}}
+					onAddPane={() => runAddPane()}
 					hiddenPanes={workspace.hiddenPanes.length}
 					currentLayout={() => layoutOfPanes(panes)}
 					missingModels={missingModels}

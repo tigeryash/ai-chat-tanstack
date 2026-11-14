@@ -1,19 +1,25 @@
 import type { Chat } from "@ai-sdk/react";
 import type { UIMessage } from "ai";
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import { ChatUsageButton } from "@/components/chat/chat-usage";
 import { ChatView, type ChatViewProps } from "@/components/chat/chat-view";
+import { ContextNotice, ContextRing } from "@/components/chat/context-status";
 import { HostSwitcher } from "@/components/models/host-switcher";
 import { LocalModelCard, ModelCard } from "@/components/models/model-card";
-import { ModelPicker } from "@/components/models/model-picker";
+import { ModelPicker, trackPick } from "@/components/models/model-picker";
 import { RemovedModelBanner } from "@/components/models/removed-model-banner";
 import { useChatModel } from "@/components/models/use-chat-model";
 import { SettingsPanel } from "@/components/params/settings-panel";
 import { useChatParams } from "@/components/params/use-chat-params";
 import { supportFromModalities } from "@/lib/attachments/validate";
 import { storeChatModelChoice } from "@/lib/chat/chat-model-choice";
-import { LOCAL_PROVIDER } from "@/lib/chat/model-selection";
+import { LOCAL_PROVIDER, type ModelChoice } from "@/lib/chat/model-selection";
 import { useLocalEndpointFor } from "@/lib/local-endpoints/endpoints";
+import { pickedChoice } from "@/lib/models/pick-choice";
+import {
+	usePaneControls,
+	type WorkspacePaneControls,
+} from "./use-pane-controls";
 
 /**
  * A chat with its model picker above it, and the model's card while the chat is empty. In a workspace
@@ -26,8 +32,11 @@ export function ChatScreen({
 	subheader,
 	sync,
 	paneCount,
+	pane,
 }: {
 	chat: Chat<UIMessage>;
+	/** In a workspace: this pane's place and controls, for the palette's pane actions (R2 S7). */
+	pane?: WorkspacePaneControls;
 	onSend?: () => void;
 	actions?: ReactNode;
 	/** Under the header row: a pane's compare stats (roadmap 3.4). */
@@ -41,6 +50,24 @@ export function ChatScreen({
 	const localEndpoint = useLocalEndpointFor(
 		isLocal ? choice.endpoint : undefined,
 	);
+	const [settingsOpen, setSettingsOpen] = useState(false);
+	usePaneControls({
+		chat,
+		model,
+		params,
+		pickModel: (next: ModelChoice) => {
+			const picked = pickedChoice(next, wanted);
+			if (
+				picked.gatewayId !== choice?.gatewayId ||
+				picked.model !== choice?.model
+			) {
+				trackPick(picked, model.catalog.models ?? []);
+			}
+			model.setChoice(picked);
+		},
+		openModelSettings: choice?.model ? () => setSettingsOpen(true) : undefined,
+		workspace: pane,
+	});
 
 	const handleSend = () => {
 		// Pin the chat to the model it was sent with, even if the default changes later. Its host
@@ -49,6 +76,16 @@ export function ChatScreen({
 		params.pin();
 		onSend?.();
 	};
+
+	// The pinned upstream's context, else the direct host's, else the model's (R2 S4).
+	const upstream = choice?.upstream
+		? model.host?.upstreams?.find((up) => up.slug === choice.upstream)
+		: undefined;
+	const contextLength = isLocal
+		? undefined
+		: (upstream?.contextLength ??
+			model.host?.stats?.contextLength ??
+			chosenModel?.contextWindow);
 
 	let empty: React.ReactNode = "Pick a model to start.";
 	if (chosenModel) {
@@ -108,15 +145,19 @@ export function ChatScreen({
 								<SettingsPanel
 									params={params}
 									modelName={chosenModel?.name ?? choice.model}
+									open={settingsOpen}
+									onOpenChange={setSettingsOpen}
 								/>
 							)}
 						</div>
+						<ContextRing chat={chat} contextLength={contextLength} />
 						<ChatUsageButton chat={chat} />
 						{actions && (
 							<div className="flex shrink-0 items-center gap-1">{actions}</div>
 						)}
 					</div>
 					{subheader}
+					<ContextNotice chat={chat} contextLength={contextLength} />
 					{chosenModel?.status === "removed" && (
 						<RemovedModelBanner
 							model={chosenModel}

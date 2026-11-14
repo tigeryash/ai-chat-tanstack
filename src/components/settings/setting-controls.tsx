@@ -20,6 +20,7 @@ import {
 	TabStatusSwitch,
 	TestNotification,
 } from "./background-status-settings";
+import { ContextWarningsSwitch } from "./chat-settings";
 import { ConnectOpenRouter } from "./connect-openrouter";
 import { DataTransfer } from "./data-settings";
 import { DefaultModelControl, TitleModelControl } from "./general-settings";
@@ -55,6 +56,7 @@ export const SETTING_CONTROLS: Record<
 	"code-font": CodeFontSelect,
 	"theme-file": ThemeFileControl,
 	"reset-appearance": ResetAppearance,
+	"context-warnings": ContextWarningsSwitch,
 	"tab-status": TabStatusSwitch,
 	"notify-finished": NotifyFinishedSwitch,
 	"notify-failed": NotifyFailedSwitch,

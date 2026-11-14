@@ -23,8 +23,6 @@ const sheet = (page: Page) =>
 	page.getByRole("dialog", { name: "Keyboard shortcuts" });
 const palette = (page: Page) =>
 	page.getByRole("dialog", { name: "Command palette" });
-const modelPicker = (page: Page) =>
-	page.getByRole("dialog", { name: "Choose a model" });
 const sidebarState = (page: Page) =>
 	page.locator("[data-slot=sidebar][data-state]");
 
@@ -93,7 +91,7 @@ for (const keymap of KEYMAPS) {
 				.getByRole("button", { name: "Keyboard", exact: true })
 				.click();
 			await expect(
-				settingsDialog(page).locator("[data-shortcut=add-pane]"),
+				settingsDialog(page).locator('[data-shortcut="pane.add"]'),
 			).toContainText("Add a pane");
 			await page.keyboard.press("Escape");
 			await expect(settingsDialog(page)).toHaveCount(0);
@@ -126,13 +124,33 @@ for (const keymap of KEYMAPS) {
 			await expect(panes(page)).toHaveCount(2);
 			await expect(page.locator(`[data-pane-id="${added}"]`)).toHaveCount(0);
 
-			// Cmd+Shift+M opens the focused pane's model picker.
+			// Cmd+Shift+M opens the palette's "Switch model" page for the focused pane (R2 S7's command).
 			await page.keyboard.press(`${paneMod}+1`);
 			await expect(pane(page, 1)).toBeFocused();
 			await page.keyboard.press(`${mod}+Shift+M`);
-			await expect(modelPicker(page)).toBeVisible();
+			await expect(
+				palette(page).getByRole("combobox", { name: "Search: Switch model" }),
+			).toBeFocused();
+			// Esc goes back a page, then closes.
 			await page.keyboard.press("Escape");
-			await expect(modelPicker(page)).toHaveCount(0);
+			await expect(
+				palette(page).getByRole("combobox", {
+					name: "Search commands, chats and settings",
+				}),
+			).toBeVisible();
+			await page.keyboard.press("Escape");
+			await expect(palette(page)).toHaveCount(0);
+
+			// The palette's pane rows show the same keys.
+			await page.keyboard.press(`${mod}+K`);
+			await page.keyboard.type("add pane");
+			await expect(
+				palette(page)
+					.getByRole("option", { name: /^Add pane/ })
+					.locator("kbd"),
+			).toHaveAttribute("aria-label", mod === "Meta" ? "⌘\\" : "Ctrl+\\");
+			await page.keyboard.press("Escape");
+			await expect(palette(page)).toHaveCount(0);
 
 			// Shift+Esc puts the cursor in the focused pane's message box.
 			await page.keyboard.press(`${paneMod}+2`);
@@ -140,47 +158,51 @@ for (const keymap of KEYMAPS) {
 			await expect(composer(pane(page, 2))).toBeFocused();
 		});
 
-		test("only Cmd+K, Cmd+, and Shift+Esc work while typing", async ({
+		test("keys with a modifier work while typing; ? and AltGr don't", async ({
 			page,
 		}) => {
 			await openWorkspace(page, 2);
 			const box = composer(pane(page, 1));
 			await box.click();
-			const url = page.url();
 
-			for (const keys of [
-				`${mod}+Shift+O`,
-				`${mod}+Slash`,
-				`${mod}+b`,
-				`${mod}+Shift+M`,
-				`${mod}+Backslash`,
-				`${mod}+Shift+Backslash`,
-				`${paneMod}+2`,
-			]) {
-				await page.keyboard.press(keys);
-				await expect(box, keys).toBeFocused();
-			}
+			// Plain keys type: ? goes into the box and opens nothing. AltGr (Ctrl+Alt) types too.
 			await page.keyboard.press("Shift+Slash");
+			await page.keyboard.press("Control+Alt+2");
+			await expect(box).toBeFocused();
 			await expect(box).toHaveValue("?");
 			await expect(sheet(page)).toHaveCount(0);
-			await expect(modelPicker(page)).toHaveCount(0);
+
+			// Keys with ⌘, Ctrl or Alt type nothing, so they run from the box.
+			await page.keyboard.press(`${paneMod}+2`);
+			await expect(pane(page, 2)).toBeFocused();
+			await page.keyboard.press("Shift+Escape");
+			const second = composer(pane(page, 2));
+			await expect(second).toBeFocused();
+			await page.keyboard.press(`${mod}+Backslash`);
+			await expect(panes(page)).toHaveCount(3);
+			await second.click();
+			await page.keyboard.press(`${mod}+Shift+Backslash`);
 			await expect(panes(page)).toHaveCount(2);
+			await composer(pane(page, 1)).click();
+			await page.keyboard.press(`${mod}+b`);
 			await expect(sidebarState(page)).toHaveAttribute(
 				"data-state",
-				"expanded",
+				"collapsed",
 			);
-			expect(page.url()).toBe(url);
-
-			// The allowed ones: Shift+Esc moves to the focused pane's box, Cmd+K and Cmd+, open their dialogs.
-			await composer(pane(page, 2)).click();
-			await page.keyboard.press("Shift+Escape");
-			await expect(composer(pane(page, 2))).toBeFocused();
+			await page.keyboard.press(`${mod}+Slash`);
+			await expect(sheet(page)).toBeVisible();
+			await page.keyboard.press("Escape");
+			await expect(sheet(page)).toHaveCount(0);
 			await page.keyboard.press(`${mod}+K`);
 			await expect(palette(page)).toBeVisible();
 			await page.keyboard.press("Escape");
-			await expect(composer(pane(page, 2))).toBeFocused();
+			await expect(composer(pane(page, 1))).toBeFocused();
 			await page.keyboard.press(`${mod}+Comma`);
 			await expect(settingsDialog(page)).toBeVisible();
+			await page.keyboard.press("Escape");
+			await composer(pane(page, 1)).click();
+			await page.keyboard.press(`${mod}+Shift+O`);
+			await expect(page).toHaveURL(/\/new$/);
 		});
 	});
 }

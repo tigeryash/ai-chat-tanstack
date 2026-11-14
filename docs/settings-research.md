@@ -399,7 +399,7 @@ Yash picked the layout from the reference apps.)
   OpenRouter and Gateway routing. *Done when:* Vitest covers the mapping and Auto's filtering; e2e on fixture
   endpoints shows a blocked host gone from Auto and marked in "Run with", and the request to the faked OpenRouter
   carries `ignore`, `quantizations` and `max_price`.
-- [ ] **S4 Context-length warnings.** A pane-header notice when the chat outgrows its host's context, with a
+- [x] **S4 Context-length warnings.** A pane-header notice when the chat outgrows its host's context, with a
   switch in Settings. *Done when:* Vitest covers the check; e2e shows the notice on a fixture chat and not when
   it's off.
 - [x] **S5 Palette v1.** Cmd+K, go to (chats, workspaces, settings sections, Prompts), new chat, settings search,
@@ -409,7 +409,7 @@ Yash picked the layout from the reference apps.)
 - [x] **S6 Keyboard section and shortcut sheet.** Shortcut list from the command registry, ⌘/ and ? sheet, the
   shortcuts in the table above. *Done when:* e2e runs each shortcut once on macOS and Linux keymaps and none fires
   while typing in a field (except Cmd+K and ⇧Esc).
-- [ ] **S7 Palette v2.** Pane actions: add or remove pane, toggle sync, switch model or host, apply prompt, copy
+- [x] **S7 Palette v2.** Pane actions: add or remove pane, toggle sync, switch model or host, apply prompt, copy
   last reply, regenerate, stop all, theme switch. *Done when:* e2e does each on a two-pane mock workspace, and the
   composer screenshot baselines are unchanged.
 - [ ] **S8 Account section.** The signed-in profile, linked methods, both sign-out paths; signed out shows the

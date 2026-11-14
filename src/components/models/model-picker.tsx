@@ -11,6 +11,7 @@ import { LOCAL_PROVIDER, type ModelChoice } from "@/lib/chat/model-selection";
 import type { ChatNeeds } from "@/lib/hosts/host-options";
 import type { ProviderId } from "@/lib/keys/providers";
 import type { CatalogModel } from "@/lib/models/catalog";
+import { pickedChoice } from "@/lib/models/pick-choice";
 import {
 	DEFAULT_FILTERS,
 	type PickerFilters,
@@ -43,7 +44,7 @@ export interface ModelPickerProps {
 }
 
 /** `model_picked` with the catalog's developer id (or local / custom) and whether it's High Elo. */
-function trackPick(next: ModelChoice, models: readonly CatalogModel[]) {
+export function trackPick(next: ModelChoice, models: readonly CatalogModel[]) {
 	const model = next.gatewayId
 		? models.find((entry) => entry.gatewayId === next.gatewayId)
 		: undefined;
@@ -93,13 +94,7 @@ export function ModelPicker({
 		if (close) setOpen(false);
 	};
 	/** A list row: the same model keeps its host settings; another one starts on Auto. */
-	const pick = (next: ModelChoice) => {
-		const same = next.gatewayId && next.gatewayId === wanted?.gatewayId;
-		choose(
-			same ? wanted : next.gatewayId ? { ...next, autoHost: true } : next,
-			true,
-		);
-	};
+	const pick = (next: ModelChoice) => choose(pickedChoice(next, wanted), true);
 	const label = triggerLabel(choice ?? wanted, chosenModel);
 
 	return (
@@ -118,8 +113,6 @@ export function ModelPicker({
 						// Shrinks (the name truncates) in a narrow pane (roadmap 3.1).
 						className="min-w-0 shrink gap-2 font-medium"
 						aria-label={`Model: ${label}`}
-						// Cmd+Shift+M opens the focused pane's picker (roadmap R2 S6).
-						data-model-picker
 					/>
 				}
 			>

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/popover";
 import { useReplyVote, voteOnReply } from "@/lib/chat/chat-votes";
 import { type ReplyDetail, replyDetails } from "@/lib/chat/reply-details";
+import { replyText } from "@/lib/chat/reply-text";
 import { logWarn } from "@/lib/log";
 import { type PromptSource, replyPromptSource } from "@/lib/prompts/provenance";
 import { chatStore } from "@/lib/storage/app-store";
@@ -32,12 +33,6 @@ export type MessageActionsProps = MessageUIProps & {
 	/** The reply's chat, for its thumbs up/down (roadmap 3.4). No vote buttons without it. */
 	chatId?: string;
 };
-
-function textOf(message: MessageUIProps["message"]): string {
-	return message.parts
-		.flatMap((part) => (part.type === "text" ? [part.text] : []))
-		.join("\n\n");
-}
 
 /**
  * The "⋯" on a reply's action row (roadmap 2.5b): its model, host, cost, tokens and timings, and the
@@ -137,7 +132,7 @@ const MessageActions = ({
 }: MessageActionsProps) => {
 	const handleCopy = () => {
 		navigator.clipboard
-			.writeText(textOf(message))
+			.writeText(replyText(message))
 			.catch((error) => logWarn("Couldn't copy the reply:", error));
 	};
 	const details = replyDetails(message.metadata);

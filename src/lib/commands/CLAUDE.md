@@ -10,15 +10,24 @@ Notes for working in this folder. The root [CLAUDE.md](/CLAUDE.md) (commands, ha
 - **Shortcuts** (roadmap R2 S6): every shortcut is in `keymap.ts`, the only place one is written down. A command
   takes its `shortcut` from `shortcutOf(id)`; the sheet and Settings → Keyboard list `SHORTCUTS`.
   `src/components/shortcuts/shortcuts-host.tsx` (dashboard shell) runs them; Cmd+K, Cmd+, and Cmd+B keep their
-  own listeners. Only bindings with `inFields` fire while typing (Cmd+K, Cmd+, and Shift+Esc). Pane actions go
-  through `src/lib/workspaces/focused-pane.ts`.
+  own listeners. Keys with ⌘, Ctrl or Alt work while typing in a field (they type nothing), as does Shift+Esc;
+  plain keys like `?` don't (`worksWhileTyping`). The pane shortcuts carry `PANE_COMMAND_IDS` (`pane-command-ids.ts`,
+  small for the shell) and run what those commands run; Cmd+Shift+M opens the palette on "Switch model…".
 - **Hard rule 4:** a command made from your data (chat, workspace, layout) sets `kind`. Analytics send
   `kind ?? id` (`command_run`), and only commands without a `kind` go into the recent list (`recent.ts`,
   localStorage `highelo-recent-commands`). Never put a chat id or title in a fixed id.
 - **Chats only through the viewer:** the palette lists `sidebarEntries(chats, workspaces, viewer)`, as the
   sidebar does (src/lib/storage/CLAUDE.md).
-- **Bundle budget:** only `palette-state.ts`, `shortcut.ts`, `keymap.ts` and `shortcut-sheet-state.ts` (and the
+- **Bundle budget:** only `palette-state.ts`, `shortcut.ts`, `keymap.ts`, `pane-command-ids.ts` and `shortcut-sheet-state.ts` (and the
   hosts and button in `src/components/command-palette/` and `src/components/shortcuts/`) are in the dashboard shell. Everything
   else loads with the palette through `import()`. Keep those files small.
 - Toggles (`checked` set) run without closing the palette. Other commands run once it has closed and focus
   is back where it was, so what they open (Settings) returns focus there too.
+- **Pane actions** (R2 S7, `pane-commands.ts`): commands on the focused pane, which
+  `src/lib/workspaces/focused-pane.ts` tracks (the last pane clicked or focused, else pane 1). Each chat screen
+  registers its controls there (`src/components/chat/use-pane-controls.ts`), built from the functions its own
+  buttons call; a command's `when` reads `context.pane` and its `run` reads `focusedPane()` when it runs, so a
+  shortcut (S6) can run the same command. Ids for shortcuts: `PANE_COMMAND_IDS`.
+- **Nested pages:** a command with `opens` pushes a page (switch model, switch host, apply prompt, switch theme)
+  instead of running. Its rows are built only while it shows (`searchPage`), Backspace on an empty query or Esc
+  goes back. Rows from the catalog or your prompts set a `kind` (`pane.model`, `pane.host`, `prompt.apply`).

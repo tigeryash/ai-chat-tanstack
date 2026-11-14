@@ -29,9 +29,9 @@ describe("pressedShortcut", () => {
 
 	it("tells ⌘\\ from ⌘⇧\\, though Shift types |", () => {
 		const backslash = { key: "\\", code: "Backslash", ctrlKey: true };
-		expect(pressed(backslash, false)?.id).toBe("add-pane");
+		expect(pressed(backslash, false)?.id).toBe("pane.add");
 		expect(pressed({ ...backslash, key: "|", shiftKey: true }, false)?.id).toBe(
-			"remove-pane",
+			"pane.remove",
 		);
 	});
 
@@ -98,12 +98,34 @@ describe("the keymap", () => {
 		}
 	});
 
-	it("lets only Cmd+K, Cmd+, and Shift+Esc work while typing", () => {
+	it("lets keys with ⌘, Ctrl or Alt work while typing, and Shift+Esc, but not ?", () => {
+		const inFields = (init: Partial<KeyboardEvent>, apple: boolean) =>
+			pressedShortcut(key(init), apple)?.inFields;
 		expect(
-			SHORTCUTS.filter((b) => b.inFields)
-				.map((b) => b.id)
-				.sort(),
-		).toEqual(["command-palette", "focus-composer", "open-settings"]);
+			inFields({ key: "o", code: "KeyO", metaKey: true, shiftKey: true }, true),
+		).toBe(true);
+		expect(inFields({ key: "2", code: "Digit2", ctrlKey: true }, true)).toBe(
+			true,
+		);
+		expect(inFields({ key: "2", code: "Digit2", altKey: true }, false)).toBe(
+			true,
+		);
+		expect(inFields({ key: "Escape", shiftKey: true }, false)).toBe(true);
+		expect(inFields({ key: "/", code: "Slash", ctrlKey: true }, false)).toBe(
+			true,
+		);
+		expect(inFields({ key: "?", code: "Slash", shiftKey: true }, false)).toBe(
+			false,
+		);
+	});
+
+	it("ignores AltGr (Ctrl+Alt), which types characters", () => {
+		expect(
+			pressedShortcut(
+				key({ key: "2", code: "Digit2", ctrlKey: true, altKey: true }),
+				false,
+			),
+		).toBeNull();
 	});
 });
 
