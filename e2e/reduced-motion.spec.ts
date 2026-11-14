@@ -373,6 +373,34 @@ test.describe("with Reduce motion on", () => {
 		expect(frames.at(-1)?.opacity).toBe("1");
 	});
 
+	test("the command palette fades in without scaling", async ({ page }) => {
+		await page.goto("/new");
+		await expect(page.getByPlaceholder("Ask anything")).toBeVisible();
+		// Loads its code first, so the frames below are the open animation, not the download.
+		await page.getByRole("button", { name: "Command palette" }).hover();
+		await page.waitForLoadState("networkidle");
+		const frames = await page.evaluate(async () => {
+			document
+				.querySelector<HTMLButtonElement>("[aria-label='Command palette']")
+				?.click();
+			const seen: { scale: string; opacity: string }[] = [];
+			let after = 0;
+			for (let frame = 0; frame < 600 && after < 30; frame++) {
+				const popup = document.querySelector("[data-testid='command-palette']");
+				if (popup) {
+					const style = getComputedStyle(popup);
+					seen.push({ scale: style.scale, opacity: style.opacity });
+					after++;
+				}
+				await new Promise(requestAnimationFrame);
+			}
+			return seen;
+		});
+		expect(frames.length).toBe(30);
+		expect(new Set(frames.map((f) => f.scale))).toEqual(new Set(["none"]));
+		expect(frames.at(-1)?.opacity).toBe("1");
+	});
+
 	test("the composer resizes without animating", async ({ page }) => {
 		await page.goto("/e2e/composer");
 		await expect(page.locator("main[data-hydrated='true']")).toBeAttached();

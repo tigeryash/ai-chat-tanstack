@@ -402,7 +402,7 @@ Yash picked the layout from the reference apps.)
 - [ ] **S4 Context-length warnings.** A pane-header notice when the chat outgrows its host's context, with a
   switch in Settings. *Done when:* Vitest covers the check; e2e shows the notice on a fixture chat and not when
   it's off.
-- [ ] **S5 Palette v1.** Cmd+K, go to (chats, workspaces, settings sections, Prompts), new chat, settings search,
+- [x] **S5 Palette v1.** Cmd+K, go to (chats, workspaces, settings sections, Prompts), new chat, settings search,
   quick toggles, recency, lazy-loaded. *Done when:* e2e opens it from the composer and returns focus there, finds
   a chat and a setting, and opens neither another account's chat nor any request; the bundle budget passes; the
   reduced-motion spec covers it.

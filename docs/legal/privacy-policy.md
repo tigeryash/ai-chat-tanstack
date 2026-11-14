@@ -59,9 +59,10 @@ Most of what the app stores never leaves your device. It lives in your browser's
   your browser profile, not against malicious code running in the page.
 - **Settings and choices.** Your chosen models and hosts, the default model for new chats and the title model,
   picker view, hosting preferences (including hosts you block, a minimum precision and a price cap), local model
-  servers you add, background status and notification settings, and a few "already seen" flags. Stored in
-  localStorage. Hosting preferences also go, with each request, to the router you send it through (OpenRouter or
-  Vercel AI Gateway), never to us.
+  servers you add, background status and notification settings, the command palette's recently run commands
+  (which commands, never a chat's name or what you typed), and a few "already seen" flags. Stored in localStorage.
+  Hosting preferences also go, with each request, to the router you send it through (OpenRouter or Vercel AI
+  Gateway), never to us.
 - **Recent host failures.** The host, error status and time of failed requests, forgotten after 15 minutes. No
   content.
 
