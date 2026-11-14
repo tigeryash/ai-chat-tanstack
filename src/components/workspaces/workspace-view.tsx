@@ -25,7 +25,9 @@ import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { chatStore } from "@/lib/storage/app-store";
 import type { WorkspacePane } from "@/lib/storage/workspace";
 import { copySettingsToPanes } from "@/lib/workspaces/copy-settings";
+import { registerPaneController } from "@/lib/workspaces/focused-pane";
 import {
+	canAddPane,
 	layoutOf,
 	movePane,
 	removePane,
@@ -161,11 +163,25 @@ export function WorkspaceView({
 				setSaveFailed(true);
 			});
 	};
-	const addPane = async () => {
-		const next = addNewPane(workspace, await currentViewer());
+	const addPane = async (after?: string) => {
+		const next = addNewPane(workspace, await currentViewer(), undefined, after);
 		save(next);
-		setShownId(next[next.length - 1]?.chatId);
+		const known = new Set(panes.map((pane) => pane.chatId));
+		const added = next.find((pane) => !known.has(pane.chatId));
+		if (added) setShownId(added.chatId);
 	};
+	// Cmd+\ and Cmd+Shift+\ (roadmap R2 S6), and the palette's pane actions, act on this workspace.
+	useEffect(() =>
+		registerPaneController({
+			addPane: (after) => {
+				if (!canAddPane(panes, workspace.hiddenPanes.length)) return;
+				addPane(after).catch((error) =>
+					logError("Couldn't add a pane:", error),
+				);
+			},
+			removePane: (chatId) => save(removePane(panes, chatId)),
+		}),
+	);
 	const shown = panes.find((pane) => pane.chatId === shownId) ?? panes[0];
 
 	// A pane's chat is opened by `PaneChat`, never here: see quality audit Q2, W1.
@@ -184,7 +200,9 @@ export function WorkspaceView({
 			<section
 				aria-label={label}
 				data-pane-id={pane.chatId}
-				className="h-full min-h-0 min-w-0"
+				// Focusable by script only: Ctrl+1–4 (Alt+1–4 off a Mac) focus a pane (roadmap R2 S6).
+				tabIndex={-1}
+				className="h-full min-h-0 min-w-0 rounded-pane outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
 			>
 				<ChatScreen
 					chat={chat}

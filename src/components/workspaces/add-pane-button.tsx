@@ -1,9 +1,10 @@
 import { useNavigate } from "@tanstack/react-router";
 import { Columns2Icon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { currentViewer } from "@/lib/account";
 import { logError } from "@/lib/log";
+import { registerPaneController } from "@/lib/workspaces/focused-pane";
 import { createWorkspaceFrom } from "@/lib/workspaces/workspace-sessions";
 
 /**
@@ -26,6 +27,14 @@ export function AddPaneButton({ chatId }: { chatId: string }) {
 			setFailed(true);
 		}
 	};
+	// Cmd+\ (roadmap R2 S6) and the palette's "Add pane" do what this button does.
+	useEffect(() =>
+		registerPaneController({
+			addPane: () => {
+				void addPane();
+			},
+		}),
+	);
 	return (
 		<>
 			{failed && (

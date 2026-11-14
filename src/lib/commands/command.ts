@@ -10,8 +10,8 @@ import type { LayoutPane } from "@/lib/workspaces/saved-layouts";
 /** Where a command is listed. Prefixes pick one: `>` actions, `#` chats, `/` settings. */
 export type CommandGroup = "actions" | "chats" | "settings";
 
-/** Keys as named in a shortcut: "Mod" is ⌘ on a Mac and Ctrl elsewhere. */
-export type ShortcutKey = "Mod" | "Shift" | "Alt" | (string & {});
+/** Keys as named in a shortcut: "Mod" is ⌘ on a Mac and Ctrl elsewhere; "Ctrl" is Ctrl (⌃) everywhere. */
+export type ShortcutKey = "Mod" | "Ctrl" | "Shift" | "Alt" | (string & {});
 export type Shortcut = readonly ShortcutKey[];
 
 /** What a command's `when` can look at. */
@@ -29,6 +29,8 @@ export interface CommandEnv {
 	/** Opens Settings at `section`; with `setting`, focuses and highlights that row. */
 	openSettings(section: SettingsSectionId, setting?: SettingId): void;
 	toggleSidebar(): void;
+	/** Opens the keyboard shortcut sheet (roadmap R2 S6). */
+	showShortcuts(): void;
 }
 
 export interface Command {

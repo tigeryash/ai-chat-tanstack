@@ -281,7 +281,7 @@ test.describe("on a phone", () => {
 		expect(box?.x).toBeGreaterThanOrEqual(0);
 		await search(page).fill("new chat");
 		await expect(
-			results(page).getByRole("option", { name: "New chat", exact: true }),
+			results(page).getByRole("option", { name: /^New chat( |$)/ }),
 		).toBeVisible();
 	});
 });

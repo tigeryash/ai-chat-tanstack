@@ -20,6 +20,7 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { isTypingTarget } from "@/lib/commands/shortcut";
 import { cn } from "@/lib/utils";
 
 const SIDEBAR_WIDTH = "16rem";
@@ -90,6 +91,8 @@ function SidebarProvider({
 	// Adds a keyboard shortcut to toggle the sidebar.
 	React.useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
+			// Not while typing (roadmap R2 S6): only a few shortcuts work in a text field.
+			if (isTypingTarget(event.target)) return;
 			if (
 				event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
 				(event.metaKey || event.ctrlKey)

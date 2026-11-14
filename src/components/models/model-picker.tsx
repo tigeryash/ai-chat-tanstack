@@ -118,6 +118,8 @@ export function ModelPicker({
 						// Shrinks (the name truncates) in a narrow pane (roadmap 3.1).
 						className="min-w-0 shrink gap-2 font-medium"
 						aria-label={`Model: ${label}`}
+						// Cmd+Shift+M opens the focused pane's picker (roadmap R2 S6).
+						data-model-picker
 					/>
 				}
 			>
