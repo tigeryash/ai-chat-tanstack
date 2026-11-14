@@ -77,6 +77,14 @@ describe("settingsCommands", () => {
 		expect(run.openSettings).toHaveBeenCalledWith("privacy");
 	});
 
+	it("lists every registry section and row, Models & hosts included", () => {
+		const ids = settingsCommands().map((c) => c.id);
+		expect(ids).toContain("settings.models");
+		for (const row of ["blocked-hosts", "min-precision", "price-cap"]) {
+			expect(ids).toContain(`setting.${row}`);
+		}
+	});
+
 	it("has fixed, analytics-safe ids", () => {
 		for (const command of settingsCommands()) {
 			expect(analyticsIdOf(command)).toMatch(/^[a-z0-9][a-z0-9._-]{0,39}$/);

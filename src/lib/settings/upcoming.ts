@@ -9,8 +9,7 @@ export const SECTION_UPCOMING: Record<SettingsSectionId, string> = {
 	chat: "Reply stats, reasoning open or closed, and scroll sync defaults.",
 	keyboard: "A list of keyboard shortcuts.",
 	notifications: "Notifications for agent runs.",
-	models:
-		"Host preferences: hosts to skip, a price cap for Auto, and per-model defaults.",
+	models: "Per-model defaults and context-length warnings.",
 	connections: "More connections, like a search tool key.",
 	prompts: "A default system prompt for every chat.",
 	data: "Storage used on this device, and deleting every chat here.",

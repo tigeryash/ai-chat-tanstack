@@ -1,4 +1,7 @@
-import { extractReasoningMiddleware, wrapLanguageModel } from "ai";
+import {
+	extractReasoningMiddleware,
+	wrapLanguageModel,
+} from "@/lib/chat/ai-engine";
 
 // `ai` no longer re-exports the provider spec types (LanguageModelV2/V3/V4).
 type BaseModel = Parameters<typeof wrapLanguageModel>[0]["model"];

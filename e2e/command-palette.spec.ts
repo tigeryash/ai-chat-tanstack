@@ -148,6 +148,16 @@ test("finds a chat and a setting, and makes no request doing it", async ({
 	await expect(row).toHaveAttribute("data-highlighted", "true");
 	await expect(page).toHaveURL(/\?settings=connections$/);
 
+	// Settings added by later slices are searchable too (Models & hosts, R2 S3).
+	await page.keyboard.press("Escape");
+	await expect(settingsDialog(page)).toHaveCount(0);
+	await openPalette(page);
+	await search(page).fill("/price cap");
+	await expect(option(page, /Price cap for Auto/)).toContainText(
+		"Settings / Models & hosts",
+	);
+	await page.keyboard.press("Escape");
+
 	page.off("request", record);
 	expect(requests).toEqual([]);
 });

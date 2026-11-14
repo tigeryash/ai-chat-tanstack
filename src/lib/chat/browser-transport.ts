@@ -1,42 +1,20 @@
-import {
-	type ChatTransport,
-	convertToModelMessages,
-	type LanguageModel,
-	streamText,
-	type UIMessage,
-	type UIMessageChunk,
+import type {
+	ChatTransport,
+	LanguageModel,
+	UIMessage,
+	UIMessageChunk,
 } from "ai";
-import { textFilesAsText } from "@/lib/attachments/text-file";
-import { hostKey, recordHostResult } from "@/lib/hosts/host-failures";
-import { getProviderKey } from "@/lib/keys";
-import { localEndpointFor } from "@/lib/local-endpoints/endpoints";
-import { logError } from "@/lib/log";
-import { mergeProviderOptions, toCallParams } from "@/lib/params/mapping";
-import { parseRequestSettings } from "@/lib/params/request";
-import { developerOf, type ParamRoute } from "@/lib/params/routes";
 import type { PromptSource } from "@/lib/prompts/provenance";
-import { z } from "@/lib/zod";
-import {
-	ChatSetupError,
-	chatErrorLogFields,
-	describeChatError,
-} from "./chat-errors";
-import { createLanguageModel } from "./language-model";
-import {
-	LOCAL_PROVIDER,
-	type ModelSelection,
-	modelSelectionSchema,
-	providerName,
-} from "./model-selection";
-import { type ReplyHost, replyHostOf } from "./reply-host";
-import { createReplyClock, type ReplyStats } from "./reply-stats";
-import { routingOptions } from "./routing-options";
+import type { ModelSelection } from "./model-selection";
+import type { ReplyHost } from "./reply-host";
+import type { ReplyStats } from "./reply-stats";
 
 // The chat engine's transport (roadmap decision 7): `useChat` hands it the messages, and it runs
 // `streamText` right here in the browser against the chosen provider. Nothing goes through our server.
 // The provider and model come in each request's `body` (`sendMessage(…, { body: selection })`), so
 // every pane can pick its own. The chat's settings ride along in `body.settings` (roadmap 2.4b): the
 // transport sends only what the model and host support (src/lib/params/mapping.ts).
+// The work happens in stream-reply.ts, which loads on the first send (perf/trim-new-route).
 
 /**
  * Saved on each reply, so a chat shows which model wrote what, which host answered (roadmap 2.2b)
@@ -58,152 +36,39 @@ export type ResolveModel = (
 	selection: ModelSelection,
 ) => Promise<LanguageModel>;
 
-/** The real provider for `selection`, with the key from the vault. */
-export const resolveProviderModel: ResolveModel = async (selection) => {
-	if (selection.provider === LOCAL_PROVIDER) {
-		const endpoint = localEndpointFor(selection.endpoint);
-		if (!endpoint) {
-			throw new ChatSetupError(
-				selection.endpoint
-					? "This chat's local server was removed in Settings. Pick another model."
-					: "Add a local server (LM Studio or Ollama) in Settings first.",
-			);
-		}
-		return createLanguageModel(selection, null, undefined, endpoint.baseUrl);
-	}
-	const key = await getProviderKey(selection.provider);
-	if (!key) {
-		throw new ChatSetupError(
-			`There's no ${providerName(selection.provider)} key in this browser. Add one in Settings.`,
-		);
-	}
-	return createLanguageModel(selection, key);
-};
-
-/** Where the settings go: the route decides which settings exist and how they're sent. */
-function paramRouteOf(selection: ModelSelection): ParamRoute {
-	return {
-		provider: selection.provider,
-		endpointKind:
-			selection.provider === LOCAL_PROVIDER
-				? localEndpointFor(selection.endpoint)?.kind
-				: undefined,
-		developer: developerOf(selection.gatewayId),
-	};
-}
-
-const replyIdSchema = z.object({ replyId: z.string().min(1).max(256) });
+const loadStreamReply = () => import("./stream-reply");
 
 /**
- * The id the reply must get, when the request asks for one (`body.replyId`): regenerating into a
- * branch (roadmap R4) names the new reply up front, so its branch exists before it streams.
+ * Starts loading the send path as soon as the chat engine has loaded (chat-sessions.ts calls it), in a
+ * task of its own, so the first send doesn't wait for it but the page doesn't preload it. A failed
+ * download is retried by the send itself.
  */
-function replyIdOf(body: object | undefined): string | undefined {
-	const parsed = replyIdSchema.safeParse(body);
-	return parsed.success ? parsed.data.replyId : undefined;
-}
-
-function parseSelection(body: object | undefined): ModelSelection {
-	const parsed = modelSelectionSchema.safeParse(body);
-	if (!parsed.success) {
-		throw new ChatSetupError("Pick a provider and a model first.");
-	}
-	return parsed.data;
+export function prefetchStreamReply(): void {
+	if (typeof window === "undefined") return;
+	const load = () => {
+		loadStreamReply().catch(() => undefined);
+	};
+	setTimeout(load, 0);
 }
 
 export class BrowserChatTransport implements ChatTransport<UIMessage> {
-	readonly #resolveModel: ResolveModel;
+	readonly #resolveModel: ResolveModel | undefined;
 	readonly #now: (() => number) | undefined;
 
-	/** `resolveModel` swaps in a mock model for tests, and `now` a clock for timing replies. */
-	constructor(
-		resolveModel: ResolveModel = resolveProviderModel,
-		now?: () => number,
-	) {
+	/**
+	 * `resolveModel` swaps in a mock model for tests (default: the real provider, with the key from the
+	 * vault, `provider-model.ts`), and `now` a clock for timing replies.
+	 */
+	constructor(resolveModel?: ResolveModel, now?: () => number) {
 		this.#resolveModel = resolveModel;
 		this.#now = now;
 	}
 
-	async sendMessages({
-		messages,
-		abortSignal,
-		body,
-	}: Parameters<ChatTransport<UIMessage>["sendMessages"]>[0]): Promise<
-		ReadableStream<UIMessageChunk>
-	> {
-		const selection = parseSelection(body);
-		const replyId = replyIdOf(body);
-		const { params, support, systemPrompt, promptSource } =
-			parseRequestSettings(
-				(body as { settings?: unknown } | undefined)?.settings,
-			);
-		const call = toCallParams(paramRouteOf(selection), params, support);
-		const name = providerName(selection.provider);
-		const host = hostKey(selection.provider, selection.upstream);
-		const onError = (error: unknown) => {
-			const fields = chatErrorLogFields(error);
-			// Content-free on purpose (hard rule 4): no prompt, reply, or provider message.
-			logError("Chat request failed:", {
-				provider: selection.provider,
-				...fields,
-			});
-			if (fields.status !== undefined || error instanceof TypeError) {
-				recordHostResult(host, { ok: false, status: fields.status });
-			}
-			return describeChatError(error, name);
-		};
-
-		try {
-			const model = await this.#resolveModel(selection);
-			// Text and code files go as text parts, which every model reads (roadmap 1.6b).
-			const modelMessages = await convertToModelMessages(
-				textFilesAsText(messages),
-			);
-			// Started once the key is read and the messages are converted, so TTFT is the provider's.
-			const clock = createReplyClock(this.#now);
-			const result = streamText({
-				model,
-				...call.settings,
-				...(systemPrompt !== undefined && { system: systemPrompt }),
-				messages: modelMessages,
-				providerOptions: mergeProviderOptions(
-					routingOptions(selection),
-					call.providerOptions,
-				),
-				abortSignal,
-			});
-			return result.toUIMessageStream({
-				sendReasoning: true,
-				sendSources: true,
-				// The start chunk carries `replyId`, which the chat gives the reply it streams.
-				...(replyId !== undefined && {
-					originalMessages: messages,
-					generateMessageId: () => replyId,
-				}),
-				onError,
-				messageMetadata: ({ part }): Partial<ReplyMetadata> | undefined => {
-					const stats = clock(part);
-					if (stats) return stats;
-					if (part.type === "start") {
-						return {
-							provider: selection.provider,
-							model: selection.model,
-							gatewayId: selection.gatewayId,
-							upstream: selection.upstream,
-							...(promptSource && { prompt: promptSource }),
-						};
-					}
-					if (part.type === "finish-step") {
-						recordHostResult(host, { ok: true });
-						return replyHostOf(selection, part);
-					}
-					return undefined;
-				},
-			});
-		} catch (error) {
-			// useChat shows this error's message, so swap in the safe one.
-			throw new ChatSetupError(onError(error));
-		}
+	async sendMessages(
+		options: Parameters<ChatTransport<UIMessage>["sendMessages"]>[0],
+	): Promise<ReadableStream<UIMessageChunk>> {
+		const { streamReply } = await loadStreamReply();
+		return streamReply(options, this.#resolveModel, this.#now);
 	}
 
 	async reconnectToStream() {
