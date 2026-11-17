@@ -489,7 +489,7 @@ Only what's still open. When one is done, tick it, add a dated note, and move it
   *Status (2026-11-08):* done in [PR #70](https://github.com/tigeryash/ai-chat-tanstack/pull/70). Logic in `src/lib/chat/reply-stats.ts` and `chat-usage.ts`.
 - [x] **2.5b Quieter reply stats** (Yash, 2026-11-09). A reply's tokens, TTFT and tokens/sec stop showing inline;
   a "⋯" button on its action row opens them (with the cost and host). Later: a setting for which stats show inline.
-  *Status (2026-11-09):* the "⋯" popover is done in [PR #85](https://github.com/tigeryash/ai-chat-tanstack/pull/85); the inline-stats setting is still to do.
+  *Status (2026-11-09):* the "⋯" popover is done in [PR #85](https://github.com/tigeryash/ai-chat-tanstack/pull/85); the inline-stats setting in [PR #123](https://github.com/tigeryash/ai-chat-tanstack/pull/123) (R2 S10).
 - [ ] **2.6 (Stretch) In-browser models.** WebGPU (transformers.js / WebLLM) and browser built-in AI (e.g. Chrome's
   Prompt API) as extra connection types.
 
@@ -586,6 +586,8 @@ on top. Order: R1 first; R2 and R3 can run alongside; R4 after R3; R5 any time.
     Settings → Keyboard list. *Status:* [PR #115](https://github.com/tigeryash/ai-chat-tanstack/pull/115).
   - [x] **S7 Palette v2.** Pane actions on the focused pane (add, remove, sync, switch model or host, apply
     prompt, model settings, copy, regenerate, stop all) and Switch theme, with nested pages. *Status:* [PR #116](https://github.com/tigeryash/ai-chat-tanstack/pull/116).
+  - [x] **S10 Chat section.** Stats under each reply (none, cost, all), how reasoning starts, and Sync scroll and
+    new-pane-synced defaults for workspaces. *Status:* [PR #123](https://github.com/tigeryash/ai-chat-tanstack/pull/123).
 - [ ] **R3 Quality audit Q3.** A fresh review of UX consistency, performance and code health across everything
   Milestone 2 added, folded together with R1's notes, turned into fix slices (as Q1 and Q2 were).
 - [ ] **R4 Leftovers.** Q2 slice 5 (small follow-ups); workspaces and layouts in exports (from 3.5 and 1.10);
