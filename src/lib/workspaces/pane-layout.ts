@@ -21,14 +21,15 @@ export function canAddPane(panes: Panes, hidden = 0): boolean {
 }
 
 /**
- * Adds a synced pane for `chatId` to the right of `after` (at the end when it's not shown). No change at
- * the limit or for a chat already shown.
+ * Adds a pane for `chatId` to the right of `after` (at the end when it's not shown), synced unless
+ * `synced` is false (Settings → Chat, R2 S10). No change at the limit or for a chat already shown.
  */
 export function addPane(
 	panes: Panes,
 	chatId: string,
 	hidden = 0,
 	after?: string,
+	synced = true,
 ): WorkspacePane[] {
 	if (
 		!canAddPane(panes, hidden) ||
@@ -36,7 +37,7 @@ export function addPane(
 	) {
 		return [...panes];
 	}
-	const added = { chatId, size: 0, synced: true };
+	const added = { chatId, size: 0, synced };
 	const at = panes.findIndex((pane) => pane.chatId === after);
 	if (at === -1) return evenly([...panes, added]);
 	return evenly([...panes.slice(0, at + 1), added, ...panes.slice(at + 1)]);
@@ -101,12 +102,13 @@ export function layoutOf(panes: Panes): Record<string, number> {
 	return Object.fromEntries(panes.map((pane) => [pane.chatId, pane.size]));
 }
 
-/** A new workspace's panes: the chats given, synced, in equal widths. */
-export function initialPanes(chatIds: readonly string[]): WorkspacePane[] {
+/** A new workspace's panes: the chats given, in equal widths, synced unless `synced` is false. */
+export function initialPanes(
+	chatIds: readonly string[],
+	synced = true,
+): WorkspacePane[] {
 	return evenly(
-		chatIds
-			.slice(0, MAX_PANES)
-			.map((chatId) => ({ chatId, size: 0, synced: true })),
+		chatIds.slice(0, MAX_PANES).map((chatId) => ({ chatId, size: 0, synced })),
 	);
 }
 

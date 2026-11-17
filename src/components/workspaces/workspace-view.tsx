@@ -20,6 +20,7 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import { currentViewer } from "@/lib/account";
 import { readChatModelChoice } from "@/lib/chat/chat-model-choice";
+import { readChatPrefs } from "@/lib/chat/chat-prefs";
 import { peekOpenChat, retainChat } from "@/lib/chat/open-chats";
 import { logError } from "@/lib/log";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
@@ -146,7 +147,10 @@ export function WorkspaceView({
 	const reduced = usePrefersReducedMotion();
 	const { panes } = workspace;
 	useRetainPanes(panes);
-	const [syncScroll, setSyncScroll] = useState(false);
+	// Starts as Settings → Chat says (R2 S10); the toolbar switch changes it for this visit only.
+	const [syncScroll, setSyncScroll] = useState(
+		() => readChatPrefs().syncScroll,
+	);
 	const panesRef = useRef<HTMLDivElement>(null);
 	useSyncScroll(panesRef, syncScroll && !isMobile);
 

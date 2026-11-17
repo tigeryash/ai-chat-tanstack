@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { replyDetails } from "./reply-details";
+import { inlineReplyStats, replyDetails } from "./reply-details";
 import { USAGE_FIXTURE_MESSAGES } from "./usage.fixtures";
 
 const replies = USAGE_FIXTURE_MESSAGES.filter((m) => m.role === "assistant");
@@ -55,5 +55,33 @@ describe("replyDetails", () => {
 		expect(
 			rows({ provider: "openai", model: "m", ttftMs: -5, usage: "lots" }),
 		).toEqual(["Model: m", "Host: OpenAI", "Cost: No price"]);
+	});
+});
+
+describe("inlineReplyStats", () => {
+	it("shows nothing by default", () => {
+		expect(inlineReplyStats(replies[0]?.metadata, "none")).toEqual([]);
+	});
+
+	it("shows only the cost, marking estimates", () => {
+		expect(inlineReplyStats(replies[0]?.metadata, "cost")).toEqual(["$0.0042"]);
+		expect(inlineReplyStats(replies[1]?.metadata, "cost")).toEqual([
+			"~$0.0011",
+		]);
+	});
+
+	it("shows cost, tokens and timings for all", () => {
+		expect(inlineReplyStats(replies[0]?.metadata, "all")).toEqual([
+			"$0.0042",
+			"1,540 tokens",
+			"420 ms",
+			"52 tok/s",
+		]);
+	});
+
+	it("skips what wasn't recorded, and malformed metadata", () => {
+		expect(inlineReplyStats(replies[2]?.metadata, "cost")).toEqual([]);
+		expect(inlineReplyStats(undefined, "all")).toEqual([]);
+		expect(inlineReplyStats({ model: "m", ttftMs: -5 }, "all")).toEqual([]);
 	});
 });

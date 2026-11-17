@@ -1,15 +1,17 @@
 import {
+	formatCost,
 	formatCostExact,
 	formatLatency,
 	formatSpeed,
 } from "@/lib/models/format";
 import type { ReplyMetadata } from "./browser-transport";
+import type { InlineStats } from "./chat-prefs";
 import { LOCAL_PROVIDER, providerName } from "./model-selection";
 import { readReplyStats, totalTokens } from "./reply-stats";
 
 // Everything recorded about one reply (roadmap 2.5b), for the "⋯" popover on its action row: the
-// model, host and cost from 2.2b and the tokens and timings from 2.5. Nothing shows inline under a
-// reply; it all lives here.
+// model, host and cost from 2.2b and the tokens and timings from 2.5. By default nothing shows inline
+// under a reply; Settings → Chat can show its cost, or all of its stats, beside the "⋯" (R2 S10).
 
 export interface ReplyDetail {
 	label: string;
@@ -84,4 +86,31 @@ export function replyDetails(metadata: unknown): ReplyDetail[] | null {
 		{ label: "Cost", value: costValue(reply) },
 		...statsRows(metadata),
 	];
+}
+
+/**
+ * The stats shown under a reply beside its "⋯" (Settings → Chat, R2 S10): none, its cost, or cost,
+ * tokens, time to first token and speed. Empty when there's nothing recorded to show.
+ */
+export function inlineReplyStats(
+	metadata: unknown,
+	mode: InlineStats,
+): string[] {
+	if (mode === "none") return [];
+	const reply = metadata as Partial<ReplyMetadata> | undefined;
+	if (typeof reply?.model !== "string") return [];
+	const cost = formatCost(
+		typeof reply.cost === "number" ? reply.cost : undefined,
+	);
+	const shownCost =
+		cost && reply.costEstimated && !cost.startsWith("<") ? `~${cost}` : cost;
+	if (mode === "cost") return shownCost ? [shownCost] : [];
+	const stats = readReplyStats(metadata);
+	const total = totalTokens(stats?.usage);
+	return [
+		shownCost,
+		total === undefined ? undefined : `${COUNT.format(total)} tokens`,
+		formatLatency(stats?.ttftMs),
+		formatSpeed(stats?.tokensPerSecond),
+	].filter((part): part is string => typeof part === "string");
 }
