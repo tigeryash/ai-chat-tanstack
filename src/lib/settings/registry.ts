@@ -358,11 +358,12 @@ export const SETTINGS = [
 		id: "inline-stats",
 		section: "chat",
 		card: "replies",
-		label: "Stats under each reply",
+		label: "Reply stats",
 		description:
-			'What shows beside a reply\'s "⋯" button: nothing, its cost, or its cost, tokens, time to first token and speed. "⋯" always lists them all.',
+			'Where a reply\'s cost, tokens, time to first token and speed show: only in its "⋯" menu, or also beside the reply, just the cost or all of them.',
 		keywords: [
 			"reply stats",
+			"inline stats",
 			"cost",
 			"price",
 			"tokens",
@@ -375,7 +376,7 @@ export const SETTINGS = [
 		],
 		scope: "global",
 		storage: "syncs",
-		layout: "inline",
+		layout: "block",
 	},
 	{
 		id: "reasoning-start",
@@ -383,7 +384,7 @@ export const SETTINGS = [
 		card: "replies",
 		label: "Reasoning",
 		description:
-			"How a reply's thinking starts: open while the model thinks and closed when it's done, always open, or closed until you open it.",
+			"How a reply's thinking starts: closed until you open it (\"Thinking...\" still shows while it works), open while the model thinks and closed when it's done, or always open.",
 		keywords: [
 			"thinking",
 			"reasoning open",

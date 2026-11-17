@@ -14,15 +14,15 @@ import type { SettingControlProps } from "./setting-row-props";
 // Settings → Chat (roadmap R2 S4 and S10).
 
 const INLINE_STATS_LABELS: Record<InlineStats, string> = {
-	none: "None",
-	cost: "Cost",
-	all: "All",
+	none: "In the ⋯ menu",
+	cost: "Cost beside the reply",
+	all: "All beside the reply",
 };
 
 const REASONING_LABELS: Record<ReasoningStart, string> = {
+	closed: "Closed",
 	"while-thinking": "Open while thinking",
 	open: "Always open",
-	closed: "Closed",
 };
 
 type SwitchPref = "contextWarnings" | "syncScroll" | "newPanesSynced";

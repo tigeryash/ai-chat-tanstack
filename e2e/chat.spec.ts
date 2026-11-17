@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test";
+import { CHAT_PREFS_KEY } from "../src/lib/chat/chat-prefs";
 import { MOCK_REASONING, MOCK_REPLY } from "../src/routes/e2e/-mock-chat";
 import { expect, test } from "./support/fixtures";
 
@@ -32,6 +33,14 @@ function thinkingShows(page: Page) {
 	);
 }
 
+/** Reasoning opens while it streams (Settings → Chat; the default is closed, R2 S10). */
+async function openReasoningWhileThinking(page: Page) {
+	await page.addInitScript(([key, value]) => localStorage.setItem(key, value), [
+		CHAT_PREFS_KEY,
+		JSON.stringify({ reasoning: "while-thinking" }),
+	] as const);
+}
+
 async function send(page: Page, text: string) {
 	const box = page.getByPlaceholder("Ask anything");
 	await box.fill(text);
@@ -45,6 +54,7 @@ const reply = (page: Page) =>
 test("a reply streams in, reasoning first and live, then saves locally", async ({
 	page,
 }) => {
+	await openReasoningWhileThinking(page);
 	await open(page);
 	const thinking = thinkingShows(page);
 	await send(page, "Hello mock");
@@ -169,6 +179,7 @@ test("finished reasoning reopens collapsed after a reload, without opening first
 			attributeFilter: ["aria-expanded"],
 		});
 	});
+	await openReasoningWhileThinking(page);
 	await open(page);
 	await send(page, "Hello mock");
 	// A live reply opens its reasoning.

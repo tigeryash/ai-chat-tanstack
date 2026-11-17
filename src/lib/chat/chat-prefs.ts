@@ -7,22 +7,26 @@ import { z } from "@/lib/zod";
 
 export const CHAT_PREFS_KEY = "highelo-chat-prefs";
 
-/** What shows under a reply, beside its "⋯": nothing, its cost, or cost, tokens and timings. */
+/**
+ * Where a reply's stats show: only in its "⋯" menu (stored as `none`), or also beside the reply: just the
+ * cost, or cost, tokens and timings. The "⋯" menu always lists them all.
+ */
 export const INLINE_STATS = ["none", "cost", "all"] as const;
 export type InlineStats = (typeof INLINE_STATS)[number];
 
 /**
- * How a reply's reasoning starts: open while the model thinks and closed once it's done, always open,
- * or closed until the person opens it.
+ * How a reply's reasoning starts: closed until the person opens it (its "Thinking..." line still shows
+ * while it streams), open while the model thinks and closed once it's done, or always open. Add a
+ * choice here, with its label in `chat-settings.tsx` and its props in `message-ui.tsx`.
  */
-export const REASONING_STARTS = ["while-thinking", "open", "closed"] as const;
+export const REASONING_STARTS = ["closed", "while-thinking", "open"] as const;
 export type ReasoningStart = (typeof REASONING_STARTS)[number];
 
 const schema = z.object({
 	/** A notice in the pane header when the chat nears or passes its context length. */
 	contextWarnings: z.boolean().default(true),
 	inlineStats: z.enum(INLINE_STATS).default("none"),
-	reasoning: z.enum(REASONING_STARTS).default("while-thinking"),
+	reasoning: z.enum(REASONING_STARTS).default("closed"),
 	/** Whether a workspace opens with Sync scroll on (roadmap 3.4). */
 	syncScroll: z.boolean().default(false),
 	/** Whether a pane added to a workspace, or a new workspace's panes, start synced (roadmap 3.2). */
@@ -34,7 +38,7 @@ export type ChatPrefs = z.infer<typeof schema>;
 export const DEFAULT_CHAT_PREFS: ChatPrefs = {
 	contextWarnings: true,
 	inlineStats: "none",
-	reasoning: "while-thinking",
+	reasoning: "closed",
 	syncScroll: false,
 	newPanesSynced: true,
 };

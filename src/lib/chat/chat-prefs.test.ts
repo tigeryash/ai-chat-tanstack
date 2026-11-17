@@ -18,7 +18,7 @@ describe("chat prefs", () => {
 		expect(DEFAULT_CHAT_PREFS).toEqual({
 			contextWarnings: true,
 			inlineStats: "none",
-			reasoning: "while-thinking",
+			reasoning: "closed",
 			syncScroll: false,
 			newPanesSynced: true,
 		});

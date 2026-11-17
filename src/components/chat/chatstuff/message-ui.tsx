@@ -109,7 +109,7 @@ const REASONING_START_PROPS: Record<
 	ReasoningStart,
 	{ defaultOpen: boolean; autoClose: boolean }
 > = {
+	closed: { defaultOpen: false, autoClose: false },
 	"while-thinking": { defaultOpen: true, autoClose: true },
 	open: { defaultOpen: true, autoClose: false },
-	closed: { defaultOpen: false, autoClose: false },
 };
