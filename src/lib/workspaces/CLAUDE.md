@@ -31,4 +31,6 @@ Notes for working in this folder. The root [CLAUDE.md](/CLAUDE.md) (commands, ha
 - **Focused pane** (R2 S7, `focused-pane.ts`): which pane the palette's pane actions and S6's shortcuts act on,
   and every pane's controls (`PaneControls`), registered each render by `ChatScreen` (`usePaneControls`; a single
   chat is "Pane 1"). A workspace pane's section sets focus on pointer down or focus; on a phone the shown pane is
-  the focused one. Imports only types, so the palette can read it without the chat engine.
+  the focused one. Imports only types, so the palette can read it without the chat engine. S6's shortcuts
+  and the palette's rows share its actions (`addPaneToFocused`, `removeFocusedPane`); it also focuses a pane by
+  number (`focusPaneAt`) or the focused pane's message box (`focusComposer`, `[data-composer-input]`).

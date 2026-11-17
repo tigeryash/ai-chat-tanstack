@@ -38,6 +38,12 @@ describe("pane layout", () => {
 		expect(ids(addPane(initialPanes(["a"]), "a"))).toEqual(["a"]);
 	});
 
+	it("adds to the right of a given pane, or at the end when it isn't shown", () => {
+		const panes = initialPanes(["a", "b"]);
+		expect(ids(addPane(panes, "c", 0, "a"))).toEqual(["a", "c", "b"]);
+		expect(ids(addPane(panes, "c", 0, "zz"))).toEqual(["a", "b", "c"]);
+	});
+
 	it("removes a pane but never the last", () => {
 		const panes = initialPanes(["a", "b", "c"]);
 		const two = removePane(panes, "b");

@@ -489,14 +489,21 @@ export function cardsInSection(section: SettingsSectionId) {
 		.filter(({ rows }) => rows.length > 0);
 }
 
+/** Sections that show something other than rows: Keyboard lists the shortcuts (roadmap R2 S6). */
+export const SECTIONS_WITH_OWN_BODY: ReadonlySet<SettingsSectionId> = new Set([
+	"keyboard",
+]);
+
 /**
- * Sections shown in the nav: those with rows, plus General, where Settings opens. A section without
- * rows yet still opens from a link (`?settings=keyboard`) and says what's coming.
+ * Sections shown in the nav: those with rows or their own body, plus General, where Settings opens. A
+ * section without rows yet still opens from a link (`?settings=chat`) and says what's coming.
  */
 export function visibleSettingsSections(): SettingsSection[] {
 	return SETTINGS_SECTIONS.filter(
 		(section) =>
-			section.id === "general" || settingsInSection(section.id).length > 0,
+			section.id === "general" ||
+			SECTIONS_WITH_OWN_BODY.has(section.id) ||
+			settingsInSection(section.id).length > 0,
 	);
 }
 

@@ -19,9 +19,9 @@ import {
 	layoutCommands,
 	settingsCommands,
 } from "@/lib/commands/data-commands";
+import { PANE_COMMAND_IDS } from "@/lib/commands/pane-command-ids";
 import {
 	type LocalModelList,
-	PANE_COMMAND_IDS,
 	paneCommands,
 } from "@/lib/commands/pane-commands";
 import { usePrompts } from "@/lib/prompts/use-prompts";

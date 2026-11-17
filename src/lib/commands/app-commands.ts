@@ -7,6 +7,7 @@ import {
 } from "@/lib/appearance/schema";
 import { updateAppearance } from "@/lib/appearance/store";
 import type { Command } from "./command";
+import { shortcutOf } from "./keymap";
 
 // The app's fixed commands (roadmap R2 S5): actions, and the quick toggles that flip a setting right in
 // the palette. Their ids are stable slugs: recency stores them and `command_run` sends them.
@@ -17,6 +18,7 @@ export const ACTION_COMMANDS: readonly Command[] = [
 		title: "New chat",
 		keywords: ["create", "start", "conversation"],
 		group: "actions",
+		shortcut: shortcutOf("new-chat"),
 		run: (env) => env.goTo("/new"),
 	},
 	{
@@ -32,7 +34,7 @@ export const ACTION_COMMANDS: readonly Command[] = [
 		title: "Open Settings",
 		keywords: ["preferences", "options", "configure"],
 		group: "actions",
-		shortcut: ["Mod", ","],
+		shortcut: shortcutOf("open-settings"),
 		run: (env) => env.openSettings("general"),
 	},
 	{
@@ -40,8 +42,16 @@ export const ACTION_COMMANDS: readonly Command[] = [
 		title: "Toggle sidebar",
 		keywords: ["hide sidebar", "show sidebar", "chat list"],
 		group: "actions",
-		shortcut: ["Mod", "B"],
+		shortcut: shortcutOf("toggle-sidebar"),
 		run: (env) => env.toggleSidebar(),
+	},
+	{
+		id: "show-shortcuts",
+		title: "Keyboard shortcuts",
+		keywords: ["keys", "hotkeys", "keybindings", "help"],
+		group: "actions",
+		shortcut: shortcutOf("show-shortcuts"),
+		run: (env) => env.showShortcuts(),
 	},
 ];
 

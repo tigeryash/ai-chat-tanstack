@@ -6,14 +6,17 @@ import { useSyncExternalStore } from "react";
 
 let open = false;
 let returnTo: Element | null = null;
+let startPage: string | null = null;
 const listeners = new Set<() => void>();
 
 function notify() {
 	for (const listener of listeners) listener();
 }
 
-export function openCommandPalette(): void {
+/** Opens the palette; with `page`, on that command's nested page (a shortcut for "Switch model…"). */
+export function openCommandPalette(page?: string): void {
 	if (open) return;
+	startPage = page ?? null;
 	returnTo = document.activeElement;
 	open = true;
 	notify();
@@ -39,4 +42,11 @@ export function useCommandPaletteOpen(): boolean {
 /** What had focus when the palette opened. */
 export function paletteOpenedFrom(): Element | null {
 	return returnTo;
+}
+
+/** The page the palette was asked to open on, once: the palette reads it as it opens. */
+export function takeStartPage(): string | null {
+	const page = startPage;
+	startPage = null;
+	return page;
 }

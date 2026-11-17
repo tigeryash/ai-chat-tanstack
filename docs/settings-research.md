@@ -406,7 +406,7 @@ Yash picked the layout from the reference apps.)
   quick toggles, recency, lazy-loaded. *Done when:* e2e opens it from the composer and returns focus there, finds
   a chat and a setting, and opens neither another account's chat nor any request; the bundle budget passes; the
   reduced-motion spec covers it.
-- [ ] **S6 Keyboard section and shortcut sheet.** Shortcut list from the command registry, ⌘/ and ? sheet, the
+- [x] **S6 Keyboard section and shortcut sheet.** Shortcut list from the command registry, ⌘/ and ? sheet, the
   shortcuts in the table above. *Done when:* e2e runs each shortcut once on macOS and Linux keymaps and none fires
   while typing in a field (except Cmd+K and ⇧Esc).
 - [x] **S7 Palette v2.** Pane actions: add or remove pane, toggle sync, switch model or host, apply prompt, copy

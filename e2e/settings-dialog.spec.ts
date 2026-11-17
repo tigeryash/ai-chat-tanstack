@@ -71,7 +71,7 @@ test("a deep link opens a section, and Back closes the dialog, not the section",
 	await expect(page.locator("#setting-default-model")).toBeVisible();
 
 	// A section with no rows yet says what's coming.
-	await page.goto("/new?settings=keyboard");
+	await page.goto("/new?settings=prompts");
 	await expect(settingsDialog(page)).toContainText("Nothing to set here yet");
 });
 

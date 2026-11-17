@@ -3,6 +3,7 @@ import { BackgroundStatus } from "@/components/background-status/background-stat
 import { NoAccountChatsPrompt } from "@/components/chat-ownership/no-account-chats-prompt";
 import { CommandPaletteHost } from "@/components/command-palette/command-palette-host";
 import { HeaderSlot } from "@/components/header-slot";
+import { ShortcutsHost } from "@/components/shortcuts/shortcuts-host";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import {
 	SidebarInset,
@@ -35,6 +36,8 @@ function DashboardLayout() {
 			<NoAccountChatsPrompt />
 			{/* Cmd+K, the command palette (roadmap R2 S5), loaded on first open. */}
 			<CommandPaletteHost />
+			{/* The other keyboard shortcuts and their sheet (roadmap R2 S6). */}
+			<ShortcutsHost />
 		</SidebarProvider>
 	);
 }

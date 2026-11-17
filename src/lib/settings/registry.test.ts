@@ -25,11 +25,12 @@ describe("settings registry", () => {
 		expect(new Set(order).size).toBe(order.length);
 	});
 
-	it("shows General plus the sections that have rows", () => {
+	it("shows General, Keyboard and the sections that have rows", () => {
 		expect(visibleSettingsSections().map((s) => s.id)).toEqual([
 			"general",
 			"appearance",
 			"chat",
+			"keyboard",
 			"notifications",
 			"models",
 			"connections",
