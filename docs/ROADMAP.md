@@ -586,6 +586,8 @@ on top. Order: R1 first; R2 and R3 can run alongside; R4 after R3; R5 any time.
     Settings → Keyboard list. *Status:* [PR #115](https://github.com/tigeryash/ai-chat-tanstack/pull/115).
   - [x] **S7 Palette v2.** Pane actions on the focused pane (add, remove, sync, switch model or host, apply
     prompt, model settings, copy, regenerate, stop all) and Switch theme, with nested pages. *Status:* [PR #116](https://github.com/tigeryash/ai-chat-tanstack/pull/116).
+  - [x] **S8 Account section.** Profile, linked sign-in methods and both sign-outs when signed in; a sign-in card
+    when signed out. *Status:* [PR #117](https://github.com/tigeryash/ai-chat-tanstack/pull/117).
   - [x] **S10 Chat section.** Stats under each reply (none, cost, all), how reasoning starts, and Sync scroll and
     new-pane-synced defaults for workspaces. *Status:* [PR #123](https://github.com/tigeryash/ai-chat-tanstack/pull/123).
 - [ ] **R3 Quality audit Q3.** A fresh review of UX consistency, performance and code health across everything

@@ -17,6 +17,9 @@ const SECTION_LABELS: Record<string, string> = {
 	privacy: "Privacy",
 };
 
+// These tests run signed out, where Account is a sign-in card; e2e/settings-account.spec.ts covers its rows.
+const SIGNED_OUT_SETTINGS = SETTINGS.filter((s) => s.section !== "account");
+
 const composer = (page: Page) => page.getByPlaceholder("Ask anything");
 const search = (page: Page) =>
 	settingsDialog(page).getByRole("searchbox", { name: "Search settings" });
@@ -144,7 +147,9 @@ test("every setting is reachable from the nav", async ({ page }) => {
 	for (const [section, label] of Object.entries(SECTION_LABELS)) {
 		await showSettingsSection(page, label);
 		await expect(breadcrumb(page)).toHaveText(`Settings/${label}`);
-		for (const setting of SETTINGS.filter((s) => s.section === section)) {
+		for (const setting of SIGNED_OUT_SETTINGS.filter(
+			(s) => s.section === section,
+		)) {
 			const row = page.locator(`#setting-${setting.id}`);
 			await expect(row).toBeVisible();
 			await expect(row).toContainText(setting.label);
@@ -168,7 +173,7 @@ test("every setting is reachable by search, which jumps to its row and highlight
 	page,
 }) => {
 	await page.goto("/new?settings=general");
-	for (const setting of SETTINGS) {
+	for (const setting of SIGNED_OUT_SETTINGS) {
 		await search(page).fill(setting.label);
 		await settingsDialog(page)
 			.getByRole("list", { name: "Search results" })
