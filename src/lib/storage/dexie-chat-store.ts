@@ -334,6 +334,14 @@ export function createDexieChatStore({
 			);
 		},
 
+		async countAttachments(chatIds) {
+			if (chatIds.length === 0) return 0;
+			return db.attachments
+				.where("chatId")
+				.anyOf([...chatIds])
+				.count();
+		},
+
 		async putChats(chats: readonly Chat[]) {
 			// Run through the same checks as a loaded chat, so the store only ever holds valid chats.
 			const valid = await Promise.all(
