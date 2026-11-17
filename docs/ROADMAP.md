@@ -582,6 +582,8 @@ on top. Order: R1 first; R2 and R3 can run alongside; R4 after R3; R5 any time.
     the context length, with a switch in Settings → Chat. *Status:* [PR #112](https://github.com/tigeryash/ai-chat-tanstack/pull/112).
   - [x] **S5 Command palette v1.** Cmd+K over any dashboard page: go to chats, workspaces, Prompts and Settings,
     new chat (also from a layout), settings search, quick toggles, recency. *Status:* [PR #111](https://github.com/tigeryash/ai-chat-tanstack/pull/111).
+  - [x] **S6 Keyboard shortcuts.** One keymap in the command registry, a ⌘/ and ? shortcut sheet, and a read-only
+    Settings → Keyboard list. *Status:* [PR #115](https://github.com/tigeryash/ai-chat-tanstack/pull/115).
   - [x] **S7 Palette v2.** Pane actions on the focused pane (add, remove, sync, switch model or host, apply
     prompt, model settings, copy, regenerate, stop all) and Switch theme, with nested pages. *Status:* [PR #116](https://github.com/tigeryash/ai-chat-tanstack/pull/116).
   - [x] **S8 Account section.** Profile, linked sign-in methods and both sign-outs when signed in; a sign-in card

@@ -164,13 +164,16 @@ export function WorkspaceView({
 				setSaveFailed(true);
 			});
 	};
-	const addPane = async () => {
-		const next = addNewPane(workspace, await currentViewer());
+	const addPane = async (after?: string) => {
+		const next = addNewPane(workspace, await currentViewer(), undefined, after);
 		save(next);
-		setShownId(next[next.length - 1]?.chatId);
+		const known = new Set(panes.map((pane) => pane.chatId));
+		const added = next.find((pane) => !known.has(pane.chatId));
+		if (added) setShownId(added.chatId);
 	};
-	const runAddPane = () => {
-		addPane().catch((error) => logError("Couldn't add a pane:", error));
+	/** Adds a pane to the right of `after` (the end when undefined). */
+	const runAddPane = (after?: string) => {
+		addPane(after).catch((error) => logError("Couldn't add a pane:", error));
 	};
 	const shown = panes.find((pane) => pane.chatId === shownId) ?? panes[0];
 	// On a phone the shown pane is the focused one.
@@ -197,8 +200,9 @@ export function WorkspaceView({
 			label,
 			synced: pane.synced,
 			setSynced: (synced) => save(setPaneSynced(panes, pane.chatId, synced)),
+			// To the right of this pane (Cmd+\, roadmap R2 S6).
 			addPane: canAddPane(panes, workspace.hiddenPanes.length)
-				? runAddPane
+				? () => runAddPane(pane.chatId)
 				: undefined,
 			removePane:
 				panes.length > 1
@@ -210,7 +214,9 @@ export function WorkspaceView({
 			<section
 				aria-label={label}
 				data-pane-id={pane.chatId}
-				className="h-full min-h-0 min-w-0"
+				// Focusable by script only: Ctrl+1–4 (Alt+1–4 off a Mac) focus a pane (roadmap R2 S6).
+				tabIndex={-1}
+				className="h-full min-h-0 min-w-0 rounded-pane outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
 				onPointerDownCapture={() => focusPane(pane.chatId)}
 				onFocusCapture={() => focusPane(pane.chatId)}
 			>
@@ -264,7 +270,7 @@ export function WorkspaceView({
 					warned={warned}
 					diverged={diverged}
 					saveFailed={saveFailed}
-					onAddPane={runAddPane}
+					onAddPane={() => runAddPane()}
 					hiddenPanes={workspace.hiddenPanes.length}
 					currentLayout={() => layoutOfPanes(panes)}
 					missingModels={missingModels}

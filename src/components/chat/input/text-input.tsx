@@ -41,6 +41,8 @@ export const TextInput = ({ input, setInput, onKeyDown }: TextInputProps) => {
 				<textarea
 					id={id}
 					ref={textareaRef}
+					// Shift+Esc and the palette find the message box by this (roadmap R2 S6).
+					data-composer-input
 					style={{ height: `${height}px` }}
 					value={input}
 					rows={1}

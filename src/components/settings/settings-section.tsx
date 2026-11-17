@@ -1,4 +1,5 @@
 import { type ReactNode, useId } from "react";
+import { ShortcutList } from "@/components/shortcuts/shortcut-list";
 import { Button } from "@/components/ui/button";
 import {
 	cardsInSection,
@@ -21,6 +22,7 @@ export function SettingsSectionBody({
 	highlighted: SettingId | null;
 	onSelect: (section: SettingsSectionId) => void;
 }) {
+	if (section === "keyboard") return <ShortcutList />;
 	const cards = cardsInSection(section);
 	if (cards.length === 0) {
 		return <EmptySection section={section} onSelect={onSelect} />;
