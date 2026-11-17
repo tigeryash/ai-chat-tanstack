@@ -71,7 +71,7 @@ export function usePaletteCommands(page: string | null): {
 			prompts: prompts.status === "ready" ? prompts.prompts : [],
 			localModels,
 		}),
-		switchThemeCommand(appearance.theme),
+		switchThemeCommand(appearance),
 		...layoutCommands(layouts),
 		...chatCommands(entries),
 		...settingsCommands(),

@@ -4,6 +4,9 @@ import {
 	Streamdown,
 	type StreamdownProps,
 } from "streamdown";
+import { shikiThemes } from "@/lib/appearance/code-themes";
+import { useAppearance } from "@/lib/appearance/store";
+import { lazyCodePlugin } from "./lazy-code-plugin";
 
 // Streamdown with SafeMarkdown's fixed plugins. Only `safe-markdown.tsx` imports this, lazily, so the
 // markdown stack loads when there's markdown to render. Render untrusted text through SafeMarkdown,
@@ -31,13 +34,22 @@ const hardenedRehypePlugins: RehypePlugin[] = [
 export default function HardenedStreamdown(
 	props: Omit<
 		StreamdownProps,
-		"rehypePlugins" | "urlTransform" | "allowedTags" | "linkSafety"
+		| "rehypePlugins"
+		| "urlTransform"
+		| "allowedTags"
+		| "linkSafety"
+		| "plugins"
+		| "shikiTheme"
 	>,
 ) {
+	const [light, dark] = shikiThemes(useAppearance());
 	return (
 		<Streamdown
 			{...props}
 			rehypePlugins={hardenedRehypePlugins}
+			// Settings → Appearance → Code colors (roadmap R2 S9).
+			plugins={{ code: lazyCodePlugin }}
+			shikiTheme={[light, dark]}
 			// SafeMarkdown's link already opens in a new tab with the real host on hover; Streamdown's own
 			// link check would wrap it in a confirmation dialog it renders itself.
 			linkSafety={{ enabled: false }}

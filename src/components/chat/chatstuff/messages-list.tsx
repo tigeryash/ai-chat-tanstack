@@ -87,7 +87,7 @@ const MessagesList = ({
 	return (
 		<div className="flex-1 h-full  ">
 			<Conversation className=" relative size-full">
-				<ConversationContent className="w-[80%] mx-auto">
+				<ConversationContent className="mx-auto w-(--reading-width)">
 					{messages.map((message, index) => (
 						<MessageRow
 							key={message.id}

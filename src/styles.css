@@ -5,6 +5,14 @@
 @import './styles/fonts.css';
 
 /*
+  Code highlighting (roadmap R2 S9, @streamdown/code). Streamdown colors each token with these classes,
+  and Tailwind doesn't scan node_modules, so they're listed here. The light side is the token's own
+  color, the dark side Shiki's dark theme; `dark:` follows the page's scheme. Code blocks keep the
+  theme's background (no Shiki background classes).
+*/
+@source inline("text-[var(--sdm-c,inherit)] dark:text-[var(--shiki-dark,var(--sdm-c,inherit))]");
+
+/*
   Dark mode follows the system unless Settings → Appearance (roadmap 3.11) picks a side. Every color
   token below is one light-dark() pair, so the browser picks the side from color-scheme: the system's
   by default, or forced by a `dark` / `light` class on <html> (or any subtree, like the auth pages).
@@ -31,7 +39,8 @@
   - text size: --font-size-root scales every rem-based size (text, spacing, radii) at once;
     --text-* and --leading-* are Tailwind's own theme tokens;
   - density: --spacing is Tailwind's spacing step;
-  - shape: --radius, and --pane-radius for the chat pane cards.
+  - shape: --radius, and --pane-radius for the chat pane cards;
+  - reading width: --reading-width, the message column in a pane (roadmap R2 S9).
 */
 :root {
   color-scheme: light dark;
@@ -46,6 +55,7 @@
     "Liberation Mono", monospace;
   --radius: 0.5rem;
   --pane-radius: calc(var(--radius) + 0.5rem);
+  --reading-width: 80%;
 
   /* The canvas behind the panes, a step darker than the cards in dark mode. */
   --background: light-dark(oklch(0.985 0 0), oklch(0 0 0));

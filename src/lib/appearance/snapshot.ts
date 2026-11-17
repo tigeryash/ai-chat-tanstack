@@ -15,6 +15,20 @@ export interface AppearanceSnapshot {
 /** Tailwind's spacing step per density. 0.25rem is Tailwind's default. */
 const SPACING = { compact: "0.21875rem", comfortable: null } as const;
 
+/** `--radius` and `--pane-radius` per corner radius; null keeps styles.css's. */
+const RADIUS = {
+	sharp: ["0.125rem", "0.25rem"],
+	default: null,
+	round: ["0.875rem", "1.5rem"],
+} as const;
+
+/** `--reading-width`, the message column's width. */
+const READING_WIDTH = {
+	narrow: "min(80%, 42rem)",
+	default: null,
+	full: "100%",
+} as const;
+
 /** Every property a snapshot can set, so applying one clears what the last one set. */
 export const MANAGED_VARS = [
 	"--font-size-root",
@@ -22,6 +36,9 @@ export const MANAGED_VARS = [
 	"--ui-font",
 	"--reading-font",
 	"--code-font",
+	"--radius",
+	"--pane-radius",
+	"--reading-width",
 	...COLOR_TOKEN_NAMES.map((name) => `--${name}`),
 ];
 
@@ -40,6 +57,10 @@ export function appearanceSnapshot(
 	set("--ui-font", fontStack(UI_FONTS, settings.uiFont));
 	set("--reading-font", fontStack(READING_FONTS, settings.readingFont));
 	set("--code-font", fontStack(CODE_FONTS, settings.codeFont));
+	const radius = RADIUS[settings.radius];
+	set("--radius", radius?.[0] ?? null);
+	set("--pane-radius", radius?.[1] ?? null);
+	set("--reading-width", READING_WIDTH[settings.readingWidth]);
 
 	const changed = new Set<ColorTokenName>([
 		...(Object.keys(overriddenColors(settings, "light")) as ColorTokenName[]),
