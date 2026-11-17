@@ -13,5 +13,5 @@ export const SECTION_UPCOMING: Partial<Record<SettingsSectionId, string>> = {
 	connections: "More connections, like a search tool key.",
 	prompts: "A default system prompt for every chat.",
 	privacy: "Your share links.",
-	account: "Your profile, sign-in methods and signing out.",
+	account: "Sync and sharing.",
 };

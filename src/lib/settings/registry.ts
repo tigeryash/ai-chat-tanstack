@@ -15,8 +15,11 @@ import {
 /** Who a setting applies to (docs/settings-research.md, "Scope rules"). */
 export type SettingScope = "global" | "model" | "workspace" | "chat";
 
-/** Where it's kept: this device only, forever, or this device now and synced in Phase 6. */
-export type SettingStorage = "device" | "syncs";
+/**
+ * Where it's kept: this device only, forever; this device now and synced in Phase 6; or with the
+ * account on our server (Account, which shows what sign-in already stores).
+ */
+export type SettingStorage = "device" | "syncs" | "account";
 
 /** `inline`: label and description on the left, the control on the right. `block`: the control below. */
 export type SettingLayout = "inline" | "block";
@@ -92,6 +95,10 @@ export const SETTINGS_CARDS = [
 			"Analytics never see what's in your chats: not your messages, replies, files, keys or chat names. Only counts and load times.",
 	},
 	{ id: "legal", section: "privacy" },
+	// Account (S8). Sync (6.1), sharing (6.3) and sessions (6.4) add their own cards here as they land.
+	{ id: "profile", section: "account" },
+	{ id: "sign-in-methods", section: "account" },
+	{ id: "sign-out", section: "account" },
 ] as const satisfies readonly SettingsCard[];
 
 type CardId = (typeof SETTINGS_CARDS)[number]["id"];
@@ -542,6 +549,62 @@ export const SETTINGS = [
 		keywords: ["privacy policy", "terms of service"],
 		scope: "global",
 		storage: "syncs",
+		layout: "inline",
+	},
+	// Account: shown signed in; signed out, the section is a sign-in card instead.
+	{
+		id: "profile",
+		section: "account",
+		card: "profile",
+		label: "Profile",
+		description: "The name and email you signed in with.",
+		keywords: ["account", "name", "email", "avatar", "signed in as", "user"],
+		scope: "global",
+		storage: "account",
+		layout: "inline",
+	},
+	{
+		id: "sign-in-methods",
+		section: "account",
+		card: "sign-in-methods",
+		label: "Linked sign-in methods",
+		description: "The ways you can sign in to this account.",
+		keywords: [
+			"login",
+			"password",
+			"google",
+			"github",
+			"discord",
+			"oauth",
+			"social",
+			"connected accounts",
+		],
+		scope: "global",
+		storage: "account",
+		layout: "block",
+	},
+	{
+		id: "sign-out",
+		section: "account",
+		card: "sign-out",
+		label: "Sign out",
+		description:
+			"Your account's chats stay in this browser, hidden, and come back when you sign in here again.",
+		keywords: ["log out", "logout", "sign off"],
+		scope: "global",
+		storage: "account",
+		layout: "inline",
+	},
+	{
+		id: "sign-out-remove-chats",
+		section: "account",
+		card: "sign-out",
+		label: "Sign out and remove my chats from this device",
+		description:
+			"Deletes your account's chats from this browser first. Your account doesn't keep a copy yet.",
+		keywords: ["log out", "logout", "delete chats", "shared computer", "clear"],
+		scope: "global",
+		storage: "account",
 		layout: "inline",
 	},
 ] as const satisfies readonly (SettingDefinition & { card: CardId })[];

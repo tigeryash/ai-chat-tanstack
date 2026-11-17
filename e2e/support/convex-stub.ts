@@ -65,6 +65,23 @@ function sessionFor(userId: string) {
 	};
 }
 
+/**
+ * What Better Auth's `list-accounts` returns for a signed-in test user: email and password plus GitHub,
+ * so Settings → Account shows both linked and unlinked methods.
+ */
+function accountsFor(userId: string) {
+	const now = new Date().toISOString();
+	return ["credential", "github"].map((providerId) => ({
+		id: `account-${providerId}-${userId}`,
+		providerId,
+		accountId: `${providerId}-${userId}`,
+		userId,
+		scopes: [],
+		createdAt: now,
+		updatedAt: now,
+	}));
+}
+
 async function readJson(request: IncomingMessage): Promise<unknown> {
 	let body = "";
 	for await (const chunk of request) body += chunk;
@@ -123,6 +140,14 @@ const server = createServer((request, response) => {
 		const userId = e2eUserOf(request);
 		response.writeHead(200, { "content-type": "application/json" });
 		response.end(JSON.stringify(userId ? sessionFor(userId) : null));
+		return;
+	}
+	if (path === "/api/auth/list-accounts") {
+		const userId = e2eUserOf(request);
+		response.writeHead(userId ? 200 : 401, {
+			"content-type": "application/json",
+		});
+		response.end(JSON.stringify(userId ? accountsFor(userId) : null));
 		return;
 	}
 	if (path === "/api/auth/sign-out") {
