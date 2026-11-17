@@ -20,11 +20,15 @@ export function canAddPane(panes: Panes, hidden = 0): boolean {
 	return panes.length + hidden < MAX_PANES;
 }
 
-/** Adds a synced pane for `chatId` at the end. No change at the limit or for a chat already shown. */
+/**
+ * Adds a synced pane for `chatId` to the right of `after` (at the end when it's not shown). No change at
+ * the limit or for a chat already shown.
+ */
 export function addPane(
 	panes: Panes,
 	chatId: string,
 	hidden = 0,
+	after?: string,
 ): WorkspacePane[] {
 	if (
 		!canAddPane(panes, hidden) ||
@@ -32,7 +36,10 @@ export function addPane(
 	) {
 		return [...panes];
 	}
-	return evenly([...panes, { chatId, size: 0, synced: true }]);
+	const added = { chatId, size: 0, synced: true };
+	const at = panes.findIndex((pane) => pane.chatId === after);
+	if (at === -1) return evenly([...panes, added]);
+	return evenly([...panes.slice(0, at + 1), added, ...panes.slice(at + 1)]);
 }
 
 /** Removes a pane. The last pane stays: a workspace always shows at least one. */

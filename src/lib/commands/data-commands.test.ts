@@ -24,6 +24,7 @@ const env = (): CommandEnv => ({
 	openLayout: vi.fn(),
 	openSettings: vi.fn(),
 	toggleSidebar: vi.fn(),
+	showShortcuts: vi.fn(),
 });
 
 describe("chatCommands", () => {

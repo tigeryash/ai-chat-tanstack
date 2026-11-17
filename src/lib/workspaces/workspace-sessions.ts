@@ -121,10 +121,17 @@ export function addNewPane(
 	workspace: Pick<OpenWorkspace, "panes" | "hiddenPanes">,
 	viewer: Viewer,
 	store: ChatStore = chatStore(),
+	/** The pane the new one goes to the right of; the end when undefined. */
+	after?: string,
 ): WorkspacePane[] {
 	const added = openNewChat({ ownerId: viewer, store });
 	holdChatModelChoice(added.id);
-	return addPane(workspace.panes, added.id, workspace.hiddenPanes.length);
+	return addPane(
+		workspace.panes,
+		added.id,
+		workspace.hiddenPanes.length,
+		after,
+	);
 }
 
 /** A pane to start a workspace with: its model (null for the default), and optionally its width and sync. */

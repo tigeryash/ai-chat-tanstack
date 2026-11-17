@@ -7,7 +7,10 @@ import {
 	type Command,
 	type CommandEnv,
 } from "@/lib/commands/command";
-import { closeCommandPalette } from "@/lib/commands/palette-state";
+import {
+	closeCommandPalette,
+	takeStartPage,
+} from "@/lib/commands/palette-state";
 import { rememberCommand, useRecentCommands } from "@/lib/commands/recent";
 import { searchCommands, searchPage } from "@/lib/commands/search";
 import { logError } from "@/lib/log";
@@ -115,7 +118,7 @@ function PaletteBody({
 	const [query, setQuery] = useState("");
 	const [activeId, setActiveId] = useState<string | null>(null);
 	// Nested pages (R2 S7), by their opener's id. A page whose opener is gone (its pane closed) ends.
-	const [pageId, setPageId] = useState<string | null>(null);
+	const [pageId, setPageId] = useState<string | null>(takeStartPage);
 	const { commands, context, chatsFailed } = usePaletteCommands(pageId);
 	const recent = useRecentCommands();
 	const env = useCommandEnv();

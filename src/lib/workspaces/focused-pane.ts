@@ -121,3 +121,49 @@ function subscribe(listener: () => void) {
 export function useFocusedPaneState(): FocusedPaneState {
 	return useSyncExternalStore(subscribe, focusedPaneState, focusedPaneState);
 }
+
+// What S6's shortcuts and the palette's commands both run (roadmap R2 S6, S7). Each returns false when
+// the focused pane can't do it, so a shortcut leaves the key alone.
+
+/** Adds a pane to the right of the focused one (on a single chat, makes a workspace). */
+export function addPaneToFocused(): boolean {
+	const add = focusedPane()?.addPane;
+	add?.();
+	return add !== undefined;
+}
+
+/** Removes the focused pane; a workspace keeps its last one. */
+export function removeFocusedPane(): boolean {
+	const remove = focusedPane()?.removePane;
+	remove?.();
+	return remove !== undefined;
+}
+
+/** A pane's element in a workspace; a single chat has none, so the page stands in. */
+function paneScope(chatId: string): ParentNode {
+	return (
+		document.querySelector(`section[data-pane-id="${CSS.escape(chatId)}"]`) ??
+		document
+	);
+}
+
+/** Focuses pane `index` (from 0), as clicking into it would. */
+export function focusPaneAt(index: number): boolean {
+	const pane = state.panes[index];
+	if (!pane) return false;
+	focusPane(pane.chatId);
+	const scope = paneScope(pane.chatId);
+	if (scope instanceof HTMLElement) scope.focus();
+	return true;
+}
+
+/** Puts the cursor in the focused pane's message box (`data-composer-input`). */
+export function focusComposer(): boolean {
+	const pane = focusedPane();
+	if (!pane) return false;
+	const box = paneScope(pane.chatId).querySelector<HTMLElement>(
+		"[data-composer-input]",
+	);
+	box?.focus();
+	return box !== null;
+}

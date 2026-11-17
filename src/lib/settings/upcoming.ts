@@ -7,7 +7,7 @@ export const SECTION_UPCOMING: Record<SettingsSectionId, string> = {
 	general: "How many panes a new chat starts with.",
 	appearance: "A colored top border per model, to tell panes apart.",
 	chat: "Reply stats, reasoning open or closed, and scroll sync defaults.",
-	keyboard: "A list of keyboard shortcuts.",
+	keyboard: "Changing a shortcut's keys.",
 	notifications: "Notifications for agent runs.",
 	models: "Per-model defaults and context-length warnings.",
 	connections: "More connections, like a search tool key.",

@@ -8,9 +8,9 @@ import {
 	unregisterPane,
 } from "@/lib/workspaces/focused-pane";
 import { analyticsIdOf, type Command, isRememberable } from "./command";
+import { PANE_COMMAND_IDS } from "./pane-command-ids";
 import {
 	modelCommands,
-	PANE_COMMAND_IDS,
 	type PaneCommandData,
 	paneCommands,
 	promptCommands,

@@ -2,6 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useSidebar } from "@/components/ui/sidebar";
 import { currentViewer } from "@/lib/account";
 import type { CommandEnv } from "@/lib/commands/command";
+import { setShortcutSheetOpen } from "@/lib/commands/shortcut-sheet-state";
 import { useSettingsNavigation } from "@/lib/settings/navigation";
 
 /** The palette's side of the registry: commands act through the router and the app's stores. */
@@ -39,5 +40,6 @@ export function useCommandEnv(): CommandEnv {
 		},
 		openSettings: (section, setting) => settings.open(section, setting),
 		toggleSidebar,
+		showShortcuts: () => setShortcutSheetOpen(true),
 	};
 }

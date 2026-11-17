@@ -401,6 +401,39 @@ test.describe("with Reduce motion on", () => {
 		expect(frames.at(-1)?.opacity).toBe("1");
 	});
 
+	test("the shortcut sheet fades in without scaling", async ({ page }) => {
+		await page.goto("/prompts");
+		await expect(
+			page.getByRole("heading", { name: "Prompts", level: 1 }),
+		).toBeVisible();
+		// Opens and closes it once, so the frames below are the open animation, not the download.
+		const sheet = page.getByRole("dialog", { name: "Keyboard shortcuts" });
+		await page.keyboard.press("Shift+Slash");
+		await expect(sheet).toBeVisible();
+		await page.keyboard.press("Escape");
+		await expect(sheet).toHaveCount(0);
+		const frames = await page.evaluate(async () => {
+			window.dispatchEvent(
+				new KeyboardEvent("keydown", { key: "?", shiftKey: true }),
+			);
+			const seen: { scale: string; opacity: string }[] = [];
+			let after = 0;
+			for (let frame = 0; frame < 600 && after < 30; frame++) {
+				const popup = document.querySelector("[data-testid='shortcut-sheet']");
+				if (popup) {
+					const style = getComputedStyle(popup);
+					seen.push({ scale: style.scale, opacity: style.opacity });
+					after++;
+				}
+				await new Promise(requestAnimationFrame);
+			}
+			return seen;
+		});
+		expect(frames.length).toBe(30);
+		expect(new Set(frames.map((f) => f.scale))).toEqual(new Set(["none"]));
+		expect(frames.at(-1)?.opacity).toBe("1");
+	});
+
 	test("the composer resizes without animating", async ({ page }) => {
 		await page.goto("/e2e/composer");
 		await expect(page.locator("main[data-hydrated='true']")).toBeAttached();

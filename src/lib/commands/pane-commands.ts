@@ -9,12 +9,16 @@ import { logWarn } from "@/lib/log";
 import { routesFor } from "@/lib/models/runnability";
 import type { Prompt } from "@/lib/prompts/prompt";
 import {
+	addPaneToFocused,
 	focusedPane,
 	focusedPaneState,
 	type PaneControls,
+	removeFocusedPane,
 	stopAllPanes,
 } from "@/lib/workspaces/focused-pane";
 import type { Command, CommandContext } from "./command";
+import { shortcutOf } from "./keymap";
+import { PANE_COMMAND_IDS } from "./pane-command-ids";
 
 // Pane actions (roadmap R2 S7, docs/settings-research.md section 3 "v2"): commands on the focused pane
 // (`lib/workspaces/focused-pane.ts`). Each is listed only when its `when` finds the focused pane can do
@@ -40,21 +44,6 @@ export interface PaneCommandData {
 	/** What saved local servers report; asked only while the model page shows. */
 	localModels: readonly LocalModelList[];
 }
-
-/** Command ids S6's shortcuts bind to. */
-export const PANE_COMMAND_IDS = {
-	add: "pane.add",
-	remove: "pane.remove",
-	sync: "pane.sync",
-	switchModel: "pane.switch-model",
-	switchHost: "pane.switch-host",
-	applyPrompt: "pane.apply-prompt",
-	applyPromptSynced: "pane.apply-prompt-synced",
-	modelSettings: "pane.model-settings",
-	copyReply: "pane.copy-reply",
-	regenerate: "pane.regenerate",
-	stopAll: "pane.stop-all",
-} as const;
 
 const CURRENT = "Current";
 
@@ -191,8 +180,11 @@ export function paneCommands(data: PaneCommandData): Command[] {
 			title: "Add pane",
 			keywords: ["split", "compare", "new pane", "workspace"],
 			group: "actions",
+			shortcut: shortcutOf(PANE_COMMAND_IDS.add),
 			when: has((pane) => pane.addPane !== undefined),
-			run: () => focusedPane()?.addPane?.(),
+			run: () => {
+				addPaneToFocused();
+			},
 		},
 		{
 			id: PANE_COMMAND_IDS.remove,
@@ -200,8 +192,11 @@ export function paneCommands(data: PaneCommandData): Command[] {
 			detail: data.pane?.label,
 			keywords: ["close pane", "delete pane"],
 			group: "actions",
+			shortcut: shortcutOf(PANE_COMMAND_IDS.remove),
 			when: has((pane) => pane.removePane !== undefined),
-			run: () => focusedPane()?.removePane?.(),
+			run: () => {
+				removeFocusedPane();
+			},
 		},
 		{
 			id: PANE_COMMAND_IDS.sync,
@@ -222,6 +217,7 @@ export function paneCommands(data: PaneCommandData): Command[] {
 			detail: data.pane?.label,
 			keywords: ["model", "change model", "pick model", "llm"],
 			group: "actions",
+			shortcut: shortcutOf(PANE_COMMAND_IDS.switchModel),
 			when: has(() => true),
 			opens: {
 				title: "Switch model",
