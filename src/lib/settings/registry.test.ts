@@ -36,6 +36,7 @@ describe("settings registry", () => {
 			"connections",
 			"data",
 			"privacy",
+			"account",
 		]);
 		expect(cardsInSection("keyboard")).toEqual([]);
 	});
@@ -55,6 +56,8 @@ describe("settings search", () => {
 		expect(ids("advanced colors")).toEqual(["advanced-colors"]);
 		expect(ids("auto title")).toEqual(["title-model"]);
 		expect(ids("last used")).toEqual(["default-model"]);
+		expect(ids("logout")).toEqual(["sign-out", "sign-out-remove-chats"]);
+		expect(ids("github")).toEqual(["sign-in-methods"]);
 	});
 
 	it("needs every word, in any order", () => {
