@@ -3,6 +3,7 @@ import {
 	holdChatModelChoice,
 	setChatModelChoice,
 } from "@/lib/chat/chat-model-choice";
+import { readChatPrefs } from "@/lib/chat/chat-prefs";
 import { openChat, openNewChat } from "@/lib/chat/chat-sessions";
 import { loadChatSettings } from "@/lib/chat/chat-settings";
 import { loadChatVotes } from "@/lib/chat/chat-votes";
@@ -97,7 +98,7 @@ export async function openWorkspace(
 
 /**
  * "Add pane" on a single chat: a new workspace with that chat and a new empty one beside it, both the
- * viewer's, whoever owns the shown chat. Returns the workspace's id.
+ * viewer's, whoever owns the shown chat, synced as Settings → Chat says. Returns the workspace's id.
  */
 export async function createWorkspaceFrom(
 	chatId: string,
@@ -111,12 +112,15 @@ export async function createWorkspaceFrom(
 	const workspace = await store.saveWorkspace({
 		id: crypto.randomUUID(),
 		ownerId: viewer,
-		panes: initialPanes([chatId, added.id]),
+		panes: initialPanes([chatId, added.id], readChatPrefs().newPanesSynced),
 	});
 	return workspace.id;
 }
 
-/** Adds a new empty pane whose chat is the viewer's, whoever owns the workspace. Returns the new pane list. */
+/**
+ * Adds a new empty pane whose chat is the viewer's, whoever owns the workspace, synced as Settings →
+ * Chat says (R2 S10). Returns the new pane list.
+ */
 export function addNewPane(
 	workspace: Pick<OpenWorkspace, "panes" | "hiddenPanes">,
 	viewer: Viewer,
@@ -131,6 +135,7 @@ export function addNewPane(
 		added.id,
 		workspace.hiddenPanes.length,
 		after,
+		readChatPrefs().newPanesSynced,
 	);
 }
 
@@ -154,6 +159,8 @@ export async function createWorkspaceWith(
 	const kept = seeds.slice(0, MAX_PANES);
 	if (kept.length === 0) throw new Error("A workspace needs a pane.");
 	const evenSize = 100 / kept.length;
+	// A deep link's panes start as Settings → Chat says; a saved layout keeps its own switches.
+	const { newPanesSynced } = readChatPrefs();
 	const panes = kept.map((seed) => {
 		const chat = openNewChat({ ownerId: viewer, store });
 		if (seed.model) setChatModelChoice(chat.id, seed.model);
@@ -161,7 +168,7 @@ export async function createWorkspaceWith(
 		return {
 			chatId: chat.id,
 			size: seed.size ?? evenSize,
-			synced: seed.synced ?? true,
+			synced: seed.synced ?? newPanesSynced,
 		};
 	});
 	const workspace = await store.saveWorkspace({

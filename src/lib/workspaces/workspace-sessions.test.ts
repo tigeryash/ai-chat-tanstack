@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { readChatModelChoice } from "@/lib/chat/chat-model-choice";
+import { updateChatPrefs } from "@/lib/chat/chat-prefs";
 import { readModelChoice } from "@/lib/chat/model-selection";
 import { peekOpenChat } from "@/lib/chat/open-chats";
 import { createDexieChatStore } from "@/lib/storage/dexie-chat-store";
@@ -22,6 +23,8 @@ function freshStore() {
 const id = () => crypto.randomUUID();
 
 describe("workspace sessions", () => {
+	afterEach(() => updateChatPrefs({ newPanesSynced: true }));
+
 	it("hides another account's panes but keeps them, with their places and widths", async () => {
 		const store = freshStore();
 		const [mine, theirs] = [id(), id()];
@@ -123,6 +126,26 @@ describe("workspace sessions", () => {
 		expect(peekOpenChat(first?.chatId ?? "")?.ownerId).toBe("user-a");
 		// A link or layout doesn't change the default for new chats.
 		expect(readModelChoice()).toEqual(before);
+	});
+
+	it("starts new panes unsynced when Settings → Chat says so, but keeps a layout's switches", async () => {
+		const store = freshStore();
+		updateChatPrefs({ newPanesSynced: false });
+		const added = addNewPane({ panes: [], hiddenPanes: [] }, null, store);
+		expect(added.map((pane) => pane.synced)).toEqual([false]);
+		const solo = id();
+		const fromChat = await store.getWorkspace(
+			await createWorkspaceFrom(solo, null, store),
+		);
+		expect(fromChat?.panes.map((pane) => pane.synced)).toEqual([false, false]);
+		const fromSeeds = await store.getWorkspace(
+			await createWorkspaceWith(
+				[{ model: null }, { model: null, synced: true }],
+				null,
+				store,
+			),
+		);
+		expect(fromSeeds?.panes.map((pane) => pane.synced)).toEqual([false, true]);
 	});
 
 	it("opens at most four panes from a layout, evenly when it has no widths", async () => {

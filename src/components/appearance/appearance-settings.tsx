@@ -1,7 +1,6 @@
+import { Choice } from "@/components/settings/setting-choice";
 import type { SettingControlProps } from "@/components/settings/setting-row-props";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { CODE_FONTS, READING_FONTS, UI_FONTS } from "@/lib/appearance/fonts";
 import {
 	DENSITIES,
@@ -119,38 +118,6 @@ export function ResetAppearance() {
 		>
 			Reset all
 		</Button>
-	);
-}
-
-function Choice<T extends string>({
-	controlId,
-	labelId,
-	descriptionId,
-	options,
-	labels,
-	value,
-	onChange,
-}: SettingControlProps & {
-	options: readonly T[];
-	labels: Record<T, string>;
-	value: T;
-	onChange: (value: T) => void;
-}) {
-	return (
-		<RadioGroup
-			aria-labelledby={labelId}
-			aria-describedby={descriptionId}
-			value={value}
-			onValueChange={(next) => onChange(next as T)}
-			className="flex flex-wrap gap-4 @lg:justify-self-end"
-		>
-			{options.map((option) => (
-				<div key={option} className="flex items-center gap-2">
-					<RadioGroupItem id={`${controlId}-${option}`} value={option} />
-					<Label htmlFor={`${controlId}-${option}`}>{labels[option]}</Label>
-				</div>
-			))}
-		</RadioGroup>
 	);
 }
 

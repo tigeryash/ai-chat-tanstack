@@ -1,8 +1,8 @@
 import { type RefObject, useEffect } from "react";
 
 // Sync scroll (roadmap 3.4): scrolling one pane's messages scrolls the others to the same place, by
-// proportion, since replies of different lengths make pixel offsets meaningless. Off by default; the
-// workspace toolbar toggles it for this visit.
+// proportion, since replies of different lengths make pixel offsets meaningless. Off unless Settings →
+// Chat turns it on for new visits (R2 S10); the workspace toolbar toggles it for this visit.
 
 /** Each pane's scrolling message list. */
 export const PANE_SCROLLER =

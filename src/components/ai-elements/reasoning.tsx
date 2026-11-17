@@ -50,6 +50,11 @@ export type ReasoningProps = Omit<
 	isStreaming?: boolean;
 	open?: boolean;
 	defaultOpen?: boolean;
+	/**
+	 * With `defaultOpen`: true (the default) opens it only while it streams and closes it shortly after;
+	 * false starts it open, also when it has already finished, and leaves it open (Settings → Chat).
+	 */
+	autoClose?: boolean;
 	onOpenChange?: (open: boolean) => void;
 	duration?: number;
 };
@@ -63,15 +68,17 @@ export const Reasoning = memo(
 		isStreaming = false,
 		open,
 		defaultOpen = true,
+		autoClose = true,
 		onOpenChange,
 		duration: durationProp,
 		children,
 		...props
 	}: ReasoningProps) => {
 		// Only a reasoning that is still streaming when it first renders opens itself. One that's already
-		// finished (a saved chat, after a reload) starts closed, so it never flashes open and shut.
+		// finished (a saved chat, after a reload) starts closed, so it never flashes open and shut. Without
+		// `autoClose` it starts open either way.
 		const [uncontrolledOpen, setUncontrolledOpen] = useState(
-			defaultOpen && isStreaming,
+			defaultOpen && (isStreaming || !autoClose),
 		);
 		const isOpen = open ?? uncontrolledOpen;
 		const setIsOpen = (next: boolean) => {
@@ -98,20 +105,20 @@ export const Reasoning = memo(
 		}, [isStreaming, startTime]);
 
 		// An effect event, so a new `onOpenChange` each render doesn't restart the timer.
-		const autoClose = useEffectEvent(() => {
+		const closeAfterStream = useEffectEvent(() => {
 			setIsOpen(false);
 			setSettled(true);
 		});
 
 		// Open while it streams, close shortly after it finishes (once), unless the person chose.
 		useEffect(() => {
-			if (defaultOpen && !isStreaming && isOpen && !settled) {
+			if (autoClose && defaultOpen && !isStreaming && isOpen && !settled) {
 				// Add a small delay before closing to allow user to see the content
-				const timer = setTimeout(autoClose, AUTO_CLOSE_DELAY);
+				const timer = setTimeout(closeAfterStream, AUTO_CLOSE_DELAY);
 
 				return () => clearTimeout(timer);
 			}
-		}, [isStreaming, isOpen, defaultOpen, settled]);
+		}, [isStreaming, isOpen, defaultOpen, autoClose, settled]);
 
 		const handleOpenChange = (newOpen: boolean) => {
 			setSettled(true);

@@ -5,6 +5,7 @@ import {
 	ReasoningContent,
 	ReasoningTrigger,
 } from "@/components/ai-elements/reasoning";
+import { type ReasoningStart, useChatPrefs } from "@/lib/chat/chat-prefs";
 import type { MessageUIProps } from "@/types/types";
 import MessageActions, { type MessageActionsProps } from "./message-actions";
 import { MessagePart } from "./message-parts";
@@ -85,11 +86,13 @@ const ReasoningUI = ({ message }: MessageUIProps) => {
 	const reasoning = message.parts.flatMap((part, index) =>
 		part.type === "reasoning" ? [{ part, index }] : [],
 	);
+	const start = useChatPrefs().reasoning;
 	if (message.role !== "assistant" || reasoning.length === 0) return null;
 
 	return (
 		<Reasoning
 			isStreaming={reasoning.some(({ part }) => part.state === "streaming")}
+			{...REASONING_START_PROPS[start]}
 		>
 			<ReasoningTrigger />
 			{reasoning.map(({ part, index }) => (
@@ -99,4 +102,14 @@ const ReasoningUI = ({ message }: MessageUIProps) => {
 			))}
 		</Reasoning>
 	);
+};
+
+/** How each Settings → Chat choice (R2 S10) opens a reply's reasoning. Read once, when it first shows. */
+const REASONING_START_PROPS: Record<
+	ReasoningStart,
+	{ defaultOpen: boolean; autoClose: boolean }
+> = {
+	"while-thinking": { defaultOpen: true, autoClose: true },
+	open: { defaultOpen: true, autoClose: false },
+	closed: { defaultOpen: false, autoClose: false },
 };

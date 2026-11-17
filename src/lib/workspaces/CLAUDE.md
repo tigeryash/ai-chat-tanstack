@@ -26,7 +26,9 @@ Notes for working in this folder. The root [CLAUDE.md](/CLAUDE.md) (commands, ha
   (`setChatModelChoice`, not `storeChatModelChoice`).
 - **Compare tools** (roadmap 3.4): each pane's stats line (`pane-stats.ts`, latest reply's TTFT and tok/s plus the
   chat's cost, built on `readReplyStats` / `chatUsage`) sits under its header, never on replies. Sync scroll
-  (`sync-scroll.ts`) matches panes by scroll proportion, for this visit only. "Copy settings to all panes"
+  (`sync-scroll.ts`) matches panes by scroll proportion; it starts as Settings → Chat says (`chat-prefs.ts`, R2 S10) and
+  the toolbar switch changes it for this visit only. New panes (`addNewPane`, `createWorkspaceFrom`, deep links)
+  start synced unless Settings → Chat says otherwise; saved layouts keep their own switches. "Copy settings to all panes"
   (`copy-settings.ts`) copies params and system prompt, never the model. Votes are `lib/chat/chat-votes.ts`.
 - **Focused pane** (R2 S7, `focused-pane.ts`): which pane the palette's pane actions and S6's shortcuts act on,
   and every pane's controls (`PaneControls`), registered each render by `ChatScreen` (`usePaneControls`; a single
