@@ -600,6 +600,7 @@ on top. Order: R1 first; R2 and R3 can run alongside; R4 after R3; R5 any time.
   replies, contrast in every theme.
 - [ ] **R6 Context management (research only, not built yet).** Research compaction (summarise older turns) and
   other strategies (trim, pin, branch to a fresh chat with a summary); output is a research doc, then slices.
+  *Status:* research in [context-management-research.md](./context-management-research.md), [PR #121](https://github.com/tigeryash/ai-chat-tanstack/pull/121); waiting for Yash to pick the first slice.
 - After R1–R5: 3.9 Insights if Yash still wants it, then 4.0.
 
 ## Phase 4: Agent harness
