@@ -412,7 +412,7 @@ Yash picked the layout from the reference apps.)
 - [x] **S7 Palette v2.** Pane actions: add or remove pane, toggle sync, switch model or host, apply prompt, copy
   last reply, regenerate, stop all, theme switch. *Done when:* e2e does each on a two-pane mock workspace, and the
   composer screenshot baselines are unchanged.
-- [ ] **S8 Account section.** The signed-in profile, linked methods, both sign-out paths; signed out shows the
+- [x] **S8 Account section.** The signed-in profile, linked methods, both sign-out paths; signed out shows the
   sign-in card. Rows for 6.x appear as those slices land. *Done when:* e2e with the stubbed session covers both
   states.
 - [x] **S9 Theme presets and new knobs.** Presets grid with preview, radius, reading width, code theme.
