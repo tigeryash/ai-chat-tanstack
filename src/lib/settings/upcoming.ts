@@ -14,5 +14,5 @@ export const SECTION_UPCOMING: Record<SettingsSectionId, string> = {
 	prompts: "A default system prompt for every chat.",
 	data: "Storage used on this device, and deleting every chat here.",
 	privacy: "Your share links.",
-	account: "Your profile, sign-in methods and signing out.",
+	account: "Sync and sharing.",
 };

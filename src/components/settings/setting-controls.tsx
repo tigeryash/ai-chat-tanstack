@@ -12,6 +12,12 @@ import {
 	UiFontSelect,
 } from "@/components/appearance/appearance-settings";
 import type { SettingId } from "@/lib/settings/registry";
+import {
+	ProfileControl,
+	SignInMethods,
+	SignOutControl,
+	SignOutRemoveChatsControl,
+} from "./account-settings";
 import { AnalyticsSwitch, LegalLinks } from "./analytics-settings";
 import {
 	NotificationPermission,
@@ -65,4 +71,8 @@ export const SETTING_CONTROLS: Record<
 	"export-import": DataTransfer,
 	analytics: AnalyticsSwitch,
 	legal: LegalLinks,
+	profile: ProfileControl,
+	"sign-in-methods": SignInMethods,
+	"sign-out": SignOutControl,
+	"sign-out-remove-chats": SignOutRemoveChatsControl,
 };
