@@ -420,8 +420,9 @@ Yash picked the layout from the reference apps.)
   edits it into "Custom".
 - [ ] **S10 Chat section.** Inline reply stats (the 2.5b leftover), reasoning open or closed, sync-scroll and
   new-pane-synced defaults. *Done when:* e2e covers each default on a new chat.
-- [ ] **S11 Your data and Privacy tidy-up.** Storage used, persistence status, Danger zone, legal links.
+- [x] **S11 Your data and Privacy tidy-up.** Storage used, persistence status, Danger zone, legal links.
   *Done when:* e2e shows the storage numbers on a fixture chat and the delete-all confirm.
+  *Status (2026-11-16):* done; delete all keeps saved prompts and other accounts' chats. PR: https://github.com/tigeryash/ai-chat-tanstack/pull/122
 - [ ] **S12 Theme library (later).** A searchable library of many themes beyond the six presets (inspired by
   Monkeytype's ~190), built from upstream palettes under their own licenses with credits, as in section 4. No
   Monkeytype files are copied, and Monkeytype-original themes wait for the licensing check. *Done when:* every

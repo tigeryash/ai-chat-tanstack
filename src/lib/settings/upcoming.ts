@@ -1,9 +1,9 @@
 import type { SettingsSectionId } from "./sections";
 
 // What lands in each Settings section in later slices, for the empty state of a section with no rows
-// yet. Apart from `sections.ts` so every page's first load doesn't carry it (bundle budget).
+// yet (a section with rows never shows it, so finished ones have none). Apart from `sections.ts` so every page's first load doesn't carry it (bundle budget).
 
-export const SECTION_UPCOMING: Record<SettingsSectionId, string> = {
+export const SECTION_UPCOMING: Partial<Record<SettingsSectionId, string>> = {
 	general: "How many panes a new chat starts with.",
 	appearance: "Theme presets.",
 	chat: "Reply stats, reasoning open or closed, and scroll sync defaults.",
@@ -12,7 +12,6 @@ export const SECTION_UPCOMING: Record<SettingsSectionId, string> = {
 	models: "Per-model defaults and context-length warnings.",
 	connections: "More connections, like a search tool key.",
 	prompts: "A default system prompt for every chat.",
-	data: "Storage used on this device, and deleting every chat here.",
 	privacy: "Your share links.",
 	account: "Sync and sharing.",
 };

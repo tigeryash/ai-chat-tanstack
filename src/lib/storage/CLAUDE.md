@@ -28,3 +28,7 @@ Notes for working in this folder. The root [CLAUDE.md](/CLAUDE.md) (commands, ha
   anything that removes chats through the ChatStore (sign-out removal included) removes their files. Never log or
   `track()` their contents. Text and code files (1.6b) are stored the same way; only the transport turns them into
   text parts (`src/lib/attachments/text-file.ts`).
+- **Storage used and delete all** (Refine S11, Settings → Your data): `storage-usage.ts` counts the viewer's chats
+  and attachments (`ChatStore.countAttachments`), `storage-wording.ts` holds the wording (no Dexie), and
+  `local-data.ts` (loaded with `import()`) wires them and `src/lib/chat/delete-all-chats.ts` to the app's store.
+  Delete all acts only on chats and workspaces the viewer can see; saved prompts stay.

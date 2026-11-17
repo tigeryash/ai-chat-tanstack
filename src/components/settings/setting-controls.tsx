@@ -29,6 +29,7 @@ import {
 import { ContextWarningsSwitch } from "./chat-settings";
 import { ConnectOpenRouter } from "./connect-openrouter";
 import { DataTransfer } from "./data-settings";
+import { DeleteAllChats } from "./delete-all-chats";
 import { DefaultModelControl, TitleModelControl } from "./general-settings";
 import {
 	BlockedHostsControl,
@@ -38,6 +39,7 @@ import {
 import { LocalEndpoints } from "./local-endpoints";
 import { ProviderKeyList } from "./provider-keys";
 import type { SettingControlProps } from "./setting-row-props";
+import { PersistentStorage, StorageUsed } from "./storage-settings";
 
 /** The control for each row of the settings registry (`src/lib/settings/registry.ts`). */
 export const SETTING_CONTROLS: Record<
@@ -68,7 +70,10 @@ export const SETTING_CONTROLS: Record<
 	"notify-failed": NotifyFailedSwitch,
 	"notification-permission": NotificationPermission,
 	"test-notification": TestNotification,
+	"storage-used": StorageUsed,
+	"persistent-storage": PersistentStorage,
 	"export-import": DataTransfer,
+	"delete-all-chats": DeleteAllChats,
 	analytics: AnalyticsSwitch,
 	legal: LegalLinks,
 	profile: ProfileControl,
