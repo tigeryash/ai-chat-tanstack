@@ -88,6 +88,8 @@ export interface ChatStore {
 	): () => void;
 	/** Deleting a chat that doesn't exist does nothing. */
 	deleteChat(chatId: string): Promise<void>;
+	/** How many attached files these chats keep on this device (Settings → Your data). Reads no bytes. */
+	countAttachments(chatIds: readonly string[]): Promise<number>;
 	/** Writes whole chats, keeping their timestamps (import today, sync in Phase 6). */
 	putChats(chats: readonly Chat[]): Promise<void>;
 	/** Checked on read; `undefined` if there is no such workspace (roadmap 3.1). */

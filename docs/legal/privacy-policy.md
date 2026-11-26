@@ -2,7 +2,7 @@
 
 > **Draft. Not legal advice: have a lawyer review before public launch.** This draft is built from the project's data inventory and is revised as features land.
 
-Last updated: 2026-11-09
+Last updated: 2026-11-16
 
 High Elo LLMs ("the app", "we", "us") is an independent, non-commercial project run by its developer, an individual based in Ontario,
 Canada. You can reach us at support@highelollms.com.
@@ -158,9 +158,12 @@ message content.
 
 ## Exporting and deleting your data
 
-- **Chats:** delete them in the app, or export them as a file (JSON) in Settings → Your data and import them
-  elsewhere. Exports include the chat's attachments and system prompt, and never include API keys. Deleting a chat
-  deletes its attachments.
+- **Chats:** delete them in the app one at a time, or all at once with "Delete all chats on this device" in
+  Settings → Your data (it deletes every chat you can see in this browser, with its attachments and workspaces;
+  chats of other accounts signed in here stay, and so do saved prompts, keys and settings). Export them as a file
+  (JSON) in the same place and import them elsewhere. Exports include the chat's attachments and system prompt,
+  and never include API keys. Deleting a chat deletes its attachments. Settings → Your data also shows how many
+  chats and attached files are stored here, counted in your browser and never sent to us.
 - **Saved prompts:** delete them in the prompt library. They're included in the same export file as your chats.
 - **Workspaces and saved layouts:** delete them from the sidebar and in Layouts. Both are included in the same
   export file; importing keeps whichever copy is newer.

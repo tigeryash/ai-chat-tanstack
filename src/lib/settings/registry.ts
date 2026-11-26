@@ -31,6 +31,8 @@ export interface SettingsCard {
 	/** Shown above the card, and names it for screen readers. */
 	title?: string;
 	description?: string;
+	/** `danger`: actions that can't be undone, drawn with the destructive token. */
+	tone?: "danger";
 }
 
 export interface SettingDefinition {
@@ -69,8 +71,29 @@ export const SETTINGS_CARDS = [
 		description:
 			"When this tab is in the background, show how replies are going. Only counts and the chat's name are shown, never what's in a chat.",
 	},
+	{
+		id: "storage",
+		section: "data",
+		title: "On this device",
+		description:
+			"Your chats are stored in this browser first. Nothing here is sent anywhere.",
+	},
 	{ id: "transfer", section: "data" },
-	{ id: "analytics", section: "privacy" },
+	{
+		id: "danger-zone",
+		section: "data",
+		title: "Danger zone",
+		description:
+			"These can't be undone. Export your data first to keep a copy.",
+		tone: "danger",
+	},
+	{
+		id: "analytics",
+		section: "privacy",
+		title: "Analytics and error reports",
+		description:
+			"Analytics never see what's in your chats: not your messages, replies, files, keys or chat names. Only counts and load times.",
+	},
 	{ id: "legal", section: "privacy" },
 	// Account (S8). Sync (6.1), sharing (6.3) and sessions (6.4) add their own cards here as they land.
 	{ id: "profile", section: "account" },
@@ -471,6 +494,38 @@ export const SETTINGS = [
 	},
 	// Your data
 	{
+		id: "storage-used",
+		section: "data",
+		card: "storage",
+		label: "Storage used",
+		description:
+			"Your chats and their attached files in this browser, and how much space this site uses here.",
+		keywords: [
+			"storage",
+			"space",
+			"disk",
+			"quota",
+			"size",
+			"attachments",
+			"how many chats",
+		],
+		scope: "global",
+		storage: "device",
+		layout: "block",
+	},
+	{
+		id: "persistent-storage",
+		section: "data",
+		card: "storage",
+		label: "Persistent storage",
+		description:
+			"Asks the browser not to clear your chats when space runs low. The browser decides; exports are the real backup.",
+		keywords: ["persist", "eviction", "keep chats", "cleared", "safari"],
+		scope: "global",
+		storage: "device",
+		layout: "block",
+	},
+	{
 		id: "export-import",
 		section: "data",
 		card: "transfer",
@@ -489,6 +544,25 @@ export const SETTINGS = [
 		scope: "global",
 		storage: "device",
 		layout: "block",
+	},
+	{
+		id: "delete-all-chats",
+		section: "data",
+		card: "danger-zone",
+		label: "Delete all chats on this device",
+		description:
+			"Deletes every chat you can see here, with its branches, attached files and workspaces. Saved prompts, keys and settings stay. Chats of other accounts signed in on this browser stay too.",
+		keywords: [
+			"delete all",
+			"clear chats",
+			"remove chats",
+			"wipe",
+			"erase",
+			"reset",
+		],
+		scope: "global",
+		storage: "device",
+		layout: "inline",
 	},
 	// Privacy
 	{
