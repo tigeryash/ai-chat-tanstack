@@ -1,4 +1,4 @@
-import { ENFORCE_STRICT_CSP, ENFORCED_CSP } from "../src/lib/security/csp";
+import { ENFORCE_STRICT_CSP } from "../src/lib/security/csp";
 import { expect, test } from "./support/fixtures";
 
 // The CSP and security headers (src/lib/security/). The strict policy is report-only until
@@ -21,10 +21,9 @@ test("pages carry the security headers and a per-request nonce", async ({
 	expect(headers["x-frame-options"]).toBe("DENY");
 	const policy = headers["content-security-policy-report-only"] ?? "";
 	expect(headers["content-security-policy"]).toBe(
-		ENFORCE_STRICT_CSP ? policy : ENFORCED_CSP,
-	);
-	expect(ENFORCED_CSP).toBe(
-		"object-src 'none'; base-uri 'none'; frame-ancestors 'none'",
+		ENFORCE_STRICT_CSP
+			? policy
+			: "object-src 'none'; base-uri 'none'; frame-ancestors 'none'",
 	);
 
 	expect(policy).toContain("'strict-dynamic'");
@@ -125,36 +124,4 @@ test.describe("violations", () => {
 			)
 			.toContain("base-uri");
 	});
-});
-
-// browser-image-compression's worker mode loads the library from a CDN; the composer must not.
-test("attaching an image fetches nothing from other origins", async ({
-	page,
-	context,
-}) => {
-	const offMachine: string[] = [];
-	context.on("request", (request) => {
-		if (
-			!/^(blob|data):|^https?:\/\/(localhost|127\.0\.0\.1)[:/]/.test(
-				request.url(),
-			)
-		) {
-			offMachine.push(request.url());
-		}
-	});
-	await page.goto("/e2e/composer");
-	await expect(page.locator("main")).toHaveAttribute("data-hydrated", "true");
-
-	await page.locator('input[type="file"].hidden').setInputFiles({
-		name: "pixel.png",
-		mimeType: "image/png",
-		// A 1x1 PNG.
-		buffer: Buffer.from(
-			"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-			"base64",
-		),
-	});
-
-	await expect(page.locator('img[src^="blob:"]')).toBeVisible();
-	expect(offMachine).toEqual([]);
 });

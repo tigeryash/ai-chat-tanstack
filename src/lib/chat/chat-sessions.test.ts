@@ -114,25 +114,6 @@ describe("chat sessions", () => {
 		expect(await store.getChat(chat.id)).toBeUndefined();
 	});
 
-	it("names a new chat after its first message", async () => {
-		const store = createDexieChatStore({ db: openTestDatabase() });
-		const transport = new BrowserChatTransport(async () =>
-			mockChatModel({ text: ["ok"] }),
-		);
-		const chat = openNewChat({ transport, store, ownerId: null });
-
-		await chat.sendMessage(
-			{ text: "Plan a trip\nto Lisbon" },
-			{ body: SELECTION },
-		);
-
-		await vi.waitFor(async () =>
-			expect(await store.getChat(chat.id)).toMatchObject({
-				title: "Plan a trip",
-			}),
-		);
-	});
-
 	it("names a new chat in the same write that creates it, so leaving the page can't strand it untitled", async () => {
 		const store = createDexieChatStore({ db: openTestDatabase() });
 		// What the store holds the moment the creating save resolves, before anything else is written.

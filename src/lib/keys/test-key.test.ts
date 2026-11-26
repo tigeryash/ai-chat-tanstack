@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { PROVIDER_API_ORIGINS } from "@/lib/security/provider-origins";
 import { PROVIDER_IDS } from "./providers";
-import { TEST_REQUESTS, testProviderKey } from "./test-key";
+import { testProviderKey } from "./test-key";
 
 const KEY = "test-key-abcdefgh1234";
 
@@ -41,8 +41,16 @@ describe("testProviderKey", () => {
 	});
 
 	it("reads Google's and Together's list shapes", async () => {
-		expect(TEST_REQUESTS.google.countModels?.({ models: [1, 2, 3] })).toBe(3);
-		expect(TEST_REQUESTS.together.countModels?.([1])).toBe(1);
+		const google = recordingFetch(Response.json({ models: [1, 2, 3] }));
+		expect(await testProviderKey("google", KEY, google.fetchImpl)).toEqual({
+			ok: true,
+			modelCount: 3,
+		});
+		const together = recordingFetch(Response.json([1]));
+		expect(await testProviderKey("together", KEY, together.fetchImpl)).toEqual({
+			ok: true,
+			modelCount: 1,
+		});
 	});
 
 	it.each([

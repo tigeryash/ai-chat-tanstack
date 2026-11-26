@@ -47,7 +47,9 @@ describe("saved layouts", () => {
 		expect(suggestLayoutName(panes)).toBe(
 			"anthropic/claude-opus-5.5 vs Default model",
 		);
-		expect(saveLayout("   ", panes).name).toBe(suggestLayoutName(panes));
+		expect(saveLayout("   ", panes).name).toBe(
+			"anthropic/claude-opus-5.5 vs Default model",
+		);
 	});
 
 	it("keeps only the newest layouts", () => {

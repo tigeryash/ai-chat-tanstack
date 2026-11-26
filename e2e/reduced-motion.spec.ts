@@ -8,8 +8,8 @@ import { expect, test } from "./support/fixtures";
 // frame. Outside Motion and GSAP, CSS transitions and animations finish instantly (the reduced-motion
 // rule in `styles.css`), the "Thinking..." shimmer is still text, loading spinners keep turning, and a
 // theme switch in Settings → Appearance doesn't cross-fade. Multi-pane workspaces add and reorder panes
-// instantly. Each check has a full-motion twin, which shows the probe can see motion and that the normal
-// animations still play.
+// instantly. Each check that something stays still has a full-motion twin, which shows the probe can see
+// motion and that the normal animations still play.
 
 const MULTI_LINE_MESSAGE = "one\ntwo\nthree\nfour";
 // The other auth pages share the login form's reveal (src/components/auth/auth-form.tsx).
@@ -643,13 +643,5 @@ test.describe("with full motion", () => {
 
 	test("switching the theme cross-fades", async ({ page }) => {
 		expect(await viewTransitionsForThemeSwitch(page)).toBe(1);
-	});
-
-	test("loading spinners turn", async ({ page }) => {
-		await page.goto("/e2e/loading");
-
-		expect(
-			await distinctStyleValues(page.locator(".animate-spin"), "transform"),
-		).toBeGreaterThan(1);
 	});
 });

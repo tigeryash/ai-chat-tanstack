@@ -45,13 +45,10 @@ describe("createLocalStore", () => {
 		expect(makeStore().read()).toEqual(FALLBACK);
 	});
 
-	it("reads storage once, then serves the cached value", () => {
+	it("returns the same value on every read, as useSyncExternalStore needs", () => {
 		localStorage.setItem(KEY, JSON.stringify({ count: 2 }));
-		const getItem = vi.spyOn(Storage.prototype, "getItem");
 		const store = makeStore();
-		store.read();
-		store.read();
-		expect(getItem).toHaveBeenCalledTimes(1);
+		expect(store.read()).toBe(store.read());
 	});
 
 	it("saves a written value as JSON", () => {

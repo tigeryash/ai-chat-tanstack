@@ -27,6 +27,8 @@ const EXPORT = {
 
 const ring = (page: Page) => page.locator("[data-context-ring]");
 const notice = (page: Page) => page.locator("[data-context-warning]");
+const ringColor = (page: Page) =>
+	ring(page).evaluate((el) => getComputedStyle(el).color);
 
 async function openChat(page: Page, level: Level) {
 	await page.goto(`/${chatId(level)}`);
@@ -49,8 +51,7 @@ test("the ring shows how much context is used, muted under 80% and in the warnin
 }) => {
 	await openChat(page, "under");
 	await expect(ring(page)).toHaveAccessibleName("41% of 128K context used");
-	await expect(ring(page)).toHaveAttribute("data-context-ring", "under");
-	const muted = await ring(page).evaluate((el) => getComputedStyle(el).color);
+	const muted = await ringColor(page);
 	await ring(page).hover();
 	await expect(page.locator("[data-slot='tooltip-content']")).toHaveText(
 		"41% of 128K context used",
@@ -59,14 +60,12 @@ test("the ring shows how much context is used, muted under 80% and in the warnin
 
 	await openChat(page, "nearing");
 	await expect(ring(page)).toHaveAccessibleName("85% of 128K context used");
-	await expect(ring(page)).toHaveAttribute("data-context-ring", "nearing");
-	expect(
-		await ring(page).evaluate((el) => getComputedStyle(el).color),
-	).not.toBe(muted);
+	const warning = await ringColor(page);
+	expect(warning).not.toBe(muted);
 
 	await openChat(page, "over");
 	await expect(ring(page)).toHaveAccessibleName("110% of 128K context used");
-	await expect(ring(page)).toHaveAttribute("data-context-ring", "over");
+	expect(await ringColor(page)).toBe(warning);
 });
 
 test("a chat near or past its context gets a notice with what to do", async ({

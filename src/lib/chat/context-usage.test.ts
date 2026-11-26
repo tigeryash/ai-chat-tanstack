@@ -1,7 +1,6 @@
 import type { UIMessage } from "ai";
 import { describe, expect, it } from "vitest";
 import {
-	CONTEXT_NEARING_RATIO,
 	contextLevel,
 	contextPercent,
 	contextTokens,
@@ -54,13 +53,10 @@ describe("contextLevel", () => {
 
 	it("is under below the nearing threshold", () => {
 		expect(contextLevel(0, length)).toBe("under");
-		expect(contextLevel(length * CONTEXT_NEARING_RATIO - 1, length)).toBe(
-			"under",
-		);
+		expect(contextLevel(7_999, length)).toBe("under");
 	});
 
 	it("is nearing from 80% up to the limit", () => {
-		expect(CONTEXT_NEARING_RATIO).toBe(0.8);
 		expect(contextLevel(8_000, length)).toBe("nearing");
 		expect(contextLevel(9_999, length)).toBe("nearing");
 	});
