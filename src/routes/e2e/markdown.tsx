@@ -12,7 +12,11 @@ import {
 } from "@/components/ai-elements/reasoning";
 import { HUGE_PAYLOADS, XSS_PAYLOADS } from "./-xss-payloads";
 
-type Search = { huge?: boolean };
+type Search = { huge?: boolean; code?: boolean };
+
+/** `?code=true`: one fenced block, for code highlighting (roadmap R2 S9, theme-presets.spec.ts). */
+const CODE_SAMPLE =
+	"```ts\nconst answer: number = 42;\nexport function hello() {\n  return answer;\n}\n```";
 
 // Client-only, like every route that shows chats (roadmap 1.2). Server-rendered, the page streamed
 // finished markdown that React then swapped back to SafeMarkdown's loading fallback until the lazy
@@ -21,6 +25,7 @@ export const Route = createFileRoute("/e2e/markdown")({
 	ssr: false,
 	validateSearch: (search: Record<string, unknown>): Search => ({
 		huge: search.huge === true || search.huge === "true" ? true : undefined,
+		code: search.code === true || search.code === "true" ? true : undefined,
 	}),
 	component: MarkdownHarness,
 });
@@ -29,7 +34,7 @@ export const Route = createFileRoute("/e2e/markdown")({
 // open reasoning. `?huge=true` renders the oversized payloads instead. `data-hydrated` tells tests
 // when the client has taken over.
 function MarkdownHarness() {
-	const { huge } = Route.useSearch();
+	const { huge, code } = Route.useSearch();
 	const [hydrated, setHydrated] = useState(false);
 
 	useEffect(() => {
@@ -37,6 +42,18 @@ function MarkdownHarness() {
 	}, []);
 
 	const payloads = huge ? HUGE_PAYLOADS : XSS_PAYLOADS;
+
+	if (code) {
+		return (
+			<main data-hydrated={hydrated} className="mx-auto max-w-3xl p-8">
+				<Message from="assistant" data-testid="reply">
+					<MessageContent>
+						<MessageResponse>{CODE_SAMPLE}</MessageResponse>
+					</MessageContent>
+				</Message>
+			</main>
+		);
+	}
 
 	return (
 		<main data-hydrated={hydrated} className="mx-auto max-w-3xl space-y-8 p-8">

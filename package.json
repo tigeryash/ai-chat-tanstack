@@ -37,6 +37,7 @@
     "@react-three/fiber": "^9.8.2",
     "@sentry/browser": "^11.11.0",
     "@shadcn/react": "^0.3.1",
+    "@streamdown/code": "2.0.0",
     "@t3-oss/env-core": "^0.13.11",
     "@tailwindcss/vite": "^4.3.5",
     "@tanstack/react-devtools": "^0.10.14",
