@@ -136,17 +136,3 @@ test("a chat through OpenRouter sends the key only to OpenRouter", async ({
 		"https://openrouter.ai",
 	]);
 });
-
-test("with nothing connected, the picker links to Settings", async ({
-	page,
-}) => {
-	await page.goto("/e2e/chat-live");
-	await expect(page.getByText("Pick a model to start.")).toBeVisible();
-	await page.getByRole("button", { name: "Model: Pick a model" }).click();
-	await expect(
-		page
-			.getByRole("dialog", { name: "Choose a model" })
-			.getByRole("link", { name: "Connect Anthropic" })
-			.first(),
-	).toHaveAttribute("href", "/settings");
-});

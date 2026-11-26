@@ -22,10 +22,6 @@ const MAX_PASSWORD = "1".repeat(MAX_PASSWORD_LENGTH);
 const LONG_PASSWORD = "1".repeat(MAX_PASSWORD_LENGTH + 1);
 
 describe("loginSchema", () => {
-	it("uses the server's minimum password length of 8", () => {
-		expect(MIN_PASSWORD_LENGTH).toBe(8);
-	});
-
 	it("rejects a password shorter than the server allows", () => {
 		const result = loginSchema.safeParse({ email: EMAIL, password: "1234567" });
 

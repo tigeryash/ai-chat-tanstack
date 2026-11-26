@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import {
 	createReplyClock,
 	formatTokenCount,
-	MIN_SPEED_WINDOW_MS,
 	readReplyStats,
 	replyStatsSummary,
 	tokensPerSecond,
@@ -60,7 +59,7 @@ describe("tokensPerSecond", () => {
 	});
 
 	it("gives nothing for a reply too quick or too empty to time", () => {
-		expect(tokensPerSecond(500, MIN_SPEED_WINDOW_MS - 1)).toBeUndefined();
+		expect(tokensPerSecond(500, 49)).toBeUndefined();
 		expect(tokensPerSecond(0, 10_000)).toBeUndefined();
 		expect(tokensPerSecond(undefined, 10_000)).toBeUndefined();
 	});

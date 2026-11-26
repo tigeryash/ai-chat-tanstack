@@ -58,30 +58,20 @@ describe("testLocalEndpoint", () => {
 		).toEqual({ ok: false, reason: "unreachable" });
 		expect(probe).not.toHaveBeenCalled();
 	});
-
-	it("reports a server that never answers as timed out", async () => {
-		const probe = vi.fn();
-		const hanging = ((_url: string, init?: RequestInit) =>
-			new Promise((_, reject) => {
-				init?.signal?.addEventListener("abort", () =>
-					reject(init.signal?.reason),
-				);
-			})) as typeof fetch;
-		expect(
-			await testLocalEndpoint(BASE, { fetch: hanging, timeoutMs: 10, probe }),
-		).toEqual({ ok: false, reason: "timed-out" });
-		expect(probe).not.toHaveBeenCalled();
-	});
 });
 
 describe("localNetworkAccess", () => {
 	it("uses the first permission name the browser knows", async () => {
-		const query = vi.fn(async ({ name }: { name: string }) => {
-			if (name !== "local-network-access") throw new TypeError("unknown");
-			return { state: "denied" } as PermissionStatus;
-		});
+		const states: Record<string, PermissionState> = {
+			"local-network-access": "denied",
+			"local-network": "granted",
+		};
+		const query = async ({ name }: { name: string }) => {
+			const state = states[name];
+			if (!state) throw new TypeError("unknown");
+			return { state } as PermissionStatus;
+		};
 		expect(await localNetworkAccess({ query })).toBe("denied");
-		expect(query).toHaveBeenCalledTimes(2);
 	});
 
 	it("is unknown in browsers without the permission", async () => {

@@ -51,7 +51,7 @@ function testRequest(providerId: ProviderId): TestRequest {
 	};
 }
 
-export const TEST_REQUESTS = Object.fromEntries(
+const TEST_REQUESTS = Object.fromEntries(
 	PROVIDER_IDS.map((id) => [id, testRequest(id)]),
 ) as Record<ProviderId, TestRequest>;
 

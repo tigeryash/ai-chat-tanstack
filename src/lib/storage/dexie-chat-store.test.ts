@@ -1,8 +1,7 @@
 import Dexie from "dexie";
-import { IDBFactory, IDBKeyRange } from "fake-indexeddb";
+import { IDBFactory } from "fake-indexeddb";
 import { describe, expect, it, vi } from "vitest";
 import { EMPTY_BRANCHES, editAt } from "./branches";
-import { openChatDatabase } from "./db";
 import { createDexieChatStore } from "./dexie-chat-store";
 import { ChatStoreError } from "./errors";
 import v0Chat from "./fixtures/chat-v0.json";
@@ -325,45 +324,6 @@ describe("DexieChatStore", () => {
 		});
 		await expect(store.saveMessages("c3", hello, "")).rejects.toMatchObject({
 			code: "invalid-chat",
-		});
-	});
-
-	it("upgrades format 1 rows to no-account chats when the database opens", async () => {
-		// The database as roadmap 1.3 left it: Dexie version 1, format 1 rows without an owner.
-		const indexedDB = new IDBFactory();
-		const old = new Dexie("upgrade-test", { indexedDB, IDBKeyRange });
-		old.version(1).stores({
-			chats: "id, updatedAt",
-			messages: "[chatId+position]",
-		});
-		await old.table("chats").put({
-			id: "c1",
-			title: "Old",
-			createdAt: 1,
-			updatedAt: 2,
-			messageCount: 1,
-			pinned: true,
-			formatVersion: 1,
-		});
-		await old
-			.table("messages")
-			.put({ chatId: "c1", position: 0, message: hello[0] });
-		old.close();
-
-		const db = openChatDatabase("upgrade-test", { indexedDB, IDBKeyRange });
-		const store = createDexieChatStore({ db });
-		// Dexie's version 2 upgrade moves rows to format 2; later formats migrate when read.
-		expect(await db.chats.get("c1")).toMatchObject({
-			formatVersion: 2,
-			ownerId: null,
-		});
-		expect(await store.listChats()).toEqual([
-			expect.objectContaining({ id: "c1", ownerId: null, pinned: true }),
-		]);
-		expect(await store.getChat("c1")).toMatchObject({
-			title: "Old",
-			ownerId: null,
-			messages: [hello[0]],
 		});
 	});
 

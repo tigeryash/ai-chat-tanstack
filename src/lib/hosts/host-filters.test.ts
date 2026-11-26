@@ -239,7 +239,15 @@ describe("request mapping", () => {
 		expect(options?.openrouter?.provider).toEqual({
 			// Only DeepInfra serves this model there; its live slug, not "deepinfra/fp8".
 			ignore: ["deepinfra"],
-			quantizations: openRouterQuantizations("fp8"),
+			quantizations: [
+				"int8",
+				"fp8",
+				"mxfp8",
+				"fp16",
+				"bf16",
+				"fp32",
+				"unknown",
+			],
 			max_price: { prompt: 1, completion: 2 },
 		});
 	});
@@ -278,7 +286,13 @@ describe("request mapping", () => {
 		);
 		expect(options?.gateway).toEqual({
 			only: ["fireworks", "deepseek"],
-			has: gatewayQuantizationFilter("fp8"),
+			has: [
+				"!quantization:int4",
+				"!quantization:fp4",
+				"!quantization:mxfp4",
+				"!quantization:nvfp4",
+				"!quantization:fp6",
+			],
 		});
 	});
 

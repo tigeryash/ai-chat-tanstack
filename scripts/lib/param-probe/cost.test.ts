@@ -66,7 +66,7 @@ describe("pricing", () => {
 describe("estimates", () => {
 	it("over-counts input tokens rather than under", () => {
 		// '{"messages":[{"role":"user","content":"Hi"}]}' is 45 characters, ~12 real tokens.
-		expect(estimateInputTokens(HI)).toBe(Math.ceil(45 / 3) + 16);
+		expect(estimateInputTokens(HI)).toBe(31);
 	});
 
 	it("assumes the whole max_tokens is used", () => {
@@ -86,7 +86,8 @@ describe("estimates", () => {
 		]);
 		expect(plan.requests).toBe(3);
 		expect(plan.unpriced).toEqual(["c/unknown"]);
-		expect(plan.totalUsd).toBeCloseTo(2 * estimateRequestUsd(FRONTIER, HI), 10);
+		// Two requests at 31 input tokens and 16 output tokens each; the free model adds nothing.
+		expect(plan.totalUsd).toBeCloseTo(0.00111, 10);
 	});
 
 	it("keeps a frontier model's full probe under a cent", () => {

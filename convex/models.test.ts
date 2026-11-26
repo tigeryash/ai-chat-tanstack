@@ -153,15 +153,19 @@ describe("model catalog sync", () => {
 		expect(models[0]).not.toHaveProperty("supportedParameters");
 		const highElo = models
 			.filter((model) => model.highElo)
-			.map((model) => model.gatewayId);
-		expect(highElo).toEqual(
-			models
-				.filter(
-					(model) => model.pinned || model.intelligenceIndex !== undefined,
-				)
-				.map((model) => model.gatewayId),
-		);
-		expect(highElo).toContain("anthropic/claude-haiku-5.5");
+			.map((model) => model.gatewayId)
+			.sort();
+		// Haiku 5.5 is pinned; the rest are scored, and the fixture has fewer than HIGH_ELO_COUNT of them.
+		expect(highElo).toEqual([
+			"anthropic/claude-haiku-5.5",
+			"anthropic/claude-opus-5.5",
+			"anthropic/claude-sonnet-4.5",
+			"google/gemini-4-argon",
+			"moonshotai/kimi-k3.1-pro",
+			"openai/gpt-6.1-sol",
+			"openai/gpt-oss-120b",
+			"spacexai/grok-4.7",
+		]);
 
 		const batch = await t.query(api.models.get, {
 			gatewayId: "anthropic/claude-opus-5.5-batch",

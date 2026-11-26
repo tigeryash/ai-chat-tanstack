@@ -62,27 +62,10 @@ test("links to sign-up and to password reset", async ({ page }) => {
 	).toBeVisible();
 });
 
-test("a sign-in the server refuses says why", async ({ page }) => {
-	await page.route("**/api/auth/sign-in/email", (route) =>
-		route.fulfill({
-			status: 403,
-			json: { code: "EMAIL_NOT_VERIFIED", message: "Email not verified" },
-		}),
-	);
-	await page.goto("/login");
-	await expect(page.locator("main[data-hydrated='true']")).toBeAttached();
-
-	await page.getByLabel("Email").fill(EMAIL);
-	await page.getByLabel("Password").fill("a long enough password");
-	await page.getByRole("button", { name: "Login", exact: true }).click();
-
-	await expect(page.getByRole("alert")).toContainText(
-		"Verify your email first",
-	);
-	await expect(page).toHaveURL(/\/login$/);
-});
-
-/** Signs in with an address Better Auth hasn't verified yet, so the page offers a new link. */
+/**
+ * Signs in with an address Better Auth hasn't verified yet: the page stays put, says why, and offers a
+ * new link.
+ */
 async function signInUnverified(page: Page) {
 	await page.route("**/api/auth/sign-in/email", (route) =>
 		route.fulfill({
@@ -99,6 +82,7 @@ async function signInUnverified(page: Page) {
 	await expect(page.getByRole("alert")).toContainText(
 		"Verify your email first",
 	);
+	await expect(page).toHaveURL(/\/login$/);
 }
 
 test("an unverified address can ask for a new link, and the answer doesn't say whether one was sent", async ({
