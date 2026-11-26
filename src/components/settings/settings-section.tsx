@@ -9,6 +9,7 @@ import {
 } from "@/lib/settings/registry";
 import type { SettingsSectionId } from "@/lib/settings/sections";
 import { SECTION_UPCOMING } from "@/lib/settings/upcoming";
+import { cn } from "@/lib/utils";
 import { AccountGate } from "./account-settings";
 import { SettingRow } from "./setting-row";
 
@@ -47,8 +48,14 @@ export function SettingsSectionBody({
 
 function Card({ card, children }: { card: SettingsCard; children: ReactNode }) {
 	const titleId = useId();
+	const danger = card.tone === "danger";
 	const rows = (
-		<div className="divide-y overflow-hidden rounded-lg border bg-card text-card-foreground">
+		<div
+			className={cn(
+				"divide-y overflow-hidden rounded-lg border bg-card text-card-foreground",
+				danger && "border-destructive/50",
+			)}
+		>
 			{children}
 		</div>
 	);
@@ -56,7 +63,10 @@ function Card({ card, children }: { card: SettingsCard; children: ReactNode }) {
 	return (
 		<section aria-labelledby={titleId} className="grid gap-2">
 			<div className="grid gap-1 px-1">
-				<h3 id={titleId} className="font-medium text-sm">
+				<h3
+					id={titleId}
+					className={cn("font-medium text-sm", danger && "text-destructive")}
+				>
 					{card.title}
 				</h3>
 				{card.description && (
@@ -85,9 +95,11 @@ function EmptySection({
 		<div className="grid gap-4 rounded-lg border bg-card p-4 text-card-foreground">
 			<div className="grid gap-1">
 				<p className="font-medium text-sm">Nothing to set here yet</p>
-				<p className="text-muted-foreground text-sm">
-					Coming here: {SECTION_UPCOMING[section]}
-				</p>
+				{SECTION_UPCOMING[section] && (
+					<p className="text-muted-foreground text-sm">
+						Coming here: {SECTION_UPCOMING[section]}
+					</p>
+				)}
 			</div>
 			<div className="grid gap-2">
 				<p className="text-muted-foreground text-sm">

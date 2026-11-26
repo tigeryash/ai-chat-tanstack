@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { sanitizeEvent } from "@/lib/analytics/track";
-import { ACTION_COMMANDS, toggleCommands } from "./app-commands";
+import { withPreset } from "@/lib/appearance/presets";
+import { DEFAULT_APPEARANCE } from "@/lib/appearance/schema";
+import {
+	ACTION_COMMANDS,
+	switchThemeCommand,
+	toggleCommands,
+} from "./app-commands";
 
 const state = { theme: "dark", density: "compact", analytics: true } as const;
 
@@ -33,5 +39,37 @@ describe("app commands", () => {
 				(t) => t.id === "toggle-analytics",
 			),
 		).toBe(false);
+	});
+
+	it("lists the presets on Switch theme, checked until the preset is edited", () => {
+		const paper = withPreset(DEFAULT_APPEARANCE, "paper");
+		const page = (settings: typeof paper) =>
+			switchThemeCommand(settings).opens?.commands() ?? [];
+		const rows = page(paper);
+		expect(rows.map((r) => r.id)).toEqual([
+			"theme-system",
+			"theme-light",
+			"theme-dark",
+			"preset-default",
+			"preset-high-contrast",
+			"preset-brand",
+			"preset-paper",
+			"preset-nord",
+			"preset-dracula",
+		]);
+		for (const row of rows) {
+			expect(sanitizeEvent("command_run", { id: row.id })).not.toBeNull();
+		}
+		expect(rows.filter((r) => r.checked).map((r) => r.id)).toEqual([
+			"theme-system",
+			"preset-paper",
+		]);
+		const edited = { ...paper, radius: "sharp" as const };
+		expect(
+			page(edited).some((r) => r.id.startsWith("preset-") && r.checked),
+		).toBe(false);
+		expect(switchThemeCommand(edited).detail).toBe(
+			"System · Custom (from Paper)",
+		);
 	});
 });

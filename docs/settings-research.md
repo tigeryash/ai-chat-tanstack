@@ -415,13 +415,14 @@ Yash picked the layout from the reference apps.)
 - [x] **S8 Account section.** The signed-in profile, linked methods, both sign-out paths; signed out shows the
   sign-in card. Rows for 6.x appear as those slices land. *Done when:* e2e with the stubbed session covers both
   states.
-- [ ] **S9 Theme presets and new knobs.** Presets grid with preview, radius, reading width, code theme.
+- [x] **S9 Theme presets and new knobs.** Presets grid with preview, radius, reading width, code theme.
   *Done when:* Vitest checks each preset passes AA in both modes; e2e applies one, reloads with no flash, and
   edits it into "Custom".
 - [x] **S10 Chat section.** Inline reply stats (the 2.5b leftover), reasoning open or closed, sync-scroll and
   new-pane-synced defaults. *Done when:* e2e covers each default on a new chat.
-- [ ] **S11 Your data and Privacy tidy-up.** Storage used, persistence status, Danger zone, legal links.
+- [x] **S11 Your data and Privacy tidy-up.** Storage used, persistence status, Danger zone, legal links.
   *Done when:* e2e shows the storage numbers on a fixture chat and the delete-all confirm.
+  *Status (2026-11-16):* done; delete all keeps saved prompts and other accounts' chats. PR: https://github.com/tigeryash/ai-chat-tanstack/pull/122
 - [ ] **S12 Theme library (later).** A searchable library of many themes beyond the six presets (inspired by
   Monkeytype's ~190), built from upstream palettes under their own licenses with credits, as in section 4. No
   Monkeytype files are copied, and Monkeytype-original themes wait for the licensing check. *Done when:* every

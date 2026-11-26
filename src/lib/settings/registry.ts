@@ -31,6 +31,8 @@ export interface SettingsCard {
 	/** Shown above the card, and names it for screen readers. */
 	title?: string;
 	description?: string;
+	/** `danger`: actions that can't be undone, drawn with the destructive token. */
+	tone?: "danger";
 }
 
 export interface SettingDefinition {
@@ -59,7 +61,7 @@ export const SETTINGS_CARDS = [
 	{ id: "api-keys", section: "connections" },
 	{ id: "local-models", section: "connections" },
 	{ id: "theme", section: "appearance" },
-	{ id: "text", section: "appearance", title: "Fonts" },
+	{ id: "text", section: "appearance", title: "Fonts and code" },
 	{ id: "theme-file", section: "appearance" },
 	{ id: "replies", section: "chat", title: "Replies" },
 	{ id: "chat-notices", section: "chat" },
@@ -77,8 +79,29 @@ export const SETTINGS_CARDS = [
 		description:
 			"When this tab is in the background, show how replies are going. Only counts and the chat's name are shown, never what's in a chat.",
 	},
+	{
+		id: "storage",
+		section: "data",
+		title: "On this device",
+		description:
+			"Your chats are stored in this browser first. Nothing here is sent anywhere.",
+	},
 	{ id: "transfer", section: "data" },
-	{ id: "analytics", section: "privacy" },
+	{
+		id: "danger-zone",
+		section: "data",
+		title: "Danger zone",
+		description:
+			"These can't be undone. Export your data first to keep a copy.",
+		tone: "danger",
+	},
+	{
+		id: "analytics",
+		section: "privacy",
+		title: "Analytics and error reports",
+		description:
+			"Analytics never see what's in your chats: not your messages, replies, files, keys or chat names. Only counts and load times.",
+	},
 	{ id: "legal", section: "privacy" },
 	// Account (S8). Sync (6.1), sharing (6.3) and sessions (6.4) add their own cards here as they land.
 	{ id: "profile", section: "account" },
@@ -235,6 +258,18 @@ export const SETTINGS = [
 	},
 	// Appearance
 	{
+		id: "preset",
+		section: "appearance",
+		card: "theme",
+		label: "Preset",
+		description:
+			"A ready-made look for light and dark. Change anything after picking one to make it your own.",
+		keywords: ["theme preset", "high contrast", "paper", "nord", "dracula"],
+		scope: "global",
+		storage: "syncs",
+		layout: "block",
+	},
+	{
 		id: "theme",
 		section: "appearance",
 		card: "theme",
@@ -252,6 +287,28 @@ export const SETTINGS = [
 		label: "Density",
 		description: "How much space sits around messages and controls.",
 		keywords: ["compact", "comfortable", "spacing"],
+		scope: "global",
+		storage: "syncs",
+		layout: "inline",
+	},
+	{
+		id: "radius",
+		section: "appearance",
+		card: "theme",
+		label: "Corner radius",
+		description: "How round panes, buttons and menus are.",
+		keywords: ["rounded", "corners", "sharp", "shape"],
+		scope: "global",
+		storage: "syncs",
+		layout: "inline",
+	},
+	{
+		id: "reading-width",
+		section: "appearance",
+		card: "theme",
+		label: "Reading width",
+		description: "How wide messages get in a pane.",
+		keywords: ["chat width", "line length", "message width", "column"],
 		scope: "global",
 		storage: "syncs",
 		layout: "inline",
@@ -331,6 +388,17 @@ export const SETTINGS = [
 		layout: "inline",
 	},
 	{
+		id: "code-theme",
+		section: "appearance",
+		card: "text",
+		label: "Code colors",
+		description: "Syntax highlighting in code blocks.",
+		keywords: ["code theme", "syntax highlighting", "shiki"],
+		scope: "global",
+		storage: "syncs",
+		layout: "inline",
+	},
+	{
 		id: "theme-file",
 		section: "appearance",
 		card: "theme-file",
@@ -347,7 +415,8 @@ export const SETTINGS = [
 		section: "appearance",
 		card: "theme-file",
 		label: "Reset appearance",
-		description: "Back to the default theme, fonts, text size and colors.",
+		description:
+			"Back to the default preset, theme, fonts, text size and colors.",
 		keywords: ["reset all", "default", "restore"],
 		scope: "global",
 		storage: "syncs",
@@ -507,6 +576,38 @@ export const SETTINGS = [
 	},
 	// Your data
 	{
+		id: "storage-used",
+		section: "data",
+		card: "storage",
+		label: "Storage used",
+		description:
+			"Your chats and their attached files in this browser, and how much space this site uses here.",
+		keywords: [
+			"storage",
+			"space",
+			"disk",
+			"quota",
+			"size",
+			"attachments",
+			"how many chats",
+		],
+		scope: "global",
+		storage: "device",
+		layout: "block",
+	},
+	{
+		id: "persistent-storage",
+		section: "data",
+		card: "storage",
+		label: "Persistent storage",
+		description:
+			"Asks the browser not to clear your chats when space runs low. The browser decides; exports are the real backup.",
+		keywords: ["persist", "eviction", "keep chats", "cleared", "safari"],
+		scope: "global",
+		storage: "device",
+		layout: "block",
+	},
+	{
 		id: "export-import",
 		section: "data",
 		card: "transfer",
@@ -525,6 +626,25 @@ export const SETTINGS = [
 		scope: "global",
 		storage: "device",
 		layout: "block",
+	},
+	{
+		id: "delete-all-chats",
+		section: "data",
+		card: "danger-zone",
+		label: "Delete all chats on this device",
+		description:
+			"Deletes every chat you can see here, with its branches, attached files and workspaces. Saved prompts, keys and settings stay. Chats of other accounts signed in on this browser stay too.",
+		keywords: [
+			"delete all",
+			"clear chats",
+			"remove chats",
+			"wipe",
+			"erase",
+			"reset",
+		],
+		scope: "global",
+		storage: "device",
+		layout: "inline",
 	},
 	// Privacy
 	{

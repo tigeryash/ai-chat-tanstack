@@ -25,6 +25,20 @@ describe("appearanceSchema", () => {
 		expect(appearanceSchema.safeParse(custom).success).toBe(true);
 	});
 
+	it("loads settings saved before presets with the new options' defaults", () => {
+		const {
+			radius: _r,
+			readingWidth: _w,
+			codeTheme: _c,
+			preset: _p,
+			...before
+		} = DEFAULT_APPEARANCE;
+		expect(appearanceSchema.parse({ ...before, density: "compact" })).toEqual({
+			...DEFAULT_APPEARANCE,
+			density: "compact",
+		});
+	});
+
 	it("drops overrides of retired tokens and keeps the rest", () => {
 		const saved = {
 			...DEFAULT_APPEARANCE,

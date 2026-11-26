@@ -588,6 +588,8 @@ on top. Order: R1 first; R2 and R3 can run alongside; R4 after R3; R5 any time.
     prompt, model settings, copy, regenerate, stop all) and Switch theme, with nested pages. *Status:* [PR #116](https://github.com/tigeryash/ai-chat-tanstack/pull/116).
   - [x] **S8 Account section.** Profile, linked sign-in methods and both sign-outs when signed in; a sign-in card
     when signed out. *Status:* [PR #117](https://github.com/tigeryash/ai-chat-tanstack/pull/117).
+  - [x] **S9 Theme presets and new knobs.** Six presets (grid with live previews, also on the palette's Switch
+    theme page), corner radius, reading width and code colors (syntax highlighting via `@streamdown/code`). *Status:* [PR #118](https://github.com/tigeryash/ai-chat-tanstack/pull/118).
   - [x] **S10 Chat section.** Stats under each reply (none, cost, all), how reasoning starts, and Sync scroll and
     new-pane-synced defaults for workspaces. *Status:* [PR #123](https://github.com/tigeryash/ai-chat-tanstack/pull/123).
 - [ ] **R3 Quality audit Q3.** A fresh review of UX consistency, performance and code health across everything
@@ -602,6 +604,7 @@ on top. Order: R1 first; R2 and R3 can run alongside; R4 after R3; R5 any time.
   replies, contrast in every theme.
 - [ ] **R6 Context management (research only, not built yet).** Research compaction (summarise older turns) and
   other strategies (trim, pin, branch to a fresh chat with a summary); output is a research doc, then slices.
+  *Status:* research in [context-management-research.md](./context-management-research.md), [PR #121](https://github.com/tigeryash/ai-chat-tanstack/pull/121); waiting for Yash to pick the first slice.
 - After R1–R5: 3.9 Insights if Yash still wants it, then 4.0.
 
 ## Phase 4: Agent harness

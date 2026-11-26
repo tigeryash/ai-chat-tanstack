@@ -56,4 +56,24 @@ describe("appearanceSnapshot", () => {
 		expect(vars["--ring"]).toBe("light-dark(#3366cc, #ffffff)");
 		expect(vars["--primary-foreground"]).toBe("oklch(0.985 0 0)");
 	});
+
+	it("sets the corner radius and reading width", () => {
+		const { vars } = appearanceSnapshot({
+			...DEFAULT_APPEARANCE,
+			radius: "sharp",
+			readingWidth: "narrow",
+		});
+		expect(vars).toMatchObject({
+			"--radius": "0.125rem",
+			"--pane-radius": "0.25rem",
+			"--reading-width": "min(80%, 42rem)",
+		});
+		const round = appearanceSnapshot({
+			...DEFAULT_APPEARANCE,
+			radius: "round",
+			readingWidth: "full",
+		});
+		expect(round.vars["--pane-radius"]).toBe("1.5rem");
+		expect(round.vars["--reading-width"]).toBe("100%");
+	});
 });
