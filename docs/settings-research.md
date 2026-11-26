@@ -355,7 +355,7 @@ The list below is confirmed (Yash, 2026-11-09).
 
 **Stays out:**
 - **Custom CSS:** XSS risk on a page that holds keys (security.md). TypingMind keeps it to its team edition.
-- **Theming the composer:** hard rule 8.
+- **Theming the composer beyond colors:** hard rule 8 (its colors follow the theme since 2026-11-25).
 - **A theme store or sharing service:** theme files already cover sharing.
 
 **Later: a large theme library (S12), inspired by [Monkeytype](https://github.com/monkeytypegame/monkeytype).**
