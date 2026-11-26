@@ -13,8 +13,13 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
+import { useChatPrefs } from "@/lib/chat/chat-prefs";
 import { useReplyVote, voteOnReply } from "@/lib/chat/chat-votes";
-import { type ReplyDetail, replyDetails } from "@/lib/chat/reply-details";
+import {
+	inlineReplyStats,
+	type ReplyDetail,
+	replyDetails,
+} from "@/lib/chat/reply-details";
 import { replyText } from "@/lib/chat/reply-text";
 import { logWarn } from "@/lib/log";
 import { type PromptSource, replyPromptSource } from "@/lib/prompts/provenance";
@@ -136,11 +141,16 @@ const MessageActions = ({
 			.catch((error) => logWarn("Couldn't copy the reply:", error));
 	};
 	const details = replyDetails(message.metadata);
+	const inlineStats = inlineReplyStats(
+		message.metadata,
+		useChatPrefs().inlineStats,
+	);
 	const promptSource = replyPromptSource(message.metadata);
 	return (
 		message.role === "assistant" && (
 			// No side padding and -ml-2 (the icon buttons' own inset) line the copy icon up with the reply
-			// text. Model, host, cost and timings all sit behind "⋯", so the row stays one line.
+			// text. Model, host, cost and timings all sit behind "⋯"; Settings → Chat can show the cost, or
+			// cost, tokens and timings, beside it (R2 S10).
 			<Actions className="-ml-2 px-0">
 				{versionIds && (
 					// Hidden while a reply streams, by CSS, like the person's own switcher (roadmap 1.7).
@@ -168,6 +178,11 @@ const MessageActions = ({
 				{chatId && <ReplyVoteButtons chatId={chatId} messageId={message.id} />}
 				{details && (
 					<ReplyDetailsButton details={details} promptSource={promptSource} />
+				)}
+				{inlineStats.length > 0 && (
+					<p data-inline-stats className="min-w-0 truncate pl-1 font-mono">
+						{inlineStats.join(" · ")}
+					</p>
 				)}
 			</Actions>
 		)

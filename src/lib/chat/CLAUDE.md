@@ -16,8 +16,12 @@ Notes for working in this folder. The root [CLAUDE.md](/CLAUDE.md) (commands, ha
   tokens, TTFT and tokens/sec (`reply-stats.ts`, 2.5; timed in the page from the request), and the saved
   prompt version it was sent with (`prompt`, 3.6b, `lib/prompts/provenance.ts`). Saved and imported
   chats are untrusted, so read it back through `replyDetails` / `readReplyStats`; `chat-usage.ts` totals a chat.
-  Nothing shows inline under a reply; the "⋯" popover lists model, host, cost, tokens and timings from
-  `replyDetails` (`reply-details.ts`, 2.5b).
+  The "⋯" popover lists model, host, cost, tokens and timings from `replyDetails` (`reply-details.ts`, 2.5b);
+  inline beside it shows nothing by default, or the cost or all stats (`inlineReplyStats`, Settings → Chat).
+- **Settings → Chat** (`chat-prefs.ts`, R2 S4 and S10): context notices, inline reply stats, how reasoning starts
+  (`REASONING_START_PROPS` in `message-ui.tsx`), and the workspace defaults (Sync scroll, new panes synced, read
+  with `readChatPrefs` when a workspace opens or a pane is added). Each field has its own Zod default, so a value
+  saved before a field existed keeps its other choices; give any new field one too.
 - **New-chat defaults and titles** (Refine R2 S2, Settings → General). `readChatModelChoice` falls back to
   `default-model.ts` (last pick, or a fixed model). A title model (`title-model.ts` setting,
   `chat-title-writer.ts`) starts writing when a chat opened empty first sends, and `saveChat` waits for it so the

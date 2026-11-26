@@ -63,7 +63,15 @@ export const SETTINGS_CARDS = [
 	{ id: "theme", section: "appearance" },
 	{ id: "text", section: "appearance", title: "Fonts and code" },
 	{ id: "theme-file", section: "appearance" },
+	{ id: "replies", section: "chat", title: "Replies" },
 	{ id: "chat-notices", section: "chat" },
+	{
+		id: "panes",
+		section: "chat",
+		title: "Side-by-side chats",
+		description:
+			"Defaults for workspaces with more than one pane. Each pane's own switches still change it.",
+	},
 	{
 		id: "background-status",
 		section: "notifications",
@@ -416,6 +424,49 @@ export const SETTINGS = [
 	},
 	// Chat
 	{
+		id: "inline-stats",
+		section: "chat",
+		card: "replies",
+		label: "Reply stats",
+		description:
+			'Where a reply\'s cost, tokens, time to first token and speed show: only in its "⋯" menu, or also beside the reply, just the cost or all of them.',
+		keywords: [
+			"reply stats",
+			"inline stats",
+			"cost",
+			"price",
+			"tokens",
+			"speed",
+			"tok/s",
+			"latency",
+			"time to first token",
+			"ttft",
+			"usage",
+		],
+		scope: "global",
+		storage: "syncs",
+		layout: "block",
+	},
+	{
+		id: "reasoning-start",
+		section: "chat",
+		card: "replies",
+		label: "Reasoning",
+		description:
+			"How a reply's thinking starts: closed until you open it (\"Thinking...\" still shows while it works), open while the model thinks and closed when it's done, or always open.",
+		keywords: [
+			"thinking",
+			"reasoning open",
+			"reasoning closed",
+			"expand",
+			"collapse",
+			"chain of thought",
+		],
+		scope: "global",
+		storage: "syncs",
+		layout: "block",
+	},
+	{
 		id: "context-warnings",
 		section: "chat",
 		card: "chat-notices",
@@ -432,6 +483,37 @@ export const SETTINGS = [
 		],
 		scope: "global",
 		storage: "device",
+		layout: "inline",
+	},
+	{
+		id: "sync-scroll-default",
+		section: "chat",
+		card: "panes",
+		label: "Sync scroll on by default",
+		description:
+			"Workspaces open with Sync scroll on, so scrolling one pane scrolls the others. The toolbar switch still turns it off for a visit.",
+		keywords: ["scroll sync", "sync scroll", "workspace", "compare", "panes"],
+		scope: "global",
+		storage: "syncs",
+		layout: "inline",
+	},
+	{
+		id: "new-panes-synced",
+		section: "chat",
+		card: "panes",
+		label: "New panes start synced",
+		description:
+			"A new pane shares the message box with the other synced panes and sends with them. Saved layouts keep their own switches.",
+		keywords: [
+			"synced",
+			"sync panes",
+			"send to all",
+			"add pane",
+			"workspace",
+			"compare",
+		],
+		scope: "global",
+		storage: "syncs",
 		layout: "inline",
 	},
 	// Notifications

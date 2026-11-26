@@ -38,6 +38,15 @@ describe("pane layout", () => {
 		expect(ids(addPane(initialPanes(["a"]), "a"))).toEqual(["a"]);
 	});
 
+	it("starts or adds panes unsynced when asked (Settings → Chat)", () => {
+		expect(initialPanes(["a", "b"], false).map((p) => p.synced)).toEqual([
+			false,
+			false,
+		]);
+		const panes = addPane(initialPanes(["a"]), "b", 0, undefined, false);
+		expect(panes.map((p) => p.synced)).toEqual([true, false]);
+	});
+
 	it("adds to the right of a given pane, or at the end when it isn't shown", () => {
 		const panes = initialPanes(["a", "b"]);
 		expect(ids(addPane(panes, "c", 0, "a"))).toEqual(["a", "c", "b"]);

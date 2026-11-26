@@ -418,7 +418,7 @@ Yash picked the layout from the reference apps.)
 - [x] **S9 Theme presets and new knobs.** Presets grid with preview, radius, reading width, code theme.
   *Done when:* Vitest checks each preset passes AA in both modes; e2e applies one, reloads with no flash, and
   edits it into "Custom".
-- [ ] **S10 Chat section.** Inline reply stats (the 2.5b leftover), reasoning open or closed, sync-scroll and
+- [x] **S10 Chat section.** Inline reply stats (the 2.5b leftover), reasoning open or closed, sync-scroll and
   new-pane-synced defaults. *Done when:* e2e covers each default on a new chat.
 - [x] **S11 Your data and Privacy tidy-up.** Storage used, persistence status, Danger zone, legal links.
   *Done when:* e2e shows the storage numbers on a fixture chat and the delete-all confirm.

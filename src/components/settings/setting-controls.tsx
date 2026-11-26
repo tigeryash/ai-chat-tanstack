@@ -30,7 +30,13 @@ import {
 	TabStatusSwitch,
 	TestNotification,
 } from "./background-status-settings";
-import { ContextWarningsSwitch } from "./chat-settings";
+import {
+	ContextWarningsSwitch,
+	InlineStatsChoice,
+	NewPanesSyncedSwitch,
+	ReasoningStartChoice,
+	SyncScrollDefaultSwitch,
+} from "./chat-settings";
 import { ConnectOpenRouter } from "./connect-openrouter";
 import { DataTransfer } from "./data-settings";
 import { DeleteAllChats } from "./delete-all-chats";
@@ -72,7 +78,11 @@ export const SETTING_CONTROLS: Record<
 	"code-theme": CodeThemeSelect,
 	"theme-file": ThemeFileControl,
 	"reset-appearance": ResetAppearance,
+	"inline-stats": InlineStatsChoice,
+	"reasoning-start": ReasoningStartChoice,
 	"context-warnings": ContextWarningsSwitch,
+	"sync-scroll-default": SyncScrollDefaultSwitch,
+	"new-panes-synced": NewPanesSyncedSwitch,
 	"tab-status": TabStatusSwitch,
 	"notify-finished": NotifyFinishedSwitch,
 	"notify-failed": NotifyFailedSwitch,

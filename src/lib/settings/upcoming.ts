@@ -6,7 +6,7 @@ import type { SettingsSectionId } from "./sections";
 export const SECTION_UPCOMING: Partial<Record<SettingsSectionId, string>> = {
 	general: "How many panes a new chat starts with.",
 	appearance: "A colored top border per model, to tell panes apart.",
-	chat: "Reply stats, reasoning open or closed, and scroll sync defaults.",
+	chat: "Voice: dictation and a voice mode.",
 	keyboard: "Changing a shortcut's keys.",
 	notifications: "Notifications for agent runs.",
 	models: "Per-model defaults and context-length warnings.",
