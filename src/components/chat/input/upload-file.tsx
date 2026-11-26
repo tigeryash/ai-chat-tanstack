@@ -31,7 +31,7 @@ export const Files = ({
 							exit={{ opacity: 0, scale: 0.8, x: -20 }}
 							transition={{ duration: 0.3 }}
 							key={file.id}
-							className="relative group bg-black/5  rounded-lg p-2 flex shrink-0 items-center space-x-2 border border-black/10"
+							className="relative group bg-foreground/5  rounded-lg p-2 flex shrink-0 items-center space-x-2 border border-foreground/10"
 						>
 							<FileThumbnail file={file} onOpen={() => setSelected(file)} />
 							<div className="flex flex-col">
@@ -47,8 +47,8 @@ export const Files = ({
 								type="button"
 								onClick={() => onRemove(file.id)}
 								aria-label={`Remove ${file.file.name}`}
-								className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600
-                             text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-all shadow-sm z-30"
+								className="absolute -top-2 -right-2 bg-destructive hover:bg-destructive/90
+                             text-card rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-all shadow-sm z-30"
 							>
 								<X size={12} />
 							</button>
@@ -72,7 +72,7 @@ const FileThumbnail = ({
 }) => {
 	if (!file.preview) {
 		return (
-			<div className="w-10 h-10 bg-blue-100 flex items-center justify-center rounded text-[10px] font-bold">
+			<div className="w-10 h-10 bg-link/15 flex items-center justify-center rounded text-[10px] font-bold">
 				{file.file.name.split(".").pop()?.toUpperCase()}
 			</div>
 		);
@@ -92,7 +92,7 @@ const FileThumbnail = ({
 			/>
 			{file.isProcessing && (
 				<div className="absolute inset-0 flex items-center justify-center">
-					<Loader2 className="w-5 h-5 animate-spin text-black/50" />
+					<Loader2 className="w-5 h-5 animate-spin text-foreground/50" />
 				</div>
 			)}
 		</button>
@@ -121,7 +121,7 @@ const ImagePreview = ({
 		// biome-ignore lint/a11y/noStaticElementInteractions: the backdrop; the X button and Escape are the keyboard ways out
 		// biome-ignore lint/a11y/useKeyWithClickEvents: as above
 		<div
-			className="composer-design fixed inset-0 z-100 h-screen flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+			className="composer-design fixed inset-0 z-100 h-screen flex items-center justify-center bg-overlay/70 backdrop-blur-sm p-4 animate-in fade-in duration-200"
 			onClick={(e) => {
 				if (e.target === e.currentTarget) onClose();
 			}}
@@ -129,7 +129,7 @@ const ImagePreview = ({
 			<button
 				type="button"
 				aria-label="Close preview"
-				className="absolute top-6 right-6 text-white/70 hover:text-white transition-colors"
+				className="absolute top-6 right-6 text-overlay-foreground/70 hover:text-overlay-foreground transition-colors"
 				onClick={onClose}
 			>
 				<X size={32} strokeWidth={1.5} />

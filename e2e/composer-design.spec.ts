@@ -2,8 +2,8 @@ import type { Locator, Page } from "@playwright/test";
 import { expect, test } from "./support/fixtures";
 
 // The composer is Yash's design (CLAUDE.md hard rule 8). These screenshots pin how it looks and how
-// its icons animate, in light and dark: it is the same white pill in both. A failure here means a
-// change reached the composer's look; put it back. Refresh these baselines only after Yash approved a
+// its icons animate, in light and dark: its colors follow the theme (a popover-colored pill), the rest is
+// locked. A failure here means a change reached the composer's look; put it back. Refresh these baselines only after Yash approved a
 // mockup or screenshot of the change, never to get a slice through CI.
 //
 // Hover frames run on Playwright's clock. It starts and pauses at fixed times, so Motion starts the
@@ -85,15 +85,29 @@ for (const scheme of ["light", "dark"] as const) {
 	test.describe(`in ${scheme} mode`, () => {
 		test.use({ colorScheme: scheme });
 
-		test("keeps its own colors, not the theme's", async ({ page }) => {
+		test("takes the theme's raised-surface colors", async ({ page }) => {
 			await openComposer(page);
+			// What --popover and --popover-foreground resolve to in this scheme.
+			const card = await page.locator("main").evaluate((el) => {
+				const probe = document.createElement("div");
+				probe.style.background = "var(--popover)";
+				probe.style.color = "var(--popover-foreground)";
+				el.append(probe);
+				const style = getComputedStyle(probe);
+				const colors = {
+					background: style.backgroundColor,
+					color: style.color,
+				};
+				probe.remove();
+				return colors;
+			});
 			await expect(page.locator("form")).toHaveCSS(
 				"background-color",
-				"rgb(255, 255, 255)",
+				card.background,
 			);
 			await expect(page.getByPlaceholder("Ask anything")).toHaveCSS(
 				"color",
-				"rgb(0, 0, 0)",
+				card.color,
 			);
 		});
 

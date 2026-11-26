@@ -1,7 +1,8 @@
-// The composer is Yash's design (CLAUDE.md hard rule 8). Nothing in this file, `./input/`, its
-// animate-ui icons or its styles may change how it looks or animates without his approval of a
-// mockup or screenshot first. e2e/composer-design.spec.ts pins the look; never refresh its baselines
-// without that approval.
+// The composer is Yash's design (CLAUDE.md hard rule 8). Its colors follow the theme (design tokens
+// only, in light, dark and every preset). Nothing else in this file, `./input/`, its animate-ui icons
+// or its styles (layout, sizes, spacing, icons, motion, radius, font) may change how it looks or
+// animates without his approval of a mockup or screenshot first. e2e/composer-design.spec.ts pins the
+// look; never refresh its baselines without that approval.
 
 import type { FileUIPart } from "ai";
 import { Square } from "lucide-react";
@@ -91,8 +92,8 @@ export const Input = ({
 						transitionProperty: "border-radius",
 						animation: "border-radius 0.5s ease-in-out",
 					}}
-					className={`composer-design bg-white w-full max-w-md xl:max-w-3xl flex flex-col items-center
-             py-3 shadow-lg border-t border-black/10 `}
+					className={`composer-design bg-popover text-popover-foreground w-full max-w-md xl:max-w-3xl flex flex-col items-center
+             py-3 shadow-lg border-t border-foreground/10 `}
 				>
 					<AnimatePresence mode="popLayout">
 						{hasFiles && (

@@ -55,8 +55,8 @@ on every PR; the `Playwright` check passes without running e2e when a PR only to
   and spacing step comes from `src/styles.css`. Each color token is a `light-dark()` pair that follows the system
   unless a `dark` / `light` class forces it (auth pages are always `dark`; the `dark:` variant agrees). Use token
   classes (`bg-card`, `text-muted-foreground`, `rounded-pane`), never palette classes or literal colors
-  (`src/lib/design-tokens.test.ts` fails on them); need a new color, add a token. The composer is the one
-  exception (hard rule 8). Chat panes are cards (`rounded-pane border bg-card`, in `chat-view.tsx`).
+  (`src/lib/design-tokens.test.ts` fails on them); need a new color, add a token. The composer uses tokens
+  too, for colors only (hard rule 8). Chat panes are cards (`rounded-pane border bg-card`, in `chat-view.tsx`).
 - **UI**: Tailwind 4, shadcn components on Base UI (`base-vega` style; add more with `bunx shadcn add <name>`,
   then change their `cn` import from `"cn"` to `@/lib/utils`), no Radix. `src/components/ai-elements/` keeps the
   AI SDK Elements export names but is built on shadcn's AI Elements patterns (Message, Trace, Message Scroller).
@@ -112,11 +112,13 @@ before changing code that uses that feature from elsewhere**, too.
    `simulateReadableStream` from `ai/test`). The e2e fixture fails any request that leaves the machine.
 7. **Don't hand-edit `node_modules`.** Patches there vanish on reinstall and have broken dev before. If something
    upstream is broken, work around it in our code or config and leave a comment saying why.
-8. **The composer is Yash's design.** No change to how `src/components/chat/input*` or its icons look or animate
-   (buttons, icons, colors, spacing, sizes, motion) without Yash's explicit approval of a mockup or screenshot
-   first, whatever the slice is about. Invisible changes (wiring, accessibility attributes, invisible bug fixes) are
-   fine. Never refresh its screenshot baselines without that approval. It keeps its original colors in every theme
-   (no tokens, `.composer-design` in `src/styles.css`); `e2e/composer-design.spec.ts` pins it.
+8. **The composer is Yash's design.** Its colors follow the theme (light, dark, presets) through design tokens
+   (approved 2026-11-25). Everything else is still locked: no change to how `src/components/chat/input*` or its
+   icons look or animate (layout, buttons, icons, spacing, sizes, radius, font, motion) without Yash's explicit
+   approval of a mockup or screenshot first, whatever the slice is about. `.composer-design` in `src/styles.css`
+   keeps its own radius and font (Appearance radius and fonts don't reach it). Invisible changes (wiring,
+   accessibility attributes, invisible bug fixes) are fine. Never refresh its screenshot baselines without that
+   approval; `e2e/composer-design.spec.ts` pins it.
 
 ## Conventions
 

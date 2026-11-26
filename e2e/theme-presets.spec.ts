@@ -2,8 +2,8 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "./support/fixtures";
 
 // Roadmap R2 S9: theme presets, corner radius, reading width and code colors. A preset is on <html>
-// before the first frame (the <head> script replays it), it never restyles the composer (hard rule
-// 8), and editing anything after picking it reads "Custom (from …)".
+// before the first frame (the <head> script replays it), it recolors the composer but leaves its
+// radius and font alone (hard rule 8), and editing anything after picking it reads "Custom (from …)".
 
 test.use({ colorScheme: "dark" });
 
@@ -72,7 +72,11 @@ test("a preset applies, survives a reload with no flash, and edits into Custom",
 		"--reading-font",
 		/Source Serif 4 Variable/,
 	);
-	expect(await composerLook(page)).toEqual(composerBefore);
+	// The composer's colors follow the preset; its radius and font don't (hard rule 8).
+	const composerAfter = await composerLook(page);
+	expect(composerAfter.background).not.toBe(composerBefore.background);
+	expect(composerAfter.radius).toBe(composerBefore.radius);
+	expect(composerAfter.font).toBe(composerBefore.font);
 
 	await page.goto("/new?settings=appearance");
 	const edited = appearance(page);

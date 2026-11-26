@@ -40,7 +40,7 @@ at once), then turn its findings into small refactor slices.
   fixed in [#48](https://github.com/tigeryash/ai-chat-tanstack/pull/48)–[#53](https://github.com/tigeryash/ai-chat-tanstack/pull/53)
   (old Convex chat backend retired, leaner first load, fewer re-renders, composer cleanup, knip and lint guards in CI,
   provider registry and a CSP enforce switch).
-  *Composer:* restored to Yash's original look in [#57](https://github.com/tigeryash/ai-chat-tanstack/pull/57); hard rule 8 now locks it.
+  *Composer:* restored to Yash's original look in [#57](https://github.com/tigeryash/ai-chat-tanstack/pull/57); hard rule 8 now locks it. Its colors follow the theme since [#127](https://github.com/tigeryash/ai-chat-tanstack/pull/127).
 - [x] **Q2 (2026-10):** [quality-audit-2026-10-q2.md](./quality-audit-2026-10-q2.md) ([#60](https://github.com/tigeryash/ai-chat-tanstack/pull/60)). Fix slices 1–4
   before Milestone 2.
   *Status:* slices 1–4 fixed in [#61](https://github.com/tigeryash/ai-chat-tanstack/pull/61), [#62](https://github.com/tigeryash/ai-chat-tanstack/pull/62)
